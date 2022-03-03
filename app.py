@@ -39,7 +39,7 @@ def close_db(error):
         g.link_db.close()
 
 
-@app.route("/")
+@app.route("/base")
 def index():
     db = get_db()
     dbase = FDataBase(db)
