@@ -1,6 +1,7 @@
 import sqlite3
 import time
 import math
+import datetime
 
 
 class FDataBase:
@@ -20,7 +21,7 @@ class FDataBase:
 
     def addPost(self, title, text):
         try:
-            tm = math.floor(time.time())
+            tm = datetime.date.today()
             self.__cur.execute("INSERT INTO posts VALUES(NULL, ?, ?, ?)", (title, text, tm))
             self.__db.commit()
         except sqlite3.Error as e:
@@ -31,7 +32,7 @@ class FDataBase:
 
     def getPost(self, postId):
         try:
-            self.__cur.execute(f"SELECT title, text FROM posts WHERE id = {postId} LIMIT 1")
+            self.__cur.execute(f"SELECT amount, description FROM posts WHERE id = {postId} LIMIT 1")
             res = self.__cur.fetchone()
             if res:
                 return res
@@ -39,3 +40,13 @@ class FDataBase:
             print("Ошибка получения статьи из БД " + str(e))
 
         return (False, False)
+
+    def getPosts(self):
+        sql = '''SELECT * FROM posts'''
+        try:
+            self.__cur.execute(sql)
+            res = self.__cur.fetchall()
+            if res: return res
+        except:
+            print("Ошибка чтения из БД")
+        return []

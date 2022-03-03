@@ -1,6 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/checkout/">
+    <link rel="stylesheet" href="{{url_for('static', filename='form-validation.css') }}">
+
+    <style>
+
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+
+
+
+
+
+
+
+
+
+
+    </style>
+
     {% block title -%}
     {% if title %}
     <title>Про Flask - {{title}}</title>
@@ -9,20 +44,94 @@
     {% endif %}
     {% endblock %}
 </head>
-<body>
-{% block content -%}
-{%- block mainmenu -%}
-<ul>
-    {% for m in menu -%}
-    <li><a href="{{m.url}}"><{{m.title}}</a></li>
-    {% endfor -%}
-</ul>
-{% endblock mainmenu -%}
-{% if title -%}
-<h1>{{title}}</h1>
-{% else -%}
-<h1>Про Flask</h1>
-{% endif -%}
-{% endblock -%}
+<body class="bg-light">
+
+
+<div class="container">
+    <main>
+        <div class="py-5 text-center">
+            <h2></h2>
+        </div>
+
+        <div class="row g-5">
+
+            <div class="col-md-12 col-lg-12">
+                <h4 class="mb-3"></h4>
+                <form class="needs-validation" action="{{url_for('addPost')}}" method="post" novalidate>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label for="amount" class="form-label">Сумма</label>
+                            <input type="text" class="form-control" id="amount" name="amount" placeholder="" value=""
+                                   required>
+                            <div class="invalid-feedback">
+                                Valid first name is required.
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="description" class="form-label">Описание</label>
+                            <input type="text" class="form-control" id="description" name="description" placeholder=""
+                                   value="" required>
+                            <div class="invalid-feedback">
+                                Valid last name is required.
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="my-4"></div>
+
+
+                    <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
+                </form>
+
+                <br>
+
+                <div class="col-md-12 col-lg-12">
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="d-flex">
+                                <th class="col-2" scope="col">Дата</th>
+                                <th class="col-2" scope="col">Сумма</th>
+                                <th class="col-8" scope="col">Описание</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            {% for p in posts %}
+
+                            <tr class="d-flex">
+                                <th class="col-2" scope="row">{{p.date}}</th>
+                                <td class="col-2">{{p.amount}}</td>
+                                <td class="col-8">{{p.description}}</td>
+                            </tr>
+
+                            {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <footer class="my-5 pt-5 text-muted text-center text-small">
+        <p class="mb-1"></p>
+        <ul class="list-inline">
+
+        </ul>
+    </footer>
+</div>
+
+
+<script src="bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
 </body>
 </html>

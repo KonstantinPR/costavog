@@ -2,6 +2,7 @@ from flask import Flask, render_template, g, request, flash
 import sqlite3
 import os
 from FDataBase import FDataBase
+import datetime
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -52,16 +53,12 @@ def addPost():
     dbase = FDataBase(db)
 
     if request.method == "POST":
-        if len(request.form['name']) > 4 and len(request.form['post']) > 10:
-            res = dbase.addPost(request.form['name'], request.form['post'])
-            if not res:
-                flash('Ошибка добавления статьи', category='error')
-            else:
-                flash('Статья добавлена успешно', category='success')
-        else:
+        res = dbase.addPost(request.form['amount'], request.form['description'])
+        if not res:
             flash('Ошибка добавления статьи', category='error')
-
-    return render_template('add_post.html', menu=dbase.getMenu(), title="Добавление статьи")
+        else:
+            flash('Статья добавлена успешно', category='success')
+    return render_template('add_post.html', posts=dbase.getPosts(), title="Добавление статьи")
 
 
 @app.route("/post/<int:id_post>")
