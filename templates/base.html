@@ -25,12 +25,13 @@
         }
       }
 
-    .legend .row:nth-of-type(odd) div {
-    background-color:antiquewhite;
-    }
-    .legend .row:nth-of-type(even) div {
-    background: #FFFFFF;
-    }
+.row-striped:nth-of-type(odd){
+  background-color: #F9F9F9;
+}
+
+.row-striped:nth-of-type(even){
+  background-color: #EFEFEF;
+}
 
 
 
@@ -103,7 +104,7 @@
                 </div>
 
                 {% for p in posts %}
-                <div class="row p-3">
+                <div class="row row-striped p-3">
                     <div class="col">
                         <b>{{p.date}}</b>
                     </div>
