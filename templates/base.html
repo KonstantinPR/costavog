@@ -25,6 +25,17 @@
         }
       }
 
+    .legend .row:nth-of-type(odd) div {
+    background-color:antiquewhite;
+    }
+    .legend .row:nth-of-type(even) div {
+    background: #FFFFFF;
+    }
+
+
+
+
+
     </style>
 
     {% block title -%}
@@ -50,15 +61,17 @@
                 <h4 class="mb-3"></h4>
                 <form class="needs-validation" action="{{url_for('addPost')}}" method="post" novalidate>
                     <div class="row">
-                        <div class="col-xs-12  col-sm-12 col-lg-6 p-2" >
-                            <input type="text" class="form-control form-control-lg" id="amount" name="amount" placeholder="Сумма" value=""
+                        <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
+                            <input type="text" class="form-control form-control-lg" id="amount" name="amount"
+                                   placeholder="Сумма" value=""
                                    required>
                             <div class="invalid-feedback">
                                 Valid first name is required.
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <input type="text" class="form-control form-control-lg" id="description" name="description" placeholder="Описание"
+                            <input type="text" class="form-control form-control-lg" id="description" name="description"
+                                   placeholder="Описание"
                                    value="" required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
@@ -76,35 +89,33 @@
                 <br>
                 <br>
 
-                <div class="col-xs-12 col-md-12 col-lg-12">
 
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                            <tr class="d-flex">
-                                <th class="col-2" scope="col">Дата</th>
-                                <th class="col-2" scope="col">Сумма</th>
-                                <th class="col-8" scope="col">Описание</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-
-                            {% for p in posts %}
-
-                            <tr class="d-flex">
-                                <th class="col-2" scope="row">{{p.date}}</th>
-                                <td class="col-2">{{p.amount}}</td>
-                                <td class="col-8">{{p.description}}</td>
-                            </tr>
-
-                            {% endfor %}
-                            </tbody>
-
-                        </table>
+                <div class="row p-3">
+                    <div class="col">
+                        <b>Дата</b>
                     </div>
-
-
+                    <div class="col">
+                        <b>Сумма</b>
+                    </div>
+                    <div class="col-6">
+                        <b>Описание</b>
+                    </div>
                 </div>
+
+                {% for p in posts %}
+                <div class="row p-3">
+                    <div class="col">
+                        <b>{{p.date}}</b>
+                    </div>
+                    <div class="col">
+                        {{p.amount}}
+                    </div>
+                    <div class="col-6">
+                        {{p.description}}
+                    </div>
+                </div>
+                {% endfor %}
+
             </div>
         </div>
     </main>
