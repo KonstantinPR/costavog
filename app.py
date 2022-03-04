@@ -10,6 +10,7 @@ from UserLogin import UserLogin
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
 SECRET_KEY = 'jfdlgjshfdlgjhsfdg'
+SKEY = "14569985217456332587"
 
 app = Flask(__name__)
 login_manager = LoginManager(app)
@@ -63,14 +64,16 @@ def close_db(error):
 
 @app.route("/")
 def index():
-    return render_template("index.html", menu=dbase.getMenu())
+    return render_template("add_post.html")
 
 
 @app.route("/reg", methods=["POST", "GET"])
 def reg():
     if request.method == "POST":
         if len(request.form['name']) > 1 and len(request.form['email']) > 1 \
-                and len(request.form['psw']) > 1 and request.form['psw'] == request.form['psw2']:
+                and len(request.form['psw']) > 1 and \
+                request.form['psw'] == request.form['psw2'] and\
+                request.form['skey'] == SKEY:
             hash = generate_password_hash(request.form['psw'])
             res = dbase.addUser(request.form['name'], request.form['email'], hash)
             if res:
@@ -97,15 +100,18 @@ def login():
 
     return render_template("login.html")
 
+
 @login_manager.unauthorized_handler
 def unauthorized_callback():
     return redirect('/login')
+
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect('reg')
+
 
 @login_required
 @app.route("/add_post", methods=["POST", "GET"])
