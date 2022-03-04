@@ -19,10 +19,11 @@ class FDataBase:
             print("Ошибка чтения из БД")
         return []
 
-    def addPost(self, title, text):
+    def addPost(self, amount, description, date, who):
         try:
-            tm = datetime.date.today()
-            self.__cur.execute("INSERT INTO posts VALUES(NULL, ?, ?, ?)", (title, text, tm))
+            if date == "": date = datetime.date.today()
+            if who == "": who = "Костя"
+            self.__cur.execute("INSERT INTO posts VALUES(NULL, ?, ?, ?, ?)", (amount, description, date, who))
             self.__db.commit()
         except sqlite3.Error as e:
             print("Ошибка добавления статьи в БД " + str(e))

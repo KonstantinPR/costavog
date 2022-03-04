@@ -53,7 +53,10 @@ def addPost():
     dbase = FDataBase(db)
 
     if request.method == "POST":
-        res = dbase.addPost(request.form['amount'], request.form['description'])
+        res = dbase.addPost(request.form['amount'],
+                            request.form['description'],
+                            request.form['date'],
+                            request.form['who'])
         if not res:
             flash('Ошибка добавления статьи', category='error')
         else:
