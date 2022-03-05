@@ -8,7 +8,7 @@ class UserLogin:
         return self
 
     def is_authenticated(self):
-        return False
+        return True
 
     def is_active(self):
         return True

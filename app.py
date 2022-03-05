@@ -62,11 +62,6 @@ def close_db(error):
         g.link_db.close()
 
 
-@app.route("/")
-def index():
-    return render_template("add_post.html")
-
-
 @app.route("/reg", methods=["POST", "GET"])
 def reg():
     if request.method == "POST":
@@ -114,7 +109,7 @@ def logout():
 
 
 
-@app.route("/add_post", methods=["POST", "GET"])
+@app.route("/", methods=["POST", "GET"])
 @login_required
 def addPost():
     if request.method == "POST":

@@ -7,7 +7,7 @@
 {% block content %}
 {{ super() }}
 {% for cat, msg in get_flashed_messages(True) %}
-<div class="row flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+<div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
 {% endfor %}
 
 
