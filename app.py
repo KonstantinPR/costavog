@@ -113,8 +113,9 @@ def logout():
     return redirect('reg')
 
 
-@login_required
+
 @app.route("/add_post", methods=["POST", "GET"])
+@login_required
 def addPost():
     if request.method == "POST":
         res = dbase.addPost(request.form['amount'],
