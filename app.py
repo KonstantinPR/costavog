@@ -61,7 +61,8 @@ def login():
             login_user(user)
             return redirect('/blog')
 
-    return render_template('login.html')
+    company = Company.query.filter_by(id=current_user.company_id).first()
+    return render_template('login.html', company_name=company.company_name)
 
 
 @app.route('/company_register', methods=['POST', 'GET'])

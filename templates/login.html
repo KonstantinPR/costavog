@@ -18,7 +18,8 @@
         <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
 
         <div class="form-floating">
-            <input type="text" class="form-control" placeholder="Company Name" name="company_name">
+            <input type="text" class="form-control" placeholder="Company Name" value="{{company_name}}"
+                   name="company_name">
             <label for="floatingInput">Company Name</label>
         </div>
         <div class="form-floating">
@@ -34,6 +35,12 @@
         <button class="w-100 btn btn-lg btn-primary" type="submit">Войти</button>
         <br>
         <br>
+
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" value="remember-me" name="remember"> Запомнить меня?
+            </label>
+        </div>
         <div class="checkbox mb-3">
             <label>
                 <a href="{{url_for('company_register')}}">Не зарегистрированы?</a>
