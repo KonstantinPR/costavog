@@ -42,8 +42,8 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.String(80), unique=False)
-    description = db.Column(db.String(100))
-    username = db.Column(db.String(100))
+    description = db.Column(db.String(500))
+    user_name = db.Column(db.String(100))
     date = db.Column(db.String(100))
 
 
