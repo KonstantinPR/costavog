@@ -52,7 +52,6 @@ def login():
 
 @app.route('/company_register', methods=['POST', 'GET'])
 def company_register():
-
     if request.method == 'POST':
         company_name = request.form['company_name']
         password = request.form['password']
@@ -75,6 +74,7 @@ def user_register():
         return redirect('/company_register')
 
     if request.method == 'POST':
+
         user_name = request.form['user_name']
         user_password = request.form['user_password']
 
