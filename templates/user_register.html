@@ -14,28 +14,20 @@
 <body class="text-center">
 <div class="container">
 <main class="form-signin">
-    <form action="{{url_for('register')}}" method="post">
+    <form action="{{url_for('user_register')}}" method="post">
         <h1 class="h3 mb-3 fw-normal">Регистрация</h1>
 
         <div class="form-floating">
-            <input type="text" class="form-control" id="floatingName" placeholder="Name" name="username">
-            <label for="floatingName">Name</label>
+            <input type="text" class="form-control" id="floatingUserName" placeholder="UserName" name="user_name">
+            <label for="floatingUserName">Name</label>
         </div>
         <div class="form-floating">
-            <input type="email" class="form-control" id="floatingEmail" placeholder="Email" name="email">
+            <input type="text" class="form-control" id="floatingEmail" placeholder="Email" name="email">
             <label for="floatingEmail">Email</label>
         </div>
         <div class="form-floating">
-            <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password">
-            <label for="floatingPassword">Password</label>
-        </div>
-        <div class="form-floating">
-            <input type="password" class="form-control" id="floatingPassword2" placeholder="Password" name="password2">
-            <label for="floatingPassword2">Password repeat</label>
-        </div>
-        <div class="form-floating">
-            <input type="password" class="form-control" id="floatingSecretKey" placeholder="floatingSecretKey" name="skey">
-            <label for="floatingSecretKey">Ключ</label>
+            <input type="password" class="form-control" id="floatingUserPassword" placeholder="UserPassword" name="user_password">
+            <label for="floatingUserPassword">Ключ</label>
         </div>
 
         <br>

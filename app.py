@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
-from models import UserModel, Post, Task, db, login
+from models import Company, UserModel, Post, Task, db, login
 import datetime
 
 app = Flask(__name__)
@@ -8,7 +8,6 @@ app.secret_key = 'xyz'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 
 db.init_app(app)
 login.init_app(app)
@@ -27,8 +26,7 @@ def blog():
         amount = request.form['amount']
         description = request.form['description']
         if request.form['date'] == "": date = datetime.date.today()
-        print (date)
-        if not request.form['username']: username = "I am bro"
+        if not request.form['username']: username = "oooollll"
         post = Post(amount=amount, description=description, date=date, username=username)
         db.session.add(post)
         db.session.commit()
@@ -44,7 +42,7 @@ def login():
 
     if request.method == 'POST':
         email = request.form['email']
-        user = UserModel.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
         if user is not None and user.check_password(request.form['password']):
             login_user(user)
             return redirect('/blog')
@@ -52,25 +50,43 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/register', methods=['POST', 'GET'])
-def register():
-    if current_user.is_authenticated:
-        return redirect('/blog')
+@app.route('/company_register', methods=['POST', 'GET'])
+def company_register():
 
     if request.method == 'POST':
-        email = request.form['email']
-        username = request.form['username']
+        company_name = request.form['company_name']
         password = request.form['password']
 
-        if UserModel.query.filter_by(email=email).first():
+        if Company.query.filter_by(company_name=company_name).first():
             return ('Email already Present')
 
-        user = UserModel(email=email, username=username)
-        user.set_password(password)
+        company = Company(company_name=company_name)
+        company.set_password(password)
+        db.session.add(company)
+        db.session.commit()
+
+        return redirect('/login')
+    return render_template('company_register.html')
+
+
+@app.route('/user_register', methods=['POST', 'GET'])
+def user_register():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        user_name = request.form['user_name']
+        user_password = request.form['user_password']
+
+        if UserModel.query.filter_by(user_name=user_name).first():
+            return ('User_name already Present')
+
+        user = UserModel(user_name=user_name)
+        user.set_password(user_password)
         db.session.add(user)
         db.session.commit()
-        return redirect('/login')
-    return render_template('register.html')
+        return redirect('/blog')
+    return render_template('user_register.html')
 
 
 @app.route('/logout')
@@ -80,4 +96,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8000, debug=True)
+    app.run(host="localhost", port=8001, debug=True)

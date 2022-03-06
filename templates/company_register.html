@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block add_style %}
+<link href="{{url_for('static', filename='reg.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+{% for cat, msg in get_flashed_messages(True) %}
+<div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+{% endfor %}
+
+
+<body class="text-center">
+<div class="container">
+<main class="form-signin">
+    <form action="{{url_for('company_register')}}" method="post">
+        <h1 class="h3 mb-3 fw-normal">Регистрация</h1>
+
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingCompanyName" placeholder="CompanyName" name="company_name">
+            <label for="floatingCompanyName">Company Name</label>
+        </div>
+        <div class="form-floating">
+            <input type="text" class="form-control" id="floatingName" placeholder="floatingName" name="user_name">
+            <label for="floatingName">Name</label>
+        </div>
+        <div class="form-floating">
+            <input type="email" class="form-control" id="floatingEmail" placeholder="Email" name="email">
+            <label for="floatingEmail">Email</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password">
+            <label for="floatingPassword">Password</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="floatingPassword2" placeholder="Password" name="password2">
+            <label for="floatingPassword2">Password repeat</label>
+        </div>
+
+        <br>
+
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" value="remember-me"> Зарегистрироваться
+            </label>
+        </div>
+
+
+        <button class="w-100 btn btn-lg btn-primary" type="submit">Зарегистрироваться</button>
+
+        <br>
+        <br>
+
+        <div class="checkbox mb-3">
+            <label>
+                <a href="{{url_for('login')}}">Уже зарегистрированы?</a>
+            </label>
+        </div>
+
+    </form>
+</main>
+</div>
+
+{% endblock %}
