@@ -1,137 +1,83 @@
-from flask import Flask, render_template, g, request, flash, redirect, url_for
-import sqlite3
-import os
-from FDataBase import FDataBase
+from flask import Flask, render_template, request, redirect
+from flask_login import login_required, current_user, login_user, logout_user
+from models import UserModel, Post, Task, db, login
 import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, logout_user, login_required
-from UserLogin import UserLogin
-
-DATABASE = '/tmp/flsite.db'
-DEBUG = True
-SECRET_KEY = 'jfdlgjshfdlgjhsfdg'
-SKEY = "14569985217456332587"
 
 app = Flask(__name__)
-login_manager = LoginManager(app)
-app.config['SECRET_KEY'] = 'dfgqwerg98a9er1v9a8aklyi8467948ga9348gz998aemn,498qs91b6z3z798'
-app.config.from_object(__name__)
+app.secret_key = 'xyz'
 
-app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
-
-dbase = None
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
-@app.before_request
-def before_request():
-    """Установление соединения с БД перед выполнением запроса"""
-    global dbase
-    db = get_db()
-    dbase = FDataBase(db)
+db.init_app(app)
+login.init_app(app)
+login.login_view = 'login'
 
 
-def connect_db():
-    conn = sqlite3.connect(app.config['DATABASE'])
-    conn.row_factory = sqlite3.Row
-    return conn
+@app.before_first_request
+def create_all():
+    db.create_all()
 
 
-def create_db():
-    db = connect_db()
-    with app.open_resource('sq_db.sql', mode='r') as f:
-        db.cursor().executescript(f.read())
-    db.commit()
-    db.close()
-
-
-def get_db():
-    if not hasattr(g, 'link_db'):
-        g.link_db = connect_db()
-    return g.link_db
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    print("load_user")
-    return UserLogin().fromDB(user_id, dbase)
-
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'link_db'):
-        g.link_db.close()
-
-
-@app.route("/reg", methods=["POST", "GET"])
-def reg():
-    if request.method == "POST":
-        if len(request.form['name']) > 1 and len(request.form['email']) > 1 \
-                and len(request.form['psw']) > 1 and \
-                request.form['psw'] == request.form['psw2'] and\
-                request.form['skey'] == SKEY:
-            hash = generate_password_hash(request.form['psw'])
-            res = dbase.addUser(request.form['name'], request.form['email'], hash)
-            if res:
-                flash("Вы успешно зарегистрированы", "success")
-                return redirect(url_for('login'))
-            else:
-                flash("Ошибка при добавлении в БД", "error")
-        else:
-            flash("Неверно заполнены поля", "error")
-
-    return render_template("reg.html", title="Регистрация")
-
-
-@app.route("/login", methods=["POST", "GET"])
-def login():
-    if request.method == "POST":
-        user = dbase.getUserByEmail(request.form['email'])
-        if user and check_password_hash(user['psw'], request.form['psw']):
-            userlogin = UserLogin().create(user)
-            login_user(userlogin)
-            return redirect(url_for('addPost'))
-
-        flash("Неверная пара логин/пароль", "error")
-
-    return render_template("login.html")
-
-
-@login_manager.unauthorized_handler
-def unauthorized_callback():
-    return redirect('/login')
-
-
-@app.route("/logout")
+@app.route('/blog', methods=['POST', 'GET'])
 @login_required
+def blog():
+    if request.method == 'POST':
+        amount = request.form['amount']
+        description = request.form['description']
+        if request.form['date'] == "": date = datetime.date.today()
+        print (date)
+        if not request.form['username']: username = "I am bro"
+        post = Post(amount=amount, description=description, date=date, username=username)
+        db.session.add(post)
+        db.session.commit()
+
+    posts = db.session.query(Post).all()
+    return render_template('blog.html', posts=posts)
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if current_user.is_authenticated:
+        return redirect('/blog')
+
+    if request.method == 'POST':
+        email = request.form['email']
+        user = UserModel.query.filter_by(email=email).first()
+        if user is not None and user.check_password(request.form['password']):
+            login_user(user)
+            return redirect('/blog')
+
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    if current_user.is_authenticated:
+        return redirect('/blog')
+
+    if request.method == 'POST':
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+
+        if UserModel.query.filter_by(email=email).first():
+            return ('Email already Present')
+
+        user = UserModel(email=email, username=username)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        return redirect('/login')
+    return render_template('register.html')
+
+
+@app.route('/logout')
 def logout():
     logout_user()
-    return redirect('reg')
-
-
-
-@app.route("/", methods=["POST", "GET"])
-@login_required
-def addPost():
-    if request.method == "POST":
-        res = dbase.addPost(request.form['amount'],
-                            request.form['description'],
-                            request.form['date'],
-                            request.form['who'])
-        if not res:
-            flash('Ошибка добавления статьи', category='error')
-        else:
-            flash('Статья добавлена успешно', category='success')
-    return render_template('add_post.html', posts=dbase.getPosts(), title="Добавление статьи")
-
-
-@app.route("/post/<int:id_post>")
-def showPost(id_post):
-    title, post = dbase.getPost(id_post)
-    if not title:
-        abort(404)
-
-    return render_template('post.html', menu=dbase.getMenu(), title=title, post=post)
+    return redirect('/blog')
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="localhost", port=8000, debug=True)
