@@ -56,6 +56,8 @@ def login():
         company_name = request.form['company_name']
         user_name = request.form['user_name']
         password = request.form['password']
+        remember = True if request.form.get('remember') else False
+        print(remember)
 
         company_id = Company.query.filter_by(company_name=company_name).first()
         if not company_id:
@@ -66,7 +68,7 @@ def login():
             user = UserModel.query.filter_by(user_name=user_name, company_id=company_id.id).first()
 
         if user is not None:
-            login_user(user)
+            login_user(user, remember=remember)
             return redirect('/blog')
 
     if current_user.is_authenticated:
