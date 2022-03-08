@@ -31,7 +31,10 @@ def blog():
         amount = request.form['amount']
         description = request.form['description']
 
-        if request.form['date'] == "": date = datetime.date.today()
+        if request.form['date'] == "":
+            date = datetime.date.today()
+        else:
+            date = request.form['date']
         if request.form['user_name'] == "":
             user_name = current_user.user_name
         else:
