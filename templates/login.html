@@ -6,14 +6,21 @@
 
 {% block content %}
 {{ super() }}
-{% for cat, msg in get_flashed_messages(True) %}
-<div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-{% endfor %}
 
 
 <body class="text-center">
 
+
+<body id="body-pd">
+
+
+
 <main class="form-signin">
+
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
     <form action="{{url_for('login')}}" method="post">
         <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
 
@@ -23,7 +30,7 @@
             <label for="floatingInput">Company Name</label>
         </div>
         <div class="form-floating">
-            <input type="text" class="form-control" id="floatingInput" placeholder="Name" name="user_name">
+            <input type="text" class="form-control" id="floatingInput" placeholder="Name" value="{{user_name}}" name="user_name">
             <label for="floatingInput">User Name</label>
         </div>
         <div class="form-floating">
@@ -36,14 +43,19 @@
         <br>
         <br>
 
-        <div class="checkbox mb-3">
+        <div class="text-left checkbox mb-3">
             <label>
                 <input type="checkbox" value="remember-me" name="remember"> Запомнить меня?
             </label>
         </div>
-        <div class="checkbox mb-3">
+        <div class="pull-left mb-3">
             <label>
-                <a href="{{url_for('company_register')}}">Не зарегистрированы?</a>
+                <a href="{{url_for('company_register')}}">Зарегистрировать компанию</a>
+            </label>
+        </div>
+        <div class="text-left mb-3">
+            <label>
+                <a href="{{url_for('user_register')}}">Зарегистрироваться как пользователь</a>
             </label>
         </div>
     </form>

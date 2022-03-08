@@ -6,13 +6,15 @@
 
 {% block content %}
 {{ super() }}
-{% for cat, msg in get_flashed_messages(True) %}
-<div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-{% endfor %}
+
 
 <body class="bg-light">
 <div class="container">
     <main>
+
+        {% for cat, msg in get_flashed_messages(True) %}
+        <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+        {% endfor %}
 
         <div class="py-5 text-center">
             <h2></h2>

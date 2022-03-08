@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
 from models import Company, UserModel, Post, Task, db, login
 import datetime
@@ -21,25 +21,28 @@ def create_all():
 
 
 @app.route('/blog', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 @login_required
 def blog():
     if not current_user.is_authenticated:
         return redirect('/company_register')
+    company_id = current_user.company_id
     if request.method == 'POST':
         amount = request.form['amount']
         description = request.form['description']
+
         if request.form['date'] == "": date = datetime.date.today()
         if request.form['user_name'] == "":
             user_name = current_user.user_name
         else:
             user_name = request.form['user_name']
 
-        post = Post(amount=amount, description=description, date=date, user_name=user_name)
+        post = Post(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
         db.session.add(post)
         db.session.commit()
 
     user_name = current_user.user_name
-    posts = db.session.query(Post).all()
+    posts = db.session.query(Post).filter_by(company_id=company_id).all()
     print(posts)
     return render_template('blog.html', posts=posts, user_name=user_name)
 
@@ -52,7 +55,9 @@ def login():
         password = request.form['password']
 
         company_id = Company.query.filter_by(company_name=company_name).first()
-        print(company_id.id)
+        if not company_id:
+            flash("No such company name registered")
+            return render_template('login.html', company_name=request.form['company_name'])
 
         if check_password_hash(company_id.password_hash, password):
             user = UserModel.query.filter_by(user_name=user_name, company_id=company_id.id).first()
@@ -61,25 +66,37 @@ def login():
             login_user(user)
             return redirect('/blog')
 
-    company = Company.query.filter_by(id=current_user.company_id).first()
-    return render_template('login.html', company_name=company.company_name)
+    if current_user.is_authenticated:
+        company = Company.query.filter_by(id=current_user.company_id).first()
+        company_name = company.company_name
+    else:
+        company_name = ""
+
+    return render_template('login.html', company_name=company_name)
 
 
 @app.route('/company_register', methods=['POST', 'GET'])
 def company_register():
     if request.method == 'POST':
         company_name = request.form['company_name']
+        user_name = request.form['user_name']
         password = request.form['password']
-
-        if Company.query.filter_by(company_name=company_name).first():
-            return ('Email already Present')
 
         company = Company(company_name=company_name)
         company.set_password(password)
         db.session.add(company)
         db.session.commit()
 
-        return redirect('/login')
+        company_id = company.id
+        user = UserModel(user_name=user_name, company_id=company_id)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        db.session.commit()
+        flash(f"Компания {company_name} с пользователем {user_name} зарегистрирована")
+        return render_template('login.html', company_name=company_name, user_name=user_name)
+
     return render_template('company_register.html')
 
 
