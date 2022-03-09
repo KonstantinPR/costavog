@@ -87,17 +87,19 @@
                 </div>
 
                 {% for p in posts %}
-                <div class="row row-striped p-3">
-                    <div class="col">
-                        <b>{{p.date}}</b>
+                <a href={{url_for('post_edit', id=p.id)}}>
+                    <div class="row row-striped p-3">
+                        <div class="col">
+                            <b>{{p.date}}</b>
+                        </div>
+                        <div class="col">
+                            {{p.amount}}
+                        </div>
+                        <div class="col-6">
+                            {{p.description}}
+                        </div>
                     </div>
-                    <div class="col">
-                        {{p.amount}}
-                    </div>
-                    <div class="col-6">
-                        {{p.description}}
-                    </div>
-                </div>
+                </a>
                 {% endfor %}
 
             </div>

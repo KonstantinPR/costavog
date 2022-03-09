@@ -50,6 +50,32 @@ def blog():
     return render_template('blog.html', posts=posts, user_name=user_name)
 
 
+@app.route('/post_edit/<int:id>', methods=['POST', 'GET'])
+def post_edit(id):
+    if request.method == 'POST':
+        amount = request.form['amount']
+        description = request.form['description']
+        date = request.form['date']
+        user_name = request.form['user_name']
+        post = Post.query.filter_by(id=id).one()
+        post.amount = amount
+        post.description = description
+        post.date = date
+        post.user_name = user_name
+        db.session.add(post)
+        db.session.commit()
+        flash("Changing completed")
+
+    else:
+        post = Post.query.filter_by(id=id).first()
+        amount = post.amount
+        description = post.description
+        date = post.date
+        user_name = post.user_name
+
+    return render_template('post.html', amount=amount, description=description, date=date, user_name=user_name, id=id)
+
+
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
