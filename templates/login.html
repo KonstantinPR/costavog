@@ -1,22 +1,14 @@
 {% extends 'base.html' %}
-
 {% block add_style %}
 <link href="{{url_for('static', filename='reg.css') }}" rel="stylesheet">
 {% endblock %}
 
+
 {% block content %}
 {{ super() }}
 
-
-<body class="text-center">
-
-
-<body id="body-pd">
-
-
-
+<div class="centered">
 <main class="form-signin">
-
     {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
@@ -30,7 +22,8 @@
             <label for="floatingInput">Company Name</label>
         </div>
         <div class="form-floating">
-            <input type="text" class="form-control" id="floatingInput" placeholder="Name" value="{{user_name}}" name="user_name">
+            <input type="text" class="form-control" id="floatingInput" placeholder="Name" value="{{user_name}}"
+                   name="user_name">
             <label for="floatingInput">User Name</label>
         </div>
         <div class="form-floating">
@@ -60,7 +53,7 @@
         </div>
     </form>
 </main>
-
+</div>
 
 {% endblock %}
 

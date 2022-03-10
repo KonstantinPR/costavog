@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-
 {% block add_style %}
 
 {% endblock %}
@@ -8,8 +7,7 @@
 {{ super() }}
 
 
-<body class="bg-light">
-<div class="container">
+
     <main>
 
         {% for cat, msg in get_flashed_messages(True) %}
@@ -113,6 +111,6 @@
 
         </ul>
     </footer>
-</div>
+
 
 {% endblock %}
