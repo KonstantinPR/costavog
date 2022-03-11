@@ -7,86 +7,86 @@
 {{ super() }}
 
 
+<main>
 
-    <main>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
 
-        {% for cat, msg in get_flashed_messages(True) %}
-        <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-        {% endfor %}
+    <div class="py-5 text-center">
+        <h2></h2>
+    </div>
 
-        <div class="py-5 text-center">
-            <h2></h2>
-        </div>
+    <div class="row g-5">
 
-        <div class="row g-5">
-
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                <h4 class="mb-3"></h4>
-                <form class="needs-validation" action="{{url_for('blog')}}" method="post" novalidate>
-                    <div class="row">
-                        <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
-                            <input autofocus type="number" class="form-control form-control-lg" id="amount"
-                                   name="amount"
-                                   placeholder="Сумма" value=""
-                                   required>
-                            <div class="invalid-feedback">
-                                Valid first name is required.
-                            </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <h4 class="mb-3"></h4>
+            <form class="needs-validation" action="{{url_for('blog')}}" method="post" novalidate>
+                <div class="row">
+                    <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
+                        <input autofocus type="number" class="form-control form-control-lg" id="amount"
+                               name="amount"
+                               placeholder="Сумма" value=""
+                               required>
+                        <div class="invalid-feedback">
+                            Valid first name is required.
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <textarea class="form-control form-control-lg" rows="1" cols="45"
                                       id="description" name="description"
                                       placeholder="Описание"
                                       required></textarea>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
-                            </div>
+                        <div class="invalid-feedback">
+                            Valid last name is required.
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <input type="date" class="form-control form-control-lg" id="date" name="date"
-                                   placeholder="Дата"
-                                   value="" required>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
-                            </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                        <input type="date" class="form-control form-control-lg" id="date" name="date"
+                               placeholder="Дата"
+                               value="" required>
+                        <div class="invalid-feedback">
+                            Valid last name is required.
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <input type="text" class="form-control form-control-lg" id="who" name="user_name"
-                                   placeholder="Имя"
-                                   value="{{user_name}}" required>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                        <input type="text" class="form-control form-control-lg" id="who" name="user_name"
+                               placeholder="Имя"
+                               value="{{user_name}}" required>
+                        <div class="invalid-feedback">
+                            Valid last name is required.
 
-                            </div>
                         </div>
-
-
                     </div>
-                    <div class="my-4"></div>
-
-                    <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
-
-                </form>
-
-                <br>
-                <br>
 
 
-                <div class="row p-3">
-                    <div class="col">
-                        <b>Дата</b>
-                    </div>
-                    <div class="col">
-                        <b>Сумма</b>
-                    </div>
-                    <div class="col-6">
-                        <b>Описание</b>
-                    </div>
                 </div>
+                <div class="my-4"></div>
 
-                {% for p in posts %}
+                <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
+
+            </form>
+
+            <br>
+            <br>
+
+
+            <div class="row p-3">
+                <div class="col">
+                    <b>Дата</b>
+                </div>
+                <div class="col">
+                    <b>Сумма</b>
+                </div>
+                <div class="col-6">
+                    <b>Описание</b>
+                </div>
+            </div>
+
+            {% for p in posts %}
+            <div class="row-striped row">
                 <a href={{url_for('post_edit', id=p.id)}}>
-                    <div class="row row-striped p-3">
+                    <div class="d_hover row p-3">
                         <div class="col">
                             <b>{{p.date}}</b>
                         </div>
@@ -98,19 +98,20 @@
                         </div>
                     </div>
                 </a>
-                {% endfor %}
-
             </div>
+            {% endfor %}
+
         </div>
-    </main>
+    </div>
+</main>
 
 
-    <footer class="my-5 pt-5 text-muted text-center text-small">
-        <p class="mb-1"></p>
-        <ul class="list-inline">
+<footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1"></p>
+    <ul class="list-inline">
 
-        </ul>
-    </footer>
+    </ul>
+</footer>
 
 
 {% endblock %}
