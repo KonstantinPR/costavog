@@ -171,6 +171,7 @@ def login():
         remember = True if request.form.get('remember') else False
         print(remember)
 
+
         company_id = Company.query.filter_by(company_name=company_name).first()
         if not company_id:
             flash("No such company name registered")
