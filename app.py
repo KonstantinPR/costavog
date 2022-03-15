@@ -121,8 +121,6 @@ def tasks():
 
     user_name = current_user.user_name
     tasks = db.session.query(Task).filter_by(company_id=company_id).all()
-    print(tasks)
-    print(tasks[0].user_name)
     return render_template('tasks.html', tasks=tasks, user_name=user_name)
 
 
