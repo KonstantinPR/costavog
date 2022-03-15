@@ -54,7 +54,8 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.String(80), unique=False)
     description = db.Column(db.String(100))
-    username = db.Column(db.String(100))
+    user_name = db.Column(db.String(100))
+    company_id = db.Column(db.String(100))
     date = db.Column(db.String(100))
 
 
