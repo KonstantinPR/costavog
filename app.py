@@ -126,6 +126,10 @@ def tasks():
 
 @app.route('/task_edit/<int:id>', methods=['POST', 'GET'])
 def task_edit(id):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+
     if request.method == 'POST':
         amount = request.form['amount']
         description = request.form['description']
@@ -146,8 +150,15 @@ def task_edit(id):
         description = task.description
         date = task.date
         user_name = task.user_name
+        return render_template('task.html',
+                               amount=amount,
+                               description=description,
+                               date=date,
+                               user_name=user_name,
+                               id=id)
 
-    return render_template('task.html', amount=amount, description=description, date=date, user_name=user_name, id=id)
+    tasks = db.session.query(Task).filter_by(company_id=company_id).all()
+    return render_template('tasks.html', tasks=tasks, user_name=user_name)
 
 
 @app.route('/task_delete/<int:id>', methods=['POST', 'GET'])
@@ -168,7 +179,6 @@ def login():
         password = request.form['password']
         remember = True if request.form.get('remember') else False
         print(remember)
-
 
         company_id = Company.query.filter_by(company_name=company_name).first()
         if not company_id:
