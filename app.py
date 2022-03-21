@@ -75,8 +75,14 @@ def post_edit(id):
         description = post.description
         date = post.date
         user_name = post.user_name
-
-    return render_template('post.html', amount=amount, description=description, date=date, user_name=user_name, id=id)
+        return render_template('post.html', 
+                               amount=amount, 
+                               description=description, 
+                               date=date, 
+                               user_name=user_name, 
+                               id=id)
+        
+    return redirect('/blog')
 
 
 @app.route('/post_delete/<int:id>', methods=['POST', 'GET'])
@@ -158,7 +164,7 @@ def task_edit(id):
                                id=id)
 
     tasks = db.session.query(Task).filter_by(company_id=company_id).all()
-    return render_template('tasks.html', tasks=tasks, user_name=user_name)
+    return redirect('/tasks')
 
 
 @app.route('/task_delete/<int:id>', methods=['POST', 'GET'])
