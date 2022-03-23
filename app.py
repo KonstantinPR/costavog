@@ -18,6 +18,7 @@ login.login_view = 'login'
 
 @app.before_first_request
 def create_all():
+    print ("hi my little friend")
     db.create_all()
 
 
