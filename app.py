@@ -21,9 +21,9 @@ def hello():
     return ("hello")
 
 
-@app.before_first_request
-def create_all():
-    db.create_all()
+# @app.before_first_request
+# def create_all():
+#     db.create_all()
 
 
 # ///POSTS////////////
