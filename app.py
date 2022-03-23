@@ -10,7 +10,7 @@ from os import environ
 app = Flask(__name__)
 app.secret_key = 'xyz'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -26,8 +26,16 @@ def create_all():
 # ///POSTS////////////
 
 
-@app.route('/blog', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
+@login_required
+def index():
+    if not current_user.is_authenticated:
+        return "hello unregister friend"
+    else:
+        return "hello registered friend"
+
+
+@app.route('/blog', methods=['POST', 'GET'])
 @login_required
 def blog():
     if not current_user.is_authenticated:
