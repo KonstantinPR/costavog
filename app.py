@@ -10,7 +10,7 @@ from os import environ
 app = Flask(__name__)
 app.secret_key = 'xyz'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -78,11 +78,11 @@ def post_edit(id):
         description = post.description
         date = post.date
         user_name = post.user_name
-        return render_template('post.html', 
-                               amount=amount, 
-                               description=description, 
-                               date=date, 
-                               user_name=user_name, 
+        return render_template('post.html',
+                               amount=amount,
+                               description=description,
+                               date=date,
+                               user_name=user_name,
                                id=id)
 
     return redirect('/blog')
