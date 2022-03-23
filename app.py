@@ -3,8 +3,6 @@ from flask_login import login_required, current_user, login_user, logout_user
 from models import Company, UserModel, Post, Task, db, login
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
-import sys
 from os import environ
 
 app = Flask(__name__)
