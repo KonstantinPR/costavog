@@ -3,11 +3,14 @@ from flask_login import login_required, current_user, login_user, logout_user
 from models import Company, UserModel, Post, Task, db, login
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
+import sys
+from os import environ
 
 app = Flask(__name__)
 app.secret_key = 'xyz'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -81,7 +84,7 @@ def post_edit(id):
                                date=date, 
                                user_name=user_name, 
                                id=id)
-        
+
     return redirect('/blog')
 
 
