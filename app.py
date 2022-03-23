@@ -7,7 +7,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from os import environ
 
 app = Flask(__name__)
-migrate = Migrate(app,db)
 app.secret_key = 'xyz'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgresql://postgres:19862814@localhost/data'
@@ -17,6 +16,7 @@ db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
 
+migrate = Migrate(app, db)
 
 @app.route('/hello')
 def hello():
