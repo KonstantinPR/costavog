@@ -1,4 +1,5 @@
 from flask import Flask, flash, render_template, request, redirect
+from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
 from models import Company, UserModel, Post, Task, db, login
 import datetime
@@ -6,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from os import environ
 
 app = Flask(__name__)
+migrate = Migrate(app,db)
 app.secret_key = 'xyz'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgresql://postgres:19862814@localhost/data'
@@ -21,9 +23,9 @@ def hello():
     return ("hello")
 
 
-# @app.before_first_request
-# def create_all():
-#     db.create_all()
+@app.before_first_request
+def create_all():
+    db.create_all()
 
 
 # ///POSTS////////////
