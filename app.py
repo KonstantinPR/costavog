@@ -26,16 +26,17 @@ def create_all():
 # ///POSTS////////////
 
 
-@app.route('/', methods=['POST', 'GET'])
-@login_required
-def index():
-    if not current_user.is_authenticated:
-        return "hello unregister friend"
-    else:
-        return "hello registered friend"
+# @app.route('/', methods=['POST', 'GET'])
+# @login_required
+# def index():
+#     if not current_user.is_authenticated:
+#         return "hello unregister friend"
+#     else:
+#         return "hello registered friend"
 
 
 @app.route('/blog', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 @login_required
 def blog():
     if not current_user.is_authenticated:
@@ -59,8 +60,11 @@ def blog():
         db.session.commit()
 
     user_name = current_user.user_name
-    posts = db.session.query(Post).filter_by(company_id=company_id).all()
-    print(posts)
+    try:
+        posts = db.session.query(Post).filter_by(company_id=company_id).all()
+    except ValueError:
+        posts = ""
+        'base is empty'
     return render_template('blog.html', posts=posts, user_name=user_name)
 
 

@@ -44,7 +44,7 @@ class Post(db.Model):
     amount = db.Column(db.String(80), unique=False)
     description = db.Column(db.String(500))
     user_name = db.Column(db.String(100))
-    company_id = db.Column(db.String(100))
+    company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
 
 
@@ -55,7 +55,7 @@ class Task(db.Model):
     amount = db.Column(db.String(80), unique=False)
     description = db.Column(db.String(100))
     user_name = db.Column(db.String(100))
-    company_id = db.Column(db.String(100))
+    company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
 
 
