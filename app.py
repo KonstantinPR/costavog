@@ -8,6 +8,7 @@ from os import environ
 app = Flask(__name__)
 app.secret_key = 'xyz'
 
+
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgresql://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -16,10 +17,10 @@ login.init_app(app)
 login.login_view = 'login'
 
 
-@app.before_first_request
-def create_all():
-    print ("hi my little friend")
-    db.create_all()
+# @app.before_first_request
+# def create_all():
+#     print("hi my little friend")
+#     db.create_all()
 
 
 # ///POSTS////////////
