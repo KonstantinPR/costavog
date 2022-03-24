@@ -46,8 +46,8 @@ class Company(db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-class Post(db.Model):
-    __tablename__ = 'posts'
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
 
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.String(80), unique=False)

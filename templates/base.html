@@ -57,18 +57,19 @@
 
 <body id="body-pd" class="text-center">
 <nav class="navbar navbar-expand-lg navbar-light bg-light p-3">
-    <a href={{url_for('blog')}} class="navbar-brand">TASKER</a>
+    <a href={{url_for('transactions')}} class="navbar-brand">TASKER</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
             aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-            <a class="nav-item nav-link active" href="{{url_for('blog')}}">Финансы</a>
+            <a class="nav-item nav-link active" href="{{url_for('transactions')}}">Финансы</a>
             <a class="nav-item nav-link active" href="{{url_for('tasks')}}">Задачи</a>
             <a class="nav-item nav-link" href="{{url_for('login')}}">Login</a>
             <a class="nav-item nav-link" href="{{url_for('logout')}}">Logout</a>
-            <a class="nav-item nav-link" href="{{url_for('user_register')}}">Register</a>
+            <a class="nav-item nav-link" href="{{url_for('user_register')}}">User register</a>
+            <a class="nav-item nav-link" href="{{url_for('company_register')}}">Company register</a>
         </div>
     </div>
 </nav>

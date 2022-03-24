@@ -1,7 +1,7 @@
 from flask import Flask, flash, render_template, request, redirect
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
-from models import Company, UserModel, Post, Task, db, login
+from models import Company, UserModel, Transaction, Task, db, login
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -43,8 +43,7 @@ def hello():
     return ("hello this is DATABASE_URL_now= " + str(DATABASE_URL_now) + ' and Ura = ' + ura + ' uri_old = ' + uri_old)
 
 
-# @app.before_first_request
-@app.route('/create-all')
+@app.before_first_request
 def create_all():
     db.create_all()
 
@@ -61,10 +60,10 @@ def create_all():
 #         return "hello registered friend"
 
 
-@app.route('/blog', methods=['POST', 'GET'])
+@app.route('/transactions', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 @login_required
-def blog():
+def transactions():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
@@ -81,59 +80,59 @@ def blog():
         else:
             user_name = request.form['user_name']
 
-        post = Post(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
-        db.session.add(post)
+        transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
+        db.session.add(transaction)
         db.session.commit()
 
     user_name = current_user.user_name
     try:
-        posts = db.session.query(Post).filter_by(company_id=company_id).all()
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).all()
     except ValueError:
-        posts = ""
+        transactions = ""
         'base is empty'
-    return render_template('blog.html', posts=posts, user_name=user_name)
+    return render_template('transactions.html', transactions=transactions, user_name=user_name)
 
 
-@app.route('/post_edit/<int:id>', methods=['POST', 'GET'])
-def post_edit(id):
+@app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
+def transaction_edit(id):
     if request.method == 'POST':
         amount = request.form['amount']
         description = request.form['description']
         date = request.form['date']
         user_name = request.form['user_name']
-        post = Post.query.filter_by(id=id).one()
-        post.amount = amount
-        post.description = description
-        post.date = date
-        post.user_name = user_name
-        db.session.add(post)
+        transaction = Transaction.query.filter_by(id=id).one()
+        transaction.amount = amount
+        transaction.description = description
+        transaction.date = date
+        transaction.user_name = user_name
+        db.session.add(transaction)
         db.session.commit()
         flash("Changing completed")
 
     else:
-        post = Post.query.filter_by(id=id).first()
-        amount = post.amount
-        description = post.description
-        date = post.date
-        user_name = post.user_name
-        return render_template('post.html',
+        transaction = Transaction.query.filter_by(id=id).first()
+        amount = transaction.amount
+        description = transaction.description
+        date = transaction.date
+        user_name = transaction.user_name
+        return render_template('transaction.html',
                                amount=amount,
                                description=description,
                                date=date,
                                user_name=user_name,
                                id=id)
 
-    return redirect('/blog')
+    return redirect('/transactions')
 
 
-@app.route('/post_delete/<int:id>', methods=['POST', 'GET'])
-def post_delete(id):
+@app.route('/transaction_delete/<int:id>', methods=['POST', 'GET'])
+def transaction_delete(id):
     flash("Запись удалена")
-    post = Post.query.filter_by(id=id).one()
-    db.session.delete(post)
+    transaction = Transaction.query.filter_by(id=id).one()
+    db.session.delete(transaction)
     db.session.commit()
 
-    return render_template('blog.html')
+    return redirect('/transactions')
 
 
 # ///TASKS//////////////////
@@ -237,7 +236,7 @@ def login():
 
         if user is not None:
             login_user(user, remember=remember)
-            return redirect('/blog')
+            return redirect('/transactions')
 
     if current_user.is_authenticated:
         company = Company.query.filter_by(id=current_user.company_id).first()
@@ -295,7 +294,7 @@ def user_register():
         user = UserModel(user_name=user_name, company_id=company_id)
         db.session.add(user)
         db.session.commit()
-        return redirect('/blog')
+        return redirect('/transactions')
 
     return render_template('user_register.html')
 
@@ -303,7 +302,7 @@ def user_register():
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect('/blog')
+    return redirect('/transactions')
 
 
 if __name__ == '__main__':
