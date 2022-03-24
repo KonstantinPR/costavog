@@ -6,7 +6,6 @@ import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from os import environ
-import re
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -15,11 +14,19 @@ app.secret_key = 'xyz'
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgresql://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-uri = os.getenv("DATABASE_URL")  # or other relevant config var
+#  to solve problems connection with SQLAlchemy > 1.4
+uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
+uri = environ.get('DATABASE_URL')
 if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
-# rest of connection code using the connection string `uri`
+
+ura = 'Ura Gagarin'
+print(ura)
+if ura:
+    print(ura)
+    if ura.startswith("Ura"):
+        ura = ura.replace("Gagarin", "Gagarka", 1)
 
 db.init_app(app)
 
@@ -33,7 +40,7 @@ login.login_view = 'login'
 @app.route('/hello')
 def hello():
     database_uri = environ.get('DATABASE_URL')
-    return ("hello this is database_uri= " + str(database_uri))
+    return ("hello this is database_uri= " + str(database_uri) + ' and Ura = ' + ura + ' uri_old = ' + uri_old)
 
 
 # @app.before_first_request
