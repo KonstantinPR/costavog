@@ -11,9 +11,6 @@ app = Flask(__name__)
 migrate = Migrate(app, db)
 app.secret_key = 'xyz'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgresql://postgres:19862814@localhost/data'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 #  to solve problems connection with SQLAlchemy > 1.4
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
@@ -27,6 +24,9 @@ if ura:
     print(ura)
     if ura.startswith("Ura"):
         ura = ura.replace("Gagarin", "Gagarka", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost/data'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
