@@ -36,7 +36,7 @@ def hello():
 
 
 # @app.before_first_request
-@app.route('/create_all')
+@app.route('/create-all')
 def create_all():
     db.create_all()
 
