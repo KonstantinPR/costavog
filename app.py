@@ -215,7 +215,7 @@ def task_delete(id):
     db.session.delete(task)
     db.session.commit()
 
-    return render_template('tasks.html')
+    return redirect('/tasks')
 
 
 @app.route('/login', methods=['POST', 'GET'])
