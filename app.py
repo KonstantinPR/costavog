@@ -32,7 +32,8 @@ login.login_view = 'login'
 
 @app.route('/hello')
 def hello():
-    return ("hello")
+    database_uri = environ.get('DATABASE_URL')
+    return ("hello this is database_uri= " + str(database_uri))
 
 
 # @app.before_first_request
