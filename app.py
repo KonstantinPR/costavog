@@ -14,6 +14,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL') or 'postgres
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+
+with app.app_context():
+    db.create_all()
+
 login.init_app(app)
 login.login_view = 'login'
 
