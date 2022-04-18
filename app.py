@@ -87,7 +87,7 @@ def transactions():
 
     user_name = current_user.user_name
     try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id).all()
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by("date").all()
         transactions_sum = 0
         for i in transactions:
             transactions_sum += int(i.amount)
