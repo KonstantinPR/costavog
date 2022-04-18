@@ -6,6 +6,7 @@ import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from os import environ
+from sqlalchemy import desc
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -87,12 +88,14 @@ def transactions():
 
     user_name = current_user.user_name
     try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by("date").all()
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
+            desc(Transaction.date)).all()
         transactions_sum = 0
         for i in transactions:
             transactions_sum += int(i.amount)
     except ValueError:
         transactions = ""
+        transactions_sum = ""
         'base is empty'
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum)
