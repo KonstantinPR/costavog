@@ -14,7 +14,11 @@
     {% endfor %}
 
     <div class="py-5 text-center">
-        <h2></h2>
+        <h2>
+            <div class="row p-2">
+                <div>БАЛАНС: {{transactions_sum}}</div>
+            </div>
+        </h2>
     </div>
 
     <div class="row g-5">
@@ -69,10 +73,6 @@
 
             <br>
             <br>
-
-            <div class="row p-1">
-                <div>BALANCE TODAY: {{transactions_sum}}</div>
-            </div>
 
 
             <div class="row p-3">
