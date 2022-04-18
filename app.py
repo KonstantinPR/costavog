@@ -80,17 +80,22 @@ def transactions():
         else:
             user_name = request.form['user_name']
 
-        transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
+        transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
+                                  company_id=company_id)
         db.session.add(transaction)
         db.session.commit()
 
     user_name = current_user.user_name
     try:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id).all()
+        transactions_sum = 0
+        for i in transactions:
+            transactions_sum += int(i.amount)
     except ValueError:
         transactions = ""
         'base is empty'
-    return render_template('transactions.html', transactions=transactions, user_name=user_name)
+    return render_template('transactions.html', transactions=transactions, user_name=user_name,
+                           transactions_sum=transactions_sum)
 
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
