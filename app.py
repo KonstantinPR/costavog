@@ -92,7 +92,7 @@ def transactions():
             desc(Transaction.date)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
         initial_sum = users.initial_sum
-        transactions_sum = initial_sum
+        transactions_sum = int(initial_sum)
 
         for i in transactions:
             transactions_sum += int(i.amount)
