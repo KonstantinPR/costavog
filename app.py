@@ -12,7 +12,7 @@ app = Flask(__name__)
 migrate = Migrate(app, db)
 app.secret_key = 'xyz'
 
-#  to solve problems connection with SQLAlchemy > 1.4
+#  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
 if uri:
@@ -107,7 +107,11 @@ def profile():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-    return render_template('profile.html')
+    initial_sum = current_user.initial_sum
+    print (initial_sum)
+
+    return render_template('profile.html', initial_sum=initial_sum)
+
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
 def transaction_edit(id):
