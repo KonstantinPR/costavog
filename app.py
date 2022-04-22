@@ -90,7 +90,10 @@ def transactions():
     try:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
             desc(Transaction.date)).all()
-        transactions_sum = 0
+        users = UserModel.query.filter_by(id=current_user.id).first()
+        initial_sum = users.initial_sum
+        transactions_sum = initial_sum
+
         for i in transactions:
             transactions_sum += int(i.amount)
     except ValueError:
@@ -106,9 +109,16 @@ def transactions():
 def profile():
     if not current_user.is_authenticated:
         return redirect('/company_register')
-    company_id = current_user.company_id
+
+    if request.method == 'POST':
+        initial_sum = request.form['initial_sum']
+        users = UserModel.query.filter_by(id=current_user.id).first()
+        users.initial_sum = initial_sum
+        db.session.commit()
+
+        flash("Changing completed")
+
     initial_sum = current_user.initial_sum
-    print (initial_sum)
 
     return render_template('profile.html', initial_sum=initial_sum)
 
