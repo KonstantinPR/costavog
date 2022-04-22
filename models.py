@@ -14,8 +14,6 @@ login = LoginManager()
 db = SQLAlchemy()
 
 
-
-
 class UserModel(UserMixin, db.Model):
     __tablename__ = 'users'
 
@@ -23,7 +21,7 @@ class UserModel(UserMixin, db.Model):
     user_name = db.Column(db.String(100))
     password_hash = db.Column(db.String(500))
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    initial_sum = db.Column(db.Integer)
+    initial_sum = db.Column(db.Integer, default=0)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

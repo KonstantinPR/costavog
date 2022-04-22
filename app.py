@@ -92,6 +92,9 @@ def transactions():
             desc(Transaction.date)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
         initial_sum = users.initial_sum
+        if initial_sum is None:
+            flash("Changing completed")
+            redirect('/profile')
         transactions_sum = int(initial_sum)
 
         for i in transactions:
