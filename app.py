@@ -101,6 +101,14 @@ def transactions():
                            transactions_sum=transactions_sum)
 
 
+@app.route('/pfofile', methods=['POST', 'GET'])
+@login_required
+def profile():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+    return render_template('profile.html')
+
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
 def transaction_edit(id):
     if request.method == 'POST':
