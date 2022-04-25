@@ -27,22 +27,22 @@
                 <h4 class="mb-3"></h4>
                 <form class="needs-validation" action="{{url_for('transaction_edit', id=id)}}" method="post" novalidate>
                     <div class="row">
-                        <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <textarea class="form-control form-control-lg" rows="2" cols="45"
+                                      id="description" name="description"
+                                      placeholder="Описание"
+                                      required>{{description}}</textarea>
+                            <div class="invalid-feedback">
+                                Valid last name is required.
+                            </div>
+                        </div>
+                        <div class="col-xs-12  col-sm-12 col-lg-12 p-2">
                             <input autofocus type="number" class="form-control form-control-lg" id="amount"
                                    name="amount"
                                    placeholder="Сумма" value="{{amount}}"
                                    required>
                             <div class="invalid-feedback">
                                 Valid first name is required.
-                            </div>
-                        </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <textarea class="form-control form-control-lg" rows="1" cols="45"
-                                      id="description" name="description"
-                                      placeholder="Описание"
-                                      required>{{description}}</textarea>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
@@ -72,7 +72,7 @@
                     <button class="w-100 btn btn-primary btn-lg p-2" type="submit">Изменить</button>
 
                 </form>
-<br>
+                <br>
                 <a class="btn btn-danger w-100 btn btn-primary btn-lg" href="{{url_for('transaction_delete', id=id)}}"
                    role="button">Удалить запись</a>
             </div>

@@ -27,11 +27,20 @@
                 <h4 class="mb-3"></h4>
                 <form class="needs-validation" action="{{url_for('task_edit', id=id)}}" method="post" novalidate>
                     <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <textarea class="form-control form-control-lg" rows="1" cols="45"
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <textarea class="form-control form-control-lg" rows="2" cols="45"
                                       id="description" name="description"
                                       placeholder="Описание"
                                       required>{{description}}</textarea>
+                            <div class="invalid-feedback">
+                                Valid last name is required.
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input type="date" class="form-control form-control-lg" id="date" name="date"
+                                   placeholder="Дата"
+                                   value="{{date}}"
+                                   required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
                             </div>
@@ -43,15 +52,6 @@
                                    required>
                             <div class="invalid-feedback">
                                 Valid first name is required.
-                            </div>
-                        </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <input type="date" class="form-control form-control-lg" id="date" name="date"
-                                   placeholder="Дата"
-                                   value="{{date}}"
-                                   required>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
