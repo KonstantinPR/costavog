@@ -1,3 +1,4 @@
+import flask
 from flask import Flask, flash, render_template, request, redirect, send_file
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
@@ -9,7 +10,9 @@ from os import environ
 from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
+import io
 import requests
+import numpy as np
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -82,7 +85,6 @@ def transactions():
 
         user_name = current_user.user_name
 
-
         transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
                                   company_id=company_id)
         db.session.add(transaction)
@@ -128,7 +130,57 @@ def transactions_to_excel():
     return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
 
 
+def correct_sum(amount, account):
+    if account == 801:
+        amount = -amount
+    amount = int(amount)
+    return amount
 
+
+def correct_desc(description, desc_income):
+    if description == "":
+        description = desc_income
+    else:
+        description = str(description) + " | " + str(desc_income)
+    return description
+
+
+@app.route('/upload_transaction_excel', methods=['POST', 'GET'])
+@login_required
+def upload_transaction_excel():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+    if request.method == 'POST':
+        uploaded_files = flask.request.files.getlist("file")
+        df = pd.read_excel(uploaded_files[0])
+        df.replace(np.NaN, "", inplace=True)
+
+        df['СУММА ПРИХОДА'] = [correct_sum(amount, account) for amount, account in
+                               zip(df['СУММА ПРИХОДА'],
+                                   df['СЧЕТ РАСХОДА'],
+                                   )]
+
+        df['ОПИСАНИЕ ОПЕРАЦИИ'] = [correct_desc(description, desc_income) for description, desc_income in
+                                   zip(df['ОПИСАНИЕ ОПЕРАЦИИ'],
+                                       df['ОПИСАНИЕ ПРИХОДА'],
+                                       )]
+
+        # try:
+        #     print(df["ДАТА"])
+        #     df["ДАТА"] = df["ДАТА"].dt.strftime('%Y-%m-%d')
+        # except ValueError:
+        #     "can't transform date"
+
+        len_data = len(df['СУММА ПРИХОДА'])
+        sum = df['СУММА ПРИХОДА'].sum()
+        print(sum)
+
+        return render_template("transactions_excel.html",
+                               data=[df["ДАТА"], df['СУММА ПРИХОДА'], df["ОПИСАНИЕ ОПЕРАЦИИ"]],
+                               len_data=len_data, sum=sum)
+
+    return render_template("upload.html")
 
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
@@ -195,7 +247,6 @@ def tasks():
         else:
             amount = request.form['amount']
         user_name = current_user.user_name
-
 
         task = Task(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
         db.session.add(task)
@@ -339,6 +390,7 @@ def user_register():
 def logout():
     logout_user()
     return redirect('/transactions')
+
 
 @app.route('/pfofile', methods=['POST', 'GET'])
 @login_required
