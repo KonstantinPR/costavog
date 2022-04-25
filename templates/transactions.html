@@ -13,7 +13,7 @@
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
 
-    <div class="py-5 text-center">
+    <div class="py-5 text-left">
         <h2>
             <div class="row p-2">
                 <div>БАЛАНС: {{transactions_sum}}</div>
@@ -21,7 +21,7 @@
         </h2>
     </div>
 
-    <div class="row g-5">
+    <div class="row g-5 text-left">
 
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <h4 class="mb-3"></h4>
@@ -111,8 +111,9 @@
 </main>
 
 
-<footer class="my-5 pt-5 text-muted text-center text-small">
-    <p class="mb-1"></p>
+<footer class="my-5 pt-5 text-muted text-small text-left">
+    <p class="mb-1"><a href="{{url_for('transactions_to_excel')}}">
+        Save Transaction to excel</a></p>
     <ul class="list-inline">
 
     </ul>

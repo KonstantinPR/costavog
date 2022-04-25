@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect
+from flask import Flask, flash, render_template, request, redirect, send_file
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
 from models import Company, UserModel, Transaction, Task, db, login
@@ -7,6 +7,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from os import environ
 from sqlalchemy import desc
+import pandas as pd
+from io import BytesIO
+import requests
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -104,6 +107,26 @@ def transactions():
         'base is empty'
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum)
+
+
+@app.route('/transactions_to_excel')
+@login_required
+def transactions_to_excel():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+    try:
+        df = pd.read_sql(db.session.query(Transaction).filter_by(company_id=company_id).statement, db.session.bind)
+    except ValueError:
+        df = []
+
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer)
+    writer.close()
+    output.seek(0)
+
+    return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
 
 
 @app.route('/pfofile', methods=['POST', 'GET'])
