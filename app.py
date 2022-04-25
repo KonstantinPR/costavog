@@ -151,36 +151,32 @@ def upload_transaction_excel():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-    if request.method == 'POST':
-        uploaded_files = flask.request.files.getlist("file")
-        df = pd.read_excel(uploaded_files[0])
-        df.replace(np.NaN, "", inplace=True)
 
-        df['СУММА ПРИХОДА'] = [correct_sum(amount, account) for amount, account in
-                               zip(df['СУММА ПРИХОДА'],
-                                   df['СЧЕТ РАСХОДА'],
+    # if request.method == 'POST':
+    #     uploaded_files = flask.request.files.getlist("file")
+    #     df = pd.read_excel(uploaded_files[0])
+
+    path = str(current_user.initial_file_path)
+    df = pd.read_excel(path)
+    df.replace(np.NaN, "", inplace=True)
+
+    df['СУММА ПРИХОДА'] = [correct_sum(amount, account) for amount, account in
+                           zip(df['СУММА ПРИХОДА'],
+                               df['СЧЕТ РАСХОДА'],
+                               )]
+
+    df['ОПИСАНИЕ ОПЕРАЦИИ'] = [correct_desc(description, desc_income) for description, desc_income in
+                               zip(df['ОПИСАНИЕ ОПЕРАЦИИ'],
+                                   df['ОПИСАНИЕ ПРИХОДА'],
                                    )]
 
-        df['ОПИСАНИЕ ОПЕРАЦИИ'] = [correct_desc(description, desc_income) for description, desc_income in
-                                   zip(df['ОПИСАНИЕ ОПЕРАЦИИ'],
-                                       df['ОПИСАНИЕ ПРИХОДА'],
-                                       )]
+    len_data = len(df['СУММА ПРИХОДА'])
+    sum = df['СУММА ПРИХОДА'].sum()
+    print(sum)
 
-        # try:
-        #     print(df["ДАТА"])
-        #     df["ДАТА"] = df["ДАТА"].dt.strftime('%Y-%m-%d')
-        # except ValueError:
-        #     "can't transform date"
-
-        len_data = len(df['СУММА ПРИХОДА'])
-        sum = df['СУММА ПРИХОДА'].sum()
-        print(sum)
-
-        return render_template("transactions_excel.html",
-                               data=[df["ДАТА"], df['СУММА ПРИХОДА'], df["ОПИСАНИЕ ОПЕРАЦИИ"]],
-                               len_data=len_data, sum=sum)
-
-    return render_template("upload.html")
+    return render_template("transactions_excel.html",
+                           data=[df["ДАТА"], df['СУММА ПРИХОДА'], df["ОПИСАНИЕ ОПЕРАЦИИ"]],
+                           len_data=len_data, sum=sum)
 
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
