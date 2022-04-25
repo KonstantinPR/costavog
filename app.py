@@ -400,15 +400,19 @@ def profile():
 
     if request.method == 'POST':
         initial_sum = request.form['initial_sum']
+        initial_file_path = request.form['initial_file_path']
+
         users = UserModel.query.filter_by(id=current_user.id).first()
         users.initial_sum = initial_sum
+        users.initial_file_path = initial_file_path
         db.session.commit()
 
         flash("Changing completed")
 
     initial_sum = current_user.initial_sum
+    initial_file_path = current_user.initial_file_path
 
-    return render_template('profile.html', initial_sum=initial_sum)
+    return render_template('profile.html', initial_sum=initial_sum, initial_file_path=initial_file_path)
 
 
 if __name__ == '__main__':
