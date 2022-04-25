@@ -13,7 +13,7 @@
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
 
-    <div class="py-5 text-center">
+    <div class="py-5 text-left">
         <h2>
             <div class="row p-2">
                 <div>
@@ -25,7 +25,7 @@
 
     <div class="row g-5">
 
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-left">
             <h4 class="mb-3"></h4>
             <form class="needs-validation" action="{{url_for('profile')}}" method="post" novalidate>
                 <div class="row">
@@ -35,7 +35,8 @@
                                name="initial_sum"
                                placeholder="Initial Sum" value="{{initial_sum}}"
                                required>
-                        <label for="initial_file_path">Initial sum</label>
+                        <br>
+                        <label for="initial_file_path">Initial file path</label>
                         <input autofocus type="number" class="form-control form-control-lg" id="initial_file_path"
                                name="initial_file_path"
                                placeholder="Initial Excel file with old transactions" value="{{initial_file_path}}"
