@@ -23,8 +23,8 @@
             <h4 class="mb-3"></h4>
             <form class="needs-validation" action="{{url_for('tasks')}}" method="post" novalidate>
                 <div class="row">
-                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <textarea autofocus class="form-control form-control-lg" rows="1" cols="45"
+                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <textarea autofocus class="form-control form-control-lg" rows="2" cols="45"
                                       id="description" name="description"
                                       placeholder="Описание"
                                       required></textarea>
@@ -49,15 +49,15 @@
                             Valid last name is required.
                         </div>
                     </div>
-                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                        <input type="text" class="form-control form-control-lg" id="who" name="user_name"
-                               placeholder="Имя"
-                               value="{{user_name}}" required>
-                        <div class="invalid-feedback">
-                            Valid last name is required.
+<!--                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">-->
+<!--                        <input type="text" class="form-control form-control-lg" id="who" name="user_name"-->
+<!--                               placeholder="Имя"-->
+<!--                               value="{{user_name}}" required>-->
+<!--                        <div class="invalid-feedback">-->
+<!--                            Valid last name is required.-->
 
-                        </div>
-                    </div>
+<!--                        </div>-->
+<!--                    </div>-->
 
 
                 </div>
@@ -71,7 +71,7 @@
             <br>
 
 
-            <div class="row p-3">
+            <div class="row p-3 text-left">
                 <div class="col">
                     <b>Дата</b>
                 </div>
@@ -87,13 +87,13 @@
             <div class="row-striped row text-left">
                 <a href={{url_for('task_edit', id=p.id)}}>
                     <div class="d_hover row p-3">
-                        <div class="col">
+                        <div class="col small">
                             <b>{{p.date}}</b>
                         </div>
                         <div class="col">
                             {{p.amount}}
                         </div>
-                        <div class="col-6">
+                        <div class="col-6 small">
                             {{p.description}}
                         </div>
                     </div>

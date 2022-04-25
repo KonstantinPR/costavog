@@ -79,10 +79,9 @@ def transactions():
             date = datetime.date.today()
         else:
             date = request.form['date']
-        if request.form['user_name'] == "":
-            user_name = current_user.user_name
-        else:
-            user_name = request.form['user_name']
+
+        user_name = current_user.user_name
+
 
         transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
                                   company_id=company_id)
@@ -129,23 +128,7 @@ def transactions_to_excel():
     return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
 
 
-@app.route('/pfofile', methods=['POST', 'GET'])
-@login_required
-def profile():
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
 
-    if request.method == 'POST':
-        initial_sum = request.form['initial_sum']
-        users = UserModel.query.filter_by(id=current_user.id).first()
-        users.initial_sum = initial_sum
-        db.session.commit()
-
-        flash("Changing completed")
-
-    initial_sum = current_user.initial_sum
-
-    return render_template('profile.html', initial_sum=initial_sum)
 
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
@@ -211,10 +194,8 @@ def tasks():
             amount = 1
         else:
             amount = request.form['amount']
-        if request.form['user_name'] == "":
-            user_name = current_user.user_name
-        else:
-            user_name = request.form['user_name']
+        user_name = current_user.user_name
+
 
         task = Task(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
         db.session.add(task)
@@ -358,6 +339,24 @@ def user_register():
 def logout():
     logout_user()
     return redirect('/transactions')
+
+@app.route('/pfofile', methods=['POST', 'GET'])
+@login_required
+def profile():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        initial_sum = request.form['initial_sum']
+        users = UserModel.query.filter_by(id=current_user.id).first()
+        users.initial_sum = initial_sum
+        db.session.commit()
+
+        flash("Changing completed")
+
+    initial_sum = current_user.initial_sum
+
+    return render_template('profile.html', initial_sum=initial_sum)
 
 
 if __name__ == '__main__':

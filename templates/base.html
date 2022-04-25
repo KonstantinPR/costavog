@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="{{url_for('static', filename='form-validation.css') }}">
 
 
-
     {% block add_style %} {% endblock %}
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
@@ -49,31 +48,48 @@
       }
 
       .row-striped:nth-of-type(even){
-          background-color: #EFEFEF;
+          background-color: #F5F5F5;
       }
+
     </style>
 </head>
 
 
 <body id="body-pd" class="text-center">
-<nav class="navbar navbar-expand-lg navbar-light bg-light p-3">
-    <a href={{url_for('transactions')}} class="navbar-brand">TASKER</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-            <a class="nav-item nav-link active" href="{{url_for('transactions')}}">Финансы</a>
-            <a class="nav-item nav-link active" href="{{url_for('tasks')}}">Задачи</a>
-            <a class="nav-item nav-link" href="{{url_for('login')}}">Login</a>
-            <a class="nav-item nav-link" href="{{url_for('logout')}}">Logout</a>
-            <a class="nav-item nav-link" href="{{url_for('user_register')}}">User register</a>
-            <a class="nav-item nav-link" href="{{url_for('company_register')}}">Company register</a>
-            <a class="nav-item nav-link" href="{{url_for('profile')}}">Profile</a>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">TASKER</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-item nav-link active" href="{{url_for('transactions')}}">Финансы</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-item nav-link active" href="{{url_for('tasks')}}">Задачи</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        User
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="{{url_for('login')}}">Login</a>
+                        <a class="dropdown-item" href="{{url_for('logout')}}">Logout</a>
+                        <a class="dropdown-item" href="{{url_for('user_register')}}">User register</a>
+                        <a class="dropdown-item" href="{{url_for('company_register')}}">Company register</a>
+                        <a class="dropdown-item" href="{{url_for('profile')}}">Profile</a>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
+
 
 <div class="container">
 

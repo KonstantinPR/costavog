@@ -10,4 +10,5 @@ text-color:black
 
 .d_hover:hover{
     background-color:white;
+    text-decoration:none;
 }
