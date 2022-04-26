@@ -2,7 +2,7 @@ import flask
 from flask import Flask, flash, render_template, request, redirect, send_file
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
-from models import Company, UserModel, Transaction, Task, db, login
+from models import Company, UserModel, Transaction, Task, Product, db, login
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -11,11 +11,9 @@ from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
 import io
-import requests
 import numpy as np
 from sqlalchemy import create_engine
-import psycopg2
-import discount
+from modules import discount
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -45,7 +43,7 @@ def create_all():
     db.create_all()
 
 
-# ///GOODS////////////
+# ///products////////////
 
 
 @app.route('/upload', methods=['POST', 'GET'])
@@ -58,11 +56,12 @@ def upload():
         uploaded_files = flask.request.files.getlist("file")
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
-        col_list = ['Артикул поставщика БАЗА', 'Себестоимость БАЗА']
+        df["id"] = df.index + 1
+        col_list = ['id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
         df = df[col_list].rename(columns={'Артикул поставщика БАЗА': 'article', 'Себестоимость БАЗА': 'net_cost'})
 
         engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-        df.head(0).to_sql('goods', engine, if_exists='replace',
+        df.head(0).to_sql('products', engine, if_exists='replace',
                           index=False)  # drops old table and creates new empty table
 
         conn = engine.raw_connection()
@@ -71,7 +70,7 @@ def upload():
         df.to_csv(output, sep='\t', header=False, index=False)
         output.seek(0)
         contents = output.getvalue()
-        cur.copy_from(output, 'goods', null="")  # null values become ''
+        cur.copy_from(output, 'products', null="")  # null values become ''
         conn.commit()
         flash("Изменения в базе произведены успешно")
         print(df)
@@ -90,9 +89,16 @@ def upload_turnover():
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
         print(df)
+        df_products = pd.read_sql(db.session.query(Product).statement, db.session.bind)
+        df = discount.discount(df, df_products)
+        print(df)
+        output = BytesIO()
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+        df.to_excel(writer)
+        writer.close()
+        output.seek(0)
 
-    df_goods = pd.read_sql(db.session.query(Good).statement, db.session.bind)
-    print(df_goods)
+        return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
 
     return render_template('upload_turnover.html')
 

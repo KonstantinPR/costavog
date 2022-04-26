@@ -116,13 +116,18 @@ def discount(file_turnover, file_net_cost):
         and work with it
         :return: name of saving file
     """
-    df = merge_dataframes(file_turnover, file_net_cost, 'Артикул поставщика', 'article')
-    df.replace("Товар на сайте менее 30 дн.", 999 / 2, inplace=True)
-    df.replace(np.NaN, 0, inplace=True)
-    df.to_excel("сводная.xlsx")
-    df = pd.read_excel("сводная.xlsx")
-    df = df[(df['Остаток товара (шт.)'] > 0) & (df['Оборачиваемость'] > 0)]
+    df = file_turnover.merge(file_net_cost, left_on='Артикул поставщика', right_on='article', how='outer')
 
+    # df = merge_dataframes(file_turnover, file_net_cost, 'Артикул поставщика', 'article')
+    df.replace("Товар на сайте менее 30 дн.", int(round(999 / 2)), inplace=True)
+    df.replace(np.NaN, 0, inplace=True)
+    # df.to_excel("сводная.xlsx")
+    # df = pd.read_excel("сводная.xlsx")
+    df.to_excel('example.xlsx')
+    print(df.head)
+    df = df[(df['Остаток товара (шт.)'] > 0) & (df['Оборачиваемость'] is not None)]
+    df['Оборачиваемость'] = [int(x) for x in df['Оборачиваемость']]
+    df.to_excel('example1.xlsx')
     # ///   БЛОК КОЭФФИЦИЕНТОВ   ///
 
     # Кол-во дней в расчетном периоде
@@ -194,4 +199,4 @@ def discount(file_turnover, file_net_cost):
 
     df.reset_index()
 
-    df.to_excel('итоговая.xlsx')
+    return df
