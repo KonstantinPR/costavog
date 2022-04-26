@@ -15,6 +15,7 @@ import requests
 import numpy as np
 from sqlalchemy import create_engine
 import psycopg2
+import discount
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -75,9 +76,25 @@ def upload():
         flash("Изменения в базе произведены успешно")
         print(df)
 
-
-
     return render_template('upload.html')
+
+
+@app.route('/upload_turnover', methods=['POST', 'GET'])
+@login_required
+def upload_turnover():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        uploaded_files = flask.request.files.getlist("file")
+        df = pd.read_excel(uploaded_files[0])
+        df.replace(np.NaN, "", inplace=True)
+        print(df)
+
+    df_goods = pd.read_sql(db.session.query(Good).statement, db.session.bind)
+    print(df_goods)
+
+    return render_template('upload_turnover.html')
 
 
 # ///POSTS////////////

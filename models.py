@@ -50,7 +50,7 @@ class Good(db.Model):
     __tablename__ = 'goods'
 
     id = db.Column(db.Integer, primary_key=True)
-    art = db.Column(db.String(80), unique=True)
+    article = db.Column(db.String(80), unique=True)
     net_cost = db.Column(db.Integer)
 
 

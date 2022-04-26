@@ -52,6 +52,7 @@
       }
 
 
+
     </style>
 </head>
 
@@ -77,11 +78,20 @@
                     <a class="nav-item nav-link active" href="{{url_for('upload')}}">Загрузки</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkAnalitics" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Аналитика
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
+                        <a class="dropdown-item" href="{{url_for('upload_turnover')}}">Корректировка цен</a>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkUser" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
                         User
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkUser">
                         <a class="dropdown-item" href="{{url_for('login')}}">Login</a>
                         <a class="dropdown-item" href="{{url_for('logout')}}">Logout</a>
                         <a class="dropdown-item" href="{{url_for('user_register')}}">User register</a>
@@ -89,6 +99,7 @@
                         <a class="dropdown-item" href="{{url_for('profile')}}">Profile</a>
                     </ul>
                 </li>
+
             </ul>
         </div>
     </div>
