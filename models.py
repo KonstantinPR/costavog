@@ -46,8 +46,8 @@ class Company(db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-class Good(db.Model):
-    __tablename__ = 'goods'
+class Product(db.Model):
+    __tablename__ = 'products'
 
     id = db.Column(db.Integer, primary_key=True)
     article = db.Column(db.String(80), unique=True)
