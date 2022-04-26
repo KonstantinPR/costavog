@@ -13,9 +13,10 @@ from io import BytesIO
 import io
 import numpy as np
 from sqlalchemy import create_engine
-from modules import discount
+from modules import discount, detailing
 
 app = Flask(__name__)
+app.config.from_pyfile('config.py')
 migrate = Migrate(app, db)
 app.secret_key = 'xyz'
 
@@ -43,12 +44,12 @@ def create_all():
     db.create_all()
 
 
-# ///products////////////
+# ///PRODUCTS////////////
 
 
-@app.route('/upload', methods=['POST', 'GET'])
+@app.route('/upload_products', methods=['POST', 'GET'])
 @login_required
-def upload():
+def upload_products():
     if not current_user.is_authenticated:
         return redirect('/company_register')
 
@@ -75,8 +76,16 @@ def upload():
         flash("Изменения в базе произведены успешно")
         print(df)
 
-    return render_template('upload.html')
+    return render_template('upload_products.html')
 
+
+def io_output(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer)
+    writer.close()
+    output.seek(0)
+    return output
 
 @app.route('/upload_turnover', methods=['POST', 'GET'])
 @login_required
@@ -88,19 +97,29 @@ def upload_turnover():
         uploaded_files = flask.request.files.getlist("file")
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
-        print(df)
         df_products = pd.read_sql(db.session.query(Product).statement, db.session.bind)
         df = discount.discount(df, df_products)
-        print(df)
-        output = BytesIO()
-        writer = pd.ExcelWriter(output, engine='xlsxwriter')
-        df.to_excel(writer)
-        writer.close()
-        output.seek(0)
+        file = io_output(df)
 
-        return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
+        return send_file(file, attachment_filename="excel.xlsx", as_attachment=True)
 
     return render_template('upload_turnover.html')
+
+
+@app.route('/upload_detailing', methods=['POST', 'GET'])
+@login_required
+def upload_detailing():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        uploaded_files = flask.request.files.getlist("file")
+        df = detailing.zip_detale(uploaded_files[0])
+        file = io_output(df)
+
+        return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
+
+    return render_template('upload_detailing.html')
 
 
 # ///POSTS////////////
