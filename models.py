@@ -46,6 +46,14 @@ class Company(db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+class Good(db.Model):
+    __tablename__ = 'goods'
+
+    id = db.Column(db.Integer, primary_key=True)
+    art = db.Column(db.String(80), unique=True)
+    net_cost = db.Column(db.Integer)
+
+
 class Transaction(db.Model):
     __tablename__ = 'transactions'
 

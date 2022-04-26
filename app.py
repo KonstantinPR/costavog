@@ -13,6 +13,8 @@ from io import BytesIO
 import io
 import requests
 import numpy as np
+from sqlalchemy import create_engine
+import psycopg2
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -25,14 +27,7 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
-ura = 'Ura Gagarin'
-print(ura)
-if ura:
-    print(ura)
-    if ura.startswith("Ura"):
-        ura = ura.replace("Gagarin", "Gagarka", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost/data'
+app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql+psycopg2://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -44,15 +39,45 @@ login.init_app(app)
 login.login_view = 'login'
 
 
-@app.route('/hello')
-def hello():
-    DATABASE_URL_now = uri
-    return ("hello this is DATABASE_URL_now= " + str(DATABASE_URL_now) + ' and Ura = ' + ura + ' uri_old = ' + uri_old)
-
-
 @app.before_first_request
 def create_all():
     db.create_all()
+
+
+# ///GOODS////////////
+
+
+@app.route('/upload', methods=['POST', 'GET'])
+@login_required
+def upload():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        uploaded_files = flask.request.files.getlist("file")
+        df = pd.read_excel(uploaded_files[0])
+        df.replace(np.NaN, "", inplace=True)
+        col_list = ['Артикул поставщика БАЗА', 'Себестоимость БАЗА']
+        df = df[col_list].rename(columns={'Артикул поставщика БАЗА': 'article', 'Себестоимость БАЗА': 'net_cost'})
+
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        df.head(0).to_sql('goods', engine, if_exists='replace',
+                          index=False)  # drops old table and creates new empty table
+
+        conn = engine.raw_connection()
+        cur = conn.cursor()
+        output = io.StringIO()
+        df.to_csv(output, sep='\t', header=False, index=False)
+        output.seek(0)
+        contents = output.getvalue()
+        cur.copy_from(output, 'goods', null="")  # null values become ''
+        conn.commit()
+        flash("Изменения в базе произведены успешно")
+        print(df)
+
+
+
+    return render_template('upload.html')
 
 
 # ///POSTS////////////

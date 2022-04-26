@@ -30,13 +30,13 @@
             <form class="needs-validation" action="{{url_for('profile')}}" method="post" novalidate>
                 <div class="row">
                     <div class="col-xs-12  col-sm-12 col-lg-12p-12">
-                        <label for="initial_sum">Initial sum</label>
+                        <label for="initial_sum">Баланс на начало периода, взятый из прошлой системы учета:</label>
                         <input autofocus type="number" class="form-control form-control-lg" id="initial_sum"
                                name="initial_sum"
-                               placeholder="Initial Sum" value="{{initial_sum}}"
+                               placeholder="Баланс на начало периода, взятый из прошлой системы учета" value="{{initial_sum}}"
                                required>
                         <br>
-                        <label for="initial_file_path">Initial file path</label>
+                        <label for="initial_file_path">Путь до файла excel по учету финансов с архивными проводками:</label>
                         <input autofocus class="form-control form-control-lg" id="initial_file_path"
                                name="initial_file_path"
                                placeholder="Initial Excel file with old transactions" value="{{initial_file_path}}"
