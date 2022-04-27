@@ -34,9 +34,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# with app.app_context():
-#     db.create_all()
-
 login.init_app(app)
 login.login_view = 'login'
 
@@ -66,19 +63,6 @@ def upload_products():
         col_list = ['company_id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
         df = df[col_list].rename(columns={'Артикул поставщика БАЗА': 'article', 'Себестоимость БАЗА': 'net_cost'})
 
-        # engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-        #
-        # # Update rows in a SQL table
-        # sql = '''
-        #     UPDATE products
-        #     SET article='abc'
-        #     WHERE products.company_id = 1;
-        # '''
-        # with engine.connect().execution_options(autocommit=True) as conn:
-        #     conn.execute(text(sql))
-
-        # exit()
-
         engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
         df2 = pd.read_sql(db.session.query(Product).filter_by(company_id=company_id).statement, db.session.bind)
@@ -99,20 +83,36 @@ def upload_products():
         with engine.begin() as conn:
             conn.execute(sql)
 
-        # engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-        # df.head(0).to_sql('products', engine, if_exists='replace',
-        #                   index=False)  # drops old table and creates new empty table
-        #
-        # conn = engine.raw_connection()
-        # cur = conn.cursor()
-        # output = io.StringIO()
-        # df.to_csv(output, sep='\t', header=False, index=False)
-        # output.seek(0)
-        # contents = output.getvalue()
-        # cur.copy_from(output, 'products', null="")  # null values become ''
-        # conn.commit()
-        # flash("Изменения в базе произведены успешно")
-        # print(df)
+    return render_template('upload_products.html')
+
+
+@app.route('/read_products', methods=['POST', 'GET'])
+@login_required
+def read_products():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    company_id = current_user.company_id
+
+
+    df = pd.read_sql(db.session.query(Product).statement, db.session.bind)
+    df.replace(np.NaN, "", inplace=True)
+    file = io_output(df)
+
+    return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
+
+
+@app.route('/delete_products', methods=['POST', 'GET'])
+@login_required
+def delete_products():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    company_id = current_user.company_id
+
+    db.session.query(Product).filter_by(company_id=company_id).delete(synchronize_session='fetch')
+
+    db.session.commit()
 
     return render_template('upload_products.html')
 
@@ -125,12 +125,11 @@ def delete_all_products():
 
     company_id = current_user.company_id
 
-    db.session.query(Product).filter_by(company_id=company_id).delete(synchronize_session='fetch')
+    db.session.query(Product).delete(synchronize_session='fetch')
 
     db.session.commit()
 
     return render_template('upload_products.html')
-
 
 def io_output(df):
     output = BytesIO()
