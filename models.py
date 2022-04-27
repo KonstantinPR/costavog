@@ -49,7 +49,7 @@ class Company(db.Model):
 class Product(db.Model):
     __tablename__ = 'products'
 
-    article = db.Column(db.String(80), unique=True, primary_key=True)
+    article = db.Column(db.String(80), primary_key=True)
     net_cost = db.Column(db.Integer)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
     companies = db.relationship('Company')
