@@ -1,5 +1,6 @@
 import flask
 import psycopg2
+import requests
 from flask import Flask, flash, render_template, request, redirect, send_file
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
@@ -12,9 +13,11 @@ from sqlalchemy import desc
 from sqlalchemy.sql import text
 import pandas as pd
 from io import BytesIO
+from io import StringIO
 import io
 import numpy as np
 from sqlalchemy import create_engine
+from urllib.parse import urlencode
 from modules import discount, detailing
 
 app = Flask(__name__)
@@ -43,8 +46,37 @@ def create_all():
     db.create_all()
 
 
-# ///PRODUCTS////////////
+def io_output(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer)
+    writer.close()
+    output.seek(0)
+    return output
 
+
+# /// YANDEX DISK ////////////
+
+
+@app.route('/download_yandex_disk_excel', methods=['POST', 'GET'])
+@login_required
+def download_yandex_disk_excel():
+    base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
+    public_key = 'https://yadi.sk/i/afeeYZOgnLkSnA'  # Сюда вписываете вашу ссылку
+
+    # Получаем загрузочную ссылку
+    final_url = base_url + urlencode(dict(public_key=public_key))
+    response = requests.get(final_url)
+    download_url = response.json()['href']
+
+    download_response = requests.get(download_url)
+    df = pd.read_excel(download_response.content)
+    file = io_output(df)
+
+    return send_file(file, attachment_filename="excel_yandex.xlsx", as_attachment=True)
+
+
+# ///PRODUCTS////////////
 
 @app.route('/upload_products', methods=['POST', 'GET'])
 @login_required
@@ -94,26 +126,12 @@ def read_products():
 
     company_id = current_user.company_id
 
-
     df = pd.read_sql(db.session.query(Product).statement, db.session.bind)
     df.replace(np.NaN, "", inplace=True)
     file = io_output(df)
 
     return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
 
-
-@app.route('/drop_products', methods=['POST', 'GET'])
-@login_required
-def drop_products():
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
-
-    company_id = current_user.company_id
-    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    Product.__table__.drop(engine)
-
-
-    return render_template('upload_products.html')
 
 @app.route('/delete_products', methods=['POST', 'GET'])
 @login_required
@@ -144,13 +162,18 @@ def delete_all_products():
 
     return render_template('upload_products.html')
 
-def io_output(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer)
-    writer.close()
-    output.seek(0)
-    return output
+
+@app.route('/drop_products', methods=['POST', 'GET'])
+@login_required
+def drop_products():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    company_id = current_user.company_id
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    Product.__table__.drop(engine)
+
+    return render_template('upload_products.html')
 
 
 @app.route('/upload_turnover', methods=['POST', 'GET'])
@@ -190,14 +213,19 @@ def upload_detailing():
 
 # ///POSTS////////////
 
+def correct_sum(amount, account):
+    if account == 801:
+        amount = -amount
+    amount = int(amount)
+    return amount
 
-# @app.route('/', methods=['POST', 'GET'])
-# @login_required
-# def index():
-#     if not current_user.is_authenticated:
-#         return "hello unregister friend"
-#     else:
-#         return "hello registered friend"
+
+def correct_desc(description, desc_income):
+    if description == "":
+        description = desc_income
+    else:
+        description = str(description) + " | " + str(desc_income)
+    return description
 
 
 @app.route('/transactions', methods=['POST', 'GET'])
@@ -261,21 +289,6 @@ def transactions_to_excel():
     output.seek(0)
 
     return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
-
-
-def correct_sum(amount, account):
-    if account == 801:
-        amount = -amount
-    amount = int(amount)
-    return amount
-
-
-def correct_desc(description, desc_income):
-    if description == "":
-        description = desc_income
-    else:
-        description = str(description) + " | " + str(desc_income)
-    return description
 
 
 @app.route('/upload_transaction_excel', methods=['POST', 'GET'])
@@ -354,8 +367,7 @@ def transaction_delete(id):
     return redirect('/transactions')
 
 
-# ///TASKS//////////////////
-
+# /// TASKS //////////////////
 
 @app.route('/tasks', methods=['POST', 'GET'])
 @login_required
@@ -432,6 +444,8 @@ def task_delete(id):
 
     return redirect('/tasks')
 
+
+# /// PROFILE //////////////////
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
