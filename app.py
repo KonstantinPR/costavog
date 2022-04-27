@@ -58,8 +58,6 @@ def upload_products():
         uploaded_files = flask.request.files.getlist("file")
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
-        df_example = pd.read_sql(db.session.query(Product).statement, db.session.bind)
-        print(df_example)
         df["company_id"] = company_id
         print(df)
         col_list = ['company_id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
