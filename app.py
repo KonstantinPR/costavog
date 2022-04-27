@@ -104,6 +104,19 @@ def read_products():
     return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
 
 
+@app.route('/drop_products', methods=['POST', 'GET'])
+@login_required
+def drop_products():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    company_id = current_user.company_id
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    Product.__table__.drop(engine)
+
+
+    return render_template('upload_products.html')
+
 @app.route('/delete_products', methods=['POST', 'GET'])
 @login_required
 def delete_products():
