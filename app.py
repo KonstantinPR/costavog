@@ -1,4 +1,5 @@
 import flask
+import psycopg2
 from flask import Flask, flash, render_template, request, redirect, send_file
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, login_user, logout_user
@@ -8,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from os import environ
 from sqlalchemy import desc
+from sqlalchemy.sql import text
 import pandas as pd
 from io import BytesIO
 import io
@@ -53,28 +55,79 @@ def upload_products():
     if not current_user.is_authenticated:
         return redirect('/company_register')
 
+    company_id = current_user.company_id
+
     if request.method == 'POST':
         uploaded_files = flask.request.files.getlist("file")
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
-        df["id"] = df.index + 1
-        col_list = ['id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
+        df["company_id"] = company_id
+        print(df)
+        col_list = ['company_id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
         df = df[col_list].rename(columns={'Артикул поставщика БАЗА': 'article', 'Себестоимость БАЗА': 'net_cost'})
 
-        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-        df.head(0).to_sql('products', engine, if_exists='replace',
-                          index=False)  # drops old table and creates new empty table
+        # engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        #
+        # # Update rows in a SQL table
+        # sql = '''
+        #     UPDATE products
+        #     SET article='abc'
+        #     WHERE products.company_id = 1;
+        # '''
+        # with engine.connect().execution_options(autocommit=True) as conn:
+        #     conn.execute(text(sql))
 
-        conn = engine.raw_connection()
-        cur = conn.cursor()
-        output = io.StringIO()
-        df.to_csv(output, sep='\t', header=False, index=False)
-        output.seek(0)
-        contents = output.getvalue()
-        cur.copy_from(output, 'products', null="")  # null values become ''
-        conn.commit()
-        flash("Изменения в базе произведены успешно")
-        print(df)
+        # exit()
+
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+
+        df2 = pd.read_sql(db.session.query(Product).filter_by(company_id=company_id).statement, db.session.bind)
+
+        df3 = pd.concat([df, df2]).drop_duplicates(keep=False, subset=['company_id', 'article'])
+
+        df3.to_sql('products', engine, if_exists='append', index=False)
+
+        print(df3)
+
+        df.to_sql('temp_table', engine, if_exists='replace')
+
+        sql = "UPDATE products SET net_cost = temp_table.net_cost " \
+              "FROM temp_table " \
+              "WHERE products.article = temp_table.article " \
+              f"AND products.company_id = {company_id}"
+
+        with engine.begin() as conn:
+            conn.execute(sql)
+
+        # engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        # df.head(0).to_sql('products', engine, if_exists='replace',
+        #                   index=False)  # drops old table and creates new empty table
+        #
+        # conn = engine.raw_connection()
+        # cur = conn.cursor()
+        # output = io.StringIO()
+        # df.to_csv(output, sep='\t', header=False, index=False)
+        # output.seek(0)
+        # contents = output.getvalue()
+        # cur.copy_from(output, 'products', null="")  # null values become ''
+        # conn.commit()
+        # flash("Изменения в базе произведены успешно")
+        # print(df)
+
+    return render_template('upload_products.html')
+
+
+@app.route('/delete_all_products', methods=['POST', 'GET'])
+@login_required
+def delete_all_products():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    company_id = current_user.company_id
+
+    db.session.query(Product).filter_by(company_id=company_id).delete(synchronize_session='fetch')
+
+    db.session.commit()
 
     return render_template('upload_products.html')
 
@@ -86,6 +139,7 @@ def io_output(df):
     writer.close()
     output.seek(0)
     return output
+
 
 @app.route('/upload_turnover', methods=['POST', 'GET'])
 @login_required

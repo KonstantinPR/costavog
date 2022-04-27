@@ -20,7 +20,6 @@ def zip_detale(filename):
     df_list = []
 
     z = zipfile.ZipFile(filename)
-    print(z)
     for f in z.namelist():
         # get directory name from file
         content = io.BytesIO(z.read(f))
