@@ -18,7 +18,7 @@ class BaseConfig:
 
 class DevelopementConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEVELOPMENT_DATABASE_URI') or \
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
                               'postgresql+psycopg2://postgres:19862814@localhost/data'
 
 
