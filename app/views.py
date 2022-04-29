@@ -1,44 +1,20 @@
+from app import app
 import flask
-import psycopg2
 import requests
-from flask import Flask, flash, render_template, request, redirect, send_file
-from flask_migrate import Migrate
+from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user, login_user, logout_user
-from models import Company, UserModel, Transaction, Task, Product, db, login
+from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
-from os import environ
 from sqlalchemy import desc
-from sqlalchemy.sql import text
 import pandas as pd
 from io import BytesIO
-from io import StringIO
-import io
 import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
-from modules import discount, detailing
+from app.modules import discount, detailing
 
-app = Flask(__name__)
-app.config.from_pyfile('config.py')
-migrate = Migrate(app, db)
-app.secret_key = 'xyz'
 
-#  to solve problems connection with SQLAlchemy > 1.4 in heroku
-uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
-uri = environ.get('DATABASE_URL')
-if uri:
-    if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql+psycopg2://postgres:19862814@localhost/data'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-
-login.init_app(app)
-login.login_view = 'login'
 
 
 @app.before_first_request
@@ -557,6 +533,3 @@ def profile():
 
     return render_template('profile.html', initial_sum=initial_sum, initial_file_path=initial_file_path)
 
-
-if __name__ == '__main__':
-    app.run(host="localhost", port=8001, debug=True)
