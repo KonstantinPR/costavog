@@ -15,11 +15,10 @@ import datetime
 # print(file_names)
 
 
-def zip_detale(filename):
-
+def zip_detail(zip_downloaded, df_net_cost):
     df_list = []
 
-    z = zipfile.ZipFile(filename)
+    z = zipfile.ZipFile(zip_downloaded)
     for f in z.namelist():
         # get directory name from file
         content = io.BytesIO(z.read(f))
@@ -65,41 +64,59 @@ def zip_detale(filename):
                                             'Услуги по доставке товара покупателю': sum},
                                    margins=False)
 
-    df_result = df_pivot.merge(df_pivot2, how="left", on="Артикул поставщика")
+    df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
 
-    df_result.replace(np.NaN, 0, inplace=True)
+    if not isinstance(df_net_cost, bool):
+        df_result = df_result.merge(df_net_cost.rename(columns={'article': 'Артикул поставщика'}), how='left',
+                                    on='Артикул поставщика')
 
-    if ('К перечислению за товар', 'Продажа') not in df_result:
-        df_result[('К перечислению за товар', 'Продажа')] = 0
+        print(df_result)
 
-    if ('К перечислению за товар', 'Возврат') not in df_result:
-        df_result[('К перечислению за товар', 'Возврат')] = 0
+        df_result.replace(np.NaN, 0, inplace=True)
 
-    print(df_result)
+        if ('К перечислению за товар', 'Продажа') not in df_result:
+            df_result[('К перечислению за товар', 'Продажа')] = 0
 
-    df_result['Итого продажи'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Продажа')] + \
-                                 df_result[('К перечислению за товар', 'Продажа')]
+        if ('К перечислению за товар', 'Возврат') not in df_result:
+            df_result[('К перечислению за товар', 'Возврат')] = 0
 
-    df_result['Итого возвраты'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Возврат')] + \
-                                  df_result[('К перечислению за товар', 'Возврат')]
+        print(df_result)
 
-    df_result['Итого маржа'] = df_result['Итого продажи'] - \
-                               df_result["Услуги по доставке товара покупателю"] - \
-                               df_result['Итого возвраты']
+        df_result['Итого продажи'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Продажа')] + \
+                                     df_result[('К перечислению за товар', 'Продажа')]
 
-    df_result['Покупок шт.'] = df_result[('Количество доставок', 'Продажа')] - df_result[
-        ('Количество доставок', 'Возврат')]
+        df_result['Итого возвраты'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Возврат')] + \
+                                      df_result[('К перечислению за товар', 'Возврат')]
 
-    df_result['Маржа / логистика'] = df_result['Итого маржа'] / df_result["Услуги по доставке товара покупателю"]
-    df_result['Продажи к возвратам'] = df_result['Итого продажи'] / df_result['Итого возвраты']
-    df_result['Маржа / доставковозвратам'] = df_result['Итого маржа'] / (
-            df_result[('Количество доставок', 'Продажа')] -
-            df_result[('Количество доставок', 'Возврат')])
+        df_result['Итого маржа'] = df_result['Итого продажи'] - \
+                                   df_result["Услуги по доставке товара покупателю"] - \
+                                   df_result['Итого возвраты']
 
-    df_result['Продаж'] = df_result[('Количество доставок', 'Продажа')]
-    df_result['Возврат'] = df_result[('Количество доставок', 'Возврат')]
-    df_result['Логистика'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
-    df_result['Доставки/возвраты'] = df_result[('Количество доставок', 'Продажа')] / df_result[
-        ('Количество доставок', 'Возврат')]
+        if 'net_cost' in df_result:
+            df_result['net_cost'].replace(np.NaN, 0, inplace=True)
+        else:
+            df_result['net_cost'] = 0
 
-    return df_result
+
+
+        df_result['Покупок шт.'] = df_result[('Количество доставок', 'Продажа')] - df_result[
+            ('Количество доставок', 'Возврат')]
+
+        df_result['Маржа / логистика'] = df_result['Итого маржа'] / df_result["Услуги по доставке товара покупателю"]
+        df_result['Продажи к возвратам'] = df_result['Итого продажи'] / df_result['Итого возвраты']
+        df_result['Маржа / доставковозвратам'] = df_result['Итого маржа'] / (
+                df_result[('Количество доставок', 'Продажа')] -
+                df_result[('Количество доставок', 'Возврат')])
+
+        df_result['Продаж'] = df_result[('Количество доставок', 'Продажа')]
+        df_result['Возврат'] = df_result[('Количество доставок', 'Возврат')]
+        df_result['Логистика'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
+        df_result['Доставки/возвраты'] = df_result[('Количество доставок', 'Продажа')] / df_result[
+            ('Количество доставок', 'Возврат')]
+
+        df_result['Маржа-себест.'] = df_result['Итого маржа'] - df_result['net_cost']*df_result['Покупок шт.']
+        df_result['Маржа-себест. шт.'] = df_result['Маржа-себест.'] / df_result['Покупок шт.']
+
+        df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        return df_result

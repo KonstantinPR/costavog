@@ -15,6 +15,7 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
+app.config['ALLOWED_EXTENSIONS'] = ['zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql+psycopg2://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

@@ -29,6 +29,11 @@ def io_output(df):
     return output
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 # /// YANDEX DISK ////////////
 
 
@@ -176,18 +181,28 @@ def upload_detailing():
         return redirect('/company_register')
 
     if request.method == 'POST':
-        uploaded_files = flask.request.files.getlist("file")
-        df = detailing.zip_detale(uploaded_files[0])
+        uploaded_files = flask.request.files.get("file")
+        print(uploaded_files)
+
+        is_net_cost = request.form.get('is_net_cost')
+        print(is_net_cost == 'is_net_cost')
+
+        if not uploaded_files:
+            flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
+            return render_template('upload_detailing.html')
+
+        if is_net_cost:
+            df_net_cost = pd.read_sql(db.session.query(Product).statement, db.session.bind)
+            df_net_cost.replace(np.NaN, "", inplace=True)
+        else:
+            df_net_cost = False
+
+        print(df_net_cost)
+
+        df = detailing.zip_detail(uploaded_files, df_net_cost)
+
         file = io_output(df)
 
         return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
 
     return render_template('upload_detailing.html')
-
-
-
-
-
-
-
-
