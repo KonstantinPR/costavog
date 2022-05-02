@@ -116,6 +116,8 @@ def zip_detail(zip_downloaded, df_net_cost):
 
         df_result['Маржа-себест.'] = df_result['Итого маржа'] - df_result['net_cost']*df_result['Покупок шт.']
         df_result['Маржа-себест. шт.'] = df_result['Маржа-себест.'] / df_result['Покупок шт.']
+        df_result['Покатали раз'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
+        df_result['Покатушка средне'] = df_result['Услуги по доставке товара покупателю']/df_result[('Услуги по доставке товара покупателю', 'Логистика')]
 
         df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
 
