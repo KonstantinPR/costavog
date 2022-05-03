@@ -108,6 +108,7 @@ def read_products():
     df = pd.read_sql(db.session.query(Product).statement, db.session.bind)
     df.replace(np.NaN, "", inplace=True)
     file = io_output(df)
+    flash("Себестоимость товаров загружена")
 
     return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
 
