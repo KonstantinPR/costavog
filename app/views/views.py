@@ -124,6 +124,7 @@ def delete_products():
     db.session.query(Product).filter_by(company_id=company_id).delete(synchronize_session='fetch')
 
     db.session.commit()
+    flash(f"All products of {Company.company_name} was deleted")
 
     return render_template('upload_products.html')
 
@@ -139,6 +140,7 @@ def delete_all_products():
     db.session.query(Product).delete(synchronize_session='fetch')
 
     db.session.commit()
+    flash("All products in database was deleted")
 
     return render_template('upload_products.html')
 
@@ -152,6 +154,8 @@ def drop_products():
     company_id = current_user.company_id
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     Product.__table__.drop(engine)
+
+    flash("All table in database with products net cost was deleted")
 
     return render_template('upload_products.html')
 
