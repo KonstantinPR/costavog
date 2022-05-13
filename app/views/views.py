@@ -84,6 +84,7 @@ def upload_products():
 
         print(df3)
 
+
         df.to_sql('temp_table', engine, if_exists='replace')
 
         sql = "UPDATE products SET net_cost = temp_table.net_cost " \
@@ -93,6 +94,13 @@ def upload_products():
 
         with engine.begin() as conn:
             conn.execute(sql)
+
+        sql_temp_del = "DELETE FROM temp_table"
+
+        with engine.begin() as conn:
+            conn.execute(sql_temp_del)
+
+    flash("Себестоимость товаров загружена")
 
     return render_template('upload_products.html')
 
@@ -108,7 +116,7 @@ def read_products():
     df = pd.read_sql(db.session.query(Product).statement, db.session.bind)
     df.replace(np.NaN, "", inplace=True)
     file = io_output(df)
-    flash("Себестоимость товаров загружена")
+    flash("Себестоимость товаров скачана в excel")
 
     return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
 
@@ -145,7 +153,7 @@ def delete_all_products():
     return render_template('upload_products.html')
 
 
-@app.route('/drop_products', methods=['POST', 'GET'])
+@app.route('/drop_products', methods=[' POST', 'GET'])
 @login_required
 def drop_products():
     if not current_user.is_authenticated:
