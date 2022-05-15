@@ -7,7 +7,7 @@ import io
 from os import listdir
 import datetime
 
-'''Analize detaling WB reports, take all zip files from detailing from WB and make one file with pivot table info'''
+'''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
 
 # path = 'detailing/'
@@ -83,43 +83,69 @@ def zip_detail(zip_downloaded, df_net_cost):
         print(df_result)
 
         df_result['Продажи'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Продажа')] + \
-                                     df_result[('К перечислению за товар', 'Продажа')]
+                               df_result[('К перечислению за товар', 'Продажа')]
 
-        df_result['Возвраты'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Возврат')] + \
+        df_result['Возвраты, руб.'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Возврат')] + \
                                       df_result[('К перечислению за товар', 'Возврат')]
 
-        df_result['Маржа'] = df_result['Итого продажи'] - \
-                                   df_result["Услуги по доставке товара покупателю"] - \
-                                   df_result['Итого возвраты']
+        df_result['Маржа'] = df_result['Продажи'] - \
+                             df_result["Услуги по доставке товара покупателю"] - \
+                             df_result['Возвраты, руб.']
 
         if 'net_cost' in df_result:
             df_result['net_cost'].replace(np.NaN, 0, inplace=True)
         else:
             df_result['net_cost'] = 0
 
-
-
         df_result['Покупок шт.'] = df_result[('Количество доставок', 'Продажа')] - df_result[
             ('Количество доставок', 'Возврат')]
 
-        df_result['Маржа / логистика'] = df_result['Итого маржа'] / df_result["Услуги по доставке товара покупателю"]
-        df_result['Продажи к возвратам'] = df_result['Итого продажи'] / df_result['Итого возвраты']
-        df_result['Маржа / доставковозвратам'] = df_result['Итого маржа'] / (
+        df_result['Маржа / логистика'] = df_result['Маржа'] / df_result["Услуги по доставке товара покупателю"]
+        df_result['Продажи к возвратам'] = df_result['Продажи'] / df_result['Возвраты, руб.']
+        df_result['Маржа / доставковозвратам'] = df_result['Маржа'] / (
                 df_result[('Количество доставок', 'Продажа')] -
                 df_result[('Количество доставок', 'Возврат')])
 
         df_result['Продаж'] = df_result[('Количество доставок', 'Продажа')]
-        df_result['Возврат'] = df_result[('Количество доставок', 'Возврат')]
+        df_result['Возврат шт.'] = df_result[('Количество доставок', 'Возврат')]
         df_result['Логистика'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
-        df_result['Доставки/возвраты'] = df_result[('Количество доставок', 'Продажа')] / df_result[
+        df_result['Доставки/Возвраты, руб.'] = df_result[('Количество доставок', 'Продажа')] / df_result[
             ('Количество доставок', 'Возврат')]
 
-        df_result['Маржа-себест.'] = df_result['Итого маржа'] - df_result['net_cost']*df_result['Покупок шт.']
-        df_result['Маржа-себест. шт.'] = df_result['Маржа-себест.'] / df_result['Покупок шт.']
+        df_result['Маржа-себест.'] = df_result['Маржа'] - df_result['net_cost'] * df_result['Покупок шт.']
+        df_result['Маржа-себест. за шт. руб'] = df_result['Маржа-себест.'] / df_result['Покупок шт.']
         df_result['Себестоимость продаж'] = df_result['net_cost'] * df_result['Покупок шт.']
         df_result['Покатали раз'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
-        df_result['Покатушка средне'] = df_result['Услуги по доставке товара покупателю']/df_result[('Услуги по доставке товара покупателю', 'Логистика')]
+        df_result['Покатушка средне, руб.'] = df_result['Услуги по доставке товара покупателю'] / df_result[
+            ('Услуги по доставке товара покупателю', 'Логистика')]
 
         df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        df_result = df_result[[
+            'Бренд',
+            'Предмет',
+            'Артикул поставщика',
+            'Код номенклатуры',
+            'Маржа-себест.',
+            'Маржа',
+            'Возвраты, руб.',
+            'Продажи',
+            'Услуги по доставке товара покупателю',
+            'Покатушка средне, руб.',
+            'Маржа-себест. за шт. руб',
+            'Покупок шт.',
+            'Возврат шт.',
+            'Покатали раз',
+            'net_cost',
+            'company_id',
+            'Маржа / логистика',
+            'Продажи к возвратам',
+            'Маржа / доставковозвратам',
+            'Продаж',
+            'Логистика',
+            'Доставки/Возвраты, руб.',
+            'Себестоимость продаж']]
+
+        df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
 
         return df_result
