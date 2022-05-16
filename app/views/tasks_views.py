@@ -1,9 +1,9 @@
 from app import app
-
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
+from sqlalchemy import desc
 
 
 # /// TASKS //////////////////
@@ -33,7 +33,7 @@ def tasks():
         db.session.commit()
 
     user_name = current_user.user_name
-    tasks = db.session.query(Task).filter_by(company_id=company_id).all()
+    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date)).all()
     return render_template('tasks.html', tasks=tasks, user_name=user_name)
 
 
@@ -70,7 +70,7 @@ def task_edit(id):
                                user_name=user_name,
                                id=id)
 
-    tasks = db.session.query(Task).filter_by(company_id=company_id).all()
+    # tasks = db.session.query(Task).filter_by(company_id=company_id).all()
     return redirect('/tasks')
 
 

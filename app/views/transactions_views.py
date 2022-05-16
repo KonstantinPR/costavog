@@ -61,10 +61,12 @@ def transactions():
 
         for i in transactions:
             transactions_sum += int(i.amount)
+
     except ValueError:
         transactions = ""
         transactions_sum = ""
         'base is empty'
+
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum)
 
