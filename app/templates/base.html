@@ -53,6 +53,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -87,6 +88,17 @@
                         <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
                     </ul>
                 </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkCatalog" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Каталог
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
+                        <a class="dropdown-item" href="{{url_for('catalog')}}">Сформировать каталог</a>
+                    </ul>
+                </li>
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkUser" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
@@ -100,6 +112,7 @@
                         <a class="dropdown-item" href="{{url_for('profile')}}">Profile</a>
                     </ul>
                 </li>
+
 
             </ul>
         </div>

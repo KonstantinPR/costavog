@@ -1,0 +1,33 @@
+<body class="bg-light">
+<div class="container">
+    <main>
+
+        <center>
+
+
+            {# {% for table in tables %}
+            {{ table|safe }}
+            {% endfor %} #}
+
+
+            {% for a in art %}
+            {% if a != art[loop.index0 - 1] %}
+            <br><br>
+            <div><img width="800px" src="https://elenachezelle.ru/img-catalog/{{a}}-1.jpg"></div>
+            <br>
+            <span><b>{{a}}</b></span>
+            <br>
+            {% endif %}
+            <span style="font-size:18px">{{size[loop.index0]}} р. | </span>
+            <span style="font-size:18px">{{qt[loop.index0]}} шт.</span>
+            <br>
+            {% endfor %}
+
+
+        </center>
+
+    </main>
+
+
+</div>
+

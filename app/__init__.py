@@ -28,3 +28,4 @@ from app.views import views
 from app.views import profile_views
 from app.views import transactions_views
 from app.views import tasks_views
+from app.views import catalog_views
