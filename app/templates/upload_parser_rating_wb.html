@@ -14,14 +14,16 @@
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
-            <div>Загрузить файл excel с товаром, который сформировать в каталоге</div>
+            <div>Отправляем файл excel с товарами, на которые хотим получить текущий рейтинг с сайта WB. Загружает файл
+                с одним столбцом. В шапке - слово Номенклатура
+            </div>
         </div>
     </div>
 
     <div class="row g-5 text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" target="blank" enctype=multipart/form-data action="{{url_for('catalog')}}">
+                <form method="post" target="blank" enctype=multipart/form-data action="{{url_for('parser_rating_wb')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file">

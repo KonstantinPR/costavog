@@ -126,6 +126,7 @@ def upload_transaction_excel():
 
 
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
+@login_required
 def transaction_edit(id):
     if request.method == 'POST':
         amount = request.form['amount']
@@ -158,6 +159,7 @@ def transaction_edit(id):
 
 
 @app.route('/transaction_delete/<int:id>', methods=['POST', 'GET'])
+@login_required
 def transaction_delete(id):
     flash("Запись удалена")
     transaction = Transaction.query.filter_by(id=id).one()

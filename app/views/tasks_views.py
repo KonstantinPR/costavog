@@ -38,6 +38,7 @@ def tasks():
 
 
 @app.route('/task_edit/<int:id>', methods=['POST', 'GET'])
+@login_required
 def task_edit(id):
     if not current_user.is_authenticated:
         return redirect('/company_register')
@@ -75,6 +76,7 @@ def task_edit(id):
 
 
 @app.route('/task_delete/<int:id>', methods=['POST', 'GET'])
+@login_required
 def task_delete(id):
     flash("Запись удалена")
     task = Task.query.filter_by(id=id).one()
