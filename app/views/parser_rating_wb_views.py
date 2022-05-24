@@ -14,21 +14,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def get_rating(arts):
-    time_wait = 2
     rating = {}
     review_count = {}
     for i in arts:
-        url = f"https://www.wildberries.ru/catalog/{str(i)}/detail.aspx?targetUrl=IN"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        print(soup)
-        print(i)
-        rating[i] = soup.find('span', {'data-link': 'text{: product^star}'})
-        print(rating[i])
-
-        review_count[i] = soup.find('span', {'data-link': "{include tmpl='productCardCommentsCount'}"})
-        print(review_count[i])
-        time.sleep(time_wait)
+        url = f"https://wbxcatalog-ru.wildberries.ru/nm-2-card/" \
+              f"catalog?spp=0&pricemarginCoeff=1.0&reg=0&appType=1&emp=0&locale=ru&lang=ru&curr=rub&nm={str(i)}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 Firefox/100.0"
+        }
+        data = requests.get(url, headers=headers).json()["data"]["products"][0]
+        print(f"{data['name']}\n{data['rating']} stars from {data['feedbacks']} reviews.")
+        rating[i] = data['rating']
+        review_count[i] = data['feedbacks']
 
     return rating, review_count
 
