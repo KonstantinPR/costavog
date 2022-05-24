@@ -1,16 +1,11 @@
 import flask
 from app import app
-from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from flask import flash, render_template, request, send_file
+from flask_login import login_required
 import pandas as pd
-from bs4 import BeautifulSoup
 import requests
-import time
-from io import BytesIO
 from app.modules import io_output
 
-from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def get_rating(arts):
