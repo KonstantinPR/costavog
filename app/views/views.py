@@ -34,7 +34,6 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-
 # /// YANDEX DISK ////////////
 
 
@@ -85,7 +84,6 @@ def upload_products():
 
         print(df3)
 
-
         df.to_sql('temp_table', engine, if_exists='replace')
 
         sql = "UPDATE products SET net_cost = temp_table.net_cost " \
@@ -104,6 +102,12 @@ def upload_products():
     flash("Себестоимость товаров загружена")
 
     return render_template('upload_products.html')
+
+
+@app.route('/test/<id>', methods=['POST', 'GET'])
+@login_required
+def test(id):
+    return render_template('test.html', id=id)
 
 
 @app.route('/read_products', methods=['POST', 'GET'])

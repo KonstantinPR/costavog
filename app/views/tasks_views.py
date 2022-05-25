@@ -33,7 +33,7 @@ def tasks():
         db.session.commit()
 
     user_name = current_user.user_name
-    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date)).all()
+    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date), desc(Task.id)).all()
     return render_template('tasks.html', tasks=tasks, user_name=user_name)
 
 
@@ -69,9 +69,30 @@ def task_edit(id):
                                description=description,
                                date=date,
                                user_name=user_name,
-                               id=id)
+                               id=id,
+                               )
 
     # tasks = db.session.query(Task).filter_by(company_id=company_id).all()
+    return redirect('/tasks')
+
+
+@app.route('/task_copy/<int:id>', methods=['POST', 'GET'])
+@login_required
+def task_copy(id):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+
+    task = Task.query.filter_by(id=id).first()
+    amount = task.amount
+    description = task.description
+    date = datetime.date.today()
+    user_name = task.user_name
+    task = Task(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
+    db.session.add(task)
+    db.session.commit()
+    flash("Copy completed")
+
     return redirect('/tasks')
 
 
