@@ -84,7 +84,7 @@
 
             {% for p in tasks %}
             <div hx-target="this" hx-swap="outerHTML" class="row-striped row text-left">
-                <a href="#" hx-get="{{url_for('test', id=p.id)}}">
+                <a href="{{url_for('task_edit', id=p.id)}}">
                     <div class="d_hover row p-3">
                         <div class="col small">
                             {{p.date}}
