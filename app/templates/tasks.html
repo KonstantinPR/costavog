@@ -67,8 +67,15 @@
             </form>
 
             <br>
-            <br>
+            <form action="{{url_for('task_search')}}" method="post" novalidate>
+                <div class="input-group">
+                    <input type="search" class="form-control rounded" name="search" placeholder="Поиск" aria-label="Найти"
+                           aria-describedby="search-addon"/>
+                    <button type="submit" class="btn btn-outline-primary">Поиск по описанию</button>
+                </div>
+            </form>
 
+            <br>
 
             <div class="row p-3 text-left">
                 <div class="col">

@@ -98,6 +98,22 @@ def task_copy():
     return redirect('/tasks')
 
 
+@app.route('/task_search', methods=['POST', 'GET'])
+@login_required
+def task_search():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+
+    if request.method == 'POST':
+        search = request.form['search']
+        tasks = db.session.query(Task).filter(Task.description.like('%' + search.lower() + '%')).order_by(
+            desc(Task.date), desc(Task.id)).all()
+        return render_template('tasks.html', tasks=tasks)
+
+    return redirect('/tasks')
+
+
 @app.route('/task_delete/<int:id>', methods=['POST', 'GET'])
 @login_required
 def task_delete(id):
