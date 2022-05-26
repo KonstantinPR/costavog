@@ -107,7 +107,7 @@ def task_search():
 
     if request.method == 'POST':
         search = request.form['search']
-        tasks = db.session.query(Task).filter(Task.description.like('%' + search.lower() + '%')).order_by(
+        tasks = db.session.query(Task).filter(Task.description.ilike('%' + search.lower() + '%')).order_by(
             desc(Task.date), desc(Task.id)).all()
         return render_template('tasks.html', tasks=tasks)
 
