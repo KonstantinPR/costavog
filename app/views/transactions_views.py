@@ -158,6 +158,43 @@ def transaction_edit(id):
     return redirect('/transactions')
 
 
+@app.route('/transaction_copy', methods=['POST', 'GET'])
+@login_required
+def transaction_copy():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+
+    if request.method == 'POST':
+        amount = request.form['amount']
+        description = request.form['description']
+        date = datetime.date.today()
+        user_name = request.form['user_name']
+        transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
+                                  company_id=company_id)
+        db.session.add(transaction)
+        db.session.commit()
+        flash("Транзакция скопирована")
+
+    return redirect('/transactions')
+
+
+@app.route('/transaction_search', methods=['POST', 'GET'])
+@login_required
+def transaction_search():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+    transactions = None
+    if request.method == 'POST':
+        search = request.form['search']
+        transactions = db.session.query(Transaction).filter(
+            Transaction.description.ilike('%' + search.lower() + '%'), Transaction.company_id == company_id).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+
+    return render_template('transactions.html', transactions=transactions)
+
+
 @app.route('/transaction_delete/<int:id>', methods=['POST', 'GET'])
 @login_required
 def transaction_delete(id):

@@ -25,7 +25,7 @@
 
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                 <h4 class="mb-3"></h4>
-                <form class="needs-validation" action="{{url_for('transaction_edit', id=id)}}" method="post" novalidate>
+                <form class="needs-validation" method="post" novalidate>
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <textarea class="form-control form-control-lg" rows="2" cols="45"
@@ -69,7 +69,13 @@
                     </div>
                     <div class="my-4"></div>
 
-                    <button class="w-100 btn btn-primary btn-lg p-2" type="submit">Изменить</button>
+                    <button class="w-100 btn btn-primary btn-lg p-2" formaction="{{url_for('transaction_edit', id=id)}}"
+                            type="submit">Изменить
+                    </button>
+                    <br><br>
+                    <button class="w-100 btn btn-warning btn-lg p-2" formaction="{{url_for('transaction_copy')}}"
+                            type="submit">Копировать
+                    </button>
 
                 </form>
                 <br>

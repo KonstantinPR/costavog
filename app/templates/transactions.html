@@ -72,6 +72,16 @@
             </form>
 
             <br>
+
+            <form action="{{url_for('transaction_search')}}" method="post" novalidate>
+                <div class="input-group">
+                    <input type="search" class="form-control rounded" name="search" placeholder="Поиск"
+                           aria-label="Найти"
+                           aria-describedby="search-addon"/>
+                    <button type="submit" class="btn btn-outline-primary">Поиск по описанию</button>
+                </div>
+            </form>
+
             <br>
 
 
@@ -116,8 +126,8 @@
         </a>
         <br>
         <a href="{{url_for('upload_transaction_excel')}}">
-        <span class="glyphicon glyphicon-search">Показать все старые проводки</span>
-    </a>
+            <span class="glyphicon glyphicon-search">Показать все старые проводки</span>
+        </a>
     </p>
 
     <ul class="list-inline">
