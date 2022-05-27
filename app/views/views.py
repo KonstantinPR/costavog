@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
+from app.modules import io_output
 import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
@@ -19,14 +20,6 @@ from app.modules import discount, detailing
 def create_all():
     db.create_all()
 
-
-def io_output(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer)
-    writer.close()
-    output.seek(0)
-    return output
 
 
 def allowed_file(filename):
@@ -50,7 +43,7 @@ def download_yandex_disk_excel():
 
     download_response = requests.get(download_url)
     df = pd.read_excel(download_response.content)
-    file = io_output(df)
+    file = io_output.io_output(df)
 
     return send_file(file, attachment_filename="excel_yandex.xlsx", as_attachment=True)
 

@@ -4,6 +4,7 @@ import pandas as pd
 import math
 import numpy as np
 import random
+from typing import Union
 
 NORMAL_TURNOVER = 20
 NORMAL_REWARD = 1000
@@ -15,7 +16,7 @@ MIN_STEP_DISCOUNT = 1
 STEP_DISCOUNT = 10
 
 
-def pow(normal_reward: float, current_reward: float):
+def pow(normal_reward: float, current_reward: float) -> float:
     if current_reward > normal_reward:
         return 0.5
     elif current_reward > normal_reward / 2:
@@ -24,7 +25,8 @@ def pow(normal_reward: float, current_reward: float):
         return 1
 
 
-def analize_discount(profitability: float, turnover: float, turnover_all: float, profit, day_on_site, stock: int):
+def analize_discount(profitability: float, turnover: float, turnover_all: float, profit, day_on_site,
+                     stock: int) -> Union[float, None]:
     if turnover_all == 499.5:
         if stock > 100:
             return MIN_STEP_DISCOUNT * 6
@@ -60,14 +62,14 @@ def analize_discount(profitability: float, turnover: float, turnover_all: float,
     return round(STEP_DISCOUNT * disc, 0)
 
 
-def nice_price(current_discount, plan_delta_discount, current_price):
+def nice_price(plan_delta_discount: float, current_price: float) -> float:
     """формирование цены в виде 995"""
     new_price = int(round(current_price * (1 - plan_delta_discount / 100), 0))
     nice_new_price = round(new_price, -2) - random.randint(1, 2) * 5
     return nice_new_price
 
 
-def sigmoid(x: float = 1, k: float = 1, a: float = 0.3, b: float = -1, ):
+def sigmoid(x: float = 1, k: float = 1, a: float = 0.3, b: float = -1, ) -> float:
     """
     Сигмоида - функция для сглаживания величины при минимальных и максимальных значениях
 
@@ -75,14 +77,14 @@ def sigmoid(x: float = 1, k: float = 1, a: float = 0.3, b: float = -1, ):
     return (k / (0.5 + math.exp(a + b * x))) - 1
 
 
-def merge_dataframes(excel1_path: str, excel2_path: str, left_on: str, right_on: str):
+def merge_dataframes(excel1_path: str, excel2_path: str, left_on: str, right_on: str) -> pd.DataFrame:
     excel_data_df1 = pd.read_excel(excel1_path)
     excel_data_df2 = pd.read_excel(excel2_path)
     df = excel_data_df1.merge(excel_data_df2, left_on=left_on, right_on=right_on, how='outer')
     return df
 
 
-def is_img(art: str, r: float):
+def is_img(art: str, r: float) -> None:
     url_site = "https://www.wildberries.ru/catalog/" + str(art) + "/detail.aspx?targetUrl=IN"
 
     if r == 999 or r == 499.5:
@@ -95,7 +97,7 @@ def is_img(art: str, r: float):
     return None
 
 
-def isDiscountPosible(x, y):
+def is_discount_possible(x: int, y: int) -> int:
     if x <= 0:
         if y >= 3:
             return 3
@@ -110,7 +112,7 @@ def isDiscountPosible(x, y):
         return x
 
 
-def discount(file_turnover, file_net_cost):
+def discount(file_turnover: pd.DataFrame, file_net_cost: pd.DataFrame) -> pd.DataFrame:
     """
         get the information from excel file from WB that contains price, discount, quantity etc
         and work with it
@@ -177,15 +179,14 @@ def discount(file_turnover, file_net_cost):
                                         df['Остаток товара (шт.)'],
                                         )]
 
-    df["Скидочная маркетинговая цена"] = [nice_price(b, c, d) for b, c, d in
-                                          zip(df["Текущая скидка на сайте, %"],
-                                              df["Рек. поправка к скидке"],
+    df["Скидочная маркетинговая цена"] = [nice_price(c, d) for c, d in
+                                          zip(df["Рек. поправка к скидке"],
                                               df["Текущая конечная цена"],
                                               )]
 
     df["Согласованная скидка, %"] = df["Текущая скидка на сайте, %"] + df["Рек. поправка к скидке"]
 
-    df["Согласованная скидка, %"] = [isDiscountPosible(x, y) for x, y in
+    df["Согласованная скидка, %"] = [is_discount_possible(x, y) for x, y in
                                      zip(df["Согласованная скидка, %"],
                                          df["Текущая скидка на сайте, %"],
                                          )]

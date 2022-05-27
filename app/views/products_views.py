@@ -13,6 +13,7 @@ import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
 from app.modules import discount, detailing
+from app.modules import io_output
 
 
 # ///PRODUCTS////////////
@@ -145,7 +146,7 @@ def upload_turnover():
         df.replace(np.NaN, "", inplace=True)
         df_products = pd.read_sql(db.session.query(Product).statement, db.session.bind)
         df = discount.discount(df, df_products)
-        file = io_output(df)
+        file = io_output.io_output(df)
 
         return send_file(file, attachment_filename="excel.xlsx", as_attachment=True)
 
