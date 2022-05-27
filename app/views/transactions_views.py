@@ -52,7 +52,7 @@ def transactions():
     user_name = current_user.user_name
     try:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
-            desc(Transaction.date)).all()
+            desc(Transaction.date), desc(Transaction.id)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
         initial_sum = users.initial_sum
         if not initial_sum:
@@ -185,14 +185,15 @@ def transaction_search():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-    transactions = None
-    if request.method == 'POST':
-        search = request.form['search']
-        transactions = db.session.query(Transaction).filter(
-            Transaction.description.ilike('%' + search.lower() + '%'), Transaction.company_id == company_id).order_by(
-            desc(Transaction.date), desc(Transaction.id)).all()
 
-    return render_template('transactions.html', transactions=transactions)
+    search = request.form['search']
+    transactions = db.session.query(Transaction).filter(
+        Transaction.description.ilike('%' + search.lower() + '%'), Transaction.company_id == company_id).order_by(
+        desc(Transaction.date), desc(Transaction.id)).all()
+
+    print(transactions)
+
+    return render_template('transactions_div.html', transactions=transactions)
 
 
 @app.route('/transaction_delete/<int:id>', methods=['POST', 'GET'])
