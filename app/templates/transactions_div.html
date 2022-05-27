@@ -1,0 +1,17 @@
+{% for p in transactions %}
+<div class="row-striped row">
+    <a href={{url_for('transaction_edit', id=p.id)}}>
+        <div class="d_hover row p-3">
+            <div class="col small">
+                {{p.date}}
+            </div>
+            <div class="col">
+                {{p.amount}}
+            </div>
+            <div class="col-6 small">
+                {{p.description}}
+            </div>
+        </div>
+    </a>
+</div>
+{% endfor %}

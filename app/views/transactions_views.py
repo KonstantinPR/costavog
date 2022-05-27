@@ -193,6 +193,7 @@ def transaction_search():
 
     print(transactions)
 
+
     return render_template('transactions_div.html', transactions=transactions)
 
 
