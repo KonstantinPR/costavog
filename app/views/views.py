@@ -32,14 +32,8 @@ def allowed_file(filename):
 def upload_img_crop():
     imgs = []
     zip_buffer = str
-
-    try:
-        upload_files = flask.request.files.getlist('file')
-    except:
-        upload_files = []
-
-    print(upload_files)
-    if upload_files:
+    if request.method == "POST":
+        upload_files = flask.request.files.getlist("files")
         print(upload_files)
         for file in upload_files:
             file_name = file.filename
@@ -59,11 +53,11 @@ def upload_img_crop():
 
             print(zip_buffer)
 
-        return render_template('img.html')
+        return send_file(zip_buffer, attachment_filename='zip.zip', as_attachment=True)
+
+        # return send_file(imgs[0], attachment_filename=file_name, as_attachment=True)
 
     return render_template('upload_img_crop.html')
-
-    return send_file(zip_buffer, attachment_filename='zip.zip', as_attachment=True)
 
 
 # /// YANDEX DISK ////////////
