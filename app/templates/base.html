@@ -62,6 +62,10 @@
 
 
 
+
+
+
+
     </style>
 </head>
 
@@ -84,13 +88,7 @@
                     <a class="nav-item nav-link active" href="{{url_for('tasks')}}">Задачи</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-item nav-link active" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-item nav-link active" href="{{url_for('upload_products')}}">Загрузки</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-item nav-link active" href="{{url_for('upload_img_crop')}}">Кроп Изображений</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkAnalitics" role="button"
@@ -100,15 +98,17 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
                         <a class="dropdown-item" href="{{url_for('upload_turnover')}}">Корректировка цен</a>
                         <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
+                        <a class="dropdown-item" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
                     </ul>
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkCatalog" role="button"
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkImg" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
                         Каталог
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
+                        <a class="dropdown-item" href="{{url_for('upload_img_crop')}}">Кроп Изображений</a>
                         <a class="dropdown-item" href="{{url_for('catalog')}}">Сформировать каталог</a>
                     </ul>
                 </li>

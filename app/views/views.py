@@ -1,19 +1,12 @@
 from app import app
+from flask import flash, render_template, request, redirect, send_file
+from flask_login import login_required
+from app.models import db
+from urllib.parse import urlencode
+from app.modules import img_cropper, io_output
+import pandas as pd
 import flask
 import requests
-from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
-import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import desc
-import pandas as pd
-from io import BytesIO
-from sqlalchemy import create_engine
-from urllib.parse import urlencode
-import zipfile
-from app.modules import discount, detailing, img_cropper, io_output
-from base64 import encodebytes
 
 
 @app.before_first_request
