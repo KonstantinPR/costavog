@@ -10,7 +10,6 @@ from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
 from app.modules import io_output
-import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
 import zipfile
