@@ -9,11 +9,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
-from app.modules import io_output
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
 import zipfile
-from app.modules import discount, detailing, img_cropper
+from app.modules import discount, detailing, img_cropper, io_output
 from base64 import encodebytes
 
 
@@ -29,32 +28,11 @@ def allowed_file(filename):
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])
 def upload_img_crop():
-    imgs = []
-    zip_buffer = str
     if request.method == "POST":
-        upload_files = flask.request.files.getlist("files")
-        print(upload_files)
-        for file in upload_files:
-            file_name = file.filename
-            file = img_cropper.crop_img(file)
-            print('file after crop_img: ' + str(file))
-            img = io_output.io_img_output(file)
-
-            imgs.append((file_name, img))
-
-            print(imgs)
-
-            zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-                for file_name, data in imgs:
-                    zip_file.writestr(file_name, data.getvalue())
-            zip_buffer.seek(0)
-
-            print(zip_buffer)
-
-        return send_file(zip_buffer, attachment_filename='zip.zip', as_attachment=True)
-
-        # return send_file(imgs[0], attachment_filename=file_name, as_attachment=True)
+        upload_images = flask.request.files.getlist("images")
+        print(upload_images)
+        images_zipped = img_cropper.crop_images(upload_images)
+        return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
     return render_template('upload_img_crop.html')
 

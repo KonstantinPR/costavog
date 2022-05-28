@@ -1,25 +1,43 @@
 from PIL import Image, ImageOps
 import numpy as np
+from io import BytesIO
+from app.modules import io_output
+import zipfile
 
-k_height_left_start = 0.10
-k_height_right_start = 0.90
-k_bottom_left_start = 0.05
-k_bottom_right_start = 0.95
+K_HEIGHT_LEFT_START = 0.10
+K_HEIGHT_RIGHT_START = 0.90
+K_BOTTOM_LEFT_START = 0.05
+K_BOTTOM_RIGHT_START = 0.95
 STEP_ITERATION = 10
-sensibility_color = 210
-count_step_j = 10
-delimiter = 4
+SENSIBILITY_COLOR = 210
+COUNT_STEP_J = 10
+DELIMITER = 4
 
 
-def crop_img(img):
+def crop_images(images):
+    images_zipped = None
+    images_set = []
+    for img in images:
+        file_name = img.filename
+        file = _crop_img(img)
+        print('file after _crop_img: ' + str(file))
+        img = io_output.io_img_output(file)
+        images_set.append((file_name, img))
+        print(images_set)
+        images_zipped = _put_in_zip(images_set)
+
+    return images_zipped
+
+
+def _crop_img(img):
     # rotate problem fixing
     original_image = Image.open(img)
     fixed_image = ImageOps.exif_transpose(original_image)
     img = fixed_image
     pix = np.array(img)
-    img_crop_height_top = crop_height(pix, STEP_ITERATION)
-    img_crop_height_bottom, left_border, right_border = crop_bottom(pix, img_crop_height_top)
-    area = (left_border, img_crop_height_top, right_border, img_crop_height_bottom)  # left, top, right, bottom
+    img__crop_height_top = _crop_height(pix, STEP_ITERATION)
+    img__crop_height_bottom, left_border, right_border = _crop_bottom(pix, img__crop_height_top)
+    area = (left_border, img__crop_height_top, right_border, img__crop_height_bottom)  # left, top, right, bottom
     cropped_img = ImageOps.crop(img, area)
     im = cropped_img
 
@@ -55,18 +73,18 @@ def crop_img(img):
 
 
 # crop image
-def crop_height(img, STEP_ITERATION):
+def _crop_height(img, STEP_ITERATION):
     height, width, color = img.shape
     step = STEP_ITERATION
-    left_start = width * k_height_left_start
-    right_end = width * k_height_right_start
+    left_start = width * K_HEIGHT_LEFT_START
+    right_end = width * K_HEIGHT_RIGHT_START
     new_height = 0
-    count_i = step * count_step_j
+    count_i = step * COUNT_STEP_J
     for i in img[step * 10::step]:
         count_j = 0
         for j in i:
             if left_start < count_j < right_end:
-                if sum(j) < sensibility_color * 3:
+                if sum(j) < SENSIBILITY_COLOR * 3:
                     new_height = count_i - step * 4
                     break
             count_j += 1
@@ -77,26 +95,26 @@ def crop_height(img, STEP_ITERATION):
     return new_height
 
 
-def crop_bottom(img, img_crop_height_top):
+def _crop_bottom(img, img__crop_height_top):
     height, width, color = img.shape
     step = STEP_ITERATION
-    left_start = width * k_bottom_left_start
-    right_end = width * k_bottom_right_start
+    left_start = width * K_BOTTOM_LEFT_START
+    right_end = width * K_BOTTOM_RIGHT_START
     new_bottom = 0
     count_i = step * 10
     left_right_border = []
-    for i in img[img_crop_height_top + step * 10::step]:
-        count_j = step * count_step_j
+    for i in img[img__crop_height_top + step * 10::step]:
+        count_j = step * COUNT_STEP_J
         count_row = 0
         for j in i:
             if left_start < count_j < right_end:
-                if sum(j) > sensibility_color * 3:
+                if sum(j) > SENSIBILITY_COLOR * 3:
 
                     count_row += 1
                     if count_row >= (
-                            width * k_bottom_right_start - width * k_bottom_left_start) - 5 and count_i > height / delimiter:
+                            width * K_BOTTOM_RIGHT_START - width * K_BOTTOM_LEFT_START) - 5 and count_i > height / DELIMITER:
                         print(new_bottom)
-                        new_bottom = height - img_crop_height_top - count_i - step
+                        new_bottom = height - img__crop_height_top - count_i - step
                         break
                 else:
                     left_right_border.append(count_j)
@@ -110,3 +128,13 @@ def crop_bottom(img, img_crop_height_top):
     print("left_border " + str(left_border))
     print("right_border" + str(right_border))
     return new_bottom, left_border, right_border
+
+
+def _put_in_zip(images):
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        for file_name, data in images:
+            zip_file.writestr(file_name, data.getvalue())
+    zip_buffer.seek(0)
+    print(zip_buffer)
+    return zip_buffer
