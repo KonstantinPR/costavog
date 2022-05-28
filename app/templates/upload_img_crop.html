@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
+    <div class="g-5 text-left">
+        <div class="row p-2 bg-light">
+            <div>Загрузка zip с изображениями</div>
+        </div>
+    </div>
+
+    <div class="row g-5 text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data action="{{url_for('upload_img_crop')}}">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="form-control form-control-lg" type="file" multiple name="files">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}
