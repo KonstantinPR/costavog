@@ -14,8 +14,8 @@ SENSIBILITY_COLOR = 210
 COUNT_STEP_J = 10
 DELIMITER = 4
 NEW_HEIGHT_IM = 1600
-K_WIDHT_HEIGHT_IM = 0.75
-WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDHT_HEIGHT_IM)
+K_WIDTH_HEIGHT_IM = 0.75
+WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 
 
@@ -50,7 +50,7 @@ def _crop_img(img):
 
     old_width_im, old_height_im = im.size
     new_height_im = NEW_HEIGHT_IM
-    k_width_height_im = K_WIDHT_HEIGHT_IM
+    k_width_height_im = K_WIDTH_HEIGHT_IM
     new_width_im = int(new_height_im * k_width_height_im)
     if old_height_im < old_width_im:
         new_height_im = int(old_height_im * (new_width_im) / old_width_im)
