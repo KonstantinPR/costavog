@@ -21,18 +21,25 @@
     <div class="row g-5 text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" enctype=multipart/form-data action="{{url_for('upload_img_crop')}}">
+                <form enctype=multipart/form-data">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" multiple name="files">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">
+                            <button hx-post="{{url_for('upload_img_crop')}}" hx-target="#img_div"
+                                    class="btn btn-primary form-control form-control-lg" type="submit">
+                                Отправить
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
+
+    <div id="img_div" hx-swap="outerHTML" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        hell
     </div>
 </main>
 
