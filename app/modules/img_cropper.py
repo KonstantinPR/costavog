@@ -1,8 +1,11 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, JpegImagePlugin
 import numpy as np
 from io import BytesIO
 from app.modules import io_output
 import zipfile
+import PIL
+from typing import Union
+import os
 
 K_HEIGHT_LEFT_START = 0.10
 K_HEIGHT_RIGHT_START = 0.90
@@ -19,11 +22,12 @@ WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 
 
-def crop_images(images):
+def crop_images(images: list) -> BytesIO:
     images_zipped = None
     images_set = []
     for img in images:
-        file_name = img.filename
+        file_name = os.path.basename(img.filename)
+        print(file_name)
         file = _crop_img(img)
         print('file after _crop_img: ' + str(file))
         img = io_output.io_img_output(file)
@@ -34,13 +38,21 @@ def crop_images(images):
     return images_zipped
 
 
-def _crop_img(img):
+def _crop_img(img: Image) -> Image:
     # rotate problem fixing
-    original_image = Image.open(img)
+    print(type(img))
+    a = 123
+    print(isinstance(a, int))
+    print(type(a))
+    if isinstance(img, PIL.JpegImagePlugin.JpegImageFile):
+        original_image = img
+    else:
+        original_image = Image.open(img)
+
     fixed_image = ImageOps.exif_transpose(original_image)
     img = fixed_image
     pix = np.array(img)
-    img_crop_height_top = _crop_height(pix, STEP_ITERATION)
+    img_crop_height_top = _crop_height(pix)
     img_crop_height_bottom, left_border, right_border = _crop_bottom(pix, img_crop_height_top)
     area = (left_border, img_crop_height_top, right_border, img_crop_height_bottom)  # left, top, right, bottom
     cropped_img = ImageOps.crop(img, area)
@@ -75,11 +87,11 @@ def _crop_img(img):
                           (white_pic_size[1] - pic_size[1] + k) // 2))
     print(type(new_im))
 
-    return (new_im)
+    return new_im
 
 
 # crop image
-def _crop_height(img, STEP_ITERATION):
+def _crop_height(img):
     height, width, color = img.shape
     step = STEP_ITERATION
     left_start = width * K_HEIGHT_LEFT_START
@@ -135,7 +147,7 @@ def _crop_bottom(img, img_crop_height_top):
     return new_bottom, left_border, right_border
 
 
-def _put_in_zip(images):
+def _put_in_zip(images: list[tuple[str, BytesIO]]) -> BytesIO:
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
         for file_name, data in images:

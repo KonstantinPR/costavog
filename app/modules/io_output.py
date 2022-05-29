@@ -17,3 +17,9 @@ def io_img_output(img: Image.Image) -> BytesIO:
     img.save(img_io, 'JPEG', quality=100)
     img_io.seek(0)
     return img_io
+
+
+def io_output_all(file):
+    file_io = BytesIO()
+    file_io.seek(0)
+    return file_io
