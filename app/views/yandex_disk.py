@@ -18,15 +18,18 @@ import glob
 # /// YANDEX DISK ////////////
 
 
-URL = 'https://cloud-api.yandex.net/v1/disk/resources'
-TOKEN = 'AQAAAAAAoUNmAADLWy1QYoRObUDvk8auiY1pG2c'
+URL = app.config['URL']
+TOKEN = app.config['TOKEN']
 headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': f'OAuth {TOKEN}'}
 
 
-@app.route('/yandex_disc_take_photo', methods=['POST', 'GET'])
+@app.route('/yandex_disk_crop_images', methods=['POST', 'GET'])
 @login_required
-def yandex_disc_take_photo():
+def yandex_disk_crop_images():
+    # create object that work with yandex disk using TOKEN
     y = yadisk.YaDisk(token=TOKEN)
+
+    # for creating unique folder
     id_folder = randrange(1000000)
     img_path = 'tmp_img_' + str(id_folder)
     images = []
@@ -34,12 +37,15 @@ def yandex_disc_take_photo():
     if not os.path.exists(img_path):
         os.makedirs(img_path)
 
+    # take names of all files on our directory in yandex disk
     list_img_name = (list(y.listdir("/img")))
 
+    # download all our images in temp folder
     for name_img in list_img_name:
         name = name_img['name']
         y.download("/img/" + name, img_path + "/" + name)
 
+    # take all img objects in list images
     for filename in glob.glob(img_path + '/*.JPG'):
         im = Image.open(filename)
         images.append(im)
@@ -48,6 +54,7 @@ def yandex_disc_take_photo():
 
     images_zipped = img_cropper.crop_images(images)
 
+    # deleting directory with images that was zipped
     try:
         shutil.rmtree(img_path)
     except OSError as e:

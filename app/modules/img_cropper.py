@@ -22,7 +22,7 @@ WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 
 
-def crop_images(images: list) -> BytesIO:
+def crop_images(images: Union[list[PIL.JpegImagePlugin.JpegImageFile], list]) -> BytesIO:
     images_zipped = None
     images_set = []
     for img in images:
@@ -38,17 +38,12 @@ def crop_images(images: list) -> BytesIO:
     return images_zipped
 
 
-def _crop_img(img: Image) -> Image:
-    # rotate problem fixing
-    print(type(img))
-    a = 123
-    print(isinstance(a, int))
-    print(type(a))
+def _crop_img(img: PIL.JpegImagePlugin.JpegImageFile) -> Image:
     if isinstance(img, PIL.JpegImagePlugin.JpegImageFile):
         original_image = img
     else:
         original_image = Image.open(img)
-
+    # rotate problem fixing
     fixed_image = ImageOps.exif_transpose(original_image)
     img = fixed_image
     pix = np.array(img)

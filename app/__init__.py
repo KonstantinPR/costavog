@@ -6,7 +6,7 @@ from app.models import db, login
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
-app.secret_key = 'xyz'
+app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
@@ -18,6 +18,8 @@ if uri:
 app.config['ALLOWED_EXTENSIONS'] = ['zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql+psycopg2://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
+app.config['TOKEN'] = 'AQAAAAAAoUNmAADLWy1QYoRObUDvk8auiY1pG2c'
 
 db.init_app(app)
 
