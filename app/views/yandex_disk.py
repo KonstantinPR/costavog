@@ -30,11 +30,15 @@ def yandex_disc_take_photo():
     id_folder = randrange(1000000)
     img_path = 'tmp_img_' + str(id_folder)
     images = []
+
     if not os.path.exists(img_path):
         os.makedirs(img_path)
 
-    y.download("/img/MHS-BASCONI-AC3786-004-3-WHITE-BROWN-1.JPG",
-               img_path + "/" + "MHS-BASCONI-AC3786-004-3-WHITE-BROWN-1.JPG")
+    list_img_name = (list(y.listdir("/img")))
+
+    for name_img in list_img_name:
+        name = name_img['name']
+        y.download("/img/" + name, img_path + "/" + name)
 
     for filename in glob.glob(img_path + '/*.JPG'):
         im = Image.open(filename)
