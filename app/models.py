@@ -23,7 +23,7 @@ class UserModel(UserMixin, db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
     initial_sum = db.Column(db.Integer, default=0)
     initial_file_path = db.Column(db.String(500), default=0)
-    yandex_disk_token = db.Column(db.String(500), default=0)
+    yandex_disk_token = db.Column(db.String(1000), default=0)
     role = db.Column(db.String(500), default='user')
 
     def set_password(self, password):
