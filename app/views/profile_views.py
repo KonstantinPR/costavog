@@ -96,7 +96,7 @@ def logout():
     return redirect('/transactions')
 
 
-@app.route('/pfofile', methods=['POST', 'GET'])
+@app.route('/profile', methods=['POST', 'GET'])
 @login_required
 def profile():
     if not current_user.is_authenticated:
