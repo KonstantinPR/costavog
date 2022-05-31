@@ -4,10 +4,13 @@ from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
 from sqlalchemy import desc
-
+import yadisk
 
 # /// TASKS //////////////////
 
+URL = app.config['URL']
+TOKEN = app.config['TOKEN']
+headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': f'OAuth {TOKEN}'}
 
 
 @app.route('/tasks', methods=['POST', 'GET'])
@@ -33,6 +36,19 @@ def tasks():
         task = Task(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
         db.session.add(task)
         db.session.commit()
+
+        # create yandex disk catalog on that task if checkbox is on
+        is_create_yandex_disk_catalog = request.form.getlist('is_create_yandex_disk_catalog')
+        if is_create_yandex_disk_catalog:
+            y = yadisk.YaDisk(token=TOKEN)
+            directory = 'ЗАДАЧИ'
+            task_directory = str(task.id) + '_' + str(date) + '_' + str(task.user_name) + '_' + str(
+                task.description)[:20]
+            if not y.exists(directory):
+                y.mkdir(directory)
+
+            if not y.exists(directory + '/' + task_directory):
+                y.mkdir(directory + '/' + task_directory)
 
     user_name = current_user.user_name
     tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date), desc(Task.id)).all()
