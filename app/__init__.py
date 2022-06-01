@@ -19,7 +19,7 @@ app.config['ALLOWED_EXTENSIONS'] = ['zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql+psycopg2://postgres:19862814@localhost/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
-app.config['TOKEN'] = 'AQAAAAAAoUNmAADLWy1QYoRObUDvk8auiY1pG2c'
+app.config['TOKEN'] = '' # here need Yandex TOKEN for API work
 
 db.init_app(app)
 

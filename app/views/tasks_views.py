@@ -43,7 +43,7 @@ def tasks():
             y = yadisk.YaDisk(token=TOKEN)
             directory = 'ЗАДАЧИ'
             task_directory = str(task.id) + '_' + str(date) + '_' + str(task.user_name) + '_' + str(
-                task.description)[:20]
+                task.description)[:20] + "..."
             if not y.exists(directory):
                 y.mkdir(directory)
 
