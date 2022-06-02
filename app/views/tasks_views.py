@@ -9,8 +9,7 @@ import yadisk
 # /// TASKS //////////////////
 
 URL = app.config['URL']
-TOKEN = app.config['TOKEN']
-headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': f'OAuth {TOKEN}'}
+
 
 
 @app.route('/tasks', methods=['POST', 'GET'])
@@ -40,7 +39,10 @@ def tasks():
         # create yandex disk catalog on that task if checkbox is on
         is_create_yandex_disk_catalog = request.form.getlist('is_create_yandex_disk_catalog')
         if is_create_yandex_disk_catalog:
-            y = yadisk.YaDisk(token=TOKEN)
+            yandex_disk_token = current_user.yandex_disk_token
+            headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
+                       'Authorization': f'OAuth {yandex_disk_token}'}
+            y = yadisk.YaDisk(token=yandex_disk_token)
             directory = 'ЗАДАЧИ'
             task_directory = str(task.id) + '_' + str(date) + '_' + str(task.user_name) + '_' + str(
                 task.description)[:20] + "..."

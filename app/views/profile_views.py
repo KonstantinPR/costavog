@@ -101,19 +101,29 @@ def logout():
 def profile():
     if not current_user.is_authenticated:
         return redirect('/company_register')
+    user_name = current_user.user_name
 
     if request.method == 'POST':
         initial_sum = request.form['initial_sum']
         initial_file_path = request.form['initial_file_path']
+        yandex_disk_token = request.form['yandex_disk_token']
 
-        users = UserModel.query.filter_by(id=current_user.id).first()
-        users.initial_sum = initial_sum
-        users.initial_file_path = initial_file_path
+        user = UserModel.query.filter_by(id=current_user.id).first()
+        user.initial_sum = initial_sum
+        user.initial_file_path = initial_file_path
+        user.yandex_disk_token = yandex_disk_token
         db.session.commit()
 
         flash("Changing completed")
 
+        return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
+                               initial_file_path=initial_file_path,
+                               yandex_disk_token=yandex_disk_token)
+
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
+    yandex_disk_token = current_user.yandex_disk_token
 
-    return render_template('profile.html', initial_sum=initial_sum, initial_file_path=initial_file_path)
+    return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
+                           initial_file_path=initial_file_path,
+                           yandex_disk_token=yandex_disk_token)

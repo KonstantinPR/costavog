@@ -14,53 +14,64 @@ from random import randrange
 import shutil
 from PIL import Image
 import glob
+from flask_login import login_required, current_user, login_user, logout_user
 
 # /// YANDEX DISK ////////////
 
 
 URL = app.config['URL']
-TOKEN = app.config['TOKEN']
-headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': f'OAuth {TOKEN}'}
 
 
 @app.route('/yandex_disk_crop_images', methods=['POST', 'GET'])
 @login_required
 def yandex_disk_crop_images():
-    # create object that work with yandex disk using TOKEN
-    y = yadisk.YaDisk(token=TOKEN)
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
 
-    # for creating unique folder
-    id_folder = randrange(1000000)
-    img_path = 'tmp_img_' + str(id_folder)
-    images = []
+    if request.method == 'POST':
+        img_path_yandex_disk = request.form['yandex_path']
+        company_id = current_user.company_id
 
-    if not os.path.exists(img_path):
-        os.makedirs(img_path)
+        # create object that work with yandex disk using TOKEN
+        yandex_disk_token = current_user.yandex_disk_token
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
+                   'Authorization': f'OAuth {yandex_disk_token}'}
+        y = yadisk.YaDisk(token=yandex_disk_token)
 
-    # take names of all files on our directory in yandex disk
-    list_img_name = (list(y.listdir("/img")))
+        # for creating unique folder
+        id_folder = randrange(1000000)
+        img_path = 'tmp_img_' + str(id_folder)
+        images = []
 
-    # download all our images in temp folder
-    for name_img in list_img_name:
-        name = name_img['name']
-        y.download("/img/" + name, img_path + "/" + name)
+        if not os.path.exists(img_path):
+            os.makedirs(img_path)
 
-    # take all img objects in list images
-    for filename in glob.glob(img_path + '/*.JPG'):
-        im = Image.open(filename)
-        images.append(im)
+        # take names of all files on our directory in yandex disk
+        list_img_name = (list(y.listdir("" + str(img_path_yandex_disk))))
 
-    print(images)
+        # download all our images in temp folder
+        for name_img in list_img_name:
+            name = name_img['name']
+            y.download("/" + str(img_path_yandex_disk) + "/" + name, img_path + "/" + name)
 
-    images_zipped = img_cropper.crop_images(images)
+        # take all img objects in list images
+        for filename in glob.glob(img_path + '/*.JPG'):
+            im = Image.open(filename)
+            images.append(im)
 
-    # deleting directory with images that was zipped
-    try:
-        shutil.rmtree(img_path)
-    except OSError as e:
-        print("Error: %s - %s." % (e.filename, e.strerror))
+        print(images)
 
-    return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+        images_zipped = img_cropper.crop_images(images)
+
+        # deleting directory with images that was zipped
+        try:
+            shutil.rmtree(img_path)
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
+
+        return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+
+    return redirect('/yandex_disk_crop_images')
 
 
 @app.route('/download_yandex_disk_excel', methods=['POST', 'GET'])

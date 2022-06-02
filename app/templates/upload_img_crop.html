@@ -14,6 +14,7 @@
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
+            <h4>Через загрузку изображений в форму ниже (можно выбрать все сразу):</h4>
             <div>Загрузка zip с изображениями обуви. Должны быть очищены все по краям фотографии от резких деталей -
                 грязи,
                 рук, посторонних предметов и т.д. Разрешение не ниже 1200*1600px
@@ -37,6 +38,38 @@
             </div>
         </div>
     </div>
+
+    <div><br><br></div>
+    <!--    image via yandex disk-->
+
+    <div class="g-5 text-left">
+        <div class="row p-2 bg-light">
+            <h4>Через папку на Яндекс.Диске</h4>
+            <div>Или укажите путь к папке на яндекс диске, в которой находятся изображения для кадрирования (путь
+                указывать без слеша в начале. Например "img/photo_03.06.2022"
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-5 text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data action="{{url_for('yandex_disk_crop_images')}}">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="form-control form-control-lg" type="text" name="yandex_path">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Обработать">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 </main>
 
 
