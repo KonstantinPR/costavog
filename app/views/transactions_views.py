@@ -58,14 +58,15 @@ def transactions():
         if not initial_sum:
             initial_sum = 0
         transactions_sum = initial_sum
-
         for i in transactions:
-            transactions_sum += int(i.amount)
-
+            if i.amount:
+                transactions_sum += int(i.amount)
     except ValueError:
         transactions = ""
         transactions_sum = ""
-        'base is empty'
+        'something wrong in transactions and tranactions'
+
+    print('vot oni ' + str(transactions))
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum)
@@ -192,7 +193,6 @@ def transaction_search():
         desc(Transaction.date), desc(Transaction.id)).all()
 
     print(transactions)
-
 
     return render_template('transactions_div.html', transactions=transactions)
 
