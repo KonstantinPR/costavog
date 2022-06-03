@@ -25,7 +25,8 @@
 
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <h4 class="mb-3"></h4>
-            <form class="needs-validation" action="{{url_for('transactions')}}" method="post" novalidate>
+            <form class="needs-validation" enctype=multipart/form-data action="{{url_for('transactions')}}"
+                  method="post" novalidate>
                 <div class="row">
                     <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <textarea class="form-control form-control-lg" rows="2" cols="45"
@@ -33,7 +34,7 @@
                                       placeholder="Описание"
                                       required></textarea>
                         <div class="invalid-feedback">
-                            Valid last name is required.
+                            Что-то не так с описанием
                         </div>
                     </div>
                     <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
@@ -42,7 +43,7 @@
                                placeholder="Сумма" value=""
                                required>
                         <div class="invalid-feedback">
-                            Valid first name is required.
+                            Что-то не так с суммой
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
@@ -50,9 +51,19 @@
                                placeholder="Дата"
                                value="" required>
                         <div class="invalid-feedback">
-                            Valid last name is required.
+                            Что-то не так с датой
                         </div>
                     </div>
+
+                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                        <input type="file" class="form-control form-control-lg" id="files" name="files"
+                               placeholder="Файлы, если есть (чеки, описи, доки)"
+                               value="">
+                        <div class="invalid-feedback">
+                            Что-то не так с прикрепленными файлами
+                        </div>
+                    </div>
+
                     <!--                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">-->
                     <!--                        <input type="text" class="form-control form-control-lg" id="who" name="user_name"-->
                     <!--                               placeholder="Имя"-->
@@ -62,10 +73,21 @@
                     <!--                        </div>-->
                     <!--                    </div>-->
 
-                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                        <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
-                    </div>
+                </div>
 
+                <div class="my-4"></div>
+
+                <div class="text-left col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <input class="form-check-input" type="checkbox" name="is_create_transaction_yandex_disk"
+                           id="flexCheckChecked">
+                    <label class="form-check-label" for="flexCheckChecked">
+                        Добавить папку с задачей на Яндекс.Диск
+                    </label>
+                    <div class="my-4"></div>
+                </div>
+
+                <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                    <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
                 </div>
 
 

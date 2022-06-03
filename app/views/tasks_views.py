@@ -43,7 +43,7 @@ def tasks():
             headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                        'Authorization': f'OAuth {yandex_disk_token}'}
             y = yadisk.YaDisk(token=yandex_disk_token)
-            directory = 'ЗАДАЧИ'
+            directory = 'TASKER'
             task_directory = str(task.id) + '_' + str(date) + '_' + str(task.user_name) + '_' + str(
                 task.description)[:20] + "..."
             if not y.exists(directory):
@@ -51,6 +51,8 @@ def tasks():
 
             if not y.exists(directory + '/' + task_directory):
                 y.mkdir(directory + '/' + task_directory)
+
+
 
     user_name = current_user.user_name
     tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date), desc(Task.id)).all()

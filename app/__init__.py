@@ -25,7 +25,7 @@ db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
 
-from app.views import views
+from app.views import crop_images_views
 from app.views import profile_views
 from app.views import transactions_views
 from app.views import tasks_views

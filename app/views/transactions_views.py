@@ -1,5 +1,6 @@
 from app import app
 from flask import flash, render_template, request, redirect, send_file
+import flask
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
@@ -7,6 +8,11 @@ from sqlalchemy import desc
 import pandas as pd
 from io import BytesIO
 import numpy as np
+import yadisk
+from random import randrange
+from flask import url_for
+import os
+import shutil
 
 
 # ///TRANSACTIONS////////////
@@ -49,7 +55,49 @@ def transactions():
         db.session.add(transaction)
         db.session.commit()
 
+        # create transactions folder in yandex disk
+        is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
+        if is_create_transaction_yandex_disk:
+
+            uploaded_file = request.files['files']
+            if uploaded_file.filename != '':
+
+                yandex_disk_token = current_user.yandex_disk_token
+                headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
+                           'Authorization': f'OAuth {yandex_disk_token}'}
+                y = yadisk.YaDisk(token=yandex_disk_token)
+                directory = 'TASKER/FINANCE'
+                transaction_directory = str(transaction.id) + '_' + str(date) + '_' + str(
+                    transaction.user_name) + '_' + str(
+                    transaction.description)[:20] + "..."
+                yandex_transaction_folder_path = f"{directory}/{transaction_directory}"
+                if not y.exists(yandex_transaction_folder_path):
+                    y.mkdir(yandex_transaction_folder_path)
+
+                # if not y.exists(yandex_transaction_folder_path + '/' + transaction_directory):
+                #     y.mkdir(yandex_transaction_folder_path + '/' + transaction_directory)
+                print('before flask request files if is folder transaction_directory  ' + str(transaction_directory))
+
+                id_folder = randrange(1000000000000)
+                files_folder = f"tmp_folder_{id_folder}"
+                if not os.path.exists(files_folder):
+                    os.makedirs(files_folder)
+                    file_path = f"{files_folder}/{uploaded_file.filename}"
+                    uploaded_file.save(file_path)
+                    yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{uploaded_file.filename}"
+
+                    y.upload(file_path, yandex_transaction_file_path)
+
+                    # deleting directory with images that was zipped
+                    try:
+                        shutil.rmtree(files_folder)
+                    except OSError as e:
+                        print("Error: %s - %s." % (e.filename, e.strerror))
+
+                    flash(f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_file_path}')
+
     user_name = current_user.user_name
+
     try:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()

@@ -16,7 +16,7 @@ def create_all():
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])
@@ -25,7 +25,6 @@ def upload_img_crop():
         upload_images = flask.request.files.getlist("images")
         print('upload images: ' + str(upload_images))
         images_zipped = img_cropper.crop_images(upload_images)
-        img = img_cropper.crop_images()
         return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
     return render_template('upload_img_crop.html')
