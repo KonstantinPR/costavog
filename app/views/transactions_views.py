@@ -13,6 +13,7 @@ from random import randrange
 from flask import url_for
 import os
 import shutil
+from app.modules import transaction_worker
 
 
 # ///TRANSACTIONS////////////
@@ -39,88 +40,22 @@ def transactions():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
+    user_name = current_user.user_name
+
     if request.method == 'POST':
-        amount = request.form['amount']
-        description = request.form['description']
-
-        if request.form['date'] == "":
-            date = datetime.date.today()
-        else:
-            date = request.form['date']
-
-        user_name = current_user.user_name
-
-        transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
-                                  company_id=company_id)
-        db.session.add(transaction)
-        db.session.commit()
-
-        flash(f'Транзакция проведена')
+        # adding transaction in db
+        transaction_id = transaction_worker.transaction_adding_in_db(request, company_id)
 
         # create transactions folder in yandex disk
         is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
+
         if is_create_transaction_yandex_disk:
-
             uploaded_files = flask.request.files.getlist("files")
-            print("uploaded_file" + str(uploaded_files))
-            if uploaded_files:
+            yandex_transaction_id = transaction_worker.transaction_adding_yandex_disk(uploaded_files, transaction_id)
+            flash(yandex_transaction_id)
 
-                print(f"{uploaded_files} is true")
-
-                yandex_disk_token = current_user.yandex_disk_token
-                headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
-                           'Authorization': f'OAuth {yandex_disk_token}'}
-                y = yadisk.YaDisk(token=yandex_disk_token)
-                directory = 'TASKER/FINANCE'
-                transaction_directory = str(transaction.id) + '_' + str(date) + '_' + str(
-                    transaction.user_name) + '_' + str(
-                    transaction.description)[:20] + "..."
-                yandex_transaction_folder_path = f"{directory}/{transaction_directory}"
-                if not y.exists(yandex_transaction_folder_path):
-                    y.mkdir(yandex_transaction_folder_path)
-
-                # if not y.exists(yandex_transaction_folder_path + '/' + transaction_directory):
-                #     y.mkdir(yandex_transaction_folder_path + '/' + transaction_directory)
-                print('before flask request files if is folder transaction_directory  ' + str(transaction_directory))
-
-                id_folder = randrange(1000000000000)
-                tmp_folder = 'tmp_folder'
-                files_folder = f"{tmp_folder}_{id_folder}"
-                if not os.path.exists(files_folder):
-                    os.makedirs(files_folder)
-                    for file in uploaded_files:
-                        file_path = f"{files_folder}/{file.filename}"
-                        file.save(file_path)
-                        yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{file.filename}"
-                        y.upload(file_path, yandex_transaction_file_path)
-
-                    # deleting directory with images that was zipped
-                    try:
-                        shutil.rmtree(files_folder)
-                    except OSError as e:
-                        print("Error: %s - %s." % (e.filename, e.strerror))
-
-                    flash(f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_folder_path}')
-
-    user_name = current_user.user_name
-
-    try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
-            desc(Transaction.date), desc(Transaction.id)).all()
-        users = UserModel.query.filter_by(id=current_user.id).first()
-        initial_sum = users.initial_sum
-        if not initial_sum:
-            initial_sum = 0
-        transactions_sum = initial_sum
-        for i in transactions:
-            if i.amount:
-                transactions_sum += int(i.amount)
-    except ValueError:
-        transactions = ""
-        transactions_sum = ""
-        'something wrong in transactions and tranactions'
-
-    print('vot oni ' + str(transactions))
+    # вывод всех текущих операций под формой
+    transactions, transactions_sum = transaction_worker.get_all_transactions_user(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum)
