@@ -55,12 +55,17 @@ def transactions():
         db.session.add(transaction)
         db.session.commit()
 
+        flash(f'Транзакция проведена')
+
         # create transactions folder in yandex disk
         is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
         if is_create_transaction_yandex_disk:
 
-            uploaded_file = request.files['files']
-            if uploaded_file.filename != '':
+            uploaded_files = flask.request.files.getlist("files")
+            print("uploaded_file" + str(uploaded_files))
+            if uploaded_files:
+
+                print(f"{uploaded_files} is true")
 
                 yandex_disk_token = current_user.yandex_disk_token
                 headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
@@ -79,14 +84,15 @@ def transactions():
                 print('before flask request files if is folder transaction_directory  ' + str(transaction_directory))
 
                 id_folder = randrange(1000000000000)
-                files_folder = f"tmp_folder_{id_folder}"
+                tmp_folder = 'tmp_folder'
+                files_folder = f"{tmp_folder}_{id_folder}"
                 if not os.path.exists(files_folder):
                     os.makedirs(files_folder)
-                    file_path = f"{files_folder}/{uploaded_file.filename}"
-                    uploaded_file.save(file_path)
-                    yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{uploaded_file.filename}"
-
-                    y.upload(file_path, yandex_transaction_file_path)
+                    for file in uploaded_files:
+                        file_path = f"{files_folder}/{file.filename}"
+                        file.save(file_path)
+                        yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{file.filename}"
+                        y.upload(file_path, yandex_transaction_file_path)
 
                     # deleting directory with images that was zipped
                     try:
@@ -94,7 +100,7 @@ def transactions():
                     except OSError as e:
                         print("Error: %s - %s." % (e.filename, e.strerror))
 
-                    flash(f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_file_path}')
+                    flash(f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_folder_path}')
 
     user_name = current_user.user_name
 
