@@ -61,6 +61,8 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
         id_folder = randrange(1000000000000)
         tmp_folder = 'tmp_folder'
         files_folder = f"{tmp_folder}_{id_folder}"
+        # для публичной ссылки на скачивание
+        yandex_link = str
         if not os.path.exists(files_folder):
             os.makedirs(files_folder)
             for file in uploaded_files:
@@ -68,6 +70,14 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
                 file.save(file_path)
                 yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{file.filename}"
                 y.upload(file_path, yandex_transaction_file_path)
+
+            # получаем публичную ссылку на скачивание
+            link = y.publish(yandex_transaction_folder_path)
+            print(f"public_link {link}")
+            yandex_link = y.get_download_link(yandex_transaction_folder_path)
+            print(f"yandex_link {yandex_link}")
+            transaction.yandex_link = yandex_link
+            db.session.commit()
 
             # deleting directory with images that was zipped
             try:
@@ -81,9 +91,10 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
     else:
         is_transaction_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
 
-    return is_transaction_added_to_yandex_disk
+    return is_transaction_added_to_yandex_disk, yandex_link
 
-def get_all_transactions_user (company_id):
+
+def get_all_transactions_user(company_id):
     try:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()

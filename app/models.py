@@ -61,11 +61,12 @@ class Transaction(db.Model):
     __tablename__ = 'transactions'
 
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer)
     amount = db.Column(db.String(80), unique=False)
     description = db.Column(db.String(500))
     user_name = db.Column(db.String(100))
-    company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
+    yandex_link = db.Column(db.String(500))
 
 
 class Task(db.Model):

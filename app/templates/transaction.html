@@ -13,10 +13,6 @@
     <main>
 
 
-        <div class="py-5 text-center">
-            <h2></h2>
-        </div>
-
         {% for cat, msg in get_flashed_messages(True) %}
         <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
         {% endfor %}
@@ -31,7 +27,7 @@
                             <textarea class="form-control form-control-lg" rows="2" cols="45"
                                       id="description" name="description"
                                       placeholder="Описание"
-                                      required>{{description}}</textarea>
+                                      required>{{transaction.description}}</textarea>
                             <div class="invalid-feedback">
                                 Valid last name is required.
                             </div>
@@ -39,16 +35,16 @@
                         <div class="col-xs-12  col-sm-12 col-lg-12 p-2">
                             <input autofocus type="number" class="form-control form-control-lg" id="amount"
                                    name="amount"
-                                   placeholder="Сумма" value="{{amount}}"
+                                   placeholder="Сумма" value="{{transaction.amount}}"
                                    required>
                             <div class="invalid-feedback">
-                                Valid first name is required.
+                                Сумма обязательна
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <input type="date" class="form-control form-control-lg" id="date" name="date"
                                    placeholder="Дата"
-                                   value="{{date}}"
+                                   value="{{transaction.date}}"
                                    required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
@@ -57,7 +53,7 @@
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <input type="text" class="form-control form-control-lg" id="who" name="user_name"
                                    placeholder="Имя"
-                                   value="{{user_name}}"
+                                   value="{{transaction.user_name}}"
                                    required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
@@ -65,11 +61,16 @@
                             </div>
                         </div>
 
+                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                            <a href="{{transaction.yandex_link}}">&#9660; Есть документы. Скачать</a>
+                        </div>
+
 
                     </div>
                     <div class="my-4"></div>
 
-                    <button class="w-100 btn btn-primary btn-lg p-2" formaction="{{url_for('transaction_edit', id=id)}}"
+                    <button class="w-100 btn btn-primary btn-lg p-2"
+                            formaction="{{url_for('transaction_edit', id=transaction.id)}}"
                             type="submit">Изменить
                     </button>
                     <br><br>
@@ -79,7 +80,8 @@
 
                 </form>
                 <br>
-                <a class="btn btn-danger w-100 btn btn-primary btn-lg" href="{{url_for('transaction_delete', id=id)}}"
+                <a class="btn btn-danger w-100 btn btn-primary btn-lg"
+                   href="{{url_for('transaction_delete', id=transaction.id)}}"
                    role="button">Удалить запись</a>
             </div>
         </div>
