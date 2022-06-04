@@ -74,7 +74,7 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
             # получаем публичную ссылку на скачивание
             link = y.publish(yandex_transaction_folder_path)
             print(f"public_link {link}")
-            yandex_link = y.get_download_link(yandex_transaction_folder_path)
+            yandex_link = yandex_transaction_folder_path
             print(f"yandex_link {yandex_link}")
             transaction.yandex_link = yandex_link
             db.session.commit()
@@ -112,3 +112,15 @@ def get_all_transactions_user(company_id):
         'something wrong in transactions'
 
     return transactions, transactions_sum
+
+
+def download_yandex_disk(id):
+    transaction = Transaction.query.filter_by(id=id).one()
+
+    yandex_disk_token = current_user.yandex_disk_token
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
+               'Authorization': f'OAuth {yandex_disk_token}'}
+    y = yadisk.YaDisk(token=yandex_disk_token)
+    transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
+
+    return transaction_yandex_disk_link

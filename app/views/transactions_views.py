@@ -51,7 +51,8 @@ def transactions():
 
         if is_create_transaction_yandex_disk:
             uploaded_files = flask.request.files.getlist("files")
-            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files, transaction_id)
+            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
+                                                                                                   transaction_id)
 
             flash(is_adding_correct_msg)
 
@@ -135,8 +136,9 @@ def transaction_edit(id):
 
     else:
         transaction = Transaction.query.filter_by(id=id).first()
+        transaction_yandex_disk_link = transaction_worker.download_yandex_disk(transaction.id)
         return render_template('transaction.html',
-                               transaction=transaction)
+                               transaction=transaction, transaction_yandex_disk_link=transaction_yandex_disk_link)
 
     return redirect('/transactions')
 
