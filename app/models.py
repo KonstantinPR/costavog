@@ -66,7 +66,7 @@ class Transaction(db.Model):
     description = db.Column(db.String(500))
     user_name = db.Column(db.String(100))
     date = db.Column(db.String(100))
-    yandex_link = db.Column(db.String(500))
+    yandex_link = db.Column(db.String(1000))
 
 
 class Task(db.Model):
