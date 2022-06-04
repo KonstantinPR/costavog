@@ -116,11 +116,16 @@ def get_all_transactions_user(company_id):
 
 def download_yandex_disk(id):
     transaction = Transaction.query.filter_by(id=id).one()
-
     yandex_disk_token = current_user.yandex_disk_token
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
-    transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
-
+    if transaction.yandex_link:
+        try:
+            transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
+        except OSError as e:
+            print("Ошибка с yandex_link")
+            transaction_yandex_disk_link = ""
+    else:
+        transaction_yandex_disk_link = ""
     return transaction_yandex_disk_link

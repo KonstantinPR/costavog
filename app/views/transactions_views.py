@@ -137,6 +137,7 @@ def transaction_edit(id):
     else:
         transaction = Transaction.query.filter_by(id=id).first()
         transaction_yandex_disk_link = transaction_worker.download_yandex_disk(transaction.id)
+
         return render_template('transaction.html',
                                transaction=transaction, transaction_yandex_disk_link=transaction_yandex_disk_link)
 
