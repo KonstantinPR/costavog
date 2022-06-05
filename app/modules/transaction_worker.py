@@ -41,21 +41,17 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
         print(f"{uploaded_files} is true")
 
         transaction = Transaction.query.filter_by(id=added_transaction_id).one()
-
         yandex_disk_token = current_user.yandex_disk_token
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                    'Authorization': f'OAuth {yandex_disk_token}'}
         y = yadisk.YaDisk(token=yandex_disk_token)
-        directory = 'TASKER/FINANCE'
-        transaction_directory = str(transaction.id) + '_' + str(transaction.date) + '_' + str(
-            transaction.user_name) + '_' + str(
-            transaction.description)[:20] + "..."
-        yandex_transaction_folder_path = f"{directory}/{transaction_directory}"
+        yandex_disk_folder = 'TASKER/FINANCE'
+        transaction_directory = f"{str(transaction.id)}_{str(transaction.date)}_{str(transaction.user_name)}_" \
+                                f"{str(transaction.description)[:20]}..."
+        yandex_transaction_folder_path = f"{yandex_disk_folder}/{transaction_directory}"
         if not y.exists(yandex_transaction_folder_path):
             y.mkdir(yandex_transaction_folder_path)
 
-        # if not y.exists(yandex_transaction_folder_path + '/' + transaction_directory):
-        #     y.mkdir(yandex_transaction_folder_path + '/' + transaction_directory)
         print('before flask request files if is folder transaction_directory  ' + str(transaction_directory))
 
         id_folder = randrange(1000000000000)
@@ -71,15 +67,12 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
                 yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{file.filename}"
                 y.upload(file_path, yandex_transaction_file_path)
 
-            # получаем публичную ссылку на скачивание
-            link = y.publish(yandex_transaction_folder_path)
-            print(f"public_link {link}")
+            # путь на яндекс.диске к файлу (заносим в базу)
             yandex_link = yandex_transaction_folder_path
-            print(f"yandex_link {yandex_link}")
             transaction.yandex_link = yandex_link
             db.session.commit()
 
-            # deleting directory with images that was zipped
+            # deleting yandex_disk_folder with images that was zipped
             try:
                 shutil.rmtree(files_folder)
             except OSError as e:
@@ -114,18 +107,19 @@ def get_all_transactions_user(company_id):
     return transactions, transactions_sum
 
 
-def download_yandex_disk(id):
+def download_yandex_disk_transactions(id):
     transaction = Transaction.query.filter_by(id=id).one()
     yandex_disk_token = current_user.yandex_disk_token
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
     if transaction.yandex_link:
-        try:
+        if y.exists(transaction.yandex_link):
             transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
-        except OSError as e:
-            print("Ошибка с yandex_link")
-            transaction_yandex_disk_link = ""
-    else:
-        transaction_yandex_disk_link = ""
+            return transaction_yandex_disk_link
+
+    transaction_yandex_disk_link = ""
+    transaction.yandex_link = ""
+    db.session.commit()
+
     return transaction_yandex_disk_link
