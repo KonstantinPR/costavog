@@ -4,10 +4,11 @@ import flask
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 import pandas as pd
 from io import BytesIO
 import numpy as np
+import re
 import yadisk
 from random import randrange
 from flask import url_for
@@ -60,7 +61,30 @@ def transactions():
     transactions, transactions_sum = transaction_worker.get_all_transactions_user(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
-                           transactions_sum=transactions_sum)
+                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='&#9660;')
+
+
+@app.route('/transactions_by_date/<sort_type>', methods=['POST', 'GET'])
+@login_required
+def transactions_by_date(sort_type):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+    user_name = current_user.user_name
+    print(sort_type)
+    # все текущие операции отсортированные по дате
+    if sort_type == 'desc':
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+        sort_type = 'asc'
+        sort_sign = '&#9660;'
+    else:
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
+            asc(Transaction.date), desc(Transaction.id)).all()
+        sort_type = 'desc'
+        sort_sign = '&#9650;'
+
+    return render_template('transactions_div.html', transactions=transactions, sort_type=sort_type, sort_sign=sort_sign)
 
 
 @app.route('/transactions_to_excel')
