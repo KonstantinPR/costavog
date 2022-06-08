@@ -26,7 +26,11 @@
                     {{p.amount}}
                 </div>
                 <div class="col-6 small">
+                    {% if p.yandex_link %}
+                    {{p.description}}. Есть приложения. &#9660;
+                    {% else %}
                     {{p.description}}
+                    {% endif %}
                 </div>
             </div>
         </a>
