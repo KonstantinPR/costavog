@@ -4,7 +4,7 @@ import flask
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, cast, Integer
 import pandas as pd
 from io import BytesIO
 import numpy as np
@@ -61,7 +61,7 @@ def transactions():
     transactions, transactions_sum = transaction_worker.get_all_transactions_user(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
-                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='&#9660;')
+                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='')
 
 
 @app.route('/transactions_by/<field_type>/<sort_type>', methods=['POST', 'GET'])
@@ -71,20 +71,29 @@ def transactions_by(field_type, sort_type):
         return redirect('/company_register')
     company_id = current_user.company_id
     user_name = current_user.user_name
-    print(sort_type)
-    print(field_type)
     # все текущие операции отсортированные по field_type (дата, описание ...)
+
     field_type = field_type
     if sort_type == 'desc':
         sort_type = 'asc'
         sort_sign = '&#9660;'
+
         sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
                         f"order_by(desc(Transaction.{field_type}),desc(Transaction.id)).all()"
+
+        if field_type == 'amount':
+            sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
+                            f"order_by(desc(cast(Transaction.{field_type},Integer)),desc(Transaction.id)).all()"
     else:
         sort_type = 'desc'
         sort_sign = '&#9650;'
+
+        if field_type == 'amount':
+            sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
+                            f"order_by(asc(cast(Transaction.{field_type},Integer)),desc(Transaction.id)).all()"
+
         sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
-                        f"order_by(desc(Transaction.{field_type}),asc(Transaction.id)).all()"
+                        f"order_by(asc(Transaction.{field_type}),desc(Transaction.id)).all()"
 
     transactions = eval(sql_preparing)
 

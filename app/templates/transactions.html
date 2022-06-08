@@ -116,10 +116,12 @@
                               hx-target="#transactions_div">Дата {{sort_sign | safe}}</a></b>
                     </div>
                     <div class="col">
-                        <b>Сумма</b>
+                        <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='amount', sort_type=sort_type)}}"
+                              hx-target="#transactions_div">Сумма {{sort_sign | safe}}</a></b>
                     </div>
                     <div class="col-6">
-                        <b>Описание</b>
+                        <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='description', sort_type=sort_type)}}"
+                              hx-target="#transactions_div">Описание {{sort_sign | safe}}</a></b>
                     </div>
                 </div>
 
