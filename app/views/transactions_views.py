@@ -238,35 +238,7 @@ def transaction_delete(id):
 @app.route('/show_yandex_transaction_files/<int:transaction_id>', methods=['POST', 'GET'])
 @login_required
 def show_yandex_transaction_files(transaction_id):
-    yandex_disk_token = current_user.yandex_disk_token
-    y = yadisk.YaDisk(token=yandex_disk_token)
-    transaction = Transaction.query.filter_by(id=transaction_id).first()
-    files = y.listdir(transaction.yandex_link)
-    images = []
-    id_folder = randrange(1000000000000)
-    static_path = 'app/static/'
-    tmp_img = f'tmp_img_{id_folder}/'
-    tmp_folder = f'{static_path}{tmp_img}'
-    files_folder = f"{tmp_folder}"
-    if not os.path.exists(files_folder):
-        os.makedirs(files_folder)
-    for file in files:
-        img = file.file
-        string_start = '&filename='
-        string_end = '.jpg'
-        name_start = img.find(string_start)
-        print(name_start)
-        name_end = img.lower().find('.jpg')
-        print(name_end)
-        name_img = img[name_start + len(string_start):name_end + len(string_end)]
-        print(name_img)
-        url = img
-        images.append(f"{tmp_img}{name_img}")
-        print(f"{tmp_folder}{name_img}")
-        with requests.get(url, stream=True) as r:
-            with open(f"{files_folder}{name_img}", "wb") as f:
-                for chunk in r.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
+    images_path_list = transaction_worker.get_transactions_files(transaction_id)
+    return render_template('transactions_files_div.html', images=images_path_list)
 
-    return render_template('transactions_files_div.html', images=images)
+
