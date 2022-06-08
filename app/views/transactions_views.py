@@ -242,6 +242,13 @@ def show_yandex_transaction_files(transaction_id):
     files = y.listdir(transaction.yandex_link)
     images = []
     for file in files:
-        images.append(file.file)
+        img = file.file
+        start = img.lower().find("&filename")
+        end = img.lower().find(".jpg")
+        print(start)
+        print(end)
+        new_string_img = img[:start] + img[end + 4:] + img[start:end + 4]
+        print(new_string_img)
+        images.append(new_string_img)
 
     return render_template('transactions_files_div.html', images=images)
