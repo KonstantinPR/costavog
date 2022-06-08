@@ -1,8 +1,8 @@
 <div id="transactions_div" hx-swap="outerHTML">
     <div class="row p-2 text-left">
         <div class="col">
-            <b><a href="#" data-hx-post="{{url_for('transactions_by_date', sort_type=sort_type)}}"
-                  hx-target="#transactions_div">Дата {{sort_sign | safe}}</a></b>
+            <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='date', sort_type=sort_type)}}"
+                              hx-target="#transactions_div">Дата {{sort_sign | safe}}</a></b>
         </div>
         <div class="col">
             <b>Сумма</b>

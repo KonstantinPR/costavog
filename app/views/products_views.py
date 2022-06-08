@@ -180,7 +180,7 @@ def upload_detailing():
 
         df = detailing.zip_detail(uploaded_files, df_net_cost)
 
-        file = io_output(df)
+        file = io_output.io_output(df)
 
         return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
 
