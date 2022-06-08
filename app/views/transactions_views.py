@@ -90,12 +90,12 @@ def transactions_by(field_type, sort_type):
         sort_type = 'desc'
         sort_sign = '&#9650;'
 
+        sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
+                        f"order_by(asc(Transaction.{field_type}),desc(Transaction.id)).all()"
+
         if field_type == 'amount':
             sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
                             f"order_by(asc(cast(Transaction.{field_type},Integer)),desc(Transaction.id)).all()"
-
-        sql_preparing = f"db.session.query(Transaction).filter_by(company_id=company_id)." \
-                        f"order_by(asc(Transaction.{field_type}),desc(Transaction.id)).all()"
 
     transactions = eval(sql_preparing)
 
@@ -240,5 +240,3 @@ def transaction_delete(id):
 def show_yandex_transaction_files(transaction_id):
     images_path_list = transaction_worker.get_transactions_files(transaction_id)
     return render_template('transactions_files_div.html', images=images_path_list)
-
-
