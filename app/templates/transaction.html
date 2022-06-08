@@ -62,9 +62,16 @@
                         </div>
                         {% if transaction_yandex_disk_link %}
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <a href="{{transaction_yandex_disk_link}}" download="*.zip">&#9660; Есть документы.
-                                Скачать</a>
+                            <a href="#"
+                               data-hx-post="{{url_for('show_yandex_transaction_files', transaction_id=transaction.id)}}"
+                               hx-target="#transactions_show">&#9660; Есть документы.
+                                Показать</a>
+
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <a href="{{transaction_yandex_disk_link}}" download="*.zip">&#9660; Скачать</a>
+                        </div>
+                        <div id="transactions_show" hx-swap="outerHTML"></div>
                         {% endif %}
 
 

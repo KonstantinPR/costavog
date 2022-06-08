@@ -231,3 +231,17 @@ def transaction_delete(id):
     db.session.commit()
 
     return redirect('/transactions')
+
+
+@app.route('/show_yandex_transaction_files/<int:transaction_id>', methods=['POST', 'GET'])
+@login_required
+def show_yandex_transaction_files(transaction_id):
+    yandex_disk_token = current_user.yandex_disk_token
+    y = yadisk.YaDisk(token=yandex_disk_token)
+    transaction = Transaction.query.filter_by(id=transaction_id).first()
+    files = y.listdir(transaction.yandex_link)
+    images = []
+    for file in files:
+        images.append(file.file)
+
+    return render_template('transactions_files_div.html', images=images)
