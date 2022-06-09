@@ -17,13 +17,22 @@ def login():
         remember = True if request.form.get('remember') else False
         print(remember)
 
-        company_id = Company.query.filter_by(company_name=company_name).first()
-        if not company_id:
-            flash("No such company name registered")
+        company = Company.query.filter_by(company_name=company_name).first()
+        print(company.id)
+        print(company)
+        if not company:
+            flash("Нет такой компании")
             return render_template('login.html', company_name=request.form['company_name'])
 
-        if check_password_hash(company_id.password_hash, password):
-            user = UserModel.query.filter_by(user_name=user_name, company_id=company_id.id).first()
+        user = UserModel.query.filter_by(user_name=user_name, company_id=company.id).first()
+
+        if not user:
+            flash("Пользователя с таким именем не найдено")
+            return render_template('login.html', company_name=request.form['company_name'])
+
+        if not check_password_hash(user.password_hash, password):
+            flash("Неверно указан пароль")
+            return render_template('login.html', company_name=request.form['company_name'])
 
         if user is not None:
             login_user(user, remember=remember)
@@ -69,7 +78,8 @@ def user_register():
 
         company_name = request.form['company_name']
         current_company_password = request.form['current_company_password']
-        current_company_password_hash = generate_password_hash(current_company_password)
+        new_user_password = request.form['new_user_password']
+        new_user_password_hash = generate_password_hash(new_user_password)
         user_name = request.form['user_name']
         user_email = request.form['user_email']
 
@@ -79,11 +89,12 @@ def user_register():
         else:
             print("Нет такой компании")
 
-        if UserModel.query.filter(user_email=user_email).first():
+        if UserModel.query.filter_by(user_email=user_email).first():
             flash('Пользователь с таким email уже существует')
             return ('Пользователь с таким email уже существует')
 
-        user = UserModel(user_name=user_name, company_id=company_id)
+        user = UserModel(user_name=user_name, company_id=company_id, password_hash=new_user_password_hash,
+                         user_email=user_email)
         db.session.add(user)
         db.session.commit()
         return redirect('/transactions')
