@@ -11,30 +11,40 @@
 {% endfor %}
 
 
-
 <div class="centered">
     <main class="form-signin">
         <form action="{{url_for('user_register')}}" method="post">
-            <h1 class="h3 mb-3 fw-normal">Регистрация</h1>
+            <h1 class="h3 mb-3 fw-normal">Регистрация пользователя</h1>
 
             <div class="form-floating">
-                <input type="text" class="form-control" id="floatingCompanyName" placeholder="Company Name" name="company_name">
-                <label for="floatingCompanyName">Company Name</label>
+                <input type="text" class="form-control" id="floatingCompanyName" placeholder="Company Name"
+                       name="company_name">
+                <label for="floatingCompanyName">Название компании</label>
             </div>
             <div class="form-floating">
-                <input type="password" class="form-control" id="floatingUserPassword" placeholder="Password"
-                       name="password">
-                <label for="floatingUserPassword">Password</label>
+                <input type="password" class="form-control" id="floatingCurrentCompanyPassword" placeholder="Password"
+                       name="current_company_password">
+                <label for="floatingCurrentCompanyPassword">Действующий пароль компании</label>
+            </div>
+            <div class="form-floating">
+                <input type="password" class="form-control" id="floatingNewUserPassword" placeholder="Password"
+                       name="new_user_password">
+                <label for="floatingNewUserPassword">Придумать пароль пользователя</label>
+            </div>
+            <div class="form-floating">
+                <input type="email" class="form-control" id="floatingNewUserEmail" placeholder="Email"
+                       name="floatingNewUserEmail">
+                <label for="floatingNewUserPassword">Email пользователя</label>
             </div>
             <div class="form-floating">
                 <input type="text" class="form-control" id="floatingUserName" placeholder="User Name" name="user_name">
-                <label for="floatingUserName">User Name</label>
+                <label for="floatingUserName">Придумать имя пользователя</label>
             </div>
 
-<!--            <div class="form-floating">-->
-<!--                <input type="text" class="form-control" id="floatingEmail" placeholder="Email" name="email">-->
-<!--                <label for="floatingEmail">Email</label>-->
-<!--            </div>-->
+            <!--            <div class="form-floating">-->
+            <!--                <input type="text" class="form-control" id="floatingEmail" placeholder="Email" name="email">-->
+            <!--                <label for="floatingEmail">Email</label>-->
+            <!--            </div>-->
 
 
             <br>
