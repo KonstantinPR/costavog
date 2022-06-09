@@ -128,6 +128,7 @@ def task_take_work(id):
 
     task = Task.query.filter_by(id=id).one()
     task.executor_id = current_user.id
+    task.condition = 'progress'
     db.session.add(task)
     db.session.commit()
 
