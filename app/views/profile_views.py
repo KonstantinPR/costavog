@@ -18,8 +18,6 @@ def login():
         print(remember)
 
         company = Company.query.filter_by(company_name=company_name).first()
-        print(company.id)
-        print(company)
         if not company:
             flash("Нет такой компании")
             return render_template('login.html', company_name=request.form['company_name'])
