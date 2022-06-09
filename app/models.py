@@ -19,7 +19,7 @@ class UserModel(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
+    user_email = db.Column(db.String(100))
     password_hash = db.Column(db.String(500))
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
     initial_sum = db.Column(db.Integer, default=0)

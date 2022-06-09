@@ -68,9 +68,10 @@ def user_register():
     if request.method == 'POST':
 
         company_name = request.form['company_name']
-        current_company_password = request.form['password']
+        current_company_password = request.form['current_company_password']
         current_company_password_hash = generate_password_hash(current_company_password)
         user_name = request.form['user_name']
+        user_email = request.form['user_email']
 
         company = Company.query.filter_by(company_name=company_name).first()
         if check_password_hash(company.password_hash, current_company_password):
@@ -78,7 +79,7 @@ def user_register():
         else:
             print("Нет такой компании")
 
-        if UserModel.query.filter_by(user_name=user_name).first():
+        if UserModel.query.filter(user_email=user_email).first():
             flash('Пользователь с таким email уже существует')
             return ('Пользователь с таким email уже существует')
 
