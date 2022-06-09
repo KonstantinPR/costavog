@@ -81,6 +81,7 @@ class Task(db.Model):
     company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
     executor_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    condition = db.Column(db.String(100))
 
 
 @login.user_loader

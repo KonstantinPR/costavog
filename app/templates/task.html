@@ -23,6 +23,14 @@
                 <h4 class="mb-3"></h4>
                 <form class="needs-validation" method="post" novalidate>
                     <div class="row">
+
+
+                        <div><a class="btn btn-success w-100 btn btn-primary btn-lg"
+                                href="{{url_for('task_take_work', id=id)}}"
+                                role="button">Взять в работу</a></div>
+                        <br>
+
+
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <textarea class="form-control form-control-lg" rows="2" cols="45"
                                       id="description" name="description"
@@ -57,8 +65,18 @@
                                    required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
-
                             </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                            <select class="form-control form-control-lg" id="who_executor" name="executor_name">
+                                {% for executor in user_name_set %}
+                                {% if executor==executor_name %}
+                                <option selected>{{executor}}</option>
+                                {% else %}
+                                <option>{{executor}}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
                         </div>
 
 

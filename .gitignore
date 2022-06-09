@@ -20,3 +20,6 @@ include/
 include/*
 
 env/
+/latest.dump.1
+/latest.dump
+

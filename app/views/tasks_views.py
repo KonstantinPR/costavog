@@ -11,7 +11,6 @@ import yadisk
 URL = app.config['URL']
 
 
-
 @app.route('/tasks', methods=['POST', 'GET'])
 @login_required
 def tasks():
@@ -52,10 +51,9 @@ def tasks():
             if not y.exists(directory + '/' + task_directory):
                 y.mkdir(directory + '/' + task_directory)
 
-
-
     user_name = current_user.user_name
     tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date), desc(Task.id)).all()
+
     return render_template('tasks.html', tasks=tasks, user_name=user_name)
 
 
@@ -71,11 +69,18 @@ def task_edit(id):
         description = request.form['description']
         date = request.form['date']
         user_name = request.form['user_name']
+        executor_name = request.form['executor_name']
+        executor_id = None
+        if executor_name:
+            executor_user = db.session.query(UserModel).filter_by(company_id=company_id, user_name=executor_name).one()
+            executor_id = executor_user.id
+
         task = Task.query.filter_by(id=id).one()
         task.amount = amount
         task.description = description
         task.date = date
         task.user_name = user_name
+        task.executor_id = executor_id
         db.session.add(task)
         db.session.commit()
         flash("Changing completed")
@@ -83,19 +88,48 @@ def task_edit(id):
 
     else:
         task = Task.query.filter_by(id=id).first()
+        executor_id = task.executor_id
         amount = task.amount
         description = task.description
         date = task.date
         user_name = task.user_name
+        users = db.session.query(UserModel).filter_by(company_id=company_id).all()
+        executor_id = None
+        executor_name = None
+        if executor_id:
+            executor_user = db.session.query(UserModel).filter_by(id=executor_id).one()
+            executor_name = executor_user.user_name
+        user_name_set = set()
+        for user in users:
+            user_name_set.add(user.user_name)
+        user_name_set.add('')
+        print(user_name_set)
+
         return render_template('task.html',
                                amount=amount,
                                description=description,
                                date=date,
                                user_name=user_name,
                                id=id,
+                               user_name_set=user_name_set,
+                               executor_name=executor_name
                                )
 
     # tasks = db.session.query(Task).filter_by(company_id=company_id).all()
+    return redirect('/tasks')
+
+
+@app.route('/task_take_work/<int:id>', methods=['POST', 'GET'])
+@login_required
+def task_take_work(id):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    task = Task.query.filter_by(id=id).one()
+    task.executor_id = current_user.id
+    db.session.add(task)
+    db.session.commit()
+
     return redirect('/tasks')
 
 
