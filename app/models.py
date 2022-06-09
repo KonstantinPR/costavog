@@ -25,6 +25,7 @@ class UserModel(UserMixin, db.Model):
     initial_file_path = db.Column(db.String(500), default=0)
     yandex_disk_token = db.Column(db.String(1000), default=0)
     role = db.Column(db.String(500), default='user')
+    tasks = db.relationship('Task')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -78,6 +79,7 @@ class Task(db.Model):
     user_name = db.Column(db.String(100))
     company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
+    executor_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
 @login.user_loader

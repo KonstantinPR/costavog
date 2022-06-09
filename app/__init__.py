@@ -15,11 +15,11 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
-app.config['ALLOWED_EXTENSIONS'] = ['zip']
+app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost:8000/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
-app.config['ALLOWED_EXTANSIONS'] = ['.jpg', '.jpeg', '.png', '.gif']
+# yandex token is placed in db (current.user.yandex_token)
 
 db.init_app(app)
 

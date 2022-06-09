@@ -134,7 +134,7 @@ def get_transactions_files(transaction_id):
     images = []
     id_folder = randrange(1000000000000)
     static_path = 'app/static/'
-    tmp_img = f'tmp_img/tmp_img_{id_folder}/'
+    tmp_img = f'tmp_folder/tmp_img_{id_folder}/'
     tmp_folder = f'{static_path}{tmp_img}'
     files_folder = f"{tmp_folder}"
     if not os.path.exists(files_folder):
