@@ -13,11 +13,13 @@
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
 
-    <div class="py-5 text-left">
+    <div class="py-5 center">
         <h2>
             <div class="row p-2">
                 <div>
-                    ПРОФАЙЛ {{user_name}}
+                    Профайл. {{user_name}}
+                    <br>
+                    <span class='h3'>{{points}}</span> <span class='h5'>пнт</span>
                 </div>
             </div>
         </h2>
@@ -55,8 +57,6 @@
                         <div class="invalid-feedback">
                             Valid first name is required.
                         </div>
-
-
                         <div class="my-4"></div>
                         <button class="w-100 btn btn-primary btn-lg" type="submit">Изменить</button>
                     </div>

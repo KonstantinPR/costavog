@@ -1,0 +1,39 @@
+<div id="tasks_div" hx-swap="outerHTML">
+    <div class="row p-3 text-left">
+        <div class="col">
+            <b>Дата</b>
+        </div>
+        <div class="col">
+            <b>Поинт</b>
+        </div>
+        <div class="col-6">
+            <b>Описание</b>
+        </div>
+    </div>
+
+    {% for p in tasks %}
+
+    {% if p.condition == 'completed' %}
+    {% set bg = 'bg_success' %}
+    {% elif p.condition == 'progress' %}
+    {% set bg = 'bg_warning' %}
+    {% endif %}
+
+    <div class="row-striped row text-left {{bg}}">
+        <a href="{{url_for('task_edit', id=p.id)}}">
+            <div class="d_hover row p-3">
+                <div class="col small">
+                    {{p.date}}
+                </div>
+                <div class="col">
+                    {{p.amount}}
+                </div>
+                <div class="col-6 small">
+                    {{p.description}}
+                </div>
+            </div>
+        </a>
+    </div>
+
+    {% endfor %}
+</div>

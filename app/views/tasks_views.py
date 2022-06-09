@@ -52,9 +52,10 @@ def tasks():
                 y.mkdir(directory + '/' + task_directory)
 
     user_name = current_user.user_name
-    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date), desc(Task.id)).all()
+    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date),
+                                                                             desc(Task.id)).all()
 
-    return render_template('tasks.html', tasks=tasks, user_name=user_name)
+    return render_template('tasks.html', tasks=tasks)
 
 
 @app.route('/task_edit/<int:id>', methods=['POST', 'GET'])
@@ -83,18 +84,17 @@ def task_edit(id):
         task.executor_id = executor_id
         db.session.add(task)
         db.session.commit()
-        flash("Changing completed")
+        flash("Изменения внесены")
 
 
     else:
         task = Task.query.filter_by(id=id).first()
-        executor_id = task.executor_id
         amount = task.amount
         description = task.description
         date = task.date
         user_name = task.user_name
         users = db.session.query(UserModel).filter_by(company_id=company_id).all()
-        executor_id = None
+        executor_id = task.executor_id
         executor_name = None
         if executor_id:
             executor_user = db.session.query(UserModel).filter_by(id=executor_id).one()
@@ -111,6 +111,7 @@ def task_edit(id):
                                date=date,
                                user_name=user_name,
                                id=id,
+                               condition=task.condition,
                                user_name_set=user_name_set,
                                executor_name=executor_name
                                )
@@ -129,6 +130,48 @@ def task_take_work(id):
     task.executor_id = current_user.id
     db.session.add(task)
     db.session.commit()
+
+    return redirect('/tasks')
+
+
+@app.route('/task_complete/<int:id>', methods=['POST', 'GET'])
+@login_required
+def task_complete(id):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    task = Task.query.filter_by(id=id).one()
+    user_task_complete = db.session.query(UserModel).filter_by(id=task.executor_id).one()
+    user_task_complete_points = user_task_complete.points
+    if user_task_complete_points == None: user_task_complete_points = 0
+    user = UserModel.query.filter_by(id=user_task_complete.id).one()
+    user.points = int(user_task_complete_points) + int(task.amount)
+    db.session.add(user)
+    task = Task.query.filter_by(id=id).one()
+    task.condition = 'completed'
+    db.session.add(task)
+    db.session.commit()
+    flash(f'Задача {task.id} закрыта. Баланс {user_task_complete.user_name} {user.points} пнт.')
+
+    return redirect('/tasks')
+
+
+@app.route('/task_recover/<int:id>', methods=['POST', 'GET'])
+@login_required
+def task_recover(id):
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    task = Task.query.filter_by(id=id).one()
+    user_task_complete = db.session.query(UserModel).filter_by(id=task.executor_id).one()
+    user_task_complete_points = user_task_complete.points
+    if user_task_complete_points == None: user_task_complete_points = 0
+    user = UserModel.query.filter_by(id=user_task_complete.id).one()
+    user.points = int(user_task_complete_points) - int(task.amount)
+    db.session.add(user)
+    task = Task.query.filter_by(id=id).one()
+    task.condition = 'progress'
+    db.session.add(task)
+    db.session.commit()
+    flash(f'Задача {task.id} восстановлена. Баланс {user_task_complete.user_name} {user.points} пнт.')
 
     return redirect('/tasks')
 
@@ -154,9 +197,9 @@ def task_copy():
     return redirect('/tasks')
 
 
-@app.route('/task_search', methods=['POST', 'GET'])
+@app.route('/tasks_search', methods=['POST', 'GET'])
 @login_required
-def task_search():
+def tasks_search():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
@@ -165,6 +208,21 @@ def task_search():
         search = request.form['search']
         tasks = db.session.query(Task).filter(Task.description.ilike('%' + search.lower() + '%')).order_by(
             desc(Task.date), desc(Task.id)).all()
+        return render_template('tasks_div.html', tasks=tasks)
+
+    return redirect('/tasks')
+
+
+@app.route('/show_task_by_condition', methods=['POST', 'GET'])
+@login_required
+def show_task_by_condition():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    company_id = current_user.company_id
+
+    if request.method == 'POST':
+        task_condition = request.form['task_type_condition']
+        tasks = db.session.query(Task).filter_by(condition=task_condition)
         return render_template('tasks.html', tasks=tasks)
 
     return redirect('/tasks')
