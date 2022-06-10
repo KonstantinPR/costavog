@@ -4,7 +4,28 @@ from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
 from sqlalchemy import desc
+import flask
 import yadisk
+from app.modules import task_worker
+from app import app
+from flask import flash, render_template, request, redirect, send_file
+import flask
+from flask_login import login_required, current_user, login_user, logout_user
+from app.models import Company, UserModel, Transaction, Task, Product, db
+import datetime
+from sqlalchemy import desc, asc, cast, Integer
+import pandas as pd
+from io import BytesIO
+import numpy as np
+import re
+import yadisk
+from random import randrange
+from flask import url_for
+import os
+import shutil
+from app.modules import transaction_worker
+import urllib.request
+import requests
 
 # /// TASKS //////////////////
 
@@ -17,43 +38,24 @@ def tasks():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-    print(company_id)
-    if request.method == 'POST':
-        description = request.form['description']
-
-        if request.form['date'] == "":
-            date = datetime.date.today()
-        else:
-            date = request.form['date']
-        if request.form['amount'] == "":
-            amount = 1
-        else:
-            amount = request.form['amount']
-        user_name = current_user.user_name
-
-        task = Task(amount=amount, description=description, date=date, user_name=user_name, company_id=company_id)
-        db.session.add(task)
-        db.session.commit()
-
-        # create yandex disk catalog on that task if checkbox is on
-        is_create_yandex_disk_catalog = request.form.getlist('is_create_yandex_disk_catalog')
-        if is_create_yandex_disk_catalog:
-            yandex_disk_token = current_user.yandex_disk_token
-            headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
-                       'Authorization': f'OAuth {yandex_disk_token}'}
-            y = yadisk.YaDisk(token=yandex_disk_token)
-            directory = 'TASKER'
-            task_directory = str(task.id) + '_' + str(date) + '_' + str(task.user_name) + '_' + str(
-                task.description)[:20] + "..."
-            if not y.exists(directory):
-                y.mkdir(directory)
-
-            if not y.exists(directory + '/' + task_directory):
-                y.mkdir(directory + '/' + task_directory)
-
     user_name = current_user.user_name
-    tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(desc(Task.date),
-                                                                             desc(Task.id)).all()
+
+    if request.method == 'POST':
+        # adding task in db
+        task_id = task_worker.task_adding_in_db(request, company_id)
+
+        # create tasks folder in yandex disk
+        is_create_task_yandex_disk = request.form.getlist('is_create_task_yandex_disk')
+
+        if is_create_task_yandex_disk:
+            uploaded_files = flask.request.files.getlist("files")
+            print(uploaded_files)
+            is_adding_correct_msg, yandex_link = task_worker.task_adding_yandex_disk(uploaded_files, task_id)
+
+            flash(is_adding_correct_msg)
+
+    # вывод всех текущих операций под формой
+    tasks = task_worker.get_all_tasks_user(company_id)
 
     return render_template('tasks.html', tasks=tasks)
 
@@ -103,6 +105,7 @@ def task_edit(id):
         for user in users:
             user_name_set.add(user.user_name)
         user_name_set.add('')
+        task_yandex_disk_link = task_worker.download_yandex_disk_tasks(task.id)
         print(user_name_set)
 
         return render_template('task.html',
@@ -113,7 +116,8 @@ def task_edit(id):
                                id=id,
                                condition=task.condition,
                                user_name_set=user_name_set,
-                               executor_name=executor_name
+                               executor_name=executor_name,
+                               task_yandex_disk_link=task_yandex_disk_link
                                )
 
     # tasks = db.session.query(Task).filter_by(company_id=company_id).all()

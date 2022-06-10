@@ -2,7 +2,7 @@ from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask
 from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from app.models import Company, UserModel, Task, Task, Product, db
 import datetime
 from sqlalchemy import desc
 import pandas as pd
@@ -16,7 +16,7 @@ import shutil
 import requests
 
 
-def transaction_adding_in_db(request, company_id):
+def task_adding_in_db(request, company_id):
     amount = request.form['amount']
     description = request.form['description']
     if request.form['date'] == "":
@@ -26,36 +26,37 @@ def transaction_adding_in_db(request, company_id):
 
     user_name = current_user.user_name
 
-    transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
+    task = Task(amount=amount, description=description, date=date, user_name=user_name,
                               company_id=company_id)
-    db.session.add(transaction)
+    db.session.add(task)
     db.session.commit()
 
-    flash('Транзакция проведена')
+    flash('Задача проведена')
 
-    return transaction.id
+    return task.id
 
 
-def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
+def task_adding_yandex_disk(uploaded_files, added_task_id):
     print("uploaded_file" + str(uploaded_files))
+    print(added_task_id)
     if any(uploaded_files):
         print(f"{uploaded_files} is true")
 
-        transaction = Transaction.query.filter_by(id=added_transaction_id).one()
+        task = Task.query.filter_by(id=added_task_id).one()
         yandex_disk_token = current_user.yandex_disk_token
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                    'Authorization': f'OAuth {yandex_disk_token}'}
         y = yadisk.YaDisk(token=yandex_disk_token)
-        yandex_disk_folder = 'TASKER/FINANCE'
+        yandex_disk_folder = 'TASKER/TASKS'
         if not y.exists(yandex_disk_folder):
             y.mkdir(yandex_disk_folder)
-        transaction_directory = f"{str(transaction.id)}_{str(transaction.date)}_{str(transaction.user_name)}_" \
-                                f"{str(transaction.description)[:20]}..."
-        yandex_transaction_folder_path = f"{yandex_disk_folder}/{transaction_directory}"
-        if not y.exists(yandex_transaction_folder_path):
-            y.mkdir(yandex_transaction_folder_path)
+        task_directory = f"{str(task.id)}_{str(task.date)}_{str(task.user_name)}_" \
+                                f"{str(task.description)[:20]}..."
+        yandex_task_folder_path = f"{yandex_disk_folder}/{task_directory}"
+        if not y.exists(yandex_task_folder_path):
+            y.mkdir(yandex_task_folder_path)
 
-        print('before flask request files if is folder transaction_directory  ' + str(transaction_directory))
+        print('before flask request files if is folder task_directory  ' + str(task_directory))
 
         id_folder = randrange(1000000000000)
         tmp_folder = 'tmp_folder'
@@ -67,12 +68,12 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
             for file in uploaded_files:
                 file_path = f"{files_folder}/{file.filename}"
                 file.save(file_path)
-                yandex_transaction_file_path = f"{yandex_transaction_folder_path}/{file.filename}"
-                y.upload(file_path, yandex_transaction_file_path)
+                yandex_task_file_path = f"{yandex_task_folder_path}/{file.filename}"
+                y.upload(file_path, yandex_task_file_path)
 
             # путь на яндекс.диске к файлу (заносим в базу)
-            yandex_link = yandex_transaction_folder_path
-            transaction.yandex_link = yandex_link
+            yandex_link = yandex_task_folder_path
+            task.yandex_link = yandex_link
             db.session.commit()
 
             # deleting yandex_disk_folder with images that was zipped
@@ -81,58 +82,51 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
             except OSError as e:
                 print("Error: %s - %s." % (e.filename, e.strerror))
 
-            is_transaction_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_folder_path}'
+            is_task_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_task_folder_path}'
         else:
-            is_transaction_added_to_yandex_disk = f'Возникли проблемы с сохранением файлов на Яндекс Диск. Файлы не сохранены'
+            is_task_added_to_yandex_disk = f'Возникли проблемы с сохранением файлов на Яндекс Диск. Файлы не сохранены'
     else:
-        is_transaction_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
+        is_task_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
 
-    return is_transaction_added_to_yandex_disk, yandex_link
+    return is_task_added_to_yandex_disk, yandex_link
 
 
-def get_all_transactions_user(company_id):
+def get_all_tasks_user(company_id):
     try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
-            desc(Transaction.date), desc(Transaction.id)).all()
+        tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
+            desc(Task.date), desc(Task.id)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
-        initial_sum = users.initial_sum
-        if not initial_sum:
-            initial_sum = 0
-        transactions_sum = initial_sum
-        for i in transactions:
-            if i.amount:
-                transactions_sum += int(i.amount)
+
     except ValueError:
-        transactions = ""
-        transactions_sum = ""
-        'something wrong in transactions'
+        tasks = ""
+        'something wrong in tasks'
 
-    return transactions, transactions_sum
+    return tasks
 
 
-def download_yandex_disk_transactions(id):
-    transaction = Transaction.query.filter_by(id=id).one()
+def download_yandex_disk_tasks(id):
+    task = Task.query.filter_by(id=id).one()
     yandex_disk_token = current_user.yandex_disk_token
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
-    if transaction.yandex_link:
-        if y.exists(transaction.yandex_link):
-            transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
-            return transaction_yandex_disk_link
+    if task.yandex_link:
+        if y.exists(task.yandex_link):
+            task_yandex_disk_link = y.get_download_link(task.yandex_link)
+            return task_yandex_disk_link
 
-    transaction_yandex_disk_link = ""
-    transaction.yandex_link = ""
+    task_yandex_disk_link = ""
+    task.yandex_link = ""
     db.session.commit()
 
-    return transaction_yandex_disk_link
+    return task_yandex_disk_link
 
 
-def get_transactions_files(transaction_id):
+def get_tasks_files(task_id):
     yandex_disk_token = current_user.yandex_disk_token
     y = yadisk.YaDisk(token=yandex_disk_token)
-    transaction = Transaction.query.filter_by(id=transaction_id).first()
-    files = y.listdir(transaction.yandex_link)
+    task = Task.query.filter_by(id=task_id).first()
+    files = y.listdir(task.yandex_link)
     images = []
     id_folder = randrange(1000000000000)
     static_path = 'app/static/'

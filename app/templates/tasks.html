@@ -20,7 +20,7 @@
 
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <h4 class="mb-3"></h4>
-            <form class="needs-validation" action="{{url_for('tasks')}}" method="post" novalidate>
+            <form class="needs-validation" enctype=multipart/form-data action="{{url_for('tasks')}}" method="post" novalidate>
                 <div class="row">
                     <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <textarea autofocus class="form-control form-control-lg" rows="2" cols="45"
@@ -49,11 +49,20 @@
                         </div>
                     </div>
 
+                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                        <input multiple type="file" class="form-control form-control-lg" id="files" name="files"
+                               placeholder="Приклепляемые материалы по задаче"
+                               value="">
+                        <div class="invalid-feedback">
+                            Что-то не так с прикрепленными файлами
+                        </div>
+                    </div>
+
                 </div>
                 <div class="my-4"></div>
 
                 <div class="text-left col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                    <input class="form-check-input" type="checkbox" name="is_create_yandex_disk_catalog"
+                    <input class="form-check-input" type="checkbox" name="is_create_task_yandex_disk"
                            id="flexCheckChecked">
                     <label class="form-check-label" for="flexCheckChecked">
                         Создать каталог с задачей на яндекс.диске

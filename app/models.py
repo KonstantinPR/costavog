@@ -83,6 +83,7 @@ class Task(db.Model):
     date = db.Column(db.String(100))
     executor_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     condition = db.Column(db.String(100))
+    yandex_link = db.Column(db.String(1000))
 
 
 @login.user_loader

@@ -103,6 +103,20 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        {% if task_yandex_disk_link %}
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <a href="#"
+                               data-hx-post="{{url_for('show_yandex_task_files', task_id=task.id)}}"
+                               hx-target="#tasks_show">&#9660; Есть приложения.
+                                Показать</a>
+
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <a href="{{task_yandex_disk_link}}" download="*.zip">&#9660; Скачать</a>
+                        </div>
+                        <div id="tasks_show" hx-swap="outerHTML"></div>
+                        {% endif %}
+                        
                     </div>
                     <div class="my-4"></div>
                     <button class="w-100 btn btn-primary btn-lg p-2" formaction="{{url_for('task_edit', id=id)}}"
