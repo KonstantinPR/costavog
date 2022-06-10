@@ -1,0 +1,5 @@
+<div class="row">
+    {% for img in images %}
+    <img src="{{url_for('static', filename=img)}}" />
+    {% endfor %}
+</div>

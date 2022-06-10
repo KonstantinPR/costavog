@@ -109,6 +109,7 @@ def task_edit(id):
         print(user_name_set)
 
         return render_template('task.html',
+                               task=task,
                                amount=amount,
                                description=description,
                                date=date,
@@ -117,7 +118,7 @@ def task_edit(id):
                                condition=task.condition,
                                user_name_set=user_name_set,
                                executor_name=executor_name,
-                               task_yandex_disk_link=task_yandex_disk_link
+                               task_yandex_disk_link=task_yandex_disk_link,
                                )
 
     # tasks = db.session.query(Task).filter_by(company_id=company_id).all()
@@ -242,3 +243,10 @@ def task_delete(id):
     db.session.commit()
 
     return redirect('/tasks')
+
+
+@app.route('/show_yandex_task_files/<int:task_id>', methods=['POST', 'GET'])
+@login_required
+def show_yandex_task_files(task_id):
+    images_path_list = task_worker.get_tasks_files(task_id)
+    return render_template('tasks_files_div.html', images=images_path_list)
