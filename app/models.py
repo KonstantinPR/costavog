@@ -66,7 +66,7 @@ class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer)
     amount = db.Column(db.String(80), unique=False)
-    description = db.Column(db.String(500))
+    description = db.Column(db.String(1000))
     user_name = db.Column(db.String(100))
     date = db.Column(db.String(100))
     yandex_link = db.Column(db.String(1000))
@@ -77,7 +77,7 @@ class Task(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.String(80), unique=False)
-    description = db.Column(db.String(100))
+    description = db.Column(db.String(1000))
     user_name = db.Column(db.String(100))
     company_id = db.Column(db.Integer)
     date = db.Column(db.String(100))
