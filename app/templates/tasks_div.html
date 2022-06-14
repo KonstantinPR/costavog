@@ -1,6 +1,6 @@
-<div id="tasks_div" hx-swap="outerHTML">
+  <div id="tasks_div" hx-swap="outerHTML">
 
-    <script>
+                <script>
                     $(document).ready(function() {
                       var $checks = $("input[type='checkbox']").change(function() {
                         var checked = $checks.is(':checked');
@@ -14,69 +14,71 @@
                       document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
                     })
 
+                </script>
+                <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
-
-
-    </script>
-    <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
-
-        <div style="z-index:100" class="fixed-bottom">
-            <button class="edit w-50 btn btn-primary btn-sm" type="submit">Взять задачу</button>
-            <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
-        </div>
-
-
-        <div class="table-header row p-1 text-left">
-            <div class="col-1">
-                <b>#</b>
-            </div>
-            <div class="col">
-                <b>Дата</b>
-            </div>
-            <div class="col-2">
-                <b>Пнт</b>
-            </div>
-            <div class="col-6">
-                <b>Описание</b>
-            </div>
-        </div>
-
-
-        {% for p in tasks %}
-
-        {% if p.condition == 'completed' %}
-        {% set bg = 'bg-success' %}
-        {% elif p.condition == 'progress' %}
-        {% set bg = 'bg-warning' %}
-        {% endif %}
-
-        <div class="row-striped row text-left bg-opacity-10 {{bg}}">
-            <a href="{{url_for('task_edit', id=p.id)}}">
-                <div class="d_hover row p-3">
-                    <div class="col-1 form-check">
-                        <input class="form-check-input" type="checkbox" value="{{p.id}}" name="check"
-                               id="{{p.id}}">
-                        <label class="form-check-label" for="{{p.id}}">
-                        </label>
+                    <div style="z-index:100 position-absolute w-100 row" class="fixed-bottom">
+                        <button class="edit w-100 btn btn-success bg-opacity-50 btn-lg"
+                                formaction="{{url_for('tasks_take_and_complete')}}" type="submit">Взять и завершить
+                            задачу
+                        </button>
+                        <button class="edit w-100 btn btn-warning bg-opacity-50 btn-lg" type="submit">Взять задачу
+                        </button>
+                        <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
                     </div>
-                    <div class="col small">
-                        {{p.date}}
-                    </div>
-                    <div class="col-2">
-                        {{p.amount}}
-                    </div>
-                    <div class="col-6 small">
-                        {% if p.yandex_link %}
-                        {{p.description}}. Есть приложения. &#9660;
-                        {% else %}
-                        {{p.description}}
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-        </div>
 
-        {% endfor %}
 
-    </form>
-</div>
+                    <div class="table-header row p-1 text-left">
+                        <div class="col-2">
+                            <b>CH</b>
+                        </div>
+                        <div class="col-2">
+                            <b>Дата</b>
+                        </div>
+                        <div class="col-2">
+                            <b>Пнт</b>
+                        </div>
+                        <div class="col-6">
+                            <b>Описание</b>
+                        </div>
+                    </div>
+
+
+                    {% for p in tasks %}
+
+                    {% if p.condition == 'completed' %}
+                    {% set bg = 'bg-success bg-opacity-25' %}
+                    {% elif p.condition == 'progress' %}
+                    {% set bg = 'bg-warning bg-opacity-25' %}
+                    {% endif %}
+
+                    <div class="row-striped row text-left {{bg}}">
+                        <a href="{{url_for('task_edit', id=p.id)}}">
+                            <div class="d_hover row p-3">
+                                <div class="col-2 form-check">
+                                    <input class="form-check-input big-checkbox" type="checkbox" value="{{p.id}}" name="check"
+                                           id="{{p.id}}">
+                                    <label class="form-check-label" for="{{p.id}}">
+                                    </label>
+                                </div>
+                                <div class="col-2 small">
+                                    {{p.date}}
+                                </div>
+                                <div class="col-2">
+                                    {{p.amount}}
+                                </div>
+                                <div class="col-6 small">
+                                    {% if p.yandex_link %}
+                                    {{p.description}}. Есть приложения. &#9660;
+                                    {% else %}
+                                    {{p.description}}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    {% endfor %}
+
+                </form>
+            </div>
