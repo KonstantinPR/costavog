@@ -11,3 +11,8 @@ text-color:black
 .d_hover:hover{
     background-color:white;
 }
+
+
+.edit {
+box-shadow: 0 0 0 max(100vh, 100vw) rgba(0, 0, 0, .1);
+}

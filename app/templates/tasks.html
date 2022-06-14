@@ -100,32 +100,30 @@
             <br>
 
 
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-            <script>
+            <div id="tasks_div" hx-swap="outerHTML">
+
+                <script>
                     $(document).ready(function() {
                       var $checks = $("input[type='checkbox']").change(function() {
                         var checked = $checks.is(':checked');
-                        $(".table-header").toggle(!checked);
+<!--                        $(".table-header").toggle(!checked);-->
                         $(".edit").toggle(checked);
                       });
                       $checks.first().change();
                     });
 
+                    window.addEventListener('scroll', function() {
+                      document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
+                    })
 
 
 
-
-
-
-            </script>
-
-
-            <div id="tasks_div" hx-swap="outerHTML">
+                </script>
                 <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
-                    <div class="sticky-top edit p-1">
-                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Взять задачу</button>
-<!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
+                    <div style="z-index:100" class="fixed-bottom">
+                        <button class="edit w-50 btn btn-primary btn-sm" type="submit">Взять задачу</button>
+                        <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
                     </div>
 
 
