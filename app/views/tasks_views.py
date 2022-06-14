@@ -57,7 +57,6 @@ def tasks():
     # вывод всех текущих операций под формой
     tasks = task_worker.get_all_tasks_user(company_id)
 
-
     return render_template('tasks.html', tasks=tasks)
 
 
@@ -298,7 +297,7 @@ def tasks_take_and_complete():
             if not task.condition == 'completed':
                 task.executor_id = current_user.id
                 task.condition = 'completed'
-                current_user.points += task.amount
+                current_user.points = int(current_user.points) + int(task.amount)
                 db.session.add(task)
             else:
                 checks_completed.pop(checks_completed.index(id))
