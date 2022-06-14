@@ -250,3 +250,14 @@ def task_delete(id):
 def show_yandex_task_files(task_id):
     images_path_list = task_worker.get_tasks_files(task_id)
     return render_template('tasks_files_div.html', images=images_path_list)
+
+
+@app.route('/tasks_take/', methods=['POST', 'GET'])
+@login_required
+def tasks_take():
+    if request.method == 'POST':
+        check = request.form.getlist("check")
+
+        print(check)
+
+    return redirect('/tasks')
