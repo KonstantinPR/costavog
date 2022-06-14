@@ -57,6 +57,7 @@ def tasks():
     # вывод всех текущих операций под формой
     tasks = task_worker.get_all_tasks_user(company_id)
 
+
     return render_template('tasks.html', tasks=tasks)
 
 
