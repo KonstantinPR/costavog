@@ -255,9 +255,59 @@ def show_yandex_task_files(task_id):
 @app.route('/tasks_take/', methods=['POST', 'GET'])
 @login_required
 def tasks_take():
-    if request.method == 'POST':
-        check = request.form.getlist("check")
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
 
-        print(check)
+    if request.method == 'POST':
+        checks = request.form.getlist("check")
+        checks_progress = checks.copy()
+        for id in checks:
+            task = Task.query.filter_by(id=id).one()
+            if not task.condition in ['progress', 'completed']:
+                task.executor_id = current_user.id
+                task.condition = 'progress'
+                db.session.add(task)
+            else:
+                checks_progress.pop(checks_progress.index(id))
+                flash(f'Задача {id} уже выполняется или выполнена. Статус и исполнитель остается прежними.')
+
+            db.session.add(task)
+
+        db.session.commit()
+
+        if checks_progress:
+            flash(f'Задачи {checks_progress} взяты в работу.')
+        else:
+            flash(f'Не выбрано ни одной свободной задачи!')
+
+    return redirect('/tasks')
+
+
+@app.route('/tasks_take_and_complete/', methods=['POST', 'GET'])
+@login_required
+def tasks_take_and_complete():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        checks = request.form.getlist("check")
+        checks_completed = checks.copy()
+        for id in checks:
+            task = Task.query.filter_by(id=id).one()
+            if not task.condition == 'completed':
+                task.executor_id = current_user.id
+                task.condition = 'completed'
+                current_user.points += task.amount
+                db.session.add(task)
+            else:
+                checks_completed.pop(checks_completed.index(id))
+                flash(f'Задача {id} ранее уже выполнена. Статус не меняется')
+
+        db.session.commit()
+
+        if checks_completed:
+            flash(f'Задачи {checks_completed} выполнены. Баланс {current_user.user_name} {current_user.points} пнт.')
+        else:
+            flash(f'Вы не выбрали ни одной не завершенной задачи!')
 
     return redirect('/tasks')

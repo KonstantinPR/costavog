@@ -4,17 +4,24 @@
                     $(document).ready(function() {
                       var $checks = $("input[type='checkbox']").change(function() {
                         var checked = $checks.is(':checked');
-                        $(".table-header").toggle(!checked);
+<!--                        $(".table-header").toggle(!checked);-->
                         $(".edit").toggle(checked);
                       });
                       $checks.first().change();
                     });
 
+                    window.addEventListener('scroll', function() {
+                      document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
+                    })
+
+
+
+
     </script>
     <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
-        <div class="sticky-top edit p-1">
-            <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Взять задачу</button>
+        <div style="z-index:100" class="fixed-bottom">
+            <button class="edit w-50 btn btn-primary btn-sm" type="submit">Взять задачу</button>
             <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
         </div>
 
@@ -43,7 +50,7 @@
         {% set bg = 'bg-warning' %}
         {% endif %}
 
-        <div class="row-striped row text-left {{bg}}">
+        <div class="row-striped row text-left bg-opacity-10 {{bg}}">
             <a href="{{url_for('task_edit', id=p.id)}}">
                 <div class="d_hover row p-3">
                     <div class="col-1 form-check">

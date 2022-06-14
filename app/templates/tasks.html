@@ -118,11 +118,19 @@
 
 
 
+
+
+
                 </script>
                 <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
-                    <div style="z-index:100" class="fixed-bottom">
-                        <button class="edit w-50 btn btn-primary btn-sm" type="submit">Взять задачу</button>
+                    <div style="z-index:100 w-100 row" class="fixed-bottom">
+                        <button class="edit w-100 btn btn-success bg-opacity-50 btn-sm"
+                                formaction="{{url_for('tasks_take_and_complete')}}" type="submit">Взять и завершить
+                            задачу
+                        </button>
+                        <button class="edit w-100 btn btn-warning bg-opacity-50 btn-sm" type="submit">Взять задачу
+                        </button>
                         <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
                     </div>
 
@@ -146,9 +154,9 @@
                     {% for p in tasks %}
 
                     {% if p.condition == 'completed' %}
-                    {% set bg = 'bg-success' %}
+                    {% set bg = 'bg-success bg-opacity-25' %}
                     {% elif p.condition == 'progress' %}
-                    {% set bg = 'bg-warning' %}
+                    {% set bg = 'bg-warning bg-opacity-25' %}
                     {% endif %}
 
                     <div class="row-striped row text-left {{bg}}">
