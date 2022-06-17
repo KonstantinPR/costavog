@@ -38,53 +38,49 @@ def task_adding_in_db(request, company_id):
 
 def task_adding_yandex_disk(uploaded_files, added_task_id):
     print("uploaded_file" + str(uploaded_files))
-    print(added_task_id)
-    if any(uploaded_files):
-        print(f"{uploaded_files} is true")
 
-        task = Task.query.filter_by(id=added_task_id).one()
-        yandex_disk_token = current_user.yandex_disk_token
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
-                   'Authorization': f'OAuth {yandex_disk_token}'}
-        y = yadisk.YaDisk(token=yandex_disk_token)
-        yandex_disk_folder = 'TASKER/TASKS'
-        if not y.exists(yandex_disk_folder):
-            y.mkdir(yandex_disk_folder)
-        task_directory = f"{str(task.id)}_{str(task.date)}_{str(task.user_name)}_" \
-                                f"{str(task.description)[:20]}..."
-        yandex_task_folder_path = f"{yandex_disk_folder}/{task_directory}"
-        if not y.exists(yandex_task_folder_path):
-            y.mkdir(yandex_task_folder_path)
+    task = Task.query.filter_by(id=added_task_id).one()
+    yandex_disk_token = current_user.yandex_disk_token
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
+               'Authorization': f'OAuth {yandex_disk_token}'}
+    y = yadisk.YaDisk(token=yandex_disk_token)
+    yandex_disk_folder = 'TASKER/TASKS'
+    if not y.exists(yandex_disk_folder):
+        y.mkdir(yandex_disk_folder)
+    task_directory = f"{str(task.id)}_{str(task.date)}_{str(task.user_name)}_" \
+                            f"{str(task.description)[:20]}..."
+    yandex_task_folder_path = f"{yandex_disk_folder}/{task_directory}"
+    if not y.exists(yandex_task_folder_path):
+        y.mkdir(yandex_task_folder_path)
 
-        print('before flask request files if is folder task_directory  ' + str(task_directory))
+    print('before flask request files if is folder task_directory  ' + str(task_directory))
 
-        id_folder = randrange(1000000000000)
-        tmp_folder = 'tmp_folder'
-        files_folder = f"{tmp_folder}_{id_folder}"
-        # для публичной ссылки на скачивание
-        yandex_link = str
-        if not os.path.exists(files_folder):
-            os.makedirs(files_folder)
-            for file in uploaded_files:
-                file_path = f"{files_folder}/{file.filename}"
-                file.save(file_path)
-                yandex_task_file_path = f"{yandex_task_folder_path}/{file.filename}"
-                y.upload(file_path, yandex_task_file_path)
+    id_folder = randrange(1000000000000)
+    tmp_folder = 'tmp_folder'
+    files_folder = f"{tmp_folder}_{id_folder}"
+    # для публичной ссылки на скачивание
+    yandex_link = str
+    if not os.path.exists(files_folder):
+        os.makedirs(files_folder)
+        for file in uploaded_files:
+            file_path = f"{files_folder}/{file.filename}"
+            file.save(file_path)
+            yandex_task_file_path = f"{yandex_task_folder_path}/{file.filename}"
+            y.upload(file_path, yandex_task_file_path)
 
-            # путь на яндекс.диске к файлу (заносим в базу)
-            yandex_link = yandex_task_folder_path
-            task.yandex_link = yandex_link
-            db.session.commit()
+        # путь на яндекс.диске к файлу (заносим в базу)
+        yandex_link = yandex_task_folder_path
+        task.yandex_link = yandex_link
+        db.session.commit()
 
-            # deleting yandex_disk_folder with images that was zipped
-            try:
-                shutil.rmtree(files_folder)
-            except OSError as e:
-                print("Error: %s - %s." % (e.filename, e.strerror))
+        # deleting yandex_disk_folder with images that was zipped
+        try:
+            shutil.rmtree(files_folder)
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
 
-            is_task_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_task_folder_path}'
-        else:
-            is_task_added_to_yandex_disk = f'Возникли проблемы с сохранением файлов на Яндекс Диск. Файлы не сохранены'
+        is_task_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_task_folder_path}'
+
     else:
         is_task_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
 

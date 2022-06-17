@@ -51,9 +51,9 @@ def transactions():
 
         # create transactions folder in yandex disk
         is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
+        uploaded_files = flask.request.files.getlist("files")
 
-        if is_create_transaction_yandex_disk:
-            uploaded_files = flask.request.files.getlist("files")
+        if any(uploaded_files):
             is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
                                                                                                    transaction_id)
 

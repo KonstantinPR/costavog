@@ -45,10 +45,10 @@ def tasks():
         task_id = task_worker.task_adding_in_db(request, company_id)
 
         # create tasks folder in yandex disk
-        is_create_task_yandex_disk = request.form.getlist('is_create_task_yandex_disk')
+        # is_create_task_yandex_disk = request.form.getlist('is_create_task_yandex_disk')
+        uploaded_files = flask.request.files.getlist("files")
 
-        if is_create_task_yandex_disk:
-            uploaded_files = flask.request.files.getlist("files")
+        if any(uploaded_files):
             print(uploaded_files)
             is_adding_correct_msg, yandex_link = task_worker.task_adding_yandex_disk(uploaded_files, task_id)
 
@@ -306,7 +306,8 @@ def tasks_take_and_complete():
         db.session.commit()
 
         if checks_completed:
-            flash(f'Задачи {checks_completed} выполнены. Баланс {current_user.user_name} {current_user.points} пнт.')
+            flash(f'Задачи {checks_completed} выполнены. Баланс {current_user.user_name} '
+                  f'{current_user.points} пнт.')
         else:
             flash(f'Вы не выбрали ни одной не завершенной задачи!')
 
