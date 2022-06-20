@@ -180,8 +180,27 @@ def upload_detailing():
 
         df = detailing.zip_detail(uploaded_files, df_net_cost)
 
+        is_get_stock = request.form.get('is_get_stock')
+
+        if is_get_stock:
+            df_stock = detailing.get_wb_stock()
+            df = df.merge(df_stock, left_on='Артикул поставщика', right_on='supplierArticle')
+
         file = io_output.io_output(df)
 
-        return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
+        flash("Отчет успешно выгружен в excel файл")
+        return send_file(file, attachment_filename='report_detailing' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
 
     return render_template('upload_detailing.html')
+
+
+@app.route('/get_wb_stock', methods=['POST', 'GET'])
+@login_required
+def get_wb_stock():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    df = detailing.get_wb_stock()
+    file = io_output.io_output(df)
+
+    return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)

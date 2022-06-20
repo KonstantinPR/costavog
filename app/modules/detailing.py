@@ -4,8 +4,10 @@ import pandas as pd
 import numpy as np
 import os
 import io
+from app.modules import io_output
 from os import listdir
 import datetime
+import requests
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -13,6 +15,42 @@ import datetime
 # path = 'detailing/'
 # file_names = [f for f in listdir('detailing')]
 # print(file_names)
+
+
+def to_round_df(df_result):
+    df_result = df_result.round(decimals=0)
+    return df_result
+
+
+def get_wb_stock():
+    response = requests.get(
+        'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21%3A00%3A00.000Z&key=NDYwYTcxYjUtMDNjZi00Zjc1LTg3NDQtN2RiM2E2MWRmYzA1')
+
+    data = response.json()
+    df = pd.DataFrame(data)
+
+
+    df_pivot = df.pivot_table(index=['supplierArticle'],
+                              values=['quantity',
+                                      'quantityFull',
+                                      'inWayToClient',
+                                      'inWayFromClient',
+                                      'Price',
+                                      'Discount',
+                                      'daysOnSite'],
+                              aggfunc={'quantity': sum,
+                                       'quantityFull': sum,
+                                       'inWayToClient': sum,
+                                       'inWayFromClient': sum,
+                                       'Price': max,
+                                       'Discount': max,
+                                       'daysOnSite': max},
+                              margins=False)
+
+    df_pivot['finishPrice'] = df_pivot['Price'] - df_pivot['Price'] * (df_pivot['Discount'] / 100)
+    df = to_round_df(df_pivot)
+
+    return df
 
 
 def zip_detail(zip_downloaded, df_net_cost):
@@ -35,6 +73,9 @@ def zip_detail(zip_downloaded, df_net_cost):
 
     if 'Услуги по доставке товара покупателю' not in result:
         result['Услуги по доставке товара покупателю'] = 0
+
+    if not 'К перечислению Продавцу за реализованный Товар' in result:
+        result['К перечислению Продавцу за реализованный Товар'] = ''
 
     df_pivot = result.pivot_table(index=['Артикул поставщика'],
                                   columns='Обоснование для оплаты',
@@ -128,12 +169,12 @@ def zip_detail(zip_downloaded, df_net_cost):
             'Код номенклатуры',
             'Маржа-себест.',
             'Маржа',
-            'Возвраты, руб.',
+            'Покупок шт.',
             'Продажи',
+            'Возвраты, руб.',
             'Услуги по доставке товара покупателю',
             'Покатушка средне, руб.',
             'Маржа-себест. за шт. руб',
-            'Покупок шт.',
             'Покатали раз',
             'net_cost',
             'company_id',
@@ -149,3 +190,5 @@ def zip_detail(zip_downloaded, df_net_cost):
         df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
 
         return df_result
+
+
