@@ -19,10 +19,15 @@ import requests
 def task_adding_in_db(request, company_id):
     amount = request.form['amount']
     description = request.form['description']
+
     if request.form['date'] == "":
         date = datetime.date.today()
     else:
         date = request.form['date']
+
+    if request.form['amount'] == "":
+        amount = 1
+
 
     user_name = current_user.user_name
 
