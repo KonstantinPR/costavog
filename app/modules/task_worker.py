@@ -28,11 +28,10 @@ def task_adding_in_db(request, company_id):
     if request.form['amount'] == "":
         amount = 1
 
-
     user_name = current_user.user_name
 
     task = Task(amount=amount, description=description, date=date, user_name=user_name,
-                              company_id=company_id)
+                company_id=company_id)
     db.session.add(task)
     db.session.commit()
 
@@ -53,7 +52,7 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
     if not y.exists(yandex_disk_folder):
         y.mkdir(yandex_disk_folder)
     task_directory = f"{str(task.id)}_{str(task.date)}_{str(task.user_name)}_" \
-                            f"{str(task.description)[:20]}..."
+                     f"{str(task.description)[:20]}..."
     yandex_task_folder_path = f"{yandex_disk_folder}/{task_directory}"
     if not y.exists(yandex_task_folder_path):
         y.mkdir(yandex_task_folder_path)
@@ -95,7 +94,7 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
 def get_all_tasks_user(company_id):
     try:
         tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
-            desc(Task.date), desc(Task.id)).all()
+            desc(Task.condition), desc(Task.date), desc(Task.id)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
 
     except ValueError:
