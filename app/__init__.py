@@ -22,6 +22,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@l
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
+app.config['ADMINISTRATOR'] = 'administrator'
 
 db.init_app(app)
 login.init_app(app)

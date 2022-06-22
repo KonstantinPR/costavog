@@ -134,6 +134,7 @@ def profile():
 
     current_role = current_user.role
     roles = app.config['ROLES']
+    administrator = app.config['ADMINISTRATOR']
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
     yandex_disk_token = app.config['YANDEX_TOKEN']
@@ -146,4 +147,5 @@ def profile():
                            points=points,
                            wb_api_token=wb_api_token,
                            roles=roles,
-                           current_role=current_role)
+                           current_role=current_role,
+                           administrator=administrator)
