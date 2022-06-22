@@ -16,4 +16,4 @@ text-color:black
 box-shadow: 0 0 0 max(100vh, 100vw) rgba(0, 0, 0, .1);
 }
 
-.big-checkbox {width: 1.5rem; height: 1.5rem;top:0.5rem}
+.big-checkbox {width: 1.5rem; height: 1.5rem; top:1.5rem}

@@ -24,7 +24,6 @@ class UserModel(UserMixin, db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
     initial_sum = db.Column(db.Integer, default=0)
     initial_file_path = db.Column(db.String(500), default=0)
-    yandex_disk_token = db.Column(db.String(1000), default=0)
     role = db.Column(db.String(500), default='user')
     tasks = db.relationship('Task')
     points = db.Column(db.Integer, default=0)
@@ -43,6 +42,8 @@ class Company(db.Model):
     company_name = db.Column(db.String(80), unique=False)
     password_hash = db.Column(db.String(500))
     users = db.relationship('UserModel')
+    yandex_disk_token = db.Column(db.String(1000), default=0)
+    wb_api_token = db.Column(db.String(1000), default=0)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
