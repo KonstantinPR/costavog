@@ -93,7 +93,6 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
 
 def get_all_tasks_user(company_id):
     try:
-
         tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
             desc(Task.condition), desc(Task.date), desc(Task.id)).all()
 
