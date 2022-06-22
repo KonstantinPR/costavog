@@ -133,17 +133,17 @@
                     </div>
 
 
-                    <div class="table-header row p-1">
+                    <div class="table-header row p-1 text-center">
                         <div class="col-2">
                             <b>Дата</b>
                         </div>
                         <div class="col-2">
                             <b>Пнт</b>
                         </div>
-                        <div class="col-7">
+                        <div class="col-6">
                             <b>Описание</b>
                         </div>
-                        <div class="col-1">
+                        <div class="col-2">
                             <b>CH</b>
                         </div>
                     </div>
@@ -166,19 +166,17 @@
                                 <div class="col-2">
                                     {{p.amount}}
                                 </div>
-                                <div class="col-7 small">
+                                <div class="col-6 small">
                                     {% if p.yandex_link %}
                                     {{p.description}}. Есть приложения. &#9660;
                                     {% else %}
                                     {{p.description}}
                                     {% endif %}
                                 </div>
-                                <div class="col-1 form-check text-center">
+                                <div class="col-2 form-check text-center">
                                     <input class="form-check-input big-checkbox" type="checkbox" value="{{p.id}}"
                                            name="check"
                                            id="{{p.id}}">
-                                    <label class="form-check-label" for="{{p.id}}">
-                                    </label>
                                 </div>
                             </div>
                         </a>

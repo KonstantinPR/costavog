@@ -114,6 +114,8 @@ def profile():
     user_name = current_user.user_name
 
     if request.method == 'POST':
+        roles = request.form.get('roles')
+        print(roles)
         initial_sum = request.form['initial_sum']
         initial_file_path = request.form['initial_file_path']
         yandex_disk_token = request.form['yandex_disk_token']
@@ -130,12 +132,18 @@ def profile():
                                initial_file_path=initial_file_path,
                                yandex_disk_token=yandex_disk_token)
 
+    current_role = current_user.role
+    roles = app.config['ROLES']
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
     yandex_disk_token = app.config['YANDEX_TOKEN']
+    wb_api_token = app.config['YANDEX_TOKEN']
     points = current_user.points
 
     return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
                            initial_file_path=initial_file_path,
                            yandex_disk_token=yandex_disk_token,
-                           points=points)
+                           points=points,
+                           wb_api_token=wb_api_token,
+                           roles=roles,
+                           current_role=current_role)
