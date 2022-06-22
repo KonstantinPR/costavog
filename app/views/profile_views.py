@@ -114,8 +114,7 @@ def profile():
     user_name = current_user.user_name
 
     if request.method == 'POST':
-        roles = request.form.get('roles')
-        print(roles)
+        role = request.form.get('roles')
         initial_sum = request.form['initial_sum']
         initial_file_path = request.form['initial_file_path']
         yandex_disk_token = request.form['yandex_disk_token']
@@ -124,6 +123,7 @@ def profile():
         user.initial_sum = initial_sum
         user.initial_file_path = initial_file_path
         user.yandex_disk_token = yandex_disk_token
+        user.role = role
         db.session.commit()
 
         flash("Changing completed")

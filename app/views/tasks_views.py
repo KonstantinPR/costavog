@@ -31,6 +31,7 @@ import requests
 
 URL = app.config['URL']
 
+
 @app.route('/tasks', methods=['POST', 'GET'])
 @login_required
 def tasks():
@@ -55,6 +56,7 @@ def tasks():
 
     # вывод всех текущих операций под формой
     tasks = task_worker.get_all_tasks_user(company_id)
+    # all_users = UserModel.query.filter_by(company_id=company_id).with_entities(UserModel.user_name).distinct()
 
     return render_template('tasks.html', tasks=tasks)
 

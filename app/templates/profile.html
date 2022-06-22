@@ -34,8 +34,8 @@
                     <div class="col-xs-12  col-sm-12 col-lg-12p-12">
 
                         {% if current_role == administrator %}
-                        <label for="initial_sum">Доступ пользователя:</label>
-                        <select name="roles" class="form-select" aria-label="Доступ пользователя">
+                        <label for="roles">Доступ пользователя:</label>
+                        <select id="roles" name="roles" class="form-select" aria-label="Доступ пользователя">
                             {% for role in roles %}
                             {% if role == current_role %}
                             {% set is_selected = 'selected' %}

@@ -33,7 +33,7 @@
                         </div>
                     </div>
                     <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
-                        <input autofocus type="number" class="form-control form-control-lg" id="amount"
+                        <input type="number" class="form-control form-control-lg" id="amount"
                                name="amount"
                                placeholder="Длительность" value=""
                                required>
@@ -49,7 +49,19 @@
                             Что-то не так с датой
                         </div>
                     </div>
-
+<!--                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+<!--                        <select id="all_users" name="all_users" class="form-select form-control form-control-lg"-->
+<!--                                aria-label="Пользователи">-->
+<!--                            {% for user in all_users %}-->
+<!--                            {% if user == current_user %}-->
+<!--                            {% set is_selected = 'selected' %}-->
+<!--                            {% else %}-->
+<!--                            {% set is_selected = '' %}-->
+<!--                            {% endif %}-->
+<!--                            <option {{is_selected}} value="{{user}}">{{user}}</option>-->
+<!--                            {% endfor %}-->
+<!--                        </select>-->
+<!--                    </div>-->
                     <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                         <input multiple type="file" class="form-control form-control-lg" id="files" name="files"
                                placeholder="Приклепляемые материалы по задаче"
@@ -117,6 +129,10 @@
                     window.addEventListener('scroll', function() {
                       document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
                     })
+
+
+
+
 
 
                 </script>
