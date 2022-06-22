@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 import os
 
 uri = os.getenv("DATABASE_URL")  # or other relevant config var
@@ -12,6 +12,7 @@ if uri:
 
 login = LoginManager()
 db = SQLAlchemy()
+
 
 
 class UserModel(UserMixin, db.Model):
@@ -42,7 +43,7 @@ class Company(db.Model):
     company_name = db.Column(db.String(80), unique=False)
     password_hash = db.Column(db.String(500))
     users = db.relationship('UserModel')
-    yandex_disk_token: object = db.Column(db.String(1000), default=0)
+    yandex_disk_token = db.Column(db.String(1000), default=0)
     wb_api_token = db.Column(db.String(1000), default=0)
 
     def set_password(self, password):

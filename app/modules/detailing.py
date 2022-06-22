@@ -24,7 +24,7 @@ def to_round_df(df_result):
 
 def get_wb_stock():
     response = requests.get(
-        'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21%3A00%3A00.000Z&key=NDYwYTcxYjUtMDNjZi00Zjc1LTg3NDQtN2RiM2E2MWRmYzA1')
+        'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21%3A00%3A00.000Z&key=DYNwYTcxYjUtMDNjZi00Zjc1LTg3NDQtN2RiM2E2MWRmYzA1')
 
     data = response.json()
     df = pd.DataFrame(data)

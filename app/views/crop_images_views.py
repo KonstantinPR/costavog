@@ -9,15 +9,6 @@ import flask
 import requests
 
 
-@app.before_first_request
-def create_all():
-    db.create_all()
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])
 def upload_img_crop():

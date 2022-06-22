@@ -31,7 +31,6 @@ import requests
 
 URL = app.config['URL']
 
-
 @app.route('/tasks', methods=['POST', 'GET'])
 @login_required
 def tasks():

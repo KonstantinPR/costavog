@@ -1,10 +1,9 @@
-import flask
 from flask import Flask
 from flask_migrate import Migrate
 import os
 from os import environ
 from app.models import db, login, Company, UserModel, Task
-from flask_login import login_required, current_user, login_user, logout_user
+from flask_login import login_required, current_user, login_user, logout_user, LoginManager
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -21,20 +20,23 @@ if uri:
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost:8000/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-
-# yandex token is placed in db (company.yandex_token)
-
-db.init_app(app)
-app.app_context().push()
-login.init_app(app)
-login.login_view = 'login'
-
-# api, keys and const config
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 
-app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=1).one().yandex_disk_token
+db.init_app(app)
+login.init_app(app)
+login.login_view = 'login'
+app.app_context().push()
+
+
+@app.before_first_request
+def create_all():
+    db.create_all()
+
+
+@app.before_first_request
+def config():
+    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
 
 
 from app.views import crop_images_views

@@ -55,7 +55,16 @@
                                placeholder="Yandex token (токен от Яндекс.Диска)" value="{{yandex_disk_token}}"
                                required>
                         <div class="invalid-feedback">
-                            Valid first name is required.
+                            Введите токен яндекс.диска чтобы им пользоваться
+                        </div>
+                        <br>
+                        <label for="initial_file_path">Yandex token (токен от Яндекс.Диска)</label>
+                        <input autofocus class="form-control form-control-lg" id="wb_api_token"
+                               name="wb_api_token"
+                               placeholder="Yandex token (токен от Яндекс.Диска)" value="{{wb_api_token}}"
+                               required>
+                        <div class="invalid-feedback">
+                            Введите api ключ от wildberries, чтобы использовать его статистику
                         </div>
                         <div class="my-4"></div>
                         <button class="w-100 btn btn-primary btn-lg" type="submit">Изменить</button>
