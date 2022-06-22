@@ -42,7 +42,7 @@ class Company(db.Model):
     company_name = db.Column(db.String(80), unique=False)
     password_hash = db.Column(db.String(500))
     users = db.relationship('UserModel')
-    yandex_disk_token = db.Column(db.String(1000), default=0)
+    yandex_disk_token: object = db.Column(db.String(1000), default=0)
     wb_api_token = db.Column(db.String(1000), default=0)
 
     def set_password(self, password):

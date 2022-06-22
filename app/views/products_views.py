@@ -81,7 +81,7 @@ def read_products():
 
     df = pd.read_sql(db.session.query(Product).statement, db.session.bind)
     df.replace(np.NaN, "", inplace=True)
-    file = io_output(df)
+    file = io_output.io_output(df)
     flash("Себестоимость товаров скачана в excel")
 
     return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
@@ -189,7 +189,8 @@ def upload_detailing():
         file = io_output.io_output(df)
 
         flash("Отчет успешно выгружен в excel файл")
-        return send_file(file, attachment_filename='report_detailing' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
+        return send_file(file, attachment_filename='report_detailing' + str(datetime.date.today()) + ".xlsx",
+                         as_attachment=True)
 
     return render_template('upload_detailing.html')
 

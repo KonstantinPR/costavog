@@ -132,7 +132,7 @@ def profile():
 
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
-    yandex_disk_token = current_user.yandex_disk_token
+    yandex_disk_token = app.config['YANDEX_TOKEN']
     points = current_user.points
 
     return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,

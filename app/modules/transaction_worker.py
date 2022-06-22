@@ -40,7 +40,7 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
     print("uploaded_file" + str(uploaded_files))
 
     transaction = Transaction.query.filter_by(id=added_transaction_id).one()
-    yandex_disk_token = current_user.yandex_disk_token
+    yandex_disk_token = app.config['YANDEX_TOKEN']
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
@@ -109,7 +109,7 @@ def get_all_transactions_user(company_id):
 
 def download_yandex_disk_transactions(id):
     transaction = Transaction.query.filter_by(id=id).one()
-    yandex_disk_token = current_user.yandex_disk_token
+    yandex_disk_token = app.config['YANDEX_TOKEN']
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
@@ -126,7 +126,7 @@ def download_yandex_disk_transactions(id):
 
 
 def get_transactions_files(transaction_id):
-    yandex_disk_token = current_user.yandex_disk_token
+    yandex_disk_token = app.config['YANDEX_TOKEN']
     y = yadisk.YaDisk(token=yandex_disk_token)
     transaction = Transaction.query.filter_by(id=transaction_id).first()
     files = y.listdir(transaction.yandex_link)

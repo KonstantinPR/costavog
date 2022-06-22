@@ -33,7 +33,7 @@ def yandex_disk_crop_images():
         company_id = current_user.company_id
 
         # create object that work with yandex disk using TOKEN
-        yandex_disk_token = current_user.yandex_disk_token
+        yandex_disk_token = app.config['YANDEX_TOKEN']
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                    'Authorization': f'OAuth {yandex_disk_token}'}
         y = yadisk.YaDisk(token=yandex_disk_token)
