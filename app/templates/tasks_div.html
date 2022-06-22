@@ -1,22 +1,7 @@
 <div id="tasks_div" hx-swap="outerHTML">
 
-    <script>
-                    $(document).ready(function() {
-                      var $checks = $("input[type='checkbox']").change(function() {
-                        var checked = $checks.is(':checked');
-<!--                        $(".table-header").toggle(!checked);-->
-                        $(".edit").toggle(checked);
-                      });
-                      $checks.first().change();
-                    });
+    <script src="/static/jq.js"></script>
 
-                    window.addEventListener('scroll', function() {
-                      document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
-                    })
-
-
-
-    </script>
     <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
         <div style="z-index:100 position-absolute w-100 row" class="fixed-bottom">

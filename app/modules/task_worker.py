@@ -17,7 +17,6 @@ import requests
 
 
 def task_adding_in_db(request, company_id):
-    amount = request.form['amount']
     description = request.form['description']
 
     if request.form['date'] == "":
@@ -27,11 +26,21 @@ def task_adding_in_db(request, company_id):
 
     if request.form['amount'] == "":
         amount = 1
+    else:
+        amount = request.form['amount']
+
+    if request.form['all_users'] == '':
+        executor_id = None
+    else:
+        executor_id = UserModel.query.filter_by(company_id=app.config["CURRENT_COMPANY_ID"],
+                                                user_name=current_user.user_name).one().id
+    print(request.form['all_users'])
+    print(executor_id)
 
     user_name = current_user.user_name
 
     task = Task(amount=amount, description=description, date=date, user_name=user_name,
-                company_id=company_id)
+                company_id=company_id, executor_id=executor_id)
     db.session.add(task)
     db.session.commit()
 
@@ -93,12 +102,18 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
 
 def get_all_tasks_user(company_id):
     try:
-        tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
-            desc(Task.condition), desc(Task.date), desc(Task.id)).all()
+        current_user_id = current_user.id
+        if current_user.role == app.config['ADMINISTRATOR']:
+            tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
+                desc(Task.condition), desc(Task.date), desc(Task.id)).all()
+        else:
+            tasks = db.session.query(Task).filter_by(company_id=company_id).filter(
+                (Task.executor_id == None) | (Task.executor_id == current_user_id)).order_by(
+                desc(Task.condition), desc(Task.date), desc(Task.id)).all()
 
     except ValueError:
         tasks = ""
-        'Что-то не так с получением задач из базы данныхЛ'
+        'Что-то не так с получением задач из базы данных'
 
     return tasks
 

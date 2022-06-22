@@ -10,6 +10,9 @@
 <main>
 
 
+    <script src="/static/jq.js"></script>
+
+
     <br>
     {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
@@ -24,10 +27,10 @@
                   novalidate>
                 <div class="row">
                     <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <textarea autofocus class="form-control form-control-lg" rows="4" cols="45"
-                                      id="description" name="description"
-                                      placeholder="Описание"
-                                      required></textarea>
+                    <textarea autofocus class="form-control form-control-lg" rows="4" cols="45"
+                              id="description" name="description"
+                              placeholder="Описание"
+                              required></textarea>
                         <div class="invalid-feedback">
                             Что-то не так с описанием
                         </div>
@@ -49,19 +52,15 @@
                             Что-то не так с датой
                         </div>
                     </div>
-                    <!--                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
-                    <!--                        <select id="all_users" name="all_users" class="form-select form-control form-control-lg"-->
-                    <!--                                aria-label="Пользователи">-->
-                    <!--                            {% for user in all_users %}-->
-                    <!--                            {% if user == current_user %}-->
-                    <!--                            {% set is_selected = 'selected' %}-->
-                    <!--                            {% else %}-->
-                    <!--                            {% set is_selected = '' %}-->
-                    <!--                            {% endif %}-->
-                    <!--                            <option {{is_selected}} value="{{user}}">{{user}}</option>-->
-                    <!--                            {% endfor %}-->
-                    <!--                        </select>-->
-                    <!--                    </div>-->
+                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                        <select id="all_users" name="all_users" class="form-select form-control form-control-lg"
+                                aria-label="Пользователи">
+                            <option selected value="">Ничья задача</option>
+                            {% for user in all_users %}
+                            <option value="{{user}}">{{user}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                         <input multiple type="file" class="form-control form-control-lg" id="files" name="files"
                                placeholder="Приклепляемые материалы по задаче"
@@ -97,16 +96,22 @@
                             class="btn btn-outline-primary">
                         Поиск по описанию
                     </button>
+                    <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">Сбросить</a>
                 </div>
             </form>
             <br>
-            <form action="{{url_for('show_task_by_condition')}}" method="post" novalidate>
+            <form novalidate>
                 <div class="input-group">
                     <select class="form-control rounded" id="task_type_condition" name="task_type_condition">
                         <option>progress</option>
                         <option>completed</option>
                     </select>
-                    <button type="submit" class="btn btn-outline-primary">Показать</button>
+                    <!--                    <button type="submit" class="btn btn-outline-primary">Показать</button>-->
+                    <button hx-post="{{url_for('show_task_by_condition')}}" hx-target="#tasks_div" type="submit"
+                            class="btn btn-outline-primary">
+                        Показать
+                    </button>
+                    <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">Сбросить</a>
                 </div>
             </form>
 
@@ -116,28 +121,6 @@
             <div id="tasks_div" hx-swap="outerHTML">
 
 
-                <script>
-                    $(document).ready(function() {
-                      var $checks = $("input[type='checkbox']").change(function() {
-                        var checked = $checks.is(':checked');
-<!--                        $(".table-header").toggle(!checked);-->
-                        $(".edit").toggle(checked);
-                      });
-                      $checks.first().change();
-                    });
-
-                    window.addEventListener('scroll', function() {
-                      document.getElementById('showScroll').innerHTML = window.pageYOffset + 'px';
-                    })
-
-
-
-
-
-
-
-
-                </script>
                 <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
 
                     <div style="z-index:100 position-absolute w-100 row" class="fixed-bottom">
@@ -192,9 +175,9 @@
                                     {% endif %}
                                 </div>
                                 <div class="col-2 form-check d-flex justify-content-center">
-                                        <input class="form-check-input big-checkbox" type="checkbox" value="{{p.id}}"
-                                               name="check"
-                                               id="{{p.id}}">
+                                    <input class="form-check-input big-checkbox" type="checkbox" value="{{p.id}}"
+                                           name="check"
+                                           id="{{p.id}}">
                                 </div>
                             </div>
                         </a>

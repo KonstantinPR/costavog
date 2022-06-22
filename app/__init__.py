@@ -23,6 +23,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
+app.config['NOBODY'] = 'nobody'
 
 db.init_app(app)
 login.init_app(app)
@@ -38,6 +39,7 @@ def create_all():
 # app key and tokens form db config
 @app.before_first_request
 def config():
+    app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
     app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
 

@@ -6,7 +6,7 @@ import datetime
 from sqlalchemy import desc
 import flask
 import yadisk
-from app.modules import task_worker
+from app.modules import task_worker, sql_query_main
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask
@@ -38,7 +38,6 @@ def tasks():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-    user_name = current_user.user_name
 
     if request.method == 'POST':
         # adding task in db
@@ -56,9 +55,8 @@ def tasks():
 
     # вывод всех текущих операций под формой
     tasks = task_worker.get_all_tasks_user(company_id)
-    # all_users = UserModel.query.filter_by(company_id=company_id).with_entities(UserModel.user_name).distinct()
-
-    return render_template('tasks.html', tasks=tasks)
+    all_unique_users = sql_query_main.get_unique_users_company()
+    return render_template('tasks.html', tasks=tasks, all_users=all_unique_users, current_user=current_user.user_name)
 
 
 @app.route('/task_edit/<int:id>', methods=['POST', 'GET'])
@@ -214,7 +212,7 @@ def tasks_search():
     if request.method == 'POST':
         search = request.form['search']
         tasks = db.session.query(Task).filter(Task.description.ilike('%' + search.lower() + '%')).order_by(
-            desc(Task.date), desc(Task.id)).all()
+            desc(Task.id), desc(Task.date)).all()
         return render_template('tasks_div.html', tasks=tasks)
 
     return redirect('/tasks')
@@ -229,8 +227,8 @@ def show_task_by_condition():
 
     if request.method == 'POST':
         task_condition = request.form['task_type_condition']
-        tasks = db.session.query(Task).filter_by(condition=task_condition)
-        return render_template('tasks.html', tasks=tasks)
+        tasks = db.session.query(Task).filter_by(condition=task_condition).order_by(desc(Task.id), desc(Task.date))
+        return render_template('tasks_div.html', tasks=tasks)
 
     return redirect('/tasks')
 
