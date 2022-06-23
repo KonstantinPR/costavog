@@ -118,6 +118,7 @@ def profile():
         initial_sum = request.form['initial_sum']
         initial_file_path = request.form['initial_file_path']
         yandex_disk_token = request.form['yandex_disk_token']
+        wb_api_token = request.form['wb_api_token']
 
         user = UserModel.query.filter_by(id=current_user.id).first()
         user.initial_sum = initial_sum
@@ -130,7 +131,8 @@ def profile():
 
         return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
                                initial_file_path=initial_file_path,
-                               yandex_disk_token=yandex_disk_token)
+                               yandex_disk_token=yandex_disk_token,
+                               wb_api_token=wb_api_token)
 
     current_role = current_user.role
     roles = app.config['ROLES']
@@ -138,7 +140,7 @@ def profile():
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
     yandex_disk_token = app.config['YANDEX_TOKEN']
-    wb_api_token = app.config['YANDEX_TOKEN']
+    wb_api_token = app.config['WB_API_TOKEN']
     points = current_user.points
 
     return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,

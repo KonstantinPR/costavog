@@ -202,6 +202,46 @@ def task_copy():
     return redirect('/tasks')
 
 
+@app.route('/tasks_copy/', methods=['POST', 'GET'])
+@login_required
+def tasks_copy():
+    """Tasks copy on press checks in tasks"""
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        checks = request.form.getlist("check")
+        for id in checks:
+            task = Task.query.filter_by(id=id).one()
+            task_copy = Task(amount=task.amount,
+                             description=task.description,
+                             date=datetime.date.today(),
+                             user_name=current_user.user_name,
+                             company_id=app.config['CURRENT_COMPANY_ID'])
+            db.session.add(task_copy)
+            db.session.commit()
+
+    return redirect('/tasks')
+
+
+@app.route('/tasks_delete/', methods=['POST', 'GET'])
+@login_required
+def tasks_delete():
+    """The checked tasks delete from tasks"""
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        checks = request.form.getlist("check")
+        for id in checks:
+            task = Task.query.filter_by(id=id).one()
+            db.session.delete(task)
+
+        db.session.commit()
+
+    return redirect('/tasks')
+
+
 @app.route('/tasks_search', methods=['POST', 'GET'])
 @login_required
 def tasks_search():

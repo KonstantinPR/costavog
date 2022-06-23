@@ -122,13 +122,18 @@
 
 
                 <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
-
                     <div style="z-index:100 position-absolute w-100 row" class="fixed-bottom">
                         <button class="edit w-100 btn btn-success bg-opacity-50 btn-lg"
                                 formaction="{{url_for('tasks_take_and_complete')}}" type="submit">Взять и завершить
                             задачу
                         </button>
                         <button class="edit w-100 btn btn-warning bg-opacity-50 btn-lg" type="submit">Взять задачу
+                        </button>
+                        <button class="edit w-100 btn btn-info bg-opacity-50 btn-lg"
+                                formaction="{{url_for('tasks_copy')}}" type="submit">Копировать задачу
+                        </button>
+                        <button class="edit w-100 btn btn-danger bg-opacity-50 btn-lg"
+                                formaction="{{url_for('tasks_delete')}}" type="submit">Удалить задачу
                         </button>
                         <!--                        <button class="w-40 btn btn-primary btn-sm p-2" type="submit">Выполнить</button>-->
                     </div>
