@@ -205,3 +205,31 @@ def get_wb_stock():
     file = io_output.io_output(df)
 
     return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
+
+
+@app.route('/get_dynamic_sales', methods=['POST', 'GET'])
+@login_required
+def get_dynamic_sales():
+    """To get speed of sales for all products in period"""
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    if request.method == 'POST':
+        if request.form.get('date_from'):
+            date_from = request.form.get('date_from')
+        else:
+            date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
+            print(date_from)
+
+        if request.form.get('days_step'):
+            days_step = request.form.get('days_step')
+        else:
+            days_step = app.config['DAYS_STEP_DEFAULT']
+
+        df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
+        file = io_output.io_output(df_sales_wb_api)
+
+        return send_file(file,
+                         attachment_filename='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
+                         as_attachment=True)
+
+    return render_template('upload_get_dynamic_sales.html')

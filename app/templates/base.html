@@ -38,7 +38,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
 
-
     <style>
 
       .bd-placeholder-img {
@@ -62,6 +61,7 @@
       .row-striped:nth-of-type(even){
           background-color: #F5F5F5;
       }
+
 
 
 
@@ -109,6 +109,7 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
                         <a class="dropdown-item" href="{{url_for('upload_turnover')}}">Корректировка цен</a>
                         <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
+                        <a class="dropdown-item" href="{{url_for('get_dynamic_sales')}}">Анализ продаж</a>
                         <a class="dropdown-item" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
                     </ul>
                 </li>

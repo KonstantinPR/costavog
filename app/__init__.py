@@ -42,6 +42,7 @@ def config():
     app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
     app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+    app.config['DAYS_STEP_DEFAULT'] = 7
 
 
 from app.views import crop_images_views

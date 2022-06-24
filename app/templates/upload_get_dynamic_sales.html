@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
+    <div class="g-5 text-left">
+        <div class="row p-2 bg-light">
+            <div>Скачать в excel отчет о продажах с сайта wb с указанной даты
+            </div>
+        </div>
+    </div>
+
+    <div class="row text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data action="{{url_for('get_dynamic_sales')}}">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="date" class="form-control form-control-lg" id="date_from" name="date_from"
+                                   placeholder="Загружать данные с указанной даты"
+                                   value="">
+                            <div class="invalid-feedback">
+                                Что-то не так с датой
+                            </div>
+                        </div>
+                        <!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
+                        <!--                            <input class="form-check-input" type="checkbox" value="is_get_stock" name="is_get_stock"-->
+                        <!--                                   id="is_get_stock" checked>-->
+                        <!--                            <label class="form-check-label" for="is_get_stock">-->
+                        <!--                                Загрузить остатки товара на складах c WB (необходим токен)-->
+                        <!--                            </label>-->
+                        <!--                        </div>-->
+                        <!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
+                        <!--                            <input class="form-check-input" type="checkbox" value="is_net_cost" name="is_net_cost"-->
+                        <!--                                   id="is_net_cost" checked>-->
+                        <!--                            <label class="form-check-label" for="is_net_cost">-->
+                        <!--                                Учитывать себестоимость товара (загрузить можно <a-->
+                        <!--                                    href="{{url_for('upload_products')}}">здесь</a>)-->
+                        <!--                            </label>-->
+                        <!--                        </div>-->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Сформировать">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}

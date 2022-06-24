@@ -1,4 +1,5 @@
 import os
+from app import app
 import zipfile
 import pandas as pd
 import numpy as np
@@ -7,6 +8,7 @@ import io
 from app.modules import io_output
 from os import listdir
 import datetime
+from datetime import datetime
 import requests
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -28,7 +30,6 @@ def get_wb_stock():
 
     data = response.json()
     df = pd.DataFrame(data)
-
 
     df_pivot = df.pivot_table(index=['supplierArticle'],
                               values=['quantity',
@@ -192,3 +193,14 @@ def zip_detail(zip_downloaded, df_net_cost):
         return df_result
 
 
+def get_wb_sales_api(date_from: datetime, days_step: int):
+    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom="
+    date_from = "2022-06-01T"
+    flag = "Z&flag=0&"
+    api_key = app.config['WB_API_TOKEN']
+    path_all = f"{path_start}{date_from}{flag}key={api_key}"
+    response = requests.get(path_all)
+    data = response.json()
+    df = pd.DataFrame(data)
+
+    return df

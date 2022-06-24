@@ -13,6 +13,8 @@
     <script src="/static/jq.js"></script>
 
 
+
+
     <br>
     {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
@@ -158,9 +160,9 @@
                     {% for p in tasks %}
 
                     {% if p.condition == 'completed' %}
-                    {% set bg = 'bg-success bg-opacity-25' %}
+                        {% set bg = 'bg-success bg-opacity-25' %}
                     {% elif p.condition == 'progress' %}
-                    {% set bg = 'bg-warning bg-opacity-25' %}
+                        {% set bg = 'bg-warning bg-opacity-25' %}
                     {% endif %}
 
                     <div class="row-striped row text-left {{bg}}">
@@ -174,9 +176,9 @@
                                 </div>
                                 <div class="col-6 small">
                                     {% if p.yandex_link %}
-                                    {{p.description}}. Есть приложения. &#9660;
+                                        {{p.description}}. Есть приложения. &#9660;
                                     {% else %}
-                                    {{p.description}}
+                                        {{p.description}}
                                     {% endif %}
                                 </div>
                                 <div class="col-2 form-check d-flex justify-content-center">
