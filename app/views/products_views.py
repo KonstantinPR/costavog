@@ -220,12 +220,18 @@ def get_dynamic_sales():
             date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
             print(date_from)
 
+        if request.form.get('date_end'):
+            date_end = request.form.get('date_end')
+        else:
+            date_end = datetime.datetime.today()
+
         if request.form.get('days_step'):
             days_step = request.form.get('days_step')
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
 
-        df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
+        # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
+        df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
         file = io_output.io_output(df_sales_wb_api)
 
         return send_file(file,

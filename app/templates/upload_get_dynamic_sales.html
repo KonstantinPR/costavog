@@ -14,7 +14,7 @@
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
-            <div>Скачать в excel отчет о продажах с сайта wb с указанной даты
+            <div>Скачать в excel отчет о продажах с сайта wb от и до указанных дат
             </div>
         </div>
     </div>
@@ -28,9 +28,14 @@
                             <input type="date" class="form-control form-control-lg" id="date_from" name="date_from"
                                    placeholder="Загружать данные с указанной даты"
                                    value="">
-                            <div class="invalid-feedback">
-                                Что-то не так с датой
-                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="date" class="form-control form-control-lg" id="date_end" name="date_end"
+                                   placeholder="Загружать данные до указанной даты"
+                                   value="">
+                        </div>
+                        <div class="invalid-feedback">
+                            Что-то не так с датой
                         </div>
                         <!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
                         <!--                            <input class="form-check-input" type="checkbox" value="is_get_stock" name="is_get_stock"-->

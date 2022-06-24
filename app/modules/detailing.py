@@ -194,11 +194,26 @@ def zip_detail(zip_downloaded, df_net_cost):
 
 
 def get_wb_sales_api(date_from: datetime, days_step: int):
+    """get sales as api wb sales describe"""
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom="
-    date_from = "2022-06-01T"
+    date_from = date_from
     flag = "Z&flag=0&"
     api_key = app.config['WB_API_TOKEN']
     path_all = f"{path_start}{date_from}{flag}key={api_key}"
+    response = requests.get(path_all)
+    data = response.json()
+    df = pd.DataFrame(data)
+
+    return df
+
+
+def get_wb_sales_realization_api(date_from: datetime, date_end: datetime, days_step: int):
+    """get sales as api wb sales realization describe"""
+    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+    date_from = date_from
+    api_key = app.config['WB_API_TOKEN']
+    limit = 10000
+    path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
     response = requests.get(path_all)
     data = response.json()
     df = pd.DataFrame(data)
