@@ -45,9 +45,9 @@ def get_wb_pivot_sells_api():
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
         # df = pd.read_excel('app/report.xlsx')
-        # df.replace(np.NaN, "", inplace=True)
 
         df = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df.replace(np.NaN, "", inplace=True)
         df_pivot = detailing_reports.get_wb_sales_realization_pivot(df)
         df_stock = detailing_reports.get_wb_stock_api(date_from, date_end, days_step)
         print(df_stock)
@@ -56,8 +56,8 @@ def get_wb_pivot_sells_api():
         print(df_net_cost)
         df = df_pivot.merge(df_stock, how='outer', left_on='sa_name', right_on='supplierArticle')
         print(df)
-        df = df.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
-
+        df = df.merge(df_net_cost, how='outer', left_on='sa_name', right_on='article')
+        print(df)
         df = detailing_reports.get_important_columns(df)
 
         file = io_output.io_output(df)

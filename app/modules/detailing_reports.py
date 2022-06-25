@@ -44,9 +44,8 @@ def get_important_columns(df):
     df.replace(np.NaN, 0, inplace=True)
 
     df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] + \
-                    df[('ppvz_for_pay', 'Корректная продажа')] - \
                     df[('ppvz_for_pay', 'Возврат')] - \
-                    df[('ppvz_for_pay', 'Корректный возврат')] - \
+                    df[('delivery_rub', 'Логистика')] - \
                     df[('penalty', 'Штрафы')] - \
                     df['net_cost']
 
