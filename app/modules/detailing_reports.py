@@ -47,7 +47,8 @@ def get_important_columns(df):
                     df[('ppvz_for_pay', 'Корректная продажа')] - \
                     df[('ppvz_for_pay', 'Возврат')] - \
                     df[('ppvz_for_pay', 'Корректный возврат')] - \
-                    df[('penalty', 'Штрафы')]
+                    df[('penalty', 'Штрафы')] - \
+                    df['net_cost']
 
     df = df[['Прибыль', 'article']]
     print(df)
