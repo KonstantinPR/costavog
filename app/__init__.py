@@ -53,3 +53,4 @@ from app.views import catalog_views
 from app.views import parser_rating_wb_views
 from app.views import products_views
 from app.views import yandex_disk
+from app.views import detailing_report_views

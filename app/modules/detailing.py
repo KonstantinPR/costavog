@@ -208,22 +208,5 @@ def get_wb_sales_api(date_from: datetime, days_step: int):
     return df
 
 
-def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
-    """get sales as api wb sales realization describe"""
-    t = time.process_time()
-    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-    date_from = date_from
-    api_key = app.config['WB_API_TOKEN']
-    print(time.process_time() - t)
-    limit = 100000
-    path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
-    # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
-    print(time.process_time() - t)
-    response = requests.get(path_all)
-    print(time.process_time() - t)
-    data = response.json()
-    print(time.process_time() - t)
-    df = pd.DataFrame(data)
-    print(time.process_time() - t)
 
-    return df
+
