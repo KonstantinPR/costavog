@@ -14,6 +14,8 @@ from sqlalchemy import create_engine
 from urllib.parse import urlencode
 from app.modules import discount, detailing
 from app.modules import io_output
+import time
+
 
 
 # ///PRODUCTS////////////
@@ -218,22 +220,28 @@ def get_dynamic_sales():
             date_from = request.form.get('date_from')
         else:
             date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
-            print(date_from)
+
+
+        print(date_from)
 
         if request.form.get('date_end'):
             date_end = request.form.get('date_end')
         else:
             date_end = datetime.datetime.today()
 
+        print(date_end)
+
         if request.form.get('days_step'):
             days_step = request.form.get('days_step')
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
-
+        t = time.process_time()
+        print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
+        print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
-
+        print(time.process_time() - t)
         return send_file(file,
                          attachment_filename='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
                          as_attachment=True)

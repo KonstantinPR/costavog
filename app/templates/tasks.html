@@ -13,8 +13,6 @@
     <script src="/static/jq.js"></script>
 
 
-
-
     <br>
     {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
@@ -124,7 +122,7 @@
 
 
                 <form action="{{url_for('tasks_take')}}" method="post" id="checked-contacts">
-                    <div style="z-index:100 position-absolute w-100 row" class="fixed-bottom">
+                    <div style="z-index:100 position-absolute row center" class="fixed-bottom p-2">
                         <button class="edit w-100 btn btn-success bg-opacity-50 btn-lg"
                                 formaction="{{url_for('tasks_take_and_complete')}}" type="submit">Взять и завершить
                             задачу
@@ -160,9 +158,9 @@
                     {% for p in tasks %}
 
                     {% if p.condition == 'completed' %}
-                        {% set bg = 'bg-success bg-opacity-25' %}
+                    {% set bg = 'bg-success bg-opacity-25' %}
                     {% elif p.condition == 'progress' %}
-                        {% set bg = 'bg-warning bg-opacity-25' %}
+                    {% set bg = 'bg-warning bg-opacity-25' %}
                     {% endif %}
 
                     <div class="row-striped row text-left {{bg}}">
@@ -176,9 +174,9 @@
                                 </div>
                                 <div class="col-6 small">
                                     {% if p.yandex_link %}
-                                        {{p.description}}. Есть приложения. &#9660;
+                                    {{p.description}}. Есть приложения. &#9660;
                                     {% else %}
-                                        {{p.description}}
+                                    {{p.description}}
                                     {% endif %}
                                 </div>
                                 <div class="col-2 form-check d-flex justify-content-center">

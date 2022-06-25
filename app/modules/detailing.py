@@ -10,6 +10,7 @@ from os import listdir
 import datetime
 from datetime import datetime
 import requests
+import time
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -209,13 +210,19 @@ def get_wb_sales_api(date_from: datetime, days_step: int):
 
 def get_wb_sales_realization_api(date_from: datetime, date_end: datetime, days_step: int):
     """get sales as api wb sales realization describe"""
+    t = time.process_time()
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
     date_from = date_from
     api_key = app.config['WB_API_TOKEN']
     limit = 10000
     path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
-    response = requests.get(path_all)
+    path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
+    print(time.process_time() - t)
+    response = requests.get(path_all_test)
+    print(time.process_time() - t)
     data = response.json()
+    print(time.process_time() - t)
     df = pd.DataFrame(data)
+    print(time.process_time() - t)
 
     return df
