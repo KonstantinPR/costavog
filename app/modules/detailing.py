@@ -214,6 +214,8 @@ def get_wb_sales_realization_api(date_from: datetime, date_end: datetime, days_s
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
     date_from = date_from
     api_key = app.config['WB_API_TOKEN']
+    print(time.process_time() - t)
+    api_key = "NDYwYTcxYjUtMDNjZi00Zjc1LTg3NDQtN2RiM2E2MWRmYzA1"
     limit = 10000
     path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
     path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
