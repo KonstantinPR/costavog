@@ -41,7 +41,17 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 #     return df_merged
 
 def get_important_columns(df):
-    pass
+    df.replace(np.NaN, 0, inplace=True)
+
+    df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] + \
+                    df[('ppvz_for_pay', 'Корректная продажа')] - \
+                    df[('ppvz_for_pay', 'Возврат')] - \
+                    df[('ppvz_for_pay', 'Корректный возврат')] - \
+                    df[('penalty', 'Штрафы')]
+
+    df = df[['Прибыль', 'article']]
+    print(df)
+    return df
 
 
 def get_wb_sales_realization_pivot(df):
