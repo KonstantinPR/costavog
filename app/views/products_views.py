@@ -220,6 +220,8 @@ def get_dynamic_sales():
             date_from = request.form.get('date_from')
         else:
             date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
+            date_from = date_from.strftime("%Y-%m-%d")
+
 
 
         print(date_from)
@@ -227,7 +229,7 @@ def get_dynamic_sales():
         if request.form.get('date_end'):
             date_end = request.form.get('date_end')
         else:
-            date_end = datetime.datetime.today()
+            date_end = time.strftime("%Y-%m-%d")
 
         print(date_end)
 
