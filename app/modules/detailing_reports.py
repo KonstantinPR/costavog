@@ -40,15 +40,20 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 #                                                     how='outer'), df_list).fillna('void')
 #     return df_merged
 
+def is_empty_sells(x, y):
+    if x:
+        return x - y
+
+
 def get_important_columns(df):
     df.replace(np.NaN, 0, inplace=True)
 
     df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] + \
                     df[('ppvz_for_pay', 'Возврат')] - \
                     df[('delivery_rub', 'Логистика')] - \
-                    df[('penalty', 'Штрафы')] - \
-                    df['net_cost']
+                    df[('penalty', 'Штрафы')]
 
+    df['Прибыль'] = [is_empty_sells(x, y) for x, y in zip(df['Прибыль'], df['net_cost'])]
     df = df[['Прибыль', 'article']]
     print(df)
     return df
@@ -98,15 +103,18 @@ def get_wb_stock_api(date_from: str, date_end: str, days_step: int):
     print(time.process_time() - t)
     data = response.json()
     print(time.process_time() - t)
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns=['nmId', 'quantityFull', 'daysOnSite'])
+    print(df)
     print(time.process_time() - t)
-    df = df.pivot_table(index=['supplierArticle'],
+    df = df.pivot_table(index=['nmId'],
                         values=['quantityFull',
                                 'daysOnSite',
                                 ],
                         aggfunc={'quantityFull': sum,
                                  'daysOnSite': max, },
                         margins=False)
+    df = df.reset_index().rename_axis(None, axis=1)
+    df = df.rename(columns={'nmId': 'nm_id'})
 
     return df
 
