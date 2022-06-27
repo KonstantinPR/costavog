@@ -10,13 +10,13 @@ import os
 K_HEIGHT_LEFT_START = 0.10
 K_HEIGHT_RIGHT_START = 0.90
 K_BOTTOM_LEFT_START = 0.10
-K_BOTTOM_RIGHT_START = 0.95
+K_BOTTOM_RIGHT_START = 0.97
 STEP_ITERATION = 25
-STEP_ITERATION_BOTTOM = 10
+STEP_ITERATION_BOTTOM = 20
 SENSIBILITY_COLOR = 210
 COUNT_STEP_J = 10
 DELIMITER = 4
-NEW_HEIGHT_IM = 1600
+NEW_HEIGHT_IM = 3000
 K_WIDTH_HEIGHT_IM = 0.75
 WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
@@ -25,7 +25,9 @@ WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 def crop_images(images: Union[list[PIL.JpegImagePlugin.JpegImageFile], list]) -> BytesIO:
     images_zipped = None
     images_set = []
+    print(images)
     for img in images:
+
         file_name = os.path.basename(img.filename)
         print(file_name)
         file = _crop_img(img)
