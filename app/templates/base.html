@@ -77,6 +77,8 @@
 
 
 
+
+
     </style>
 </head>
 
@@ -121,6 +123,15 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
                         <a class="dropdown-item" href="{{url_for('upload_img_crop')}}">Кроп Изображений</a>
                         <a class="dropdown-item" href="{{url_for('catalog')}}">Сформировать каталог</a>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkDataHandler" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Обработка данных
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
+                        <a class="dropdown-item" href="{{url_for('data_to_spec_merging')}}">Объединить данные</a>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
