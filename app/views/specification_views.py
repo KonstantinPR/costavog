@@ -45,8 +45,9 @@ def image_name_multiply():
 @app.route('/data_to_spec_merging', methods=['GET', 'POST'])
 @login_required
 def data_to_spec_merging():
-    """Смерджить 2 excel файла - заполняемый файл и спецификацию"""
+    """Смержить 2 excel файла - заполняемый файл и спецификацию"""
     name_on = "Артикул цвета"
+    barcode_column_name = "Штрихкод товара"
     if request.method == 'POST':
         uploaded_files = flask.request.files.getlist("file")
         df_from = pd.read_excel(uploaded_files[0])
@@ -60,6 +61,7 @@ def data_to_spec_merging():
         df_to.drop([col for col in df_to.columns if '_drop_column_on' in col], axis=1, inplace=True)
         df_to.drop([col for col in df_to.columns if 'Unnamed:' in col], axis=1, inplace=True)
         df_to.set_index(name_on, inplace=True)
+        df_to[barcode_column_name] = df_to[barcode_column_name].apply(lambda x: '{:d}'.format(x))
         df_excel = io_output.io_output(df_to)
 
         return send_file(
