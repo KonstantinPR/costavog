@@ -77,7 +77,16 @@ def task_edit(id):
             executor_user = db.session.query(UserModel).filter_by(company_id=company_id, user_name=executor_name).one()
             executor_id = executor_user.id
 
+        uploaded_files = flask.request.files.getlist("files")
         task = Task.query.filter_by(id=id).one()
+
+        if any(uploaded_files):
+            print(uploaded_files)
+            is_adding_correct_msg, yandex_link = task_worker.task_adding_yandex_disk(uploaded_files, task.id)
+
+            flash(is_adding_correct_msg)
+
+
         task.amount = amount
         task.description = description
         task.date = date

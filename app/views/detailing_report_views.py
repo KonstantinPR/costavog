@@ -50,7 +50,7 @@ def get_wb_pivot_sells_api():
 
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
         df_stock = detailing_reports.get_wb_stock_api(date_from, date_end, days_step)
-        print(df_stock)
+        print(df_stock.columns)
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
         print(df_net_cost)
@@ -63,8 +63,7 @@ def get_wb_pivot_sells_api():
         file = io_output.io_output(df)
 
         return send_file(file,
-                         attachment_filename='wb_pivot_sells_api' + str(datetime.date.today()) + str(
-                             datetime.time()) + ".xlsx",
+                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{str(datetime.time())}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
@@ -72,7 +71,7 @@ def get_wb_pivot_sells_api():
 
 @app.route('/get_wb_sales_realization_api', methods=['POST', 'GET'])
 @login_required
-def get_sales_realization_api():
+def get_wb_sales_realization_api():
     """To get speed of sales for all products in period"""
     if not current_user.is_authenticated:
         return redirect('/company_register')
@@ -105,7 +104,7 @@ def get_sales_realization_api():
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
         return send_file(file,
-                         attachment_filename='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
+                         attachment_filename=f"report{str(date_from)} - {str(date_end)}{str(datetime.time())} .xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')

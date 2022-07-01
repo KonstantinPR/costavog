@@ -40,21 +40,32 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 #                                                     how='outer'), df_list).fillna('void')
 #     return df_merged
 
-def is_empty_sells(x, y):
-    if x:
+def is_empty_sells(x, y, z):
+    if z > 0:
         return x - y
 
 
 def get_important_columns(df):
     df.replace(np.NaN, 0, inplace=True)
 
-    df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] + \
+    df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] - \
                     df[('ppvz_for_pay', 'Возврат')] - \
                     df[('delivery_rub', 'Логистика')] - \
                     df[('penalty', 'Штрафы')]
 
-    df['Прибыль'] = [is_empty_sells(x, y) for x, y in zip(df['Прибыль'], df['net_cost'])]
-    df = df[['Прибыль', 'article']]
+    df['Прибыль'] = [is_empty_sells(x, y, z) for x, y, z in zip(df['Прибыль'],
+                                                                df['net_cost'],
+                                                                df[('ppvz_for_pay', 'Продажа')])]
+    df = df[["subject_name",
+             "article",
+             "nm_id",
+             "Прибыль",
+             ('retail_price_withdisc_rub', 'Продажа'),
+             ('ppvz_for_pay', 'Продажа'),
+             ('ppvz_for_pay', 'Возврат'),
+             ('delivery_rub', 'Логистика'),
+             "net_cost",
+             ]]
     print(df)
     return df
 
@@ -79,9 +90,12 @@ def get_wb_sales_realization_pivot(df):
 
     df2 = df.pivot_table(index=['nm_id'],
                          values=['sa_name',
-                                 'brand_name', ],
+                                 'brand_name',
+                                 'subject_name'],
                          aggfunc={'sa_name': max,
-                                  'brand_name': max, },
+                                  'brand_name': max,
+                                  'subject_name': max,
+                                  },
                          margins=False)
 
     df = df1.merge(df2, how='left', on='nm_id')

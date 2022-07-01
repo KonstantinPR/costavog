@@ -19,6 +19,10 @@ import requests
 def task_adding_in_db(request, company_id):
     description = request.form['description']
 
+    if request.form['description'] == "":
+        flash("Вы не ввели оиписание задачи, задача не добавлена")
+        return None
+
     if request.form['date'] == "":
         date = datetime.date.today()
     else:
@@ -125,9 +129,11 @@ def download_yandex_disk_tasks(id):
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
     if task.yandex_link:
-        if y.exists(task.yandex_link):
-            task_yandex_disk_link = y.get_download_link(task.yandex_link)
-            return task_yandex_disk_link
+        task_yandex_disk_link = True
+        return task_yandex_disk_link
+        # if y.exists(task.yandex_link):
+        #     task_yandex_disk_link = y.get_download_link(task.yandex_link)
+        #     return task_yandex_disk_link
 
     task_yandex_disk_link = ""
     task.yandex_link = ""

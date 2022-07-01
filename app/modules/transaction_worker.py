@@ -107,16 +107,18 @@ def get_all_transactions_user(company_id):
     return transactions, transactions_sum
 
 
-def download_yandex_disk_transactions(id):
+def get_link_yandex_disk_transaction(id):
     transaction = Transaction.query.filter_by(id=id).one()
     yandex_disk_token = app.config['YANDEX_TOKEN']
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
     if transaction.yandex_link:
-        if y.exists(transaction.yandex_link):
-            transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
-            return transaction_yandex_disk_link
+        transaction_yandex_disk_link = True
+        # if y.exists(transaction.yandex_link):
+        #     transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
+        #     return transaction_yandex_disk_link
+        return transaction_yandex_disk_link
 
     transaction_yandex_disk_link = ""
     transaction.yandex_link = ""
@@ -130,6 +132,9 @@ def get_transactions_files(transaction_id):
     y = yadisk.YaDisk(token=yandex_disk_token)
     transaction = Transaction.query.filter_by(id=transaction_id).first()
     files = y.listdir(transaction.yandex_link)
+    if not files:
+        print(f"files from yandex disk {files}")
+        flash("Указанной папки больше не существует - ссылка не действительна")
     images = []
     id_folder = randrange(1000000000000)
     static_path = 'app/static/'

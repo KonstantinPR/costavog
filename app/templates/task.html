@@ -103,7 +103,6 @@
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <select class="form-control form-control-lg" id="who_executor" name="executor_name">
-                                <option value="" disabled selected>Исполнитель задачи</option>
                                 {% for executor in user_name_set %}
                                 {% if executor==executor_name %}
                                 <option selected>{{executor}}</option>

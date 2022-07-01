@@ -14,7 +14,10 @@
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
-            <div>Скачать в excel отчет о продажах с сайта wb от и до указанных дат
+            <div>Скачать в excel отчет о прибыльности на основе анализа отчетов о продажах и остатков с сайта wb и
+                данных о себестоимости. Отчет формируется От и до указанных дат. На выходе получим сводную таблицу с
+                реккомендациями по скидке, повышению рейтинга, скорости продажа и необходимости подсортировки конкретных
+                артикулей.
             </div>
         </div>
     </div>
@@ -54,6 +57,11 @@
                         <!--                        </div>-->
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('get_wb_pivot_sells_api')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Сводный отчет прибыльности товара">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('get_wb_sales_realization_api')}}"
                                    class="btn btn-primary form-control form-control-lg" type="submit"
                                    value="Сводный отчет о продажах и возвратах">
                         </div>

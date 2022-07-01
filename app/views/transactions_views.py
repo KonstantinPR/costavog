@@ -173,13 +173,20 @@ def transaction_edit(id):
         transaction.description = description
         transaction.date = date
         transaction.user_name = user_name
+
+        uploaded_files = flask.request.files.getlist("files")
+        if any(uploaded_files):
+            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
+                                                                                                   transaction.id)
+            flash(is_adding_correct_msg)
+
         db.session.add(transaction)
         db.session.commit()
         flash("Changing completed")
 
     else:
         transaction = Transaction.query.filter_by(id=id).first()
-        transaction_yandex_disk_link = transaction_worker.download_yandex_disk_transactions(transaction.id)
+        transaction_yandex_disk_link = transaction_worker.get_link_yandex_disk_transaction(transaction.id)
         return render_template('transaction.html',
                                transaction=transaction, transaction_yandex_disk_link=transaction_yandex_disk_link)
 
