@@ -52,6 +52,7 @@ def transactions():
         # create transactions folder in yandex disk
         is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
         uploaded_files = flask.request.files.getlist("files")
+        print(f"upload files {uploaded_files}")
 
         if any(uploaded_files):
             is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
@@ -164,18 +165,23 @@ def upload_transaction_excel():
 @login_required
 def transaction_edit(id):
     if request.method == 'POST':
+
+        transaction = Transaction.query.filter_by(id=id).one()
+
         amount = request.form['amount']
         description = request.form['description']
         date = request.form['date']
         user_name = request.form['user_name']
-        transaction = Transaction.query.filter_by(id=id).one()
+
         transaction.amount = amount
         transaction.description = description
         transaction.date = date
         transaction.user_name = user_name
 
         uploaded_files = flask.request.files.getlist("files")
+        print(flask.request.files.getlist("files"))
         if any(uploaded_files):
+            print(f"uploaded files {uploaded_files}")
             is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
                                                                                                    transaction.id)
             flash(is_adding_correct_msg)

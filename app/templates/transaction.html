@@ -21,7 +21,7 @@
 
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                 <h4 class="mb-3"></h4>
-                <form class="needs-validation" method="post" novalidate>
+                <form class="needs-validation" method="post" enctype=multipart/form-data novalidate>
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <textarea class="form-control form-control-lg" rows="4" cols="45"
@@ -60,12 +60,11 @@
 
                             </div>
                         </div>
-
-                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
-                            <input type="file" class="form-control form-control-lg" id="file" name="files"
-                                   value="">
-                            <div class="invalid-feedback">
-                            </div>
+                        <input multiple type="file" class="form-control form-control-lg" id="files" name="files"
+                               placeholder="Файлы, если есть (чеки, описи, доки)"
+                               value="">
+                        <div class="invalid-feedback">
+                            Что-то не так с прикрепленными файлами
                         </div>
                         {% if transaction_yandex_disk_link %}
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">

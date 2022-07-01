@@ -54,7 +54,7 @@ def get_wb_pivot_sells_api():
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
         print(df_net_cost)
-        df = df_sales.merge(df_stock, how='inner', on='nm_id')
+        df = df_sales.merge(df_stock, how='outer', on='nm_id')
         print(df)
         df = df.merge(df_net_cost, how='outer', left_on='sa_name', right_on='article')
         print(df)
@@ -63,7 +63,7 @@ def get_wb_pivot_sells_api():
         file = io_output.io_output(df)
 
         return send_file(file,
-                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{str(datetime.time())}.xlsx",
+                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
@@ -104,7 +104,7 @@ def get_wb_sales_realization_api():
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
         return send_file(file,
-                         attachment_filename=f"report{str(date_from)} - {str(date_end)}{str(datetime.time())} .xlsx",
+                         attachment_filename=f"wb_sales_report-{str(date_from)}-{str(date_end)}{datetime.time()}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
