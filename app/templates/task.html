@@ -93,7 +93,17 @@
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
+                            <input type="file" class="form-control form-control-lg" id="files" name="files"
+                                   placeholder="Приложить файлы"
+                                   value=""
+                                   required multiple>
+                            <div class="invalid-feedback">
+                                Valid last name is required.
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <select class="form-control form-control-lg" id="who_executor" name="executor_name">
+                                <option value="" disabled selected>Исполнитель задачи</option>
                                 {% for executor in user_name_set %}
                                 {% if executor==executor_name %}
                                 <option selected>{{executor}}</option>
@@ -116,7 +126,7 @@
                         </div>
                         <div id="tasks_show" hx-swap="outerHTML"></div>
                         {% endif %}
-                        
+
                     </div>
                     <div class="my-4"></div>
                     <button class="w-100 btn btn-primary btn-lg p-2" formaction="{{url_for('task_edit', id=id)}}"

@@ -45,7 +45,7 @@ def image_name_multiply():
 @app.route('/data_to_spec_merging', methods=['GET', 'POST'])
 @login_required
 def data_to_spec_merging():
-    """Смержить 2 excel файла - заполняемый файл и спецификацию"""
+    """Смержить 2 excel файла - заполняемый произвольный файл (можно с картинками) и спецификацию"""
     name_on = "Артикул цвета"
     barcode_column_name = "Штрихкод товара"
     if request.method == 'POST':
