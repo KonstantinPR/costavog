@@ -59,8 +59,8 @@ def get_speed_revenue():
             date_parts = 3
         print(f"date_parts {date_parts}")
 
-        # df = detailing_reports.combine_date_to_revenue(date_from, date_end, date_parts, days_step)
-        df = pd.read_excel("wb_sales_report-2022-06-27-2022-07-0400_00_00.xlsx")
+        df = detailing_reports.combine_date_to_revenue(date_from, date_end, days_step)
+        # df = pd.read_excel("wb_sales_report-2022-06-27-2022-07-0400_00_00.xlsx")
 
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         # df = detailing_reports.combine_date_to_revenue(date_from, date_end, days_step)
