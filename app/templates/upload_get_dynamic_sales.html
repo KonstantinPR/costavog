@@ -17,7 +17,9 @@
             <div>Скачать в excel отчет о прибыльности на основе анализа отчетов о продажах и остатков с сайта wb и
                 данных о себестоимости. Отчет формируется От и до указанных дат. На выходе получим сводную таблицу с
                 реккомендациями по скидке, повышению рейтинга, скорости продажа и необходимости подсортировки конкретных
-                артикулей.
+                артикулей. Можно узнать динамику изменения прибыльности, если указать на сколько частей делим выводимый
+                отчет - тогда для каждой части будет посчитана прибыльности и дальше вычислена изменчивость
+                прибыльности.
             </div>
         </div>
     </div>
@@ -40,6 +42,14 @@
                         <div class="invalid-feedback">
                             Что-то не так с датой
                         </div>
+
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input placeholder="На сколько частей делим период" class="form-control form-control-lg"
+                                   type="number"
+                                   name="part_by">
+                        </div>
+
+
                         <!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
                         <!--                            <input class="form-check-input" type="checkbox" value="is_get_stock" name="is_get_stock"-->
                         <!--                                   id="is_get_stock" checked>-->
@@ -55,6 +65,12 @@
                         <!--                                    href="{{url_for('upload_products')}}">здесь</a>)-->
                         <!--                            </label>-->
                         <!--                        </div>-->
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('get_speed_revenue')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Сводный отчет о скорости прибыльности">
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('get_wb_pivot_sells_api')}}"
                                    class="btn btn-primary form-control form-control-lg" type="submit"

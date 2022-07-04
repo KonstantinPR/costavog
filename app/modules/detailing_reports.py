@@ -7,11 +7,87 @@ import os
 import io
 from app.modules import io_output
 from os import listdir
-import datetime
-from datetime import datetime
+from datetime import datetime, timedelta
+from app.models import Company, UserModel, Transaction, Task, Product, db
 import requests
 import time
 from functools import reduce
+from copy import copy
+
+
+def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
+    df['rr_dt'] = [x[0:10] + " 00:00:00" for x in df['rr_dt']]
+    df['rr_dt'] = pd.to_datetime(df['rr_dt'])
+    # df = df.set_index(df['rr_dt'])
+    # df = df.sort_index()
+    print(df)
+
+    if isinstance(date_from, str):
+        date_from = datetime.strptime(date_from, date_format)
+
+    df_list = []
+
+    for date_end in period_dates_list:
+        print(f"from df date {date_from}")
+        print(f"end df date {date_end}")
+
+        # df = df[date_from:date_end]
+
+        d = df[(df['rr_dt'] > date_from) & (df['rr_dt'] <= date_end)]
+        date_from = date_end
+        df_list.append(d)
+
+    return df_list
+
+
+def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, days_step=7, date_format="%Y-%m-%d"):
+    period_dates_list = []
+    date_from = datetime.strptime(date_from, date_format)
+    date_end = datetime.strptime(date_end, date_format)
+    date_end_local = date_from
+
+    print(type(date_end_local))
+    print(type(date_end))
+
+    print(f"date_end_local {date_end_local}\n")
+    while date_end_local < date_end:
+        print(f"date_parts {date_parts}")
+        print(f"date_end_local {date_end_local}")
+        print(f"days bunch {days_bunch}")
+        date_end_local = date_end_local + timedelta(days_bunch)
+        date_end_local = datetime(date_end_local.year, date_end_local.month, date_end_local.day)
+        print(f"date_local_end {date_end_local}\n")
+        print(type(date_end_local))
+        print(f"date_end {date_end}\n")
+        period_dates_list.append(date_end_local)
+        print(f"type per list {period_dates_list}")
+
+    return period_dates_list
+
+
+def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format="%Y-%m-%d"):
+    print(date_from)
+    print(date_end)
+    ddate_format = "%Y-%m-%d"
+    if not date_parts:
+        date_parts = 1
+    delta = datetime.strptime(date_end, date_format) - datetime.strptime(date_from, date_format)
+    delta = delta.days
+
+    days_bunch = int(int(delta) / int(date_parts))
+    return days_bunch
+
+
+def combine_date_to_revenue(date_from, date_end, days_step=7):
+    df = get_wb_sales_realization_api(date_from, date_end, days_step)
+    df_sales = get_wb_sales_realization_pivot(df)
+    df_stock = get_wb_stock_api(date_from, date_end, days_step)
+    df_net_cost = pd.read_sql(
+        db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+    df = df_sales.merge(df_stock, how='outer', on='nm_id')
+    df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
+    df = get_revenue_column(df)
+    return df
 
 
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
@@ -40,7 +116,7 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 #                                                     how='outer'), df_list).fillna('void')
 #     return df_merged
 
-def is_empty_sells(x, y, z, w):
+def revenue_correcting(x, y, z, w):
     if z > 0:
         return x - y
     else:
@@ -48,46 +124,55 @@ def is_empty_sells(x, y, z, w):
 
 
 def get_important_columns(df):
+    df = df[[
+        'brand_name',
+        'subject_name',
+        'nm_id',
+        'supplierArticle',
+        'Прибыль',
+        ('ppvz_for_pay', 'Продажа'),
+        ('retail_price_withdisc_rub', 'Продажа'),
+        ('ppvz_for_pay', 'Возврат'),
+        ('ppvz_for_pay', 'Логистика'),
+        ('quantity', 'Продажа'),
+        ('quantity', 'Возврат'),
+        ('quantity', 'Логистика'),
+        'net_cost',
+        ('delivery_rub', 'Возврат'),
+        ('delivery_rub', 'Логистика'),
+        ('delivery_rub', 'Продажа'),
+        ('penalty', 'Возврат'),
+        ('penalty', 'Логистика'),
+        ('penalty', 'Продажа'),
+        ('retail_price_withdisc_rub', 'Возврат'),
+        ('retail_price_withdisc_rub', 'Логистика'),
+        ('delivery_amount', 'Логистика'),
+        ('return_amount', 'Логистика'),
+        'daysOnSite',
+        'quantityFull',
+        'article',
+        'company_id',
+        'sa_name',
+    ]]
+    print(df)
+    return df
+
+
+def get_revenue_column(df):
     df.replace(np.NaN, 0, inplace=True)
 
     df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] - \
                     df[('ppvz_for_pay', 'Возврат')] - \
                     df[('delivery_rub', 'Логистика')]
 
-    df['Прибыль'] = [is_empty_sells(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
-                                                                      df['net_cost'],
-                                                                      df[('ppvz_for_pay', 'Продажа')],
-                                                                      df[('delivery_rub', 'Логистика')],
-                                                                      )]
-    df = df[[
-                'brand_name',
-                'subject_name',
-                'nm_id',
-                'supplierArticle',
-                'Прибыль',
-                ('ppvz_for_pay', 'Продажа'),
-                ('retail_price_withdisc_rub', 'Продажа'),
-                ('ppvz_for_pay', 'Возврат'),
-                ('ppvz_for_pay', 'Логистика'),
-                ('quantity', 'Продажа'),
-                ('quantity', 'Возврат'),
-                ('quantity', 'Логистика'),
-                'net_cost',
-                ('delivery_rub', 'Возврат'),
-                ('delivery_rub', 'Логистика'),
-                ('delivery_rub', 'Продажа'),
-                ('penalty', 'Возврат'),
-                ('penalty', 'Логистика'),
-                ('penalty', 'Продажа'),
-                ('retail_price_withdisc_rub', 'Возврат'),
-                ('retail_price_withdisc_rub', 'Логистика'),
-                'daysOnSite',
-                'quantityFull',
-                'article',
-                'company_id',
-                'sa_name',
-             ]]
-    print(df)
+    df['Прибыль'] = [revenue_correcting(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
+                                                                          df['net_cost'],
+                                                                          df[('ppvz_for_pay', 'Продажа')],
+                                                                          df[('delivery_rub', 'Логистика')],
+                                                                          )]
+
+    # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
+
     return df
 
 
@@ -98,12 +183,16 @@ def get_wb_sales_realization_pivot(df):
                                  'delivery_rub',
                                  'penalty',
                                  'quantity',
+                                 'delivery_amount',
+                                 'return_amount',
                                  'retail_price_withdisc_rub'
                                  ],
                          aggfunc={'ppvz_for_pay': sum,
                                   'delivery_rub': sum,
                                   'penalty': sum,
                                   'quantity': sum,
+                                  'delivery_amount': sum,
+                                  'return_amount': sum,
                                   'retail_price_withdisc_rub': sum,
                                   },
                          margins=False)
