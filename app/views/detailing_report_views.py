@@ -20,11 +20,15 @@ import time
 @app.route('/get_speed_revenue', methods=['POST', 'GET'])
 @login_required
 def get_speed_revenue():
-    """to get some periods of sells and take speed data on revenue"""
-    """for examples first period revenue 5, second -2, third 1: """
-    """so medium: 5+(-2)+1 = 4"""
-    """so speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2  """
-    """so max speed: 3, min speed: -7 """
+    """
+
+    to get some periods of sells and take speed data on revenue
+    for examples first period revenue 5, second -2, third 1:
+    so medium: 5+(-2)+1 = 4
+    so speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2
+    so max speed: 3, min speed: -7
+
+    """
 
     date_format = "%Y-%m-%d"
 
