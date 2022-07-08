@@ -45,13 +45,15 @@ def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, days_st
     period_dates_list = []
     date_from = datetime.strptime(date_from, date_format)
     date_end = datetime.strptime(date_end, date_format)
-    date_end_local = date_from
+    date_end_local = date_from + timedelta(days_bunch)
 
     print(type(date_end_local))
     print(type(date_end))
 
     print(f"date_end_local {date_end_local}\n")
-    while date_end_local < date_end:
+    while date_end_local <= date_end:
+        period_dates_list.append(date_end_local)
+        print(f"type per list {period_dates_list}")
         print(f"date_parts {date_parts}")
         print(f"date_end_local {date_end_local}")
         print(f"days bunch {days_bunch}")
@@ -60,8 +62,6 @@ def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, days_st
         print(f"date_local_end {date_end_local}\n")
         print(type(date_end_local))
         print(f"date_end {date_end}\n")
-        period_dates_list.append(date_end_local)
-        print(f"type per list {period_dates_list}")
 
     return period_dates_list
 
@@ -69,7 +69,7 @@ def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, days_st
 def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format="%Y-%m-%d"):
     print(date_from)
     print(date_end)
-    ddate_format = "%Y-%m-%d"
+    date_format = "%Y-%m-%d"
     if not date_parts:
         date_parts = 1
     delta = datetime.strptime(date_end, date_format) - datetime.strptime(date_from, date_format)
@@ -159,6 +159,33 @@ def get_important_columns(df):
     return df
 
 
+def get_revenue_column_by_part(df, period_dates_list=None):
+    df.replace(np.NaN, 0, inplace=True)
+
+    for date in period_dates_list:
+        # if period_dates_list.index(date) == 0:
+        #     date = ''
+        # else:
+        date = f"_{str(date)[:10]}"
+
+        df[f'Прибыль{date}'] = df[f"('ppvz_for_pay', 'Продажа'){date}"] - \
+                               df[f"('ppvz_for_pay', 'Возврат'){date}"] - \
+                               df[f"('delivery_rub', 'Логистика'){date}"]
+
+        df[f'Прибыль{date}'] = [revenue_correcting(x, y, z, w)
+                                for x, y, z, w
+                                in zip(
+                df[f'Прибыль{date}'],
+                df['net_cost'],
+                df[f"('ppvz_for_pay', 'Продажа'){date}"],
+                df[f"('delivery_rub', 'Логистика'){date}"],
+            )]
+
+        # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
+
+    return df
+
+
 def get_revenue_column(df):
     df.replace(np.NaN, 0, inplace=True)
 
@@ -214,7 +241,7 @@ def get_wb_sales_realization_pivot(df):
     return df
 
 
-def get_wb_stock_api(date_from: str ='2018-06-24T21:00:00.000Z'):
+def get_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
     """get sales as api wb sales realization describe"""
     t = time.process_time()
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"

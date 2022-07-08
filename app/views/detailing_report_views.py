@@ -65,9 +65,7 @@ def get_speed_revenue():
 
         # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end)
         df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
-        df_net_cost = pd.read_sql(
-            db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
-        df_sales = df_sales.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
+
 
         # df_sales.to_excel('df_sales_net_cost.xlsx')
 
@@ -83,21 +81,26 @@ def get_speed_revenue():
             df = detailing_reports.get_wb_sales_realization_pivot(d)
             df_pivot_list.append(df)
 
-
-
         df = df_pivot_list[0]
+        date = iter(period_dates_list)
+        date_begin = str(next(date))[:10]
         for d in df_pivot_list[1:]:
-            date = iter(period_dates_list)
-            df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:11]}'))
+            df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
         df.to_excel('merged.xlsx')
         df_stock = pd.read_excel('wb_stock.xlsx')
-        df.to_excel('wb_stock.xlsx')
 
         df_complete = df.merge(df_stock, how='left', on='nm_id')
         df_complete.to_excel('complete.xlsx')
+        print(period_dates_list)
 
+        df_net_cost = pd.read_sql(
+            db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+        df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
+
+        df = detailing_reports.get_revenue_column_by_part(df, period_dates_list)
+        df.to_excel('revenue_part.xlsx')
         # df = detailing_reports.combine_date_to_revenue(date_from, date_end, days_step)
 
         # df_list = detailing_reports.dataframe_divide(df, period_dates_list, date_from)
@@ -244,7 +247,7 @@ def get_wb_stock_api():
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = detailing_reports.get_wb_stock_api(date_from, date_end, days_step)
+        df_sales_wb_api = detailing_reports.get_wb_stock_api()
         print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
