@@ -34,6 +34,7 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
         # df = df[date_from:date_end]
 
         d = df[(df['rr_dt'] > date_from) & (df['rr_dt'] <= date_end)]
+        print(f"d {d}")
         date_from = date_end
         df_list.append(d)
 
@@ -213,7 +214,7 @@ def get_wb_sales_realization_pivot(df):
     return df
 
 
-def get_wb_stock_api(date_from: str, date_end: str, days_step: int):
+def get_wb_stock_api(date_from: str ='2018-06-24T21:00:00.000Z'):
     """get sales as api wb sales realization describe"""
     t = time.process_time()
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"

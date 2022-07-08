@@ -7,6 +7,23 @@ import PIL
 from typing import Union
 import os
 
+# # shoes boot
+# K_HEIGHT_LEFT_START = 0.10
+# K_HEIGHT_RIGHT_START = 0.90
+# K_BOTTOM_LEFT_START = 0.10
+# K_BOTTOM_RIGHT_START = 0.97
+# STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 20
+# SENSIBILITY_COLOR = 210
+# COUNT_STEP_J = 10
+# DELIMITER = 4
+# NEW_HEIGHT_IM = 3000
+# K_WIDTH_HEIGHT_IM = 0.75
+# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+# K_BOOT_LONG_LEGS = 4
+
+# shoes leg
 K_HEIGHT_LEFT_START = 0.10
 K_HEIGHT_RIGHT_START = 0.90
 K_BOTTOM_LEFT_START = 0.10
@@ -20,6 +37,24 @@ NEW_HEIGHT_IM = 3000
 K_WIDTH_HEIGHT_IM = 0.75
 WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+K_BOOT_LONG_LEGS = 6
+
+# full clothes
+
+# K_HEIGHT_LEFT_START = 0.20
+# K_HEIGHT_RIGHT_START = 0.80
+# K_BOTTOM_LEFT_START = 0.20
+# K_BOTTOM_RIGHT_START = 0.80
+# STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 20
+# SENSIBILITY_COLOR = 210
+# COUNT_STEP_J = 10
+# DELIMITER = 4
+# NEW_HEIGHT_IM = 3000
+# K_WIDTH_HEIGHT_IM = 0.75
+# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+K_BOOT_LONG_LEGS = 1
 
 
 def crop_images(images: Union[list[PIL.JpegImagePlugin.JpegImageFile], list]) -> BytesIO:
@@ -27,7 +62,6 @@ def crop_images(images: Union[list[PIL.JpegImagePlugin.JpegImageFile], list]) ->
     images_set = []
     print(images)
     for img in images:
-
         file_name = os.path.basename(img.filename)
         print(file_name)
         file = _crop_img(img)
@@ -94,7 +128,8 @@ def _crop_height(img):
     left_start = width * K_HEIGHT_LEFT_START
     right_end = width * K_HEIGHT_RIGHT_START
     new_height = 0
-    count_i = step * COUNT_STEP_J
+    count_i = step * COUNT_STEP_J * K_BOOT_LONG_LEGS
+    print(f"count_i {count_i}")
     for i in img[step * 10::step]:
         count_j = 0
         for j in i:
