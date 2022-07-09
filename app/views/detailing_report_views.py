@@ -24,9 +24,9 @@ def get_speed_revenue():
 
     to get some periods of sells and take speed data on revenue
     for examples first period revenue 5, second -2, third 1:
-    so medium: 5+(-2)+1 = 4
-    so speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2
-    so max speed: 3, min speed: -7
+    so can count medium: 5+(-2)+1 = 4
+    or count speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2
+    or count max speed: 3, min speed: -7
 
     """
 
@@ -61,9 +61,10 @@ def get_speed_revenue():
             date_parts = request.form.get('part_by')
         else:
             date_parts = 3
-        print(f"date_parts {date_parts}")
 
-        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end)
+        # print(f"date_parts {date_parts}")
+
+        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
         # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
 
         # df_sales.to_excel('df_sales_net_cost.xlsx')
@@ -73,7 +74,7 @@ def get_speed_revenue():
                                                                     days_step, date_format)
         df_sales_list = detailing_reports.dataframe_divide(df_sales, period_dates_list, date_from)
 
-        print(df_sales_list)
+        # print(df_sales_list)
 
         df_pivot_list = []
         for d in df_sales_list:
@@ -94,7 +95,7 @@ def get_speed_revenue():
 
         df_complete = df.merge(df_stock, how='left', on='nm_id')
         # df_complete.to_excel('complete.xlsx')
-        print(period_dates_list)
+        # print(period_dates_list)
 
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
@@ -105,7 +106,7 @@ def get_speed_revenue():
         df = detailing_reports.change_order_df_columns(df)
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
         df = detailing_reports.df_reorder_important_col_first(df)
-        df.to_excel('revenue_part.xlsx')
+        # df.to_excel('revenue_part.xlsx')
 
         file = io_output.io_output(df)
 
