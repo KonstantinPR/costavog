@@ -38,6 +38,7 @@ def task_adding_in_db(request, company_id):
     else:
         executor_id = UserModel.query.filter_by(company_id=app.config["CURRENT_COMPANY_ID"],
                                                 user_name=current_user.user_name).one().id
+
     print(request.form['all_users'])
     print(executor_id)
 

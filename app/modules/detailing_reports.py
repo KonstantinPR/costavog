@@ -48,7 +48,7 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     return df_list
 
 
-def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, days_step=7, date_format="%Y-%m-%d"):
+def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, date_format="%Y-%m-%d"):
     period_dates_list = []
     date_from = datetime.strptime(date_from, date_format)
     date_end = datetime.strptime(date_end, date_format)

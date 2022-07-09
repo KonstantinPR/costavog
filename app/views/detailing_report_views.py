@@ -31,6 +31,7 @@ def get_speed_revenue():
     """
 
     date_format = "%Y-%m-%d"
+    DAYS_DELAY_REPORT = 5
 
     if not current_user.is_authenticated:
         return redirect('/company_register')
@@ -40,7 +41,8 @@ def get_speed_revenue():
         if request.form.get('date_from'):
             date_from = request.form.get('date_from')
         else:
-            date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
+            date_from = datetime.datetime.today() - datetime.timedelta(
+                days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
             date_from = date_from.strftime(date_format)
 
         print(f"type is {type(date_from)}")
@@ -48,7 +50,9 @@ def get_speed_revenue():
         if request.form.get('date_end'):
             date_end = request.form.get('date_end')
         else:
-            date_end = time.strftime(date_format)
+            date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
+            date_end = date_end.strftime(date_format)
+            # date_end = time.strftime(date_format)- datetime.timedelta(3)
 
         print(date_end)
 
@@ -62,40 +66,24 @@ def get_speed_revenue():
         else:
             date_parts = 3
 
-        # print(f"date_parts {date_parts}")
-
         df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
-
-        # df_sales.to_excel('df_sales_net_cost.xlsx')
 
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
-        period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts,
-                                                                    days_step, date_format)
+        period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
         df_sales_list = detailing_reports.dataframe_divide(df_sales, period_dates_list, date_from)
 
-        # print(df_sales_list)
-
-        df_pivot_list = []
-        for d in df_sales_list:
-            df = detailing_reports.get_wb_sales_realization_pivot(d)
-            # df = detailing_reports.df_column_set_like_to_str(df)
-            df_pivot_list.append(df)
+        # df_pivot_list = []
+        df_pivot_list = [detailing_reports.get_wb_sales_realization_pivot(d) for d in df_sales_list]
 
         df = df_pivot_list[0]
-        date = iter(period_dates_list)
-        date_begin = str(next(date))[:10]
-        for d in df_pivot_list[1:]:
+        date = iter(period_dates_list[1:])
+        df_p = df_pivot_list[1:]
+        for d in df_p:
             df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
-        # df.to_excel('merged.xlsx')
         df_stock = detailing_reports.get_wb_stock_api()
-        # df_stock = pd.read_excel('wb_stock.xlsx')
-
         df_complete = df.merge(df_stock, how='left', on='nm_id')
-        # df_complete.to_excel('complete.xlsx')
-        # print(period_dates_list)
 
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
@@ -106,8 +94,6 @@ def get_speed_revenue():
         df = detailing_reports.change_order_df_columns(df)
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
         df = detailing_reports.df_reorder_important_col_first(df)
-        # df.to_excel('revenue_part.xlsx')
-
         file = io_output.io_output(df)
 
         return send_file(file,
