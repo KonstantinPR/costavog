@@ -63,9 +63,8 @@ def get_speed_revenue():
             date_parts = 3
         print(f"date_parts {date_parts}")
 
-        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end)
-        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
-
+        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end)
+        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
 
         # df_sales.to_excel('df_sales_net_cost.xlsx')
 
@@ -79,6 +78,7 @@ def get_speed_revenue():
         df_pivot_list = []
         for d in df_sales_list:
             df = detailing_reports.get_wb_sales_realization_pivot(d)
+            # df = detailing_reports.df_column_set_like_to_str(df)
             df_pivot_list.append(df)
 
         df = df_pivot_list[0]
@@ -88,11 +88,12 @@ def get_speed_revenue():
             df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
-        df.to_excel('merged.xlsx')
-        df_stock = pd.read_excel('wb_stock.xlsx')
+        # df.to_excel('merged.xlsx')
+        df_stock = detailing_reports.get_wb_stock_api()
+        # df_stock = pd.read_excel('wb_stock.xlsx')
 
         df_complete = df.merge(df_stock, how='left', on='nm_id')
-        df_complete.to_excel('complete.xlsx')
+        # df_complete.to_excel('complete.xlsx')
         print(period_dates_list)
 
         df_net_cost = pd.read_sql(
@@ -100,21 +101,17 @@ def get_speed_revenue():
         df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
 
         df = detailing_reports.get_revenue_column_by_part(df, period_dates_list)
+        df = detailing_reports.df_stay_not_null(df)
+        df = detailing_reports.change_order_df_columns(df)
+        df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
+        df = detailing_reports.df_reorder_important_col_first(df)
         df.to_excel('revenue_part.xlsx')
-        # df = detailing_reports.combine_date_to_revenue(date_from, date_end, days_step)
 
-        # df_list = detailing_reports.dataframe_divide(df, period_dates_list, date_from)
-        # n = 1
-        # for d in df_list:
-        #     d_name = f"ex{str(n)}.xlsx"
-        #     d.to_excel(d_name)
-        #     n += 1
+        file = io_output.io_output(df)
 
-        # file = io_output.io_output(df)
-
-        # return send_file(file,
-        #                  attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
-        #                  as_attachment=True)
+        return send_file(file,
+                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
+                         as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
 

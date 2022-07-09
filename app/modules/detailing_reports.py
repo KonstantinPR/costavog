@@ -14,6 +14,13 @@ import time
 from functools import reduce
 from copy import copy
 
+IMPORTANT_COL = [
+    'brand_name',
+    'subject_name',
+    'nm_id',
+    'supplierArticle',
+]
+
 
 def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     df['rr_dt'] = [x[0:10] + " 00:00:00" for x in df['rr_dt']]
@@ -131,24 +138,24 @@ def get_important_columns(df):
         'nm_id',
         'supplierArticle',
         'Прибыль',
-        ('ppvz_for_pay', 'Продажа'),
-        ('retail_price_withdisc_rub', 'Продажа'),
-        ('ppvz_for_pay', 'Возврат'),
-        ('ppvz_for_pay', 'Логистика'),
-        ('quantity', 'Продажа'),
-        ('quantity', 'Возврат'),
-        ('quantity', 'Логистика'),
+        'ppvz_for_pay_Продажа',
+        'retail_price_withdisc_rub_Продажа',
+        'ppvz_for_pay_Возврат',
+        'ppvz_for_pay_Логистика',
+        'quantity_Продажа',
+        'quantity_Возврат',
+        'quantity_Логистика',
         'net_cost',
-        ('delivery_rub', 'Возврат'),
-        ('delivery_rub', 'Логистика'),
-        ('delivery_rub', 'Продажа'),
-        ('penalty', 'Возврат'),
-        ('penalty', 'Логистика'),
-        ('penalty', 'Продажа'),
-        ('retail_price_withdisc_rub', 'Возврат'),
-        ('retail_price_withdisc_rub', 'Логистика'),
-        ('delivery_amount', 'Логистика'),
-        ('return_amount', 'Логистика'),
+        'delivery_rub_Возврат',
+        'delivery_rub_Логистика',
+        'delivery_rub_Продажа',
+        'penalty_Возврат',
+        'penalty_Логистика',
+        'penalty_Продажа',
+        'retail_price_withdisc_rub_Возврат',
+        'retail_price_withdisc_rub_Логистика',
+        'delivery_amount_Логистика',
+        'return_amount_Логистика',
         'daysOnSite',
         'quantityFull',
         'article',
@@ -159,26 +166,56 @@ def get_important_columns(df):
     return df
 
 
+def df_reorder_important_col_first(df):
+    important_col_list = IMPORTANT_COL
+    n = 0
+    col_list = df.columns.tolist()
+    for col in col_list:
+        if col in important_col_list:
+            idx = col_list.index(col)
+            col_list[idx], col_list[n] = col_list[n], col_list[idx]
+            n += 1
+    df = df.reindex(columns=col_list)
+    return df
+
+
+def df_stay_not_null(df):
+    df = df.loc[:, df.any()]
+    return df
+
+
+def change_order_df_columns(df):
+    n = len(IMPORTANT_COL)
+    col_list = df.columns.tolist()
+    for col in col_list:
+        if "Прибыль" in col:
+            idx = col_list.index(col)
+            col_list[idx], col_list[n] = col_list[n], col_list[idx]
+            n += 1
+    df = df.reindex(columns=col_list)
+    return df
+
+
 def get_revenue_column_by_part(df, period_dates_list=None):
     df.replace(np.NaN, 0, inplace=True)
 
     for date in period_dates_list:
-        # if period_dates_list.index(date) == 0:
-        #     date = ''
-        # else:
-        date = f"_{str(date)[:10]}"
+        if period_dates_list.index(date) == 0:
+            date = ''
+        else:
+            date = f"_{str(date)[:10]}"
 
-        df[f'Прибыль{date}'] = df[f"('ppvz_for_pay', 'Продажа'){date}"] - \
-                               df[f"('ppvz_for_pay', 'Возврат'){date}"] - \
-                               df[f"('delivery_rub', 'Логистика'){date}"]
+        df[f'Прибыль{date}'] = df[f'ppvz_for_pay_Продажа{date}'] - \
+                               df[f'ppvz_for_pay_Возврат{date}'] - \
+                               df[f'delivery_rub_Логистика{date}']
 
         df[f'Прибыль{date}'] = [revenue_correcting(x, y, z, w)
                                 for x, y, z, w
                                 in zip(
                 df[f'Прибыль{date}'],
                 df['net_cost'],
-                df[f"('ppvz_for_pay', 'Продажа'){date}"],
-                df[f"('delivery_rub', 'Логистика'){date}"],
+                df[f'ppvz_for_pay_Продажа{date}'],
+                df[f'delivery_rub_Логистика{date}'],
             )]
 
         # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
@@ -189,18 +226,25 @@ def get_revenue_column_by_part(df, period_dates_list=None):
 def get_revenue_column(df):
     df.replace(np.NaN, 0, inplace=True)
 
-    df['Прибыль'] = df[('ppvz_for_pay', 'Продажа')] - \
-                    df[('ppvz_for_pay', 'Возврат')] - \
-                    df[('delivery_rub', 'Логистика')]
+    df['Прибыль'] = df['ppvz_for_pay_Продажа'] - \
+                    df['ppvz_for_pay_Возврат'] - \
+                    df['delivery_rub_Логистика']
 
     df['Прибыль'] = [revenue_correcting(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
                                                                           df['net_cost'],
-                                                                          df[('ppvz_for_pay', 'Продажа')],
-                                                                          df[('delivery_rub', 'Логистика')],
+                                                                          df['ppvz_for_pay_Продажа'],
+                                                                          df['delivery_rub_Логистика'],
                                                                           )]
 
     # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
 
+    return df
+
+
+def df_column_set_like_to_str(df):
+    for col in df.columns:
+        if isinstance(col, tuple):
+            df.rename(columns={col: '_'.join(col)}, inplace=True)
     return df
 
 
@@ -224,7 +268,6 @@ def get_wb_sales_realization_pivot(df):
                                   'retail_price_withdisc_rub': sum,
                                   },
                          margins=False)
-    print(df1)
 
     df2 = df.pivot_table(index=['nm_id'],
                          values=['sa_name',
@@ -237,6 +280,7 @@ def get_wb_sales_realization_pivot(df):
                          margins=False)
 
     df = df1.merge(df2, how='left', on='nm_id')
+    df = df_column_set_like_to_str(df)
 
     return df
 
