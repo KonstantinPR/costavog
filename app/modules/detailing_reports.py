@@ -89,7 +89,7 @@ def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format=
 def combine_date_to_revenue(date_from, date_end, days_step=7):
     df = get_wb_sales_realization_api(date_from, date_end, days_step)
     df_sales = get_wb_sales_realization_pivot(df)
-    df_stock = get_wb_stock_api(date_from, date_end, days_step)
+    df_stock = get_wb_stock_api(date_from)
     df_net_cost = pd.read_sql(
         db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
     df = df_sales.merge(df_stock, how='outer', on='nm_id')
@@ -128,7 +128,7 @@ def revenue_correcting(x, y, z, w):
     if z > 0:
         return x - y
     else:
-        return x - w
+        return x
 
 
 def get_important_columns(df):
@@ -207,16 +207,18 @@ def get_revenue_column_by_part(df, period_dates_list=None):
 
         df[f'Прибыль{date}'] = df[f'ppvz_for_pay_Продажа{date}'] - \
                                df[f'ppvz_for_pay_Возврат{date}'] - \
-                               df[f'delivery_rub_Логистика{date}']
+                               df[f'delivery_rub_Логистика{date}'] - \
+                               df[f'quantity_Продажа{date}'] * df['net_cost'] + \
+                               df[f'quantity_Возврат{date}'] * df['net_cost']
 
-        df[f'Прибыль{date}'] = [revenue_correcting(x, y, z, w)
-                                for x, y, z, w
-                                in zip(
-                df[f'Прибыль{date}'],
-                df['net_cost'],
-                df[f'ppvz_for_pay_Продажа{date}'],
-                df[f'delivery_rub_Логистика{date}'],
-            )]
+        # df[f'Прибыль{date}'] = [revenue_correcting(x, y, z, w)
+        #                         for x, y, z, w
+        #                         in zip(
+        #         df[f'Прибыль{date}'],
+        #         df['net_cost'],
+        #         df[f'ppvz_for_pay_Продажа{date}'],
+        #         df[f'delivery_rub_Логистика{date}'],
+        #     )]
 
         # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
 
@@ -228,13 +230,15 @@ def get_revenue_column(df):
 
     df['Прибыль'] = df['ppvz_for_pay_Продажа'] - \
                     df['ppvz_for_pay_Возврат'] - \
-                    df['delivery_rub_Логистика']
+                    df['delivery_rub_Логистика'] - \
+                    df['quantity_Продажа'] * df['net_cost'] + \
+                    df['quantity_Возврат'] * df['net_cost']
 
-    df['Прибыль'] = [revenue_correcting(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
-                                                                          df['net_cost'],
-                                                                          df['ppvz_for_pay_Продажа'],
-                                                                          df['delivery_rub_Логистика'],
-                                                                          )]
+    # df['Прибыль'] = [revenue_correcting(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
+    #                                                                       df['net_cost'],
+    #                                                                       df['ppvz_for_pay_Продажа'],
+    #                                                                       df['delivery_rub_Логистика'],
+    #                                                                       )]
 
     # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
 
