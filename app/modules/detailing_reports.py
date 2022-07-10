@@ -21,6 +21,10 @@ IMPORTANT_COL = [
     'supplierArticle',
 ]
 
+NEW_COL_ON_REVENUE = [
+
+]
+
 
 def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     df['rr_dt'] = [x[0:10] + " 00:00:00" for x in df['rr_dt']]
@@ -166,6 +170,20 @@ def get_important_columns(df):
     return df
 
 
+def add_new_column_on_revenue(df, period_dates_list):
+    pass
+
+
+def get_revenue_sum(df, period_dates_list):
+    """sum all revenue in one column"""
+    period_dates_list = [date[:10] for date in period_dates_list]
+    df['revenue_all'] = 0
+    for date in period_dates_list:
+        date = f'_{date}'
+        df['revenue_all'] += df[f'revenue{date}']
+        return df
+
+
 def df_reorder_important_col_first(df):
     important_col_list = IMPORTANT_COL
     n = 0
@@ -245,7 +263,7 @@ def get_revenue_column(df):
     return df
 
 
-def df_column_set_like_to_str(df):
+def df_column_set_to_str(df):
     for col in df.columns:
         if isinstance(col, tuple):
             df.rename(columns={col: '_'.join(col)}, inplace=True)
@@ -284,7 +302,7 @@ def get_wb_sales_realization_pivot(df):
                          margins=False)
 
     df = df1.merge(df2, how='left', on='nm_id')
-    df = df_column_set_like_to_str(df)
+    df = df_column_set_to_str(df)
 
     return df
 

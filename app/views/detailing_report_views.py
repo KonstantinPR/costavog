@@ -91,9 +91,13 @@ def get_speed_revenue():
 
         df = detailing_reports.get_revenue_column_by_part(df, period_dates_list)
         df = detailing_reports.df_stay_not_null(df)
-        df = detailing_reports.change_order_df_columns(df)
+
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
+        df - detailing_reports.get_revenue_sum(df, period_dates_list)
+        df = detailing_reports.change_order_df_columns(df)
         df = detailing_reports.df_reorder_important_col_first(df)
+        # df - detailing_reports.add_new_column_on_revenue(df, period_dates_list)
+
         file = io_output.io_output(df)
 
         return send_file(file,
