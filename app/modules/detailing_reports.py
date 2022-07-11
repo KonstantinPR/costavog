@@ -30,44 +30,16 @@ NEW_COL_ON_REVENUE = [
 
 # /// --- NEW COLUMN ON REVENUE ANILIZE ---
 
-def df_revenue_speed(df, period_dates_list):
-    pass
-
-def df_revenue_average(df, df_revenue_list):
-    for col_name_revenue in df_revenue_list:
-        df['Прибыль_average'] = [min(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_average'])]
-    pass
-
-
-def revenue_min(df, df_revenue_list):
-    df['Прибыль_min'] = math.inf
-    for col_name_revenue in df_revenue_list:
-        df['Прибыль_min'] = [min(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_min'])]
-    return df
-
-
-def revenue_max(df, df_revenue_list):
-    df['Прибыль_max'] = -math.inf
-    for col_name_revenue in df_revenue_list:
-        df['Прибыль_max'] = [max(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_max'])]
-    return df
+def df_revenue_growth(df, df_revenue_col_name_list):
+    growth1 = df[df_revenue_col_name_list[0]] - df[df_revenue_col_name_list[1]]
+    growth2 = df[df_revenue_col_name_list[1]] - df[df_revenue_col_name_list[2]]
+    growth = (growth2 - growth1) / growth2
+    return growth
 
 
 def df_revenue_col_name_list(df):
-    """ gap between max and min revenue in all periods"""
     df_revenue_col_name_list = [col for col in df.columns if f'Прибыль_' in col]
     return df_revenue_col_name_list
-
-
-def df_revenue_sum(df, period_dates_list):
-    """sum all revenue in one column"""
-    period_dates_list = [str(date)[:10] for date in period_dates_list]
-    print(period_dates_list)
-    df['Прибыль_итог'] = 0
-    for date in period_dates_list:
-        date = str(f'_{date}')
-        df['Прибыль_итог'] += df[f'Прибыль{date}']
-    return df
 
 
 # --- NEW COLUMN ON REVENUE ANILIZE /// ---

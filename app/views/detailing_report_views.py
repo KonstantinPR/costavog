@@ -97,11 +97,14 @@ def get_speed_revenue():
 
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
         df_revenue_col_name_list = detailing_reports.df_revenue_col_name_list(df)
-        df = detailing_reports.revenue_max(df, df_revenue_col_name_list)
-        df = detailing_reports.revenue_min(df, df_revenue_col_name_list)
-        df = detailing_reports.df_revenue_sum(df, period_dates_list)
-        df = detailing_reports.df_revenue_average(df, df_revenue_col_name_list)
-        df = detailing_reports.df_revenue_speed(df, period_dates_list)
+        df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
+        df['Прибыль_min'] = df[df_revenue_col_name_list].min(axis=1)
+        df['Прибыль_sum'] = df[df_revenue_col_name_list].sum(axis=1)
+        df['Прибыль_mean'] = df[df_revenue_col_name_list].mean(axis=1)
+        df['Прибыль_growth %'] = df[df_revenue_col_name_list[2]] - df[df_revenue_col_name_list[1]]
+        df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
+
+        # df = detailing_reports.df_revenue_speed(df, period_dates_list)
         df = detailing_reports.change_order_df_columns(df)
         df = detailing_reports.df_reorder_important_col_first(df)
 
