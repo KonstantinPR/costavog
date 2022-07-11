@@ -13,6 +13,8 @@ import requests
 import time
 from functools import reduce
 from copy import copy
+import re
+import math
 
 IMPORTANT_COL = [
     'brand_name',
@@ -25,6 +27,50 @@ NEW_COL_ON_REVENUE = [
 
 ]
 
+
+# /// --- NEW COLUMN ON REVENUE ANILIZE ---
+
+def df_revenue_speed(df, period_dates_list):
+    pass
+
+def df_revenue_average(df, df_revenue_list):
+    for col_name_revenue in df_revenue_list:
+        df['Прибыль_average'] = [min(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_average'])]
+    pass
+
+
+def revenue_min(df, df_revenue_list):
+    df['Прибыль_min'] = math.inf
+    for col_name_revenue in df_revenue_list:
+        df['Прибыль_min'] = [min(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_min'])]
+    return df
+
+
+def revenue_max(df, df_revenue_list):
+    df['Прибыль_max'] = -math.inf
+    for col_name_revenue in df_revenue_list:
+        df['Прибыль_max'] = [max(x, y) for x, y in zip(df[col_name_revenue], df['Прибыль_max'])]
+    return df
+
+
+def df_revenue_col_name_list(df):
+    """ gap between max and min revenue in all periods"""
+    df_revenue_col_name_list = [col for col in df.columns if f'Прибыль_' in col]
+    return df_revenue_col_name_list
+
+
+def df_revenue_sum(df, period_dates_list):
+    """sum all revenue in one column"""
+    period_dates_list = [str(date)[:10] for date in period_dates_list]
+    print(period_dates_list)
+    df['Прибыль_итог'] = 0
+    for date in period_dates_list:
+        date = str(f'_{date}')
+        df['Прибыль_итог'] += df[f'Прибыль{date}']
+    return df
+
+
+# --- NEW COLUMN ON REVENUE ANILIZE /// ---
 
 def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     df['rr_dt'] = [x[0:10] + " 00:00:00" for x in df['rr_dt']]
@@ -170,20 +216,6 @@ def get_important_columns(df):
     return df
 
 
-def add_new_column_on_revenue(df, period_dates_list):
-    pass
-
-
-def get_revenue_sum(df, period_dates_list):
-    """sum all revenue in one column"""
-    period_dates_list = [date[:10] for date in period_dates_list]
-    df['revenue_all'] = 0
-    for date in period_dates_list:
-        date = f'_{date}'
-        df['revenue_all'] += df[f'revenue{date}']
-        return df
-
-
 def df_reorder_important_col_first(df):
     important_col_list = IMPORTANT_COL
     n = 0
@@ -229,17 +261,6 @@ def get_revenue_column_by_part(df, period_dates_list=None):
                                df[f'quantity_Продажа{date}'] * df['net_cost'] + \
                                df[f'quantity_Возврат{date}'] * df['net_cost']
 
-        # df[f'Прибыль{date}'] = [revenue_correcting(x, y, z, w)
-        #                         for x, y, z, w
-        #                         in zip(
-        #         df[f'Прибыль{date}'],
-        #         df['net_cost'],
-        #         df[f'ppvz_for_pay_Продажа{date}'],
-        #         df[f'delivery_rub_Логистика{date}'],
-        #     )]
-
-        # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
-
     return df
 
 
@@ -251,14 +272,6 @@ def get_revenue_column(df):
                     df['delivery_rub_Логистика'] - \
                     df['quantity_Продажа'] * df['net_cost'] + \
                     df['quantity_Возврат'] * df['net_cost']
-
-    # df['Прибыль'] = [revenue_correcting(x, y, z, w) for x, y, z, w in zip(df['Прибыль'],
-    #                                                                       df['net_cost'],
-    #                                                                       df['ppvz_for_pay_Продажа'],
-    #                                                                       df['delivery_rub_Логистика'],
-    #                                                                       )]
-
-    # df['supplierArticle'] = [x for x in df['sa_name'] if x != 0]
 
     return df
 

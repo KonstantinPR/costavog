@@ -24,6 +24,7 @@ def get_speed_revenue():
 
     to get some periods of sells and take speed data on revenue
     for examples first period revenue 5, second -2, third 1:
+    1. gap between max and min revenue in all periods
     so can count medium: 5+(-2)+1 = 4
     or count speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2
     or count max speed: 3, min speed: -7
@@ -66,7 +67,8 @@ def get_speed_revenue():
         else:
             date_parts = 3
 
-        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
 
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
@@ -82,8 +84,9 @@ def get_speed_revenue():
             df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
-        df_stock = detailing_reports.get_wb_stock_api()
-        df_complete = df.merge(df_stock, how='left', on='nm_id')
+        # df_stock = detailing_reports.get_wb_stock_api()
+        df_stock = pd.read_excel("wb_stock.xlsx")
+        df_complete = df_stock.merge(df, how='outer', on='nm_id')
 
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
@@ -93,10 +96,14 @@ def get_speed_revenue():
         df = detailing_reports.df_stay_not_null(df)
 
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
-        df - detailing_reports.get_revenue_sum(df, period_dates_list)
+        df_revenue_col_name_list = detailing_reports.df_revenue_col_name_list(df)
+        df = detailing_reports.revenue_max(df, df_revenue_col_name_list)
+        df = detailing_reports.revenue_min(df, df_revenue_col_name_list)
+        df = detailing_reports.df_revenue_sum(df, period_dates_list)
+        df = detailing_reports.df_revenue_average(df, df_revenue_col_name_list)
+        df = detailing_reports.df_revenue_speed(df, period_dates_list)
         df = detailing_reports.change_order_df_columns(df)
         df = detailing_reports.df_reorder_important_col_first(df)
-        # df - detailing_reports.add_new_column_on_revenue(df, period_dates_list)
 
         file = io_output.io_output(df)
 
