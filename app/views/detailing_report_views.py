@@ -17,9 +17,9 @@ from app.modules import io_output
 import time
 
 
-@app.route('/get_speed_revenue', methods=['POST', 'GET'])
+@app.route('/revenue_processing', methods=['POST', 'GET'])
 @login_required
-def get_speed_revenue():
+def revenue_processing():
     """
 
     to get some periods of sells and take speed data on revenue
