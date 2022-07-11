@@ -67,8 +67,8 @@ def get_speed_revenue():
         else:
             date_parts = 3
 
-        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
 
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
@@ -84,8 +84,8 @@ def get_speed_revenue():
             df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
-        # df_stock = detailing_reports.get_wb_stock_api()
-        df_stock = pd.read_excel("wb_stock.xlsx")
+        df_stock = detailing_reports.get_wb_stock_api()
+        # df_stock = pd.read_excel("wb_stock.xlsx")
         df_complete = df_stock.merge(df, how='outer', on='nm_id')
 
         df_net_cost = pd.read_sql(
