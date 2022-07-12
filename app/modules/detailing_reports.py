@@ -28,6 +28,70 @@ NEW_COL_ON_REVENUE = [
 ]
 
 
+# /// --- K REVENUE FORMING ---
+def k_is_sell(q_sum, qt):
+    # нет продаж и товара много
+    if q_sum == 0:
+        if qt <= 10:
+            return 1.01
+        if 10 < qt <= 50:
+            return 1.02
+        if 50 < qt <= 100:
+            return 1.05
+        if 100 < qt <= 1000:
+            return 1.1
+
+
+def k_revenue(sum, mean, last):
+    if sum > 0 and mean > 0 and last > 0:
+        return 1
+    if sum < 0 and mean < 0 and last < 0:
+        return 0.5
+    if sum > 0 and mean > 0 and last < 0:
+        return 0.9
+    return 1
+
+
+def k_logistic(log_rub, to_rub):
+    # каково отношение денег к перечислению и денег, потраченных на логистику:
+    if log_rub = 0
+        return 1
+    # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
+    if k_log > 1:
+        # если логистика = всему что к перечислению, то уменьшаем скидку на порядок
+        return 0.1
+    if k_log > 0.5:
+        # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
+        return 0.5
+    if k_log > 0.25:
+        # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
+        return 0.75
+    # в остальных случаях оставляем скидку без изменения
+    return 1
+
+
+def k_net_cost(net_cost, price_disc):
+    if price_disc >= net_cost:
+        return 0.75
+    if price_disc >= net_cost * 2 and net_cost < 1000:
+        return 0.9
+
+
+def get_k_discount(df, df_revenue_col_name_list):
+    # если не было продаж увеличиваем скидку
+    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['quantityFull'])]
+    # постоянно растет или падает прибыль, отрицательная или положительная
+    df['k_revenue'] = [k_revenue(x, y, z) for x, y, z in zip(df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
+    # Защита от покатушек - поднимаем цену
+    df['k_logistic'] = [k_logistic(x, y) for x, y in zip(df['Логистика руб'], df['Перечисление руб'])]
+    # Защита от цены ниже себестоимости - тогда повышаем
+    df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
+    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']
+    return df
+
+
+# --- K REVENUE FORMING /// ---
+
 # /// --- NEW COLUMN ON REVENUE ANILIZE ---
 
 def df_revenue_growth(df, df_revenue_col_name_list):
@@ -255,6 +319,15 @@ def df_column_set_to_str(df):
     return df
 
 
+def _change_old_column_name(df):
+    # соединяем старые названия возврата - корректный вовзрат и продажа - корректная продажа
+    if 'ppvz_for_pay_Корректная продажа' in df:
+        df['ppvz_for_pay_Продажа'] = df['ppvz_for_pay_Корректная продажа'] + df['ppvz_for_pay_Продажа']
+    if 'ppvz_for_pay_Корректный возврат' in df:
+        df['ppvz_for_pay_Возврат'] = df['ppvz_for_pay_Корректный возврат'] + df['ppvz_for_pay_Возврат']
+    return df
+
+
 def get_wb_sales_realization_pivot(df):
     df1 = df.pivot_table(index=['nm_id'],
                          columns='supplier_oper_name',
@@ -288,7 +361,21 @@ def get_wb_sales_realization_pivot(df):
 
     df = df1.merge(df2, how='left', on='nm_id')
     df = df_column_set_to_str(df)
+    df = _change_old_column_name(df)
 
+    return df
+
+
+def get_wb_price_api():
+    headers = {
+        'accept': 'application/json',
+        'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjI3YzViYzIzLThlNDktNDNjMy04YTA2LWQ0MDI0ZjRmZDM2ZiJ9._bCg_tfpB1D1TRggc7pOeCWeFKCPy2IQr4FTz8HTk34',
+    }
+
+    response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)
+    data = response.json()
+    df = pd.DataFrame(data)
+    df = df.rename(columns={'nmId': 'nm_id'})
     return df
 
 

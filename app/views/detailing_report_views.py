@@ -17,6 +17,16 @@ from app.modules import io_output
 import time
 
 
+@app.route('/get_wb_price_api', methods=['POST', 'GET'])
+@login_required
+def get_wb_price_api():
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+    df = detailing_reports.get_wb_price_api()
+    file = io_output.io_output(df)
+    return send_file(file, attachment_filename='price.xlsx', as_attachment=True)
+
+
 @app.route('/revenue_processing', methods=['POST', 'GET'])
 @login_required
 def revenue_processing():
@@ -69,7 +79,8 @@ def revenue_processing():
 
         df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
         # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
-
+        df_sales_pivot = detailing_reports.get_wb_sales_realization_pivot(df_sales)
+        df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
         df_sales_list = detailing_reports.dataframe_divide(df_sales, period_dates_list, date_from)
@@ -86,10 +97,12 @@ def revenue_processing():
 
         df_stock = detailing_reports.get_wb_stock_api()
         # df_stock = pd.read_excel("wb_stock.xlsx")
-        df_complete = df_stock.merge(df, how='outer', on='nm_id')
+        df_price = detailing_reports.get_wb_price_api()
+        df = df_price.merge(df, how='outer', on='nm_id')
 
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+        df_complete = df_stock.merge(df, how='outer', on='nm_id')
         df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
 
         df = detailing_reports.get_revenue_column_by_part(df, period_dates_list)
@@ -97,17 +110,35 @@ def revenue_processing():
 
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
         df_revenue_col_name_list = detailing_reports.df_revenue_col_name_list(df)
+
+        # Формируем обобщающие показатели перед присоединением общей таблицы продаж с префиксом _sum
         df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
         df['Прибыль_min'] = df[df_revenue_col_name_list].min(axis=1)
         df['Прибыль_sum'] = df[df_revenue_col_name_list].sum(axis=1)
         df['Прибыль_mean'] = df[df_revenue_col_name_list].mean(axis=1)
-        df['Прибыль_growth %'] = df[df_revenue_col_name_list[2]] - df[df_revenue_col_name_list[1]]
+        df['Прибыль_first'] = df[df_revenue_col_name_list[0]]
+        df['Прибыль_last'] = df[df_revenue_col_name_list[len(df_revenue_col_name_list) - 1]]
+        df['Прибыль_growth'] = df['Прибыль_last'] - df['Прибыль_first']
         df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
+        df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
+        df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
+        df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа" in col]].sum(axis=1) - \
+                                 df[[col for col in df.columns if "ppvz_for_pay_Возврат" in col]].sum(axis=1)
+
+        # чтобы были видны итоговые значения из первоначальной таблицы с продажами
+        df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+
+        # --- /// Принятие решения о скидке на основе сформированных данных ---
+        # коэффициент влияния на скидку
+        df['k_discount'] = 1
+        # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
+        df = detailing_reports.get_k_discount(df, df_revenue_col_name_list)
+        df['Согласованная скидка, %'] = df['discount'] * df['k_discount']
 
         # df = detailing_reports.df_revenue_speed(df, period_dates_list)
+
         df = detailing_reports.change_order_df_columns(df)
         df = detailing_reports.df_reorder_important_col_first(df)
-
         file = io_output.io_output(df)
 
         return send_file(file,
