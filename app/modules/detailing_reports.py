@@ -72,12 +72,15 @@ def k_is_sell(sell_sum, qt_full):
 
 
 def k_revenue(sum, mean, last):
+    # если прибыль растет - можно чуть увеличить цену
     if sum > 0 and mean > 0 and last > 0:
-        return 0.98
+        return 0.99
+    # если прибыль отрицательная и падает - минимизируем покатушки - поднимаем цены
     if sum < 0 and mean < 0 and last < 0:
-        return 0.9
-    if sum > 0 and mean > 0 and last < 0:
         return 0.95
+    # если последний период отрицательный - чуть поднимаем цену для минимизации эффекта покатушек
+    if sum > 0 and mean > 0 and last < 0:
+        return 0.98
     return 1
 
 
@@ -388,7 +391,8 @@ def get_wb_sales_realization_pivot(df):
                                  'quantity',
                                  'delivery_amount',
                                  'return_amount',
-                                 'retail_price_withdisc_rub'
+                                 'retail_price_withdisc_rub',
+                                 'ppvz_sales_commission',
                                  ],
                          aggfunc={'ppvz_for_pay': sum,
                                   'delivery_rub': sum,
@@ -397,6 +401,7 @@ def get_wb_sales_realization_pivot(df):
                                   'delivery_amount': sum,
                                   'return_amount': sum,
                                   'retail_price_withdisc_rub': sum,
+                                  'ppvz_sales_commission': sum,
                                   },
                          margins=False)
 
