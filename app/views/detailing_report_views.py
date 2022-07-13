@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from app.modules import discount, detailing, detailing_reports, sql_query_main
 from app.modules import io_output
 import time
+from styleframe import StyleFrame, Styler, utils
 
 
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])
@@ -77,8 +78,8 @@ def revenue_processing():
         else:
             date_parts = 3
 
-        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
         df_sales_pivot = detailing_reports.get_wb_sales_realization_pivot(df_sales)
         df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
@@ -136,10 +137,18 @@ def revenue_processing():
         df['Согласованная скидка, %'] = round(df['discount'] * df['k_discount'], 0)
 
         # df = detailing_reports.df_revenue_speed(df, period_dates_list)
+        # реорганизуем порядок следования столбцов для лучшей читаемости
+        df = detailing_reports.df_reorder_important_col_desc_first(df)
+        df = detailing_reports.df_reorder_important_col_report_first(df)
+        df = detailing_reports.df_reorder_revenue_col_first(df)
 
-        df = detailing_reports.change_order_df_columns(df)
-        df = detailing_reports.df_reorder_important_col_first(df)
-        file = io_output.io_output(df)
+        # создаем стили для лучшей визуализации таблицы
+        sf = StyleFrame(df)
+        sf.apply_column_style(detailing_reports.IMPORTANT_COL_REPORT,
+                              styler_obj=Styler(bg_color='FFFFCC'),
+                              style_header=True)
+
+        file = io_output.io_output_styleframe(sf)
 
         return send_file(file,
                          attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",

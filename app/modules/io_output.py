@@ -19,6 +19,14 @@ def io_output(df: pd.DataFrame) -> BytesIO:
     output.seek(0)
     return output
 
+def io_output_styleframe(sf) -> BytesIO:
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='openpyxl')
+    sf.to_excel(writer)
+    writer.close()
+    output.seek(0)
+    return output
+
 
 def io_img_output(img: Image.Image) -> BytesIO:
     img_io = BytesIO()

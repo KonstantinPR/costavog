@@ -16,11 +16,29 @@ from copy import copy
 import re
 import math
 
-IMPORTANT_COL = [
+IMPORTANT_COL_DESC = [
     'brand_name',
     'subject_name',
     'nm_id',
     'supplierArticle',
+]
+
+IMPORTANT_COL_REPORT = [
+    'Согласованная скидка, %',
+    'discount',
+    'Перечисление руб',
+    'Логистика руб',
+    'Логистика шт',
+    'price_disc',
+    'net_cost',
+    'quantity_Возврат_sum',
+    'quantity_Продажа_sum',
+    'quantityFull',
+    'k_discount',
+    'k_is_sell',
+    'k_revenue',
+    'k_logistic',
+    'k_net_cost',
 ]
 
 NEW_COL_ON_REVENUE = [
@@ -34,10 +52,14 @@ DEFAULT_NET_COST = 1000
 def k_is_sell(sell_sum, qt_full):
     # нет продаж и товара много
     k = 1
-    if sell_sum < 5:
-        k = 1
     if not sell_sum:
         k = 1.02
+    if sell_sum <= 5:
+        k = 1
+    if sell_sum > 5:
+        k = 0.99
+    if sell_sum > 10:
+        k = 0.98
     if qt_full <= 10:
         return 1.01 * k
     if 10 < qt_full <= 50:
@@ -51,7 +73,7 @@ def k_is_sell(sell_sum, qt_full):
 
 def k_revenue(sum, mean, last):
     if sum > 0 and mean > 0 and last > 0:
-        return 1
+        return 0.98
     if sum < 0 and mean < 0 and last < 0:
         return 0.9
     if sum > 0 and mean > 0 and last < 0:
@@ -65,8 +87,8 @@ def k_logistic(log_rub, to_rub):
         return 1
     k_log = log_rub / to_rub
     # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
-    if k_log > 1:
-        # если логистика = всему что к перечислению, то уменьшаем скидку на порядок
+    if k_log > 1 or k_log < 0:
+        # если логистика = всему что к перечислению, то уменьшаем скидку пополам
         return 0.50
     if k_log > 0.5:
         # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
@@ -268,8 +290,8 @@ def get_important_columns(df):
     return df
 
 
-def df_reorder_important_col_first(df):
-    important_col_list = IMPORTANT_COL
+def df_reorder_important_col_desc_first(df):
+    important_col_list = IMPORTANT_COL_DESC
     n = 0
     col_list = df.columns.tolist()
     for col in col_list:
@@ -281,13 +303,21 @@ def df_reorder_important_col_first(df):
     return df
 
 
-def df_stay_not_null(df):
-    df = df.loc[:, df.any()]
+def df_reorder_important_col_report_first(df):
+    important_col_list = IMPORTANT_COL_REPORT
+    n = len(IMPORTANT_COL_DESC) - 1
+    col_list = df.columns.tolist()
+    for col in col_list:
+        if col in important_col_list:
+            idx = col_list.index(col)
+            col_list[idx], col_list[n] = col_list[n], col_list[idx]
+            n += 1
+    df = df.reindex(columns=col_list)
     return df
 
 
-def change_order_df_columns(df):
-    n = len(IMPORTANT_COL)
+def df_reorder_revenue_col_first(df):
+    n = len(IMPORTANT_COL_DESC) + len(IMPORTANT_COL_REPORT) - 1
     col_list = df.columns.tolist()
     for col in col_list:
         if "Прибыль" in col:
@@ -295,6 +325,11 @@ def change_order_df_columns(df):
             col_list[idx], col_list[n] = col_list[n], col_list[idx]
             n += 1
     df = df.reindex(columns=col_list)
+    return df
+
+
+def df_stay_not_null(df):
+    df = df.loc[:, df.any()]
     return df
 
 
