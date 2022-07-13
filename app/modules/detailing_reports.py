@@ -61,7 +61,7 @@ def k_revenue(sum, mean, last):
 
 def k_logistic(log_rub, to_rub):
     # каково отношение денег к перечислению и денег, потраченных на логистику:
-    if log_rub == 0:
+    if to_rub == 0:
         return 1
     k_log = log_rub / to_rub
     # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
@@ -82,7 +82,7 @@ def k_net_cost(net_cost, price_disc):
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
     if price_disc <= net_cost:
-        return 0.75
+        return 0.80
     if price_disc >= net_cost * 2 and net_cost < 1000:
         return 1.01
     if price_disc >= net_cost * 3 and net_cost < 1000:
