@@ -105,7 +105,7 @@ def revenue_processing():
         df_complete = df_stock.merge(df, how='outer', on='nm_id')
         df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
 
-        df = detailing_reports.get_revenue_column_by_part(df, period_dates_list)
+        df = detailing_reports.get_revenue_by_part(df, period_dates_list)
         df = detailing_reports.df_stay_not_null(df)
 
         df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
@@ -133,7 +133,7 @@ def revenue_processing():
         df['k_discount'] = 1
         # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
         df = detailing_reports.get_k_discount(df, df_revenue_col_name_list)
-        df['Согласованная скидка, %'] = df['discount'] * df['k_discount']
+        df['Согласованная скидка, %'] = round(df['discount'] * df['k_discount'], 0)
 
         # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 

@@ -27,28 +27,35 @@ NEW_COL_ON_REVENUE = [
 
 ]
 
+DEFAULT_NET_COST = 1000
+
 
 # /// --- K REVENUE FORMING ---
-def k_is_sell(q_sum, qt):
+def k_is_sell(sell_sum, qt_full):
     # нет продаж и товара много
-    if q_sum == 0:
-        if qt <= 10:
-            return 1.01
-        if 10 < qt <= 50:
-            return 1.02
-        if 50 < qt <= 100:
-            return 1.05
-        if 100 < qt <= 1000:
-            return 1.1
+    k = 1
+    if sell_sum < 5:
+        k = 1
+    if not sell_sum:
+        k = 1.02
+    if qt_full <= 10:
+        return 1.01 * k
+    if 10 < qt_full <= 50:
+        return 1.02 * k
+    if 50 < qt_full <= 100:
+        return 1.05 * k
+    if 100 < qt_full <= 1000:
+        return 1.1 * k
+    return 1
 
 
 def k_revenue(sum, mean, last):
     if sum > 0 and mean > 0 and last > 0:
         return 1
     if sum < 0 and mean < 0 and last < 0:
-        return 0.5
-    if sum > 0 and mean > 0 and last < 0:
         return 0.9
+    if sum > 0 and mean > 0 and last < 0:
+        return 0.95
     return 1
 
 
@@ -56,26 +63,33 @@ def k_logistic(log_rub, to_rub):
     # каково отношение денег к перечислению и денег, потраченных на логистику:
     if log_rub == 0:
         return 1
-    k_log = to_rub / log_rub
+    k_log = log_rub / to_rub
     # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
     if k_log > 1:
         # если логистика = всему что к перечислению, то уменьшаем скидку на порядок
-        return 0.1
+        return 0.5
     if k_log > 0.5:
         # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
-        return 0.5
+        return 0.75
     if k_log > 0.25:
         # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
-        return 0.75
+        return 0.95
     # в остальных случаях оставляем скидку без изменения
     return 1
 
 
 def k_net_cost(net_cost, price_disc):
-    if price_disc >= net_cost:
+    if net_cost == 0:
+        net_cost = DEFAULT_NET_COST
+    if price_disc <= net_cost:
         return 0.75
     if price_disc >= net_cost * 2 and net_cost < 1000:
-        return 0.9
+        return 1.01
+    if price_disc >= net_cost * 3 and net_cost < 1000:
+        return 1.02
+    if price_disc >= net_cost * 2 and net_cost >= 1000:
+        return 1.03
+    return 1
 
 
 def get_k_discount(df, df_revenue_col_name_list):
@@ -88,6 +102,7 @@ def get_k_discount(df, df_revenue_col_name_list):
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']
+
     return df
 
 
@@ -283,7 +298,7 @@ def change_order_df_columns(df):
     return df
 
 
-def get_revenue_column_by_part(df, period_dates_list=None):
+def get_revenue_by_part(df, period_dates_list=None):
     df.replace(np.NaN, 0, inplace=True)
 
     for date in period_dates_list:
