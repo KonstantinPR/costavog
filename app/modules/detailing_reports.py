@@ -84,18 +84,24 @@ def k_revenue(sum, mean, last):
     return 1
 
 
-def k_logistic(log_rub, to_rub):
+def k_logistic(log_rub, to_rub, from_rub):
+    # если возвратов больше чем продаж за вычетом логистики - цену не меняем, смотрим на контент - почему возвращают
+    if to_rub - log_rub < from_rub or to_rub - from_rub < 0:
+        return 1
+
+    tofrom_rub = to_rub - from_rub
+
     # каково отношение денег к перечислению и денег, потраченных на логистику:
     if to_rub == 0:
         return 1
-    k_log = log_rub / to_rub
+    k_log = log_rub / tofrom_rub
     # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
     if k_log > 1 or k_log < 0:
-        # если логистика = всему что к перечислению, то уменьшаем скидку пополам
-        return 0.50
+        # если логистика = всему что к перечислению, то сильно уменьшаем скидку
+        return 0.75
     if k_log > 0.5:
         # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
-        return 0.80
+        return 0.90
     if k_log > 0.25:
         # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
         return 0.98
@@ -123,7 +129,8 @@ def get_k_discount(df, df_revenue_col_name_list):
     # постоянно растет или падает прибыль, отрицательная или положительная
     df['k_revenue'] = [k_revenue(x, y, z) for x, y, z in zip(df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
     # Защита от покатушек - поднимаем цену
-    df['k_logistic'] = [k_logistic(x, y) for x, y in zip(df['Логистика руб'], df['Перечисление руб'])]
+    df['k_logistic'] = [k_logistic(x, y, z) for x, y, z in
+                        zip(df['Логистика руб'], df['ppvz_for_pay_Продажа'], df['ppvz_for_pay_Возврат'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']
@@ -297,8 +304,8 @@ def df_reorder_important_col_desc_first(df):
     important_col_list = IMPORTANT_COL_DESC
     n = 0
     col_list = df.columns.tolist()
-    for col in col_list:
-        if col in important_col_list:
+    for col in important_col_list:
+        if col in col_list:
             idx = col_list.index(col)
             col_list[idx], col_list[n] = col_list[n], col_list[idx]
             n += 1
@@ -308,10 +315,10 @@ def df_reorder_important_col_desc_first(df):
 
 def df_reorder_important_col_report_first(df):
     important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_DESC) - 1
+    n = len(IMPORTANT_COL_DESC)
     col_list = df.columns.tolist()
-    for col in col_list:
-        if col in important_col_list:
+    for col in important_col_list:
+        if col in col_list:
             idx = col_list.index(col)
             col_list[idx], col_list[n] = col_list[n], col_list[idx]
             n += 1
@@ -320,7 +327,7 @@ def df_reorder_important_col_report_first(df):
 
 
 def df_reorder_revenue_col_first(df):
-    n = len(IMPORTANT_COL_DESC) + len(IMPORTANT_COL_REPORT) - 1
+    n = len(IMPORTANT_COL_DESC) + len(IMPORTANT_COL_REPORT)
     col_list = df.columns.tolist()
     for col in col_list:
         if "Прибыль" in col:
@@ -336,7 +343,8 @@ def df_stay_not_null(df):
     return df
 
 
-def get_revenue_by_part(df, period_dates_list=None):
+def get_revenue_by_part(df: pd.DataFrame, period_dates_list: list = None) -> pd.DataFrame:
+    """break up revenue report in parts by date periods"""
     df.replace(np.NaN, 0, inplace=True)
 
     for date in period_dates_list:
@@ -373,7 +381,7 @@ def df_column_set_to_str(df):
     return df
 
 
-def _change_old_column_name(df):
+def _merge_old_column_name(df):
     # соединяем старые названия возврата - корректный вовзрат и продажа - корректная продажа
     if 'ppvz_for_pay_Корректная продажа' in df:
         df['ppvz_for_pay_Продажа'] = df['ppvz_for_pay_Корректная продажа'] + df['ppvz_for_pay_Продажа']
@@ -417,7 +425,8 @@ def get_wb_sales_realization_pivot(df):
 
     df = df1.merge(df2, how='left', on='nm_id')
     df = df_column_set_to_str(df)
-    df = _change_old_column_name(df)
+    df.replace(np.NaN, 0, inplace=True)
+    df = _merge_old_column_name(df)
 
     return df
 
@@ -464,6 +473,7 @@ def get_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
                         margins=False)
     df = df.reset_index().rename_axis(None, axis=1)
     df = df.rename(columns={'nmId': 'nm_id'})
+    df.replace(np.NaN, 0, inplace=True)
 
     return df
 

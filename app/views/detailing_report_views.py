@@ -32,14 +32,7 @@ def get_wb_price_api():
 @login_required
 def revenue_processing():
     """
-
-    to get some periods of sells and take speed data on revenue
-    for examples first period revenue 5, second -2, third 1:
-    1. gap between max and min revenue in all periods
-    so can count medium: 5+(-2)+1 = 4
-    or count speed: first: -2-5 = -7, second: 1-(-2) = 3, speed = (-7 + 3) / 2 = -2
-    or count max speed: 3, min speed: -7
-
+    correcting existing discount via analizing revenue dinamics and stocks
     """
 
     date_format = "%Y-%m-%d"
@@ -50,6 +43,7 @@ def revenue_processing():
 
     if request.method == 'POST':
 
+        # --- REQUEST PROCESSING ---
         if request.form.get('date_from'):
             date_from = request.form.get('date_from')
         else:
@@ -78,9 +72,18 @@ def revenue_processing():
         else:
             date_parts = 3
 
+        # --- GET DATA VIA WB API /// ---
         # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        df_stock = detailing_reports.get_wb_stock_api()
+        # df_stock = pd.read_excel("wb_stock.xlsx")
+
+        # --- GET DATA FROM DB /// ---
+        df_net_cost = pd.read_sql(
+            db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+
         df_sales_pivot = detailing_reports.get_wb_sales_realization_pivot(df_sales)
+        df_sales_pivot.to_excel('sales_pivot.xlsx')
         df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
@@ -96,13 +99,9 @@ def revenue_processing():
             df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
             df = df_pivot
 
-        df_stock = detailing_reports.get_wb_stock_api()
-        # df_stock = pd.read_excel("wb_stock.xlsx")
         df_price = detailing_reports.get_wb_price_api()
         df = df_price.merge(df, how='outer', on='nm_id')
 
-        df_net_cost = pd.read_sql(
-            db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
         df_complete = df_stock.merge(df, how='outer', on='nm_id')
         df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
 
@@ -129,7 +128,7 @@ def revenue_processing():
         # чтобы были видны итоговые значения из первоначальной таблицы с продажами
         df = df.merge(df_sales_pivot, how='outer', on='nm_id')
 
-        # --- /// Принятие решения о скидке на основе сформированных данных ---
+        # Принятие решения о скидке на основе сформированных данных ---
         # коэффициент влияния на скидку
         df['k_discount'] = 1
         # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
@@ -141,6 +140,7 @@ def revenue_processing():
         df = detailing_reports.df_reorder_important_col_desc_first(df)
         df = detailing_reports.df_reorder_important_col_report_first(df)
         df = detailing_reports.df_reorder_revenue_col_first(df)
+        df = df.sort_values(by='Прибыль_sum')
 
         # создаем стили для лучшей визуализации таблицы
         sf = StyleFrame(df)
