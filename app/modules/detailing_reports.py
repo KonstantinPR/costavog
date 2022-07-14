@@ -77,28 +77,36 @@ def k_revenue(sum, mean, last):
         return 0.99
     # если прибыль отрицательная и падает - минимизируем покатушки - поднимаем цены
     if sum < 0 and mean < 0 and last < 0:
-        return 0.95
+        return 0.90
     # если последний период отрицательный - чуть поднимаем цену для минимизации эффекта покатушек
     if sum > 0 and mean > 0 and last < 0:
         return 0.98
     return 1
 
 
-def k_logistic(log_rub, to_rub, from_rub):
+def k_logistic(log_rub, to_rub, from_rub, net_cost):
     # если возвратов больше чем продаж за вычетом логистики - цену не меняем, смотрим на контент - почему возвращают
+    if to_rub == 0 and log_rub < net_cost / 2:
+        return 1
+    if to_rub < log_rub and log_rub > 500:
+        return 0.90
+
+    if to_rub < from_rub:
+        return 1.02
+
     if to_rub - log_rub < from_rub or to_rub - from_rub < 0:
         return 1
 
     tofrom_rub = to_rub - from_rub
 
     # каково отношение денег к перечислению и денег, потраченных на логистику:
-    if to_rub == 0:
-        return 1
+    if tofrom_rub == 0:
+        return 0.98
     k_log = log_rub / tofrom_rub
     # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
     if k_log > 1 or k_log < 0:
         # если логистика = всему что к перечислению, то сильно уменьшаем скидку
-        return 0.75
+        return 0.90
     if k_log > 0.5:
         # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
         return 0.90
@@ -130,7 +138,8 @@ def get_k_discount(df, df_revenue_col_name_list):
     df['k_revenue'] = [k_revenue(x, y, z) for x, y, z in zip(df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
     # Защита от покатушек - поднимаем цену
     df['k_logistic'] = [k_logistic(x, y, z) for x, y, z in
-                        zip(df['Логистика руб'], df['ppvz_for_pay_Продажа'], df['ppvz_for_pay_Возврат'])]
+                        zip(df['Логистика руб'], df['ppvz_for_pay_Продажа'], df['ppvz_for_pay_Возврат'],
+                            df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']
