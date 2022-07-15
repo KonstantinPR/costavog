@@ -32,7 +32,7 @@ def get_wb_price_api():
 @login_required
 def revenue_processing():
     """
-    correcting existing discount via analizing revenue dinamics and stocks
+    correcting existing discount via analise revenue dynamics and stocks
     """
 
     date_format = "%Y-%m-%d"
@@ -122,11 +122,13 @@ def revenue_processing():
         df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
         df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
         df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
-        df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа" in col]].sum(axis=1) - \
-                                 df[[col for col in df.columns if "ppvz_for_pay_Возврат" in col]].sum(axis=1)
+
 
         # чтобы были видны итоговые значения из первоначальной таблицы с продажами
         df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+
+        df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
+                                 df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1)
 
         # Принятие решения о скидке на основе сформированных данных ---
         # коэффициент влияния на скидку
@@ -160,7 +162,6 @@ def revenue_processing():
 @app.route('/get_wb_pivot_sells_api', methods=['POST', 'GET'])
 @login_required
 def get_wb_pivot_sells_api():
-    """To get speed of sales for all products in period"""
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':

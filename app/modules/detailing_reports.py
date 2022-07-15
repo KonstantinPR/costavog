@@ -86,9 +86,9 @@ def k_revenue(sum, mean, last):
 
 def k_logistic(log_rub, to_rub, from_rub, net_cost):
     # если возвратов больше чем продаж за вычетом логистики - цену не меняем, смотрим на контент - почему возвращают
-    if to_rub == 0 and log_rub < net_cost / 2:
+    if to_rub == 0 and log_rub <= net_cost / 2:
         return 1
-    if to_rub < log_rub and log_rub > 500:
+    if to_rub < log_rub and log_rub > net_cost:
         return 0.90
 
     if to_rub < from_rub:
@@ -121,7 +121,9 @@ def k_net_cost(net_cost, price_disc):
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
     if price_disc <= net_cost:
-        return 0.80
+        return 0.90
+    if price_disc <= net_cost * 1.5:
+        return 0.95
     if price_disc >= net_cost * 2 and net_cost < 1000:
         return 1.01
     if price_disc >= net_cost * 3 and net_cost < 1000:
@@ -137,8 +139,8 @@ def get_k_discount(df, df_revenue_col_name_list):
     # постоянно растет или падает прибыль, отрицательная или положительная
     df['k_revenue'] = [k_revenue(x, y, z) for x, y, z in zip(df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
     # Защита от покатушек - поднимаем цену
-    df['k_logistic'] = [k_logistic(x, y, z) for x, y, z in
-                        zip(df['Логистика руб'], df['ppvz_for_pay_Продажа'], df['ppvz_for_pay_Возврат'],
+    df['k_logistic'] = [k_logistic(w, x, y, z) for w, x, y, z in
+                        zip(df['Логистика руб'], df['ppvz_for_pay_Продажа_sum'], df['ppvz_for_pay_Возврат_sum'],
                             df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
