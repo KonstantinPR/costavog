@@ -88,6 +88,8 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
     # если возвратов больше чем продаж за вычетом логистики - цену не меняем, смотрим на контент - почему возвращают
     if to_rub == 0 and log_rub <= net_cost / 2:
         return 1
+    if to_rub != 0 and to_rub - from_rub <= log_rub:
+        return 0.95
     if to_rub < log_rub and log_rub > net_cost:
         return 0.90
 

@@ -54,6 +54,8 @@ def data_to_spec_merging():
         df_to = pd.read_excel(uploaded_files[1])
         if request.form.get('name_on'):
             name_on = request.form.get('name_on')
+            if ',' in name_on:
+                name_on = name_on.split(',')
         # df_from.replace(np.NaN, "", inplace=True)
 
         df_to = df_to.merge(df_from, copy=False, how='inner', on=name_on, suffixes=("", "_drop_column_on"))
