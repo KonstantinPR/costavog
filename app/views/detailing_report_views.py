@@ -73,8 +73,8 @@ def revenue_processing():
             date_parts = 3
 
         # --- GET DATA VIA WB API /// ---
-        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
         df_stock = detailing_reports.get_wb_stock_api()
         # df_stock = pd.read_excel("wb_stock.xlsx")
 
@@ -83,7 +83,7 @@ def revenue_processing():
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
 
         df_sales_pivot = detailing_reports.get_wb_sales_realization_pivot(df_sales)
-        df_sales_pivot.to_excel('sales_pivot.xlsx')
+        # df_sales_pivot.to_excel('sales_pivot.xlsx')
         df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
