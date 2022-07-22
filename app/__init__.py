@@ -24,6 +24,7 @@ app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
 app.config['NOBODY'] = 'nobody'
+app.config['KEY_FILES'] = 'TASKER/KEY_FILES'
 
 db.init_app(app)
 login.init_app(app)

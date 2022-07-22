@@ -31,6 +31,8 @@ def get_wb_price_api():
     return send_file(file, attachment_filename='price.xlsx', as_attachment=True)
 
 
+
+
 @app.route('/revenue_processing', methods=['POST', 'GET'])
 @login_required
 def revenue_processing():
@@ -155,6 +157,12 @@ def revenue_processing():
                               style_header=True)
 
         file = io_output.io_output_styleframe(sf)
+
+        # добавляем полученный файл на яндекс.диск
+        # is_added_to_yandex_disk =
+
+
+        y.upload("file_to_upload.txt", "/destination.txt")
 
         return send_file(file,
                          attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
