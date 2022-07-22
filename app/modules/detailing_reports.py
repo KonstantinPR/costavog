@@ -1,20 +1,15 @@
-import os
 from app import app
-import zipfile
+from functools import reduce
+import math
+import requests
+from app.models import Product, db
+import datetime
 import pandas as pd
 import numpy as np
-import os
-import io
+from app.modules import yandex_disk_handler
 from app.modules import io_output
-from os import listdir
-from datetime import datetime, timedelta
-from app.models import Company, UserModel, Transaction, Task, Product, db
-import requests
 import time
-from functools import reduce
-from copy import copy
-import re
-import math
+from styleframe import StyleFrame, Styler
 
 IMPORTANT_COL_DESC = [
     'brand_name',
@@ -47,12 +42,127 @@ NEW_COL_ON_REVENUE = [
 
 DEFAULT_NET_COST = 1000
 
+DATE_FORMAT = "%Y-%m-%d"
+DAYS_DELAY_REPORT = 5
+DATE_PARTS = 3
 
 
+def revenue_processing_module(request):
+    """forming via wb api table dynamic revenue and correcting discount"""
+    # --- REQUEST PROCESSING ---
+    if request.form.get('date_from'):
+        date_from = request.form.get('date_from')
+    else:
+        date_from = datetime.datetime.today() - datetime.timedelta(
+            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
+        date_from = date_from.strftime(DATE_FORMAT)
 
+    print(f"type is {type(date_from)}")
 
+    if request.form.get('date_end'):
+        date_end = request.form.get('date_end')
+    else:
+        date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
+        date_end = date_end.strftime(DATE_FORMAT)
+        # date_end = time.strftime(date_format)- datetime.timedelta(3)
 
+    print(date_end)
 
+    if request.form.get('days_step'):
+        days_step = request.form.get('days_step')
+    else:
+        days_step = app.config['DAYS_STEP_DEFAULT']
+
+    if request.form.get('part_by'):
+        date_parts = request.form.get('part_by')
+    else:
+        date_parts = DATE_PARTS
+
+    # --- GET DATA VIA WB API /// ---
+    df_sales = get_wb_sales_realization_api(date_from, date_end, days_step)
+    # df_sales.to_excel('df_sales_excel_new.xlsx')
+    # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+    df_stock = get_wb_stock_api()
+    # df_stock = pd.read_excel("wb_stock.xlsx")
+
+    # --- GET DATA FROM DB /// ---
+    df_net_cost = pd.read_sql(
+        db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+
+    df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
+    # df_sales_pivot.to_excel('sales_pivot.xlsx')
+    # таблица с итоговыми значениями с префиксом _sum
+    df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
+    days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
+    period_dates_list = get_period_dates_list(date_from, date_end, days_bunch, date_parts)
+    df_sales_list = dataframe_divide(df_sales, period_dates_list, date_from)
+
+    # df_pivot_list = []
+    df_pivot_list = [get_wb_sales_realization_pivot(d) for d in df_sales_list]
+
+    df = df_pivot_list[0]
+    date = iter(period_dates_list[1:])
+    df_p = df_pivot_list[1:]
+    for d in df_p:
+        df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
+        df = df_pivot
+
+    df_price = get_wb_price_api()
+    df = df_price.merge(df, how='outer', on='nm_id')
+
+    df_complete = df_stock.merge(df, how='outer', on='nm_id')
+    df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
+
+    df = get_revenue_by_part(df, period_dates_list)
+    df = df_stay_not_null(df)
+
+    df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
+    df_revenue_col_name_list = df_revenue_column_name_list(df)
+
+    # Формируем обобщающие показатели перед присоединением общей таблицы продаж с префиксом _sum
+    df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
+    df['Прибыль_min'] = df[df_revenue_col_name_list].min(axis=1)
+    df['Прибыль_sum'] = df[df_revenue_col_name_list].sum(axis=1)
+    df['Прибыль_mean'] = df[df_revenue_col_name_list].mean(axis=1)
+    df['Прибыль_first'] = df[df_revenue_col_name_list[0]]
+    df['Прибыль_last'] = df[df_revenue_col_name_list[len(df_revenue_col_name_list) - 1]]
+    df['Прибыль_growth'] = df['Прибыль_last'] - df['Прибыль_first']
+    df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
+    df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
+    df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
+
+    # чтобы были видны итоговые значения из первоначальной таблицы с продажами
+    df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+
+    df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
+                             df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1)
+
+    # Принятие решения о скидке на основе сформированных данных ---
+    # коэффициент влияния на скидку
+    df['k_discount'] = 1
+    # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
+    df = get_k_discount(df, df_revenue_col_name_list)
+    df['Согласованная скидка, %'] = round(df['discount'] * df['k_discount'], 0)
+
+    # df = detailing_reports.df_revenue_speed(df, period_dates_list)
+    # реорганизуем порядок следования столбцов для лучшей читаемости
+    df = df_reorder_important_col_desc_first(df)
+    df = df_reorder_important_col_report_first(df)
+    df = df_reorder_revenue_col_first(df)
+    df = df.sort_values(by='Прибыль_sum')
+
+    # создаем стили для лучшей визуализации таблицы
+    sf = StyleFrame(df)
+    sf.apply_column_style(IMPORTANT_COL_REPORT,
+                          styler_obj=Styler(bg_color='FFFFCC'),
+                          style_header=True)
+
+    file_name = f"wb_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
+    file_content = io_output.io_output_styleframe(sf)
+    # добавляем полученный файл на яндекс.диск
+    yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)
+
+    return sf, file_name
 
 
 # /// --- K REVENUE FORMING ---
@@ -167,7 +277,7 @@ def df_revenue_growth(df, df_revenue_col_name_list):
     return growth
 
 
-def df_revenue_col_name_list(df):
+def df_revenue_column_name_list(df):
     df_revenue_col_name_list = [col for col in df.columns if f'Прибыль_' in col]
     return df_revenue_col_name_list
 
@@ -182,7 +292,7 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     print(df)
 
     if isinstance(date_from, str):
-        date_from = datetime.strptime(date_from, date_format)
+        date_from = datetime.datetime.strptime(date_from, date_format)
 
     df_list = []
 
@@ -202,9 +312,9 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
 
 def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, date_format="%Y-%m-%d"):
     period_dates_list = []
-    date_from = datetime.strptime(date_from, date_format)
-    date_end = datetime.strptime(date_end, date_format)
-    date_end_local = date_from + timedelta(days_bunch)
+    date_from = datetime.datetime.strptime(date_from, date_format)
+    date_end = datetime.datetime.strptime(date_end, date_format)
+    date_end_local = date_from + datetime.timedelta(days_bunch)
 
     print(type(date_end_local))
     print(type(date_end))
@@ -216,8 +326,8 @@ def get_period_dates_list(date_from, date_end, days_bunch, date_parts=1, date_fo
         print(f"date_parts {date_parts}")
         print(f"date_end_local {date_end_local}")
         print(f"days bunch {days_bunch}")
-        date_end_local = date_end_local + timedelta(days_bunch)
-        date_end_local = datetime(date_end_local.year, date_end_local.month, date_end_local.day)
+        date_end_local = date_end_local + datetime.timedelta(days_bunch)
+        date_end_local = datetime.datetime(date_end_local.year, date_end_local.month, date_end_local.day)
         print(f"date_local_end {date_end_local}\n")
         print(type(date_end_local))
         print(f"date_end {date_end}\n")
@@ -231,7 +341,7 @@ def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format=
     date_format = "%Y-%m-%d"
     if not date_parts:
         date_parts = 1
-    delta = datetime.strptime(date_end, date_format) - datetime.strptime(date_from, date_format)
+    delta = datetime.datetime.strptime(date_end, date_format) - datetime.datetime.strptime(date_from, date_format)
     delta = delta.days
 
     days_bunch = int(int(delta) / int(date_parts))
@@ -545,12 +655,5 @@ def get_wb_sales_realization_pivot2(df):
 
     df = reduce(lambda left, right: pd.merge(left, right, on=['nm_id'],
                                              how='outer'), dfs)
-
-    # df_pivot = df.pivot_table(index=['nm_id'],
-    #                           values=['ppvz_for_pay',
-    #                                   'delivery_rub', ],
-    #                           aggfunc={'ppvz_for_pay': sum,
-    #                                    'delivery_rub': sum, },
-    #                           margins=False)
 
     return df

@@ -48,6 +48,9 @@ def config():
     app.config['DAYS_STEP_DEFAULT'] = 7
 
 
+
+
+
 from app.views import crop_images_views
 from app.views import profile_views
 from app.views import transactions_views
