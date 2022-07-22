@@ -152,17 +152,17 @@ def revenue_processing_module(request):
     df = df.sort_values(by='Прибыль_sum')
 
     # создаем стили для лучшей визуализации таблицы
-    sf = StyleFrame(df)
-    sf.apply_column_style(IMPORTANT_COL_REPORT,
-                          styler_obj=Styler(bg_color='FFFFCC'),
-                          style_header=True)
+    # sf = StyleFrame(df)
+    # sf.apply_column_style(IMPORTANT_COL_REPORT,
+    #                       styler_obj=Styler(bg_color='FFFFCC'),
+    #                       style_header=True)
 
     file_name = f"wb_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
-    file_content = io_output.io_output_styleframe(sf)
+    file_content = io_output.io_output_styleframe(df)
     # добавляем полученный файл на яндекс.диск
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)
 
-    return sf, file_name
+    return df, file_name
 
 
 # /// --- K REVENUE FORMING ---

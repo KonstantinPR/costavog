@@ -4,9 +4,24 @@ from flask_login import login_required, current_user
 from app.models import Product, db
 import datetime
 import pandas as pd
-from app.modules import detailing, detailing_reports
+from app.modules import detailing, detailing_reports, yandex_disk_handler
 from app.modules import io_output
 import time
+
+
+@app.route('/key_indicators', methods=['POST', 'GET'])
+@login_required
+def key_indicators():
+    """
+    to show key indicators from revenue_tables via yandex_disk file or revenue_processing route
+    """
+
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    file_content, file_name = yandex_disk_handler.download_to_yandex_disk()
+    file = io_output.io_output(file_content)
+    return send_file(file, attachment_filename=file_name, as_attachment=True)
 
 
 @app.route('/revenue_processing', methods=['POST', 'GET'])
@@ -22,8 +37,8 @@ def revenue_processing():
     if request.method == 'POST':
         sf_df, file_name = detailing_reports.revenue_processing_module(request)
         print(file_name)
-        file_content = io_output.io_output_styleframe(sf_df)
-        return send_file(file_content, download_name=file_name, as_attachment=True)
+        file_excel = io_output.io_output_styleframe(sf_df)
+        return send_file(file_excel, download_name=file_name, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
 
