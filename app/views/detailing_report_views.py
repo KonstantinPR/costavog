@@ -23,7 +23,6 @@ def revenue_processing():
         sf_df, file_name = detailing_reports.revenue_processing_module(request)
         print(file_name)
         file_content = io_output.io_output_styleframe(sf_df)
-
         return send_file(file_content, download_name=file_name, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
