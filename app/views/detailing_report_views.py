@@ -12,13 +12,10 @@ from io import BytesIO
 import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
-from app.modules import discount, detailing, detailing_reports, sql_query_main
+from app.modules import discount, detailing, detailing_reports, sql_query_main, yandex_disk_handler
 from app.modules import io_output
 import time
 from styleframe import StyleFrame, Styler, utils
-
-
-
 
 
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])
@@ -29,8 +26,6 @@ def get_wb_price_api():
     df = detailing_reports.get_wb_price_api()
     file = io_output.io_output(df)
     return send_file(file, attachment_filename='price.xlsx', as_attachment=True)
-
-
 
 
 @app.route('/revenue_processing', methods=['POST', 'GET'])
@@ -78,9 +73,9 @@ def revenue_processing():
             date_parts = 3
 
         # --- GET DATA VIA WB API /// ---
-        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales.to_excel('df_sales_excel_new.xlsx')
-        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        # df_sales.to_excel('df_sales_excel_new.xlsx')
+        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
         df_stock = detailing_reports.get_wb_stock_api()
         # df_stock = pd.read_excel("wb_stock.xlsx")
 
@@ -159,10 +154,9 @@ def revenue_processing():
         file = io_output.io_output_styleframe(sf)
 
         # добавляем полученный файл на яндекс.диск
-        # is_added_to_yandex_disk =
-
-
-        y.upload("file_to_upload.txt", "/destination.txt")
+        file_name = "wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
+        is_added_to_yandex_disk = yandex_disk_handler.upload_to_yandex_disk(file, file_name)
+        flash(is_added_to_yandex_disk)
 
         return send_file(file,
                          attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
