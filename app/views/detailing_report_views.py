@@ -73,9 +73,9 @@ def revenue_processing():
             date_parts = 3
 
         # --- GET DATA VIA WB API /// ---
-        # df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
-        # df_sales.to_excel('df_sales_excel_new.xlsx')
-        df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+        df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df_sales.to_excel('df_sales_excel_new.xlsx')
+        # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
         df_stock = detailing_reports.get_wb_stock_api()
         # df_stock = pd.read_excel("wb_stock.xlsx")
 
@@ -151,15 +151,15 @@ def revenue_processing():
                               styler_obj=Styler(bg_color='FFFFCC'),
                               style_header=True)
 
+
+        file_name = f"wb_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
         file = io_output.io_output_styleframe(sf)
 
         # добавляем полученный файл на яндекс.диск
-        file_name = "wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
-        is_added_to_yandex_disk = yandex_disk_handler.upload_to_yandex_disk(file, file_name)
-        flash(is_added_to_yandex_disk)
+        yandex_disk_handler.upload_to_yandex_disk(file, file_name)
 
         return send_file(file,
-                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
+                         attachment_filename=file_name,
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')

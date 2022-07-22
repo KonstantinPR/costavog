@@ -48,6 +48,13 @@ NEW_COL_ON_REVENUE = [
 DEFAULT_NET_COST = 1000
 
 
+
+
+
+
+
+
+
 # /// --- K REVENUE FORMING ---
 def k_is_sell(sell_sum, qt_full):
     # нет продаж и товара много

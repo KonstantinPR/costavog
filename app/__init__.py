@@ -17,6 +17,7 @@ if uri:
         uri = uri.replace("postgres://", "postgresql://", 1)
 
 # app config
+app.config['APP_NAME'] = 'TASKER'
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost:8000/data'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -24,7 +25,7 @@ app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
 app.config['NOBODY'] = 'nobody'
-app.config['KEY_FILES'] = 'TASKER/KEY_FILES'
+app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 
 db.init_app(app)
 login.init_app(app)
