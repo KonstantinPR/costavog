@@ -65,9 +65,9 @@ def k_is_sell(sell_sum, qt_full):
     if 10 < qt_full <= 50:
         return 1.02 * k
     if 50 < qt_full <= 100:
-        return 1.05 * k
+        return 1.03 * k
     if 100 < qt_full <= 1000:
-        return 1.1 * k
+        return 1.04 * k
     return 1
 
 
@@ -122,16 +122,14 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
 def k_net_cost(net_cost, price_disc):
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
-    if price_disc <= net_cost:
+    k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost) * 2
+    if k_net_cost < 1:  k_net_cost = 1
+    if price_disc <= net_cost * k_net_cost:
         return 0.90
-    if price_disc <= net_cost * 1.5:
-        return 0.95
-    if price_disc >= net_cost * 2 and net_cost < 1000:
+    if price_disc <= net_cost * 1.1 * k_net_cost:
+        return 0.99
+    if price_disc >= net_cost * 2 * k_net_cost:
         return 1.01
-    if price_disc >= net_cost * 3 and net_cost < 1000:
-        return 1.02
-    if price_disc >= net_cost * 2 and net_cost >= 1000:
-        return 1.03
     return 1
 
 
