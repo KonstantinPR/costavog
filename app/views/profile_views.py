@@ -119,12 +119,20 @@ def profile():
         initial_file_path = request.form['initial_file_path']
         yandex_disk_token = request.form['yandex_disk_token']
         wb_api_token = request.form['wb_api_token']
+        wb_api_token2 = request.form['wb_api_token2']
 
         user = UserModel.query.filter_by(id=current_user.id).first()
         user.initial_sum = initial_sum
         user.initial_file_path = initial_file_path
         user.yandex_disk_token = yandex_disk_token
         user.role = role
+
+        company = Company.query.filter_by(id=current_user.id).first()
+        company.wb_api_token = wb_api_token
+        company.wb_api_token2 = wb_api_token2
+
+
+
         db.session.commit()
 
         flash("Changing completed")
@@ -132,7 +140,10 @@ def profile():
         return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
                                initial_file_path=initial_file_path,
                                yandex_disk_token=yandex_disk_token,
-                               wb_api_token=wb_api_token)
+                               wb_api_token=wb_api_token,
+                               wb_api_token2=wb_api_token2,
+
+                               )
 
     current_role = current_user.role
     roles = app.config['ROLES']
@@ -141,6 +152,7 @@ def profile():
     initial_file_path = current_user.initial_file_path
     yandex_disk_token = app.config['YANDEX_TOKEN']
     wb_api_token = app.config['WB_API_TOKEN']
+    wb_api_token2 = app.config['WB_API_TOKEN2']
     points = current_user.points
 
     return render_template('profile.html', user_name=user_name, initial_sum=initial_sum,
@@ -148,6 +160,9 @@ def profile():
                            yandex_disk_token=yandex_disk_token,
                            points=points,
                            wb_api_token=wb_api_token,
+                           wb_api_token2=wb_api_token2,
                            roles=roles,
                            current_role=current_role,
-                           administrator=administrator)
+                           administrator=administrator,
+
+                           )

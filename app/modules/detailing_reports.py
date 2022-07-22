@@ -75,7 +75,7 @@ def k_revenue(sum, mean, last):
     # если прибыль растет - можно чуть увеличить цену
     if sum > 0 and mean > 0 and last > 0:
         return 0.99
-    # если прибыль отрицательная и падает - минимизируем покатушки - поднимаем цены
+    # если прибыль отрицательная и падает - минимизируем покатушки - сильно поднимаем цены
     if sum < 0 and mean < 0 and last < 0:
         return 0.90
     # если последний период отрицательный - чуть поднимаем цену для минимизации эффекта покатушек
@@ -447,7 +447,7 @@ def get_wb_sales_realization_pivot(df):
 def get_wb_price_api():
     headers = {
         'accept': 'application/json',
-        'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjI3YzViYzIzLThlNDktNDNjMy04YTA2LWQ0MDI0ZjRmZDM2ZiJ9._bCg_tfpB1D1TRggc7pOeCWeFKCPy2IQr4FTz8HTk34',
+        'Authorization': app.config['WB_API_TOKEN2'],
     }
 
     response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)

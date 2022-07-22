@@ -74,6 +74,7 @@ def revenue_processing():
 
         # --- GET DATA VIA WB API /// ---
         df_sales = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df_sales.to_excel('df_sales_excel_new.xlsx')
         # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
         df_stock = detailing_reports.get_wb_stock_api()
         # df_stock = pd.read_excel("wb_stock.xlsx")
@@ -84,6 +85,7 @@ def revenue_processing():
 
         df_sales_pivot = detailing_reports.get_wb_sales_realization_pivot(df_sales)
         # df_sales_pivot.to_excel('sales_pivot.xlsx')
+        # таблица с итоговыми значениями с префиксом _sum
         df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
         days_bunch = detailing_reports.get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format)
         period_dates_list = detailing_reports.get_period_dates_list(date_from, date_end, days_bunch, date_parts)
@@ -122,7 +124,6 @@ def revenue_processing():
         df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
         df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
         df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
-
 
         # чтобы были видны итоговые значения из первоначальной таблицы с продажами
         df = df.merge(df_sales_pivot, how='outer', on='nm_id')
@@ -188,7 +189,7 @@ def get_wb_pivot_sells_api():
 
         df = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
-        df_stock = detailing_reports.get_wb_stock_api(date_from, date_end, days_step)
+        df_stock = detailing_reports.get_wb_stock_api(date_from)
         df_net_cost = pd.read_sql(
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
