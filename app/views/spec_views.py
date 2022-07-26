@@ -10,10 +10,24 @@ import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 
 
+@app.route('/data_transcription', methods=['GET', 'POST'])
+@login_required
+def image_name_multiply():
+    """Преобразуемт заполненный лист с данными о товаре с сокращенными абривиатурами в полноценное описание"""
+    """Например z - замша, ки - кирпичик, пл - полусапожки, описание - полусапожки из замши, каблук - кирпичик..."""
+
+
+    if request.method == 'POST':
+
+        return send_file()
+
+    return render_template('upload_txt.html')
+
+
 @app.route('/image_name_multiply', methods=['GET', 'POST'])
 @login_required
 def image_name_multiply():
-    """Обработка файла txt"""
+    """Обработка файла txt - размножит названия артикулей с префиксом -1, -2 и т.д требуемое кол-во раз"""
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']
 
