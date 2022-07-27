@@ -14,8 +14,7 @@
 
     <div class="text-left">
         <div class="row p-2 bg-light">
-            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным
-            через запятую. Спецификация - первая, заполненный произвольный лист эксель - второй</div>
+            <div>{{doc_string}}</div>
         </div>
     </div>
 
@@ -23,7 +22,7 @@
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
                 <form method="post" target="blank" enctype=multipart/form-data
-                      action="{{url_for('data_to_spec_merging')}}">
+                      action="{{url_for('data_to_spec_wb_transcript')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>

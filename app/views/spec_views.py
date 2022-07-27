@@ -5,23 +5,24 @@ from io import BytesIO
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import pandas as pd
-from app.modules import text_handler, io_output
+from app.modules import text_handler, io_output, spec_modifiyer
 import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 
 
-@app.route('/data_transcription', methods=['GET', 'POST'])
+@app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])
 @login_required
-def image_name_multiply():
-    """Преобразуемт заполненный лист с данными о товаре с сокращенными абривиатурами в полноценное описание"""
-    """Например z - замша, ки - кирпичик, пл - полусапожки, описание - полусапожки из замши, каблук - кирпичик..."""
-
+def data_to_spec_wb_transcript():
+    """Преобразуемт заполненный лист с данными о товаре с сокращенными абривиатурами в полноценное описание.
+       Например z - замша, ки - кирпичик, пл - полусапожки, описание - полусапожки из замши, каблук - кирпичик...
+       На входе файл с данными в эксель, на выходе эксель с данными пригодными для спецификации wb"""
 
     if request.method == 'POST':
+        df = spec_modifiyer.data_transcript(flask.request)
+        df_output = io_output.io_output(df)
+        return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
-        return send_file()
-
-    return render_template('upload_txt.html')
+    return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
 
 
 @app.route('/image_name_multiply', methods=['GET', 'POST'])
