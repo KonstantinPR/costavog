@@ -90,7 +90,7 @@ def revenue_processing_module(request):
         db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
 
     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
-    # df_sales_pivot.to_excel('sales_pivot.xlsx')
+    df_sales_pivot.to_excel('sales_pivot.xlsx')
     # таблица с итоговыми значениями с префиксом _sum
     df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
     days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
@@ -104,14 +104,17 @@ def revenue_processing_module(request):
     date = iter(period_dates_list[1:])
     df_p = df_pivot_list[1:]
     for d in df_p:
-        df_pivot = df.merge(d, how="left", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
+        df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
         df = df_pivot
 
-    df_price = get_wb_price_api()
-    df = df_price.merge(df, how='outer', on='nm_id')
+    df.to_excel("predsharlotka.xlsx")
 
-    df_complete = df_stock.merge(df, how='outer', on='nm_id')
-    df = df_complete.merge(df_net_cost, how='left', left_on='sa_name', right_on='article')
+    df_price = get_wb_price_api()
+    df = df.merge(df_price, how='outer', on='nm_id')
+    df.to_excel("sharlotka.xlsx")
+
+    df_complete = df.merge(df_stock, how='outer', on='nm_id')
+    df = df_complete.merge(df_net_cost, how='outer', left_on='sa_name', right_on='article')
 
     df = get_revenue_by_part(df, period_dates_list)
     df = df_stay_not_null(df)
@@ -119,7 +122,7 @@ def revenue_processing_module(request):
     df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
     df_revenue_col_name_list = df_revenue_column_name_list(df)
 
-    # Формируем обобщающие показатели перед присоединением общей таблицы продаж с префиксом _sum
+    # Формируем обобщающие показатели с префиксом _sum перед присоединением общей таблицы продаж
     df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
     df['Прибыль_min'] = df[df_revenue_col_name_list].min(axis=1)
     df['Прибыль_sum'] = df[df_revenue_col_name_list].sum(axis=1)
@@ -143,6 +146,8 @@ def revenue_processing_module(request):
     # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
     df = get_k_discount(df, df_revenue_col_name_list)
     df['Согласованная скидка, %'] = round(df['discount'] * df['k_discount'], 0)
+    df['Номенклатура (код 1С)'] = df['nm_id']
+    df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
     # реорганизуем порядок следования столбцов для лучшей читаемости
@@ -157,7 +162,7 @@ def revenue_processing_module(request):
     #                       styler_obj=Styler(bg_color='FFFFCC'),
     #                       style_header=True)
 
-    file_name = f"wb_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
+    file_name = f"wb_dynamic_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
     file_content = io_output.io_output_styleframe(df)
     # добавляем полученный файл на яндекс.диск
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)
@@ -356,7 +361,7 @@ def combine_date_to_revenue(date_from, date_end, days_step=7):
         db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
     df = df_sales.merge(df_stock, how='outer', on='nm_id')
     df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
-    df = get_revenue_column(df)
+    df = get_revenue(df)
     return df
 
 
@@ -490,7 +495,7 @@ def get_revenue_by_part(df: pd.DataFrame, period_dates_list: list = None) -> pd.
     return df
 
 
-def get_revenue_column(df):
+def get_revenue(df):
     df.replace(np.NaN, 0, inplace=True)
 
     df['Прибыль'] = df['ppvz_for_pay_Продажа'] - \

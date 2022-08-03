@@ -35,9 +35,9 @@ def revenue_processing():
         return redirect('/company_register')
 
     if request.method == 'POST':
-        sf_df, file_name = detailing_reports.revenue_processing_module(request)
+        df, file_name = detailing_reports.revenue_processing_module(request)
         print(file_name)
-        file_excel = io_output.io_output_styleframe(sf_df)
+        file_excel = io_output.io_output_styleframe(df)
         return send_file(file_excel, download_name=file_name, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
@@ -87,7 +87,7 @@ def get_wb_pivot_sells_api():
             db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
         df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
-        df = detailing_reports.get_revenue_column(df)
+        df = detailing_reports.get_revenue(df)
         df = detailing_reports.get_important_columns(df)
         file = io_output.io_output(df)
 
