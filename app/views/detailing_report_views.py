@@ -1,5 +1,5 @@
 from app import app
-from flask import render_template, request, redirect, send_file
+from flask import render_template, request, redirect, send_file, flash
 from flask_login import login_required, current_user
 from app.models import Product, db
 import datetime
@@ -7,6 +7,30 @@ import pandas as pd
 from app.modules import detailing, detailing_reports, yandex_disk_handler
 from app.modules import io_output
 import time
+import numpy as np
+
+
+def revenue_per_one(rev, sel, net, log):
+    rev_per_one = 0
+    if sel and rev:
+        return int(rev / sel)
+    if log:
+        return net - log
+    return rev_per_one
+
+
+def revenue_net_dif(rev_per, net):
+    rev_net_dif = 1
+    if rev_per and net:
+        rev_net_dif = rev_per / net
+    return rev_net_dif
+
+
+def revenue_potential_cost(rev_per, net, qt, k_dif):
+    rev_pot = net * k_dif * qt
+    if rev_per:
+        return rev_per * qt
+    return rev_pot
 
 
 @app.route('/key_indicators', methods=['POST', 'GET'])
@@ -14,14 +38,61 @@ import time
 def key_indicators():
     """
     to show key indicators from revenue_tables via yandex_disk file or revenue_processing route
+    market cost of all products on wb
+    revenue cost of all product on wb (to take medium of revenue if no sells)
     """
 
     if not current_user.is_authenticated:
         return redirect('/company_register')
+    key_indicators = {}
+    file_content, file_name = yandex_disk_handler.download_from_yandex_disk()
+    df = file_content
 
-    file_content, file_name = yandex_disk_handler.download_to_yandex_disk()
-    file = io_output.io_output(file_content)
-    return send_file(file, attachment_filename=file_name, as_attachment=True)
+    df['market_cost'] = df['price_disc'] * df['quantityFull']
+    key_indicators['market_cost'] = df['market_cost'].sum()
+    key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
+        "quantityFull"]).sum() / df[df["net_cost"] != 0]["quantityFull"].sum()
+
+    df['net_cost'] = np.where(df.net_cost == 0, key_indicators['net_cost_med'], df.net_cost)
+
+    df['nets_cost'] = df['net_cost'] * df['quantityFull']
+    key_indicators['nets_cost'] = df['nets_cost'].sum()
+    df['sells_qt_with_back'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
+    key_indicators['sells_qt_with_back'] = df['sells_qt_with_back'].sum()
+    df['revenue_per_one'] = [revenue_per_one(rev, sel, net, log) for
+                             rev, sel, net, log in
+                             zip(df['Прибыль_sum'],
+                                 df['sells_qt_with_back'],
+                                 df['net_cost'],
+                                 df['Логистика руб'],
+                                 )]
+    df['revenue_net_dif'] = [revenue_net_dif(rev_per, net) for
+                             rev_per, net in
+                             zip(df['revenue_per_one'],
+                                 df['net_cost'],
+                                 )]
+
+    key_indicators['revenue_net_dif_med'] = df[df["revenue_net_dif"] != 1]["revenue_net_dif"].mean()
+
+    df['revenue_potential_cost'] = [
+        revenue_potential_cost(rev_per, net, qt, k_dif=key_indicators['revenue_net_dif_med']) for
+        rev_per, net, qt in
+        zip(df['revenue_per_one'],
+            df['net_cost'],
+            df['quantityFull'],
+            )]
+
+    key_indicators['revenue_potential_cost'] = df['revenue_potential_cost'].sum()
+
+    for k, v in key_indicators.items():
+        if not 'revenue_net_dif_med' in k:
+            key_indicators[k] = int(v)
+        print(f'{k} {key_indicators[k]}')
+
+    df = df.from_dict(key_indicators, orient='index', columns=['key_indicator'])
+    file = io_output.io_output(df)
+
+    return send_file(file, download_name=f'key_indicator_of_{file_name}', as_attachment=True)
 
 
 @app.route('/revenue_processing', methods=['POST', 'GET'])

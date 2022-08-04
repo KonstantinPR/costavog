@@ -17,7 +17,7 @@ def upload_to_yandex_disk(file: BytesIO, file_name: str):
     return None
 
 
-def download_to_yandex_disk():
+def download_from_yandex_disk():
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(app.config['YANDEX_KEY_FILES_PATH']))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))

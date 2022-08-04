@@ -47,6 +47,8 @@ DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
 
 
+
+
 def revenue_processing_module(request):
     """forming via wb api table dynamic revenue and correcting discount"""
     # --- REQUEST PROCESSING ---
