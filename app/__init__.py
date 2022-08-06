@@ -61,3 +61,4 @@ from app.views import products_views
 from app.views import yandex_disk
 from app.views import detailing_report_views
 from app.views import spec_views
+from app.views import routes_getter_views

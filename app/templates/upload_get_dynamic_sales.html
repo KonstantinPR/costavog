@@ -14,8 +14,11 @@
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
-            <div>Скачать в excel отчет о прибыльности на основе анализа отчетов о продажах и остатков с сайта wb и
-                данных о себестоимости. Отчет формируется От и до указанных дат. На выходе получим сводную таблицу с
+            <div>Форма формирует отчет в excel о прибыльности на основе анализа отчетов о продажах и остатков с сайта wb
+                и данных о себестоимости. Отчет формируется От и до указанных дат - в случае с динамикой прибыльности
+                отчет будет делиться на указанное количество частей, в каждой из которых будет высчитываться прибыль и
+                далее рассчитыватья показатели на основе изменения прибыли от одного периода к другому. На выходе
+                получим сводную таблицу с
                 реккомендациями по скидке, и динамике прибыльности товаров.
             </div>
         </div>
@@ -62,11 +65,15 @@
                         <!--                                    href="{{url_for('upload_products')}}">здесь</a>)-->
                         <!--                            </label>-->
                         <!--                        </div>-->
-
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('key_indicators')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Ключевые показатели">
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('revenue_processing')}}"
                                    class="btn btn-primary form-control form-control-lg" type="submit"
-                                   value="Сводный отчет о скорости прибыльности">
+                                   value="Сводный отчет о динамике прибыльности">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('get_wb_pivot_sells_api')}}"

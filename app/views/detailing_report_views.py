@@ -37,9 +37,10 @@ def revenue_potential_cost(rev_per, net, qt, k_dif):
 @login_required
 def key_indicators():
     """
-    to show key indicators from revenue_tables via yandex_disk file or revenue_processing route
-    market cost of all products on wb
-    revenue cost of all product on wb (to take medium of revenue if no sells)
+    to show key indicators from revenue_tables via yandex_disk file (or revenue_processing route - planning in future)
+    1 . market cost of all products on wb
+    2 . revenue potential cost of all product on wb (to take medium of revenue if no sells)
+    (potential cost by revenue of all products)
     """
 
     if not current_user.is_authenticated:
@@ -108,7 +109,7 @@ def revenue_processing():
     if request.method == 'POST':
         df, file_name = detailing_reports.revenue_processing_module(request)
         print(file_name)
-        file_excel = io_output.io_output_styleframe(df)
+        file_excel = io_output.io_output(df)
         return send_file(file_excel, download_name=file_name, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')

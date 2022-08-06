@@ -47,8 +47,6 @@ DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
 
 
-
-
 def revenue_processing_module(request):
     """forming via wb api table dynamic revenue and correcting discount"""
     # --- REQUEST PROCESSING ---
@@ -109,17 +107,17 @@ def revenue_processing_module(request):
         df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
         df = df_pivot
 
-    df.to_excel("predsharlotka.xlsx")
+    # df.to_excel("predsharlotka.xlsx")
 
     df_price = get_wb_price_api()
+    # df_price.to_excel("df_price.xlsx")
     df = df.merge(df_price, how='outer', on='nm_id')
-    df.to_excel("sharlotka.xlsx")
+    # df.to_excel("sharlotka.xlsx")
 
     df_complete = df.merge(df_stock, how='outer', on='nm_id')
     df = df_complete.merge(df_net_cost, how='outer', left_on='sa_name', right_on='article')
 
     df = get_revenue_by_part(df, period_dates_list)
-    df = df_stay_not_null(df)
 
     df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
     df_revenue_col_name_list = df_revenue_column_name_list(df)
@@ -164,12 +162,39 @@ def revenue_processing_module(request):
     #                       styler_obj=Styler(bg_color='FFFFCC'),
     #                       style_header=True)
 
+    list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
+    df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)
+    list_re_col_names_brand = ['brand_name_sum']
+    df = combine_duplicate_column(df, 'brand_name', list_re_col_names_brand)
+    list_re_col_names_subject = ['subject_name_sum']
+    df = combine_duplicate_column(df, 'subject_name', list_re_col_names_subject)
+    drop_list = list_re_col_names_brand + list_re_col_names_art + list_re_col_names_subject
+    # df = df.drop(drop_list, axis=1)
+
+    df = df_stay_column_not_null(df)
     file_name = f"wb_dynamic_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
-    file_content = io_output.io_output_styleframe(df)
+    file_content = io_output.io_output(df)
     # добавляем полученный файл на яндекс.диск
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)
 
     return df, file_name
+
+
+def combine_duplicate_column(df, col_name_in: str, list_re_col_names: list):
+    """insert in values of col_name_in dataframe column values from list_re_col_name if 0"""
+    for col_name_from in list_re_col_names:
+        df[col_name_in] = [
+            _insert_missing_values(val_col_in, val_col_from) for
+            val_col_in, val_col_from in
+            zip(df[col_name_in], df[col_name_from])
+        ]
+    return df
+
+
+def _insert_missing_values(val_col_in, val_col_from):
+    if val_col_in:
+        return val_col_in
+    return val_col_from
 
 
 # /// --- K REVENUE FORMING ---
@@ -473,7 +498,7 @@ def df_reorder_revenue_col_first(df):
     return df
 
 
-def df_stay_not_null(df):
+def df_stay_column_not_null(df):
     df = df.loc[:, df.any()]
     return df
 
