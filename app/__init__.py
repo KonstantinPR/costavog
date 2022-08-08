@@ -48,9 +48,6 @@ def config():
     app.config['DAYS_STEP_DEFAULT'] = 7
 
 
-
-
-
 from app.views import crop_images_views
 from app.views import profile_views
 from app.views import transactions_views
@@ -62,3 +59,4 @@ from app.views import yandex_disk
 from app.views import detailing_report_views
 from app.views import spec_views
 from app.views import routes_getter_views
+from app.views import images_foldering_views
