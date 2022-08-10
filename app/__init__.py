@@ -26,6 +26,8 @@ app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
 app.config['NOBODY'] = 'nobody'
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
+app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
+app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ/НОВЫЕ"
 
 db.init_app(app)
 login.init_app(app)

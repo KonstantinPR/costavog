@@ -17,6 +17,7 @@ from werkzeug.datastructures import FileStorage
 import os
 from flask import send_file
 import io
+from app.modules import yandex_disk_handler
 
 
 # Make folders for wb photo that way:
@@ -50,17 +51,27 @@ def dir_listing():
     return abs_path
 
 
+@app.route('/images_foldering_yandisk', methods=['POST', 'GET'])
+@login_required
+def images_foldering_yandisk():
+    yandex_disk_handler.download_images_from_yandex_disk()
+    return render_template('upload_images_foldering.html')
+
+
 @app.route('/images_foldering', methods=['POST', 'GET'])
 @login_required
 def images_foldering():
-    """Get images from local comp, preparing and foldering it on wb and ozon demand, and send it in zip"""
+    """Get images from local comp, preparing and foldering it on wb and ozon demand, and send it in zip
+    on 08.08.2022 work only on local comp with pointing dict where img placed
+    header in txt no need
+    """
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']
-        df = pd.read_csv(file_txt, sep=' ', names=['Article', 'Article_WB'])
+        df = pd.read_csv(file_txt, sep='	', names=['Article', 'Article_WB'])
 
         print(f"file_txt {df}")
 
-        folder = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
+        images_folder = app.config['YANDEX_FOLDER_IMAGE']
         folder_folders = "folder_img"
 
         select = request.form.get('multiply_number')
@@ -76,7 +87,7 @@ def images_foldering():
 
             img_name_list_files = {}
 
-            for entry in os.scandir(folder):
+            for entry in os.scandir(images_folder):
                 for subentry in os.scandir(entry.path):
                     if subentry.is_dir():
                         for file in os.scandir(subentry.path):
@@ -89,7 +100,7 @@ def images_foldering():
                 os.makedirs(f"{folder_folders}/{i}/photo")
 
             val = df['Article'].values[0]
-            print(f"Aricle_by_index {val}")
+            print(f"Article_by_index {val}")
 
             for name, path in img_name_list_files.items():
                 name_clear = re.sub(r'(-9)?-\d.JPG', '', name)
@@ -100,8 +111,8 @@ def images_foldering():
                     if name_clear == j_clear:
                         if typeWB_OZON == 0:
                             shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-                        if typeWB_OZON == "1":
-                            shutil.copyfile(f"{folder}/{name}", f"{folder_folders}/{name}")
+                        if typeWB_OZON == 1:
+                            shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
 
             for j in os.listdir(folder_folders):
                 for d in range(len(df.index)):
@@ -127,22 +138,8 @@ def images_foldering():
 
         exit()
         # HERE I STAY ON 08.08.2022
+
         if typeWB_OZON == 1:
-
-            for root, dirs, files in os.walk(folder):
-                for j in files:
-                    print(j)
-                    if "-1.JPG" in j:
-                        j_re = re.sub(r'(-9)?-\d.JPG', '.JPG', j)
-                    else:
-                        j_re_start = re.sub(r'(-9)?-\d.JPG', '', j)
-                        j_re_end = j[len(j) - 6: len(j)].replace("-", "_")
-                        j_re = j_re_start + j_re_end
-
-                    shutil.copyfile(f"{folder}/{j}", f"{folder_folders}/{j_re}")
-                exit()
-
-        if typeWB_OZON == 2:
             # txt include only one column article without header name
 
             list_art = []
@@ -150,7 +147,7 @@ def images_foldering():
                 list_art.append(line.strip())
             print(list_art)
 
-            for root, dirs, files in os.walk(folder):
+            for root, dirs, files in os.walk(images_folder):
                 for j in files:
                     j_name = re.sub(r'(-9)?-\d.JPG', '', j)
                     if j_name in list_art:
@@ -161,7 +158,7 @@ def images_foldering():
                             j_re_end = j[len(j) - 6: len(j)].replace("-", "_")
                             j_re = j_re_start + j_re_end
 
-                        shutil.copyfile(f"{folder}/{j}", f"{folder_folders}/{j_re}")
+                        shutil.copyfile(f"{images_folder}/{j}", f"{folder_folders}/{j_re}")
                 exit()
 
     return render_template('upload_images_foldering.html')
