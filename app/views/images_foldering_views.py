@@ -61,7 +61,7 @@ def images_foldering_yandisk():
 @app.route('/images_foldering', methods=['POST', 'GET'])
 @login_required
 def images_foldering():
-    """Get images from local comp, preparing and foldering it on wb and ozon demand, and send it in zip
+    """Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
     """
@@ -161,4 +161,4 @@ def images_foldering():
                         shutil.copyfile(f"{images_folder}/{j}", f"{folder_folders}/{j_re}")
                 exit()
 
-    return render_template('upload_images_foldering.html')
+    return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)
