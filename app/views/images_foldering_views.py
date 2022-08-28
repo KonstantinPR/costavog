@@ -18,6 +18,7 @@ import os
 from flask import send_file
 import io
 from app.modules import yandex_disk_handler
+from PIL import Image, ImageDraw, ImageFont
 
 
 # Make folders for wb photo that way:
@@ -49,6 +50,44 @@ def dir_listing():
     # files = os.listdir(abs_path)
     # print(files)
     return abs_path
+
+
+@app.route('/watermark')
+def watermark():
+    base = Image.open('NO8B9709.JPG').convert('RGBA')
+    width, height = base.size
+
+    # make a blank image for the text, initialized to transparent text color
+    txt = Image.new('RGBA', base.size, (255, 255, 255, 0))
+
+    fontsize = 1  # starting font size
+
+    # portion of image width you want text width to be
+    img_fraction = 0.50
+    text = "150 x 200 см."
+    font = ImageFont.truetype("arial.ttf", fontsize)
+    while font.getsize(text)[0] < img_fraction * base.size[0]:
+        # iterate until the text size is just larger than the criteria
+        fontsize += 1
+        font = ImageFont.truetype("arial.ttf", fontsize)
+
+    # optionally de-increment to be sure it is less than criteria
+    fontsize -= 10
+
+    # get a font
+    fnt = ImageFont.truetype('arial.ttf', fontsize)
+    # get a drawing context
+    d = ImageDraw.Draw(txt)
+
+    x = width / 2
+    y = height - fontsize * 2
+
+    # draw text, half opacity
+    d.text((x, y), text, font=fnt, fill=(255, 255, 255, 200))
+    txt = txt.rotate(0)
+
+    out = Image.alpha_composite(base, txt)
+    out.show()
 
 
 @app.route('/images_foldering_yandisk', methods=['POST', 'GET'])
