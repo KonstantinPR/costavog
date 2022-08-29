@@ -116,7 +116,7 @@ def img_foldering(df):
                 if name_clear == j_clear:
                     if typeWB_OZON == 0:
                         shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-                        if j.startswith("WLP") and j.endswith("-1.JPG"):
+                        if j.startswith("WLP") and name.endswith("-1.JPG"):
                             img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
                     if typeWB_OZON == 1:
                         shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")

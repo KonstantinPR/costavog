@@ -54,6 +54,7 @@ def dir_listing():
 
 @app.route('/watermark')
 def watermark():
+    """test watermark placing on image for example"""
     img_processor.img_watermark("NO8B9709.JPG", "NO8B9717.JPG")
 
 
