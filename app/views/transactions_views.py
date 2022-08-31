@@ -14,7 +14,7 @@ from random import randrange
 from flask import url_for
 import os
 import shutil
-from app.modules import transaction_worker
+from app.modules import transaction_worker, decorators
 import urllib.request
 import requests
 
@@ -39,6 +39,7 @@ def correct_desc(description, desc_income):
 @app.route('/transactions', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 @login_required
+@decorators.administrator_required
 def transactions():
     if not current_user.is_authenticated:
         return redirect('/company_register')

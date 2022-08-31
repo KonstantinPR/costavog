@@ -7,6 +7,17 @@ import shutil
 import os
 from app.modules import io_output
 import copy
+from typing import Union
+
+
+def get_excel_file_from_ydisk(path: str) -> pd.DataFrame:
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
+    # file_name = os.path.basename(os.path.normpath(path_yandex_file))
+    bytes_io = BytesIO()
+    y.download(path_yandex_file, bytes_io)
+    file_content = pd.read_excel(bytes_io)
+    return file_content
 
 
 def upload_to_yandex_disk(file: BytesIO, file_name: str):
@@ -117,4 +128,3 @@ def download_images_from_yandex_disk():
     # file_content = pd.read_excel(bytes_io)
     # print(type(file_content))
     return None
-    # return file_content, file_name

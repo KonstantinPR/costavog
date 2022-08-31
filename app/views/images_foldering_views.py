@@ -71,6 +71,7 @@ def images_foldering():
     """Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
+    if good is wool then watermark will be placed like 150 x 300 см.
     """
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']

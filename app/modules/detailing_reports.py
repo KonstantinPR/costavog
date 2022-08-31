@@ -85,9 +85,14 @@ def revenue_processing_module(request):
     df_stock = get_wb_stock_api()
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
-    # --- GET DATA FROM DB /// ---
-    df_net_cost = pd.read_sql(
-        db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+    # --- GET NET_COST FROM DB /// ---
+    # df_net_cost = pd.read_sql(
+    #     db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+
+    # --- GET NET_COST FROM YADISK /// ---
+    df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+
+
 
     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
     df_sales_pivot.to_excel('sales_pivot.xlsx')
@@ -115,7 +120,7 @@ def revenue_processing_module(request):
     # df.to_excel("sharlotka.xlsx")
 
     df_complete = df.merge(df_stock, how='outer', on='nm_id')
-    df = df_complete.merge(df_net_cost, how='outer', left_on='sa_name', right_on='article')
+    df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
 
     df = get_revenue_by_part(df, period_dates_list)
 

@@ -28,6 +28,7 @@ app.config['NOBODY'] = 'nobody'
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ/НОВЫЕ"
+app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
 
 db.init_app(app)
 login.init_app(app)
@@ -47,7 +48,7 @@ def config():
     app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
     app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-    app.config['DAYS_STEP_DEFAULT'] = 14
+    app.config['DAYS_STEP_DEFAULT'] = 30
 
 
 from app.views import crop_images_views
