@@ -27,10 +27,11 @@ def to_round_df(df_result):
 
 def get_wb_stock():
     response = requests.get(
-        'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21%3A00%3A00.000Z&key=DYNwYTcxYjUtMDNjZi00Zjc1LTg3NDQtN2RiM2E2MWRmYzA1')
+        'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21%3A00%3A00.000Z&key=460a71b5-03cf-4f75-8744-7db3a61dfc05')
 
     data = response.json()
     df = pd.DataFrame(data)
+    print(f"df stock_wb {df}")
 
     df_pivot = df.pivot_table(index=['supplierArticle'],
                               values=['quantity',
@@ -206,7 +207,3 @@ def get_wb_sales_api(date_from: datetime, days_step: int):
     df = pd.DataFrame(data)
 
     return df
-
-
-
-
