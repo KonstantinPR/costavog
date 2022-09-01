@@ -23,7 +23,7 @@ def key_indicators():
         return redirect('/company_register')
 
     file_content, file_name = yandex_disk_handler.download_from_yandex_disk()
-    df = detailing_reports.key_indicators_module(file_content, file_name)
+    df = detailing_reports.key_indicators_module(file_content)
     file = io_output.io_output(df)
 
     return send_file(file, download_name=f'key_indicator_of_{file_name}', as_attachment=True)
@@ -97,7 +97,8 @@ def get_wb_pivot_sells_api():
         file = io_output.io_output(df)
 
         return send_file(file,
-                         attachment_filename=f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
+                         attachment_filename=f"wb_revenue_report-"
+                                             f"{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
@@ -177,10 +178,11 @@ def get_wb_stock_api():
 
         print(date_end)
 
-        if request.form.get('days_step'):
-            days_step = request.form.get('days_step')
-        else:
-            days_step = app.config['DAYS_STEP_DEFAULT']
+        # if request.form.get('days_step'):
+        #     days_step = request.form.get('days_step')
+        # else:
+        #     days_step = app.config['DAYS_STEP_DEFAULT']
+
         t = time.process_time()
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)

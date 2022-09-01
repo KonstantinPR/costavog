@@ -9,7 +9,6 @@ import numpy as np
 from app.modules import yandex_disk_handler
 from app.modules import io_output
 import time
-from styleframe import StyleFrame, Styler
 
 IMPORTANT_COL_DESC = [
     'brand_name',
@@ -70,7 +69,7 @@ def _revenue_potential_cost(rev_per, net, qt, k_dif):
     return rev_pot
 
 
-def key_indicators_module(file_content, file_name):
+def key_indicators_module(file_content):
     key_indicators = {}
     df = file_content
 
@@ -366,7 +365,7 @@ def get_k_discount(df, df_revenue_col_name_list):
     # если не было продаж увеличиваем скидку
     df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['quantityFull'])]
     # постоянно растет или падает прибыль, отрицательная или положительная
-    df['k_revenue'] = [k_revenue(w, x, y, z) for x, y, z in
+    df['k_revenue'] = [k_revenue(w, x, y, z) for w, x, y, z in
                        zip(df['quantity_Продажа_sum'], df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
     # Защита от покатушек - поднимаем цену
     df['k_logistic'] = [k_logistic(w, x, y, z) for w, x, y, z in
