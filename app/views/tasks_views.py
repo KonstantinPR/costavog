@@ -1,11 +1,3 @@
-from app import app
-from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
-import datetime
-from sqlalchemy import desc
-import flask
-import yadisk
 from app.modules import task_worker, sql_query_main
 from app import app
 from flask import flash, render_template, request, redirect, send_file
@@ -13,19 +5,8 @@ import flask
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, Transaction, Task, Product, db
 import datetime
-from sqlalchemy import desc, asc, cast, Integer
-import pandas as pd
-from io import BytesIO
-import numpy as np
-import re
-import yadisk
-from random import randrange
-from flask import url_for
-import os
-import shutil
-from app.modules import transaction_worker
-import urllib.request
-import requests
+from sqlalchemy import desc
+
 
 # /// TASKS //////////////////
 
@@ -56,7 +37,7 @@ def tasks():
     # вывод всех текущих операций под формой
     tasks = task_worker.get_all_tasks_user(company_id)
     all_unique_users = sql_query_main.get_unique_users_company()
-    return render_template('tasks.html', tasks=tasks, all_users=all_unique_users, current_user=current_user.user_name)
+    return render_template('tasks.html', tasks=tasks, all_users=all_unique_users)
 
 
 @app.route('/task_edit/<int:id>', methods=['POST', 'GET'])
