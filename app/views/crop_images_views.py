@@ -1,12 +1,8 @@
 from app import app
-from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required
-from app.models import db
-from urllib.parse import urlencode
-from app.modules import img_cropper, io_output
-import pandas as pd
+from flask import render_template, request, send_file
+from app.modules import img_cropper
 import flask
-import requests
+
 
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])

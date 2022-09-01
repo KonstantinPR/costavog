@@ -47,6 +47,79 @@ DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
 
 
+def _revenue_per_one(rev, sel, net, log):
+    rev_per_one = 0
+    if sel and rev:
+        return int(rev / sel)
+    if log:
+        return net - log
+    return rev_per_one
+
+
+def _revenue_net_dif(rev_per, net):
+    rev_net_dif = 1
+    if rev_per and net:
+        rev_net_dif = rev_per / net
+    return rev_net_dif
+
+
+def _revenue_potential_cost(rev_per, net, qt, k_dif):
+    rev_pot = net * k_dif * qt
+    if rev_per:
+        return rev_per * qt
+    return rev_pot
+
+
+def key_indicators_module(file_content, file_name):
+    key_indicators = {}
+    df = file_content
+
+    df['market_cost'] = df['price_disc'] * df['quantityFull']
+    key_indicators['market_cost'] = df['market_cost'].sum()
+    key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
+        "quantityFull"]).sum() / df[df["net_cost"] != 0]["quantityFull"].sum()
+
+    df['net_cost'] = np.where(df.net_cost == 0, key_indicators['net_cost_med'], df.net_cost)
+
+    df['nets_cost'] = df['net_cost'] * df['quantityFull']
+    key_indicators['nets_cost'] = df['nets_cost'].sum()
+    df['sells_qt_with_back'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
+    key_indicators['sells_qt_with_back'] = df['sells_qt_with_back'].sum()
+    df['revenue_per_one'] = [_revenue_per_one(rev, sel, net, log) for
+                             rev, sel, net, log in
+                             zip(df['Прибыль_sum'],
+                                 df['sells_qt_with_back'],
+                                 df['net_cost'],
+                                 df['Логистика руб'],
+                                 )]
+    df['revenue_net_dif'] = [_revenue_net_dif(rev_per, net) for
+                             rev_per, net in
+                             zip(df['revenue_per_one'],
+                                 df['net_cost'],
+                                 )]
+
+    key_indicators['revenue_net_dif_med'] = df[df["revenue_net_dif"] != 1]["revenue_net_dif"].mean()
+
+    df['revenue_potential_cost'] = [
+        _revenue_potential_cost(rev_per, net, qt, k_dif=key_indicators['revenue_net_dif_med']) for
+        rev_per, net, qt in
+        zip(df['revenue_per_one'],
+            df['net_cost'],
+            df['quantityFull'],
+            )]
+
+    key_indicators['revenue_potential_cost'] = df['revenue_potential_cost'].sum()
+
+    for k, v in key_indicators.items():
+        if not 'revenue_net_dif_med' in k:
+            key_indicators[k] = int(v)
+        print(f'{k} {key_indicators[k]}')
+
+    df = df.from_dict(key_indicators, orient='index', columns=['key_indicator'])
+
+    return df
+
+
 def revenue_processing_module(request):
     """forming via wb api table dynamic revenue and correcting discount"""
     # --- REQUEST PROCESSING ---
@@ -91,8 +164,6 @@ def revenue_processing_module(request):
 
     # --- GET NET_COST FROM YADISK /// ---
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-
-
 
     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
     df_sales_pivot.to_excel('sales_pivot.xlsx')
@@ -174,8 +245,8 @@ def revenue_processing_module(request):
     list_re_col_names_subject = ['subject_name_sum']
     df = combine_duplicate_column(df, 'subject_name', list_re_col_names_subject)
     drop_list = list_re_col_names_brand + list_re_col_names_art + list_re_col_names_subject
-    # df = df.drop(drop_list, axis=1)
-
+    df = df.drop(drop_list, axis=1)
+    df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
     df = df_stay_column_not_null(df)
     file_name = f"wb_dynamic_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
     file_content = io_output.io_output(df)
@@ -225,7 +296,11 @@ def k_is_sell(sell_sum, qt_full):
     return 1
 
 
-def k_revenue(sum, mean, last):
+def k_revenue(selqt, sum, mean, last):
+    # если одна или менее продаж (совсем мало)
+    if selqt <= 1:
+        return 1
+
     # если прибыль растет - можно чуть увеличить цену
     if sum > 0 and mean > 0 and last > 0:
         return 0.99
@@ -291,7 +366,8 @@ def get_k_discount(df, df_revenue_col_name_list):
     # если не было продаж увеличиваем скидку
     df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['quantityFull'])]
     # постоянно растет или падает прибыль, отрицательная или положительная
-    df['k_revenue'] = [k_revenue(x, y, z) for x, y, z in zip(df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
+    df['k_revenue'] = [k_revenue(w, x, y, z) for x, y, z in
+                       zip(df['quantity_Продажа_sum'], df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
     # Защита от покатушек - поднимаем цену
     df['k_logistic'] = [k_logistic(w, x, y, z) for w, x, y, z in
                         zip(df['Логистика руб'], df['ppvz_for_pay_Продажа_sum'], df['ppvz_for_pay_Возврат_sum'],

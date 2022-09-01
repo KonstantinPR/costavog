@@ -1,11 +1,7 @@
-# /// CATALOG ////////////
 import flask
-from werkzeug.datastructures import FileStorage
-from io import BytesIO
 from app import app
-from flask import flash, render_template, request, redirect, send_file
+from flask import render_template, request
 import pandas as pd
-from app.modules import text_handler, io_output
 import requests
 
 
