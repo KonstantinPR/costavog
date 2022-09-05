@@ -72,6 +72,7 @@ class Transaction(db.Model):
     description = db.Column(db.String(1000))
     user_name = db.Column(db.String(100))
     date = db.Column(db.String(100))
+    is_private = db.Column(db.Boolean, default=False, nullable=False)
     yandex_link = db.Column(db.String(1000))
 
 
