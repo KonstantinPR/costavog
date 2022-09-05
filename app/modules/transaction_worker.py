@@ -24,14 +24,14 @@ def transaction_adding_in_db(request, company_id):
     else:
         date = request.form['date']
 
-    is_private = False
-    if request.form.get('is_private'):
-        is_private = request.form.get('is_private')
+    # is_private = False
+    # if request.form.get('is_private'):
+    #     is_private = request.form.get('is_private')
 
     user_name = current_user.user_name
 
     transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
-                              company_id=company_id, is_private=is_private)
+                              company_id=company_id)
     db.session.add(transaction)
     db.session.commit()
 
