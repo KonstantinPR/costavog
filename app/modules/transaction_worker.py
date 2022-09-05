@@ -102,7 +102,7 @@ def get_all_transactions_user(company_id):
     except ValueError:
         transactions = ""
         transactions_sum = ""
-        'something wrong in transactions'
+        flash('something wrong in transactions')
 
     return transactions, transactions_sum
 

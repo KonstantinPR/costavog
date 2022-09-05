@@ -130,6 +130,8 @@ def get_wb_sales_realization_api():
             days_step = request.form.get('days_step')
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
+
+
         t = time.process_time()
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)

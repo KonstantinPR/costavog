@@ -13,9 +13,8 @@ import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
 from app.modules import discount, detailing, detailing_reports
-from app.modules import io_output
+from app.modules import io_output, yandex_disk_handler
 import time
-
 
 
 # ///PRODUCTS////////////
@@ -177,8 +176,7 @@ def upload_detailing():
             return render_template('upload_detailing.html')
 
         if is_net_cost:
-            df_net_cost = pd.read_sql(db.session.query(Product).statement, db.session.bind)
-            df_net_cost.replace(np.NaN, "", inplace=True)
+            df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         else:
             df_net_cost = False
 
@@ -199,5 +197,3 @@ def upload_detailing():
                          as_attachment=True)
 
     return render_template('upload_detailing.html')
-
-
