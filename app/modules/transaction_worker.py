@@ -93,7 +93,7 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
 
 def get_all_transactions_user(company_id):
     try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id, is_private=False).order_by(
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
         initial_sum = users.initial_sum
