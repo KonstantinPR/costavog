@@ -71,7 +71,7 @@ class Transaction(db.Model):
     amount = db.Column(db.String(80), unique=False)
     description = db.Column(db.String(1000))
     user_name = db.Column(db.String(100))
-    is_private = db.Column(db.Integer)
+    is_private = db.Column(db.Boolean)
     date = db.Column(db.String(100))
     yandex_link = db.Column(db.String(1000))
 

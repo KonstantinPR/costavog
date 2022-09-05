@@ -64,6 +64,14 @@
                         </div>
                     </div>
 
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                        <input class="form-check-input" type="checkbox" value=True name="is_private"
+                               id="is_private" checked>
+                        <label class="form-check-label" for="is_private">
+                            Не учитывать в транзакциях
+                        </label>
+                    </div>
+
                     <!--                    <div class="col-xs-12 col-sm-12 col-lg-6 p-2">-->
                     <!--                        <input type="text" class="form-control form-control-lg" id="who" name="user_name"-->
                     <!--                               placeholder="Имя"-->
@@ -77,18 +85,17 @@
 
                 <div class="my-4"></div>
 
-<!--                <div class="text-left col-xs-12 col-sm-12 col-md-12 col-lg-12">-->
-<!--                    <input class="form-check-input" type="checkbox" name="is_create_transaction_yandex_disk"-->
-<!--                           id="flexCheckChecked">-->
-<!--                    <label class="form-check-label" for="flexCheckChecked">-->
-<!--                        Добавить папку с транзакцией на Яндекс.Диск-->
-<!--                    </label>-->
-<!--                    <div class="my-4"></div>-->
-<!--                </div>-->
+                <!--                <div class="text-left col-xs-12 col-sm-12 col-md-12 col-lg-12">-->
+                <!--                    <input class="form-check-input" type="checkbox" name="is_create_transaction_yandex_disk"-->
+                <!--                           id="flexCheckChecked">-->
+                <!--                    <label class="form-check-label" for="flexCheckChecked">-->
+                <!--                        Добавить папку с транзакцией на Яндекс.Диск-->
+                <!--                    </label>-->
+                <!--                    <div class="my-4"></div>-->
+                <!--                </div>-->
 
 
-                    <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
-
+                <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
 
 
             </form>
@@ -112,15 +119,18 @@
             <div id="transactions_div" hx-swap="outerHTML">
                 <div class="row p-2 text-left">
                     <div class="col">
-                        <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='date', sort_type=sort_type)}}"
+                        <b><a href="#"
+                              data-hx-post="{{url_for('transactions_by', field_type='date', sort_type=sort_type)}}"
                               hx-target="#transactions_div">Дата {{sort_sign | safe}}</a></b>
                     </div>
                     <div class="col">
-                        <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='amount', sort_type=sort_type)}}"
+                        <b><a href="#"
+                              data-hx-post="{{url_for('transactions_by', field_type='amount', sort_type=sort_type)}}"
                               hx-target="#transactions_div">Сумма {{sort_sign | safe}}</a></b>
                     </div>
                     <div class="col-6">
-                        <b><a href="#" data-hx-post="{{url_for('transactions_by', field_type='description', sort_type=sort_type)}}"
+                        <b><a href="#"
+                              data-hx-post="{{url_for('transactions_by', field_type='description', sort_type=sort_type)}}"
                               hx-target="#transactions_div">Описание {{sort_sign | safe}}</a></b>
                     </div>
                 </div>

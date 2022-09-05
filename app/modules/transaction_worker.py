@@ -24,10 +24,14 @@ def transaction_adding_in_db(request, company_id):
     else:
         date = request.form['date']
 
+    is_private = False
+    if request.form.get('is_private'):
+        is_private = request.form.get('is_private')
+
     user_name = current_user.user_name
 
     transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
-                              company_id=company_id)
+                              company_id=company_id, is_private=is_private)
     db.session.add(transaction)
     db.session.commit()
 
@@ -89,7 +93,7 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
 
 def get_all_transactions_user(company_id):
     try:
-        transactions = db.session.query(Transaction).filter_by(company_id=company_id).order_by(
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id, is_private=False).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
         users = UserModel.query.filter_by(id=current_user.id).first()
         initial_sum = users.initial_sum
