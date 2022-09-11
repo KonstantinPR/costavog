@@ -290,9 +290,9 @@ def k_is_sell(sell_sum, qt_full):
 def k_fq_full(qt):
     k = 1
     if qt <= 3:
-        k = 0.98
+        k = 0.97
     if qt <= 5:
-        k = 0.99
+        k = 0.98
     if 10 < qt <= 50:
         k = 1.01
     if 50 < qt <= 100:
