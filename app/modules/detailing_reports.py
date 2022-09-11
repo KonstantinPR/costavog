@@ -287,7 +287,7 @@ def k_is_sell(sell_sum, qt_full):
     return 1
 
 
-def k_fq_full(qt):
+def k_qt_full(qt):
     k = 1
     if qt <= 3:
         k = 0.97
@@ -312,7 +312,7 @@ def k_revenue(selqt, sum, mean, last):
         return 0.99
     # если прибыль отрицательная и падает - минимизируем покатушки - сильно поднимаем цены
     if sum < 0 and mean < 0 and last < 0:
-        return 0.90
+        return 0.95
     # если последний период отрицательный - чуть поднимаем цену для минимизации эффекта покатушек
     if sum > 0 and mean > 0 and last < 0:
         return 0.98
@@ -324,9 +324,9 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
     if to_rub == 0 and log_rub <= net_cost / 2:
         return 1
     if to_rub != 0 and to_rub - from_rub <= log_rub:
-        return 0.95
+        return 0.97
     if to_rub < log_rub and log_rub > net_cost:
-        return 0.90
+        return 0.94
 
     if to_rub < from_rub:
         return 1.02
@@ -380,7 +380,7 @@ def get_k_discount(df, df_revenue_col_name_list):
                             df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
-    df['k_fq_full'] = [k_fq_full(x) for x in df['quantityFull']]
+    df['k_qt_full'] = [k_fq_full(x) for x in df['quantityFull']]
     df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost'] * df['k_fq_full']
 
     return df
