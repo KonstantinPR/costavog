@@ -288,14 +288,19 @@ def k_is_sell(sell_sum, qt_full):
 
 
 def k_fq_full(qt):
-    if qt_full <= 10:
-        return 1.01 * k
-    if 10 < qt_full <= 50:
-        return 1.02 * k
-    if 50 < qt_full <= 100:
-        return 1.03 * k
-    if 100 < qt_full <= 1000:
-        return 1.04 * k
+    k = 1
+    if qt <= 3:
+        k = 0.98
+    if qt <= 5:
+        k = 0.99
+    if 10 < qt <= 50:
+        k = 1.01
+    if 50 < qt <= 100:
+        k = 1.03
+    if 100 < qt <= 1000:
+        k = 1.05
+    return k
+
 
 def k_revenue(selqt, sum, mean, last):
     # если одна или менее продаж (совсем мало)
@@ -376,7 +381,7 @@ def get_k_discount(df, df_revenue_col_name_list):
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_fq_full'] = [k_fq_full(x) for x in df['quantityFull']]
-    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']*df['k_fq_full']
+    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost'] * df['k_fq_full']
 
     return df
 
