@@ -280,10 +280,14 @@ def k_is_sell(sell_sum, qt_full):
         k = 1.02
     if sell_sum <= 5:
         k = 1
-    if sell_sum > 5:
-        k = 0.99
     if sell_sum > 10:
         k = 0.98
+    if sell_sum > 5:
+        k = 0.99
+    return 1
+
+
+def k_fq_full(qt):
     if qt_full <= 10:
         return 1.01 * k
     if 10 < qt_full <= 50:
@@ -292,8 +296,6 @@ def k_is_sell(sell_sum, qt_full):
         return 1.03 * k
     if 100 < qt_full <= 1000:
         return 1.04 * k
-    return 1
-
 
 def k_revenue(selqt, sum, mean, last):
     # если одна или менее продаж (совсем мало)
@@ -373,7 +375,8 @@ def get_k_discount(df, df_revenue_col_name_list):
                             df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
-    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']
+    df['k_fq_full'] = [k_fq_full(x) for x in df['quantityFull']]
+    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost']*df['k_fq_full']
 
     return df
 
@@ -484,6 +487,7 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
     print(time.process_time() - t)
     response = requests.get(path_all)
+    print(response)
     print(time.process_time() - t)
     data = response.json()
     print(time.process_time() - t)
@@ -631,6 +635,7 @@ def _merge_old_column_name(df):
 
 
 def get_wb_sales_realization_pivot(df):
+    print(f"THIS IS DF IN SALES REALIZATION PIVOT {df}")
     df1 = df.pivot_table(index=['nm_id'],
                          columns='supplier_oper_name',
                          values=['ppvz_for_pay',

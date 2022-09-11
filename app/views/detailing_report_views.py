@@ -1,9 +1,7 @@
 from app import app
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
-from app.models import Product, db
 import datetime
-import pandas as pd
 from app.modules import detailing, detailing_reports, yandex_disk_handler
 from app.modules import io_output
 import time
@@ -33,7 +31,7 @@ def key_indicators():
 @login_required
 def revenue_processing():
     """
-    correcting existing discount via analise revenue dynamics and stocks
+    report on any periods of date
     """
 
     if not current_user.is_authenticated:
@@ -88,18 +86,14 @@ def get_wb_pivot_sells_api():
         df = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
         df_stock = detailing_reports.get_wb_stock_api(date_from)
-        df_net_cost = pd.read_sql(
-            db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+        df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
-        df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
+        df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
         df = detailing_reports.get_revenue(df)
         df = detailing_reports.get_important_columns(df)
         file = io_output.io_output(df)
-
-        return send_file(file,
-                         attachment_filename=f"wb_revenue_report-"
-                                             f"{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
-                         as_attachment=True)
+        name_of_file = f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
+        return send_file(file, attachment_filename=name_of_file, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
 
@@ -130,7 +124,6 @@ def get_wb_sales_realization_api():
             days_step = request.form.get('days_step')
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
-
 
         t = time.process_time()
         print(time.process_time() - t)
