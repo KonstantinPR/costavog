@@ -93,6 +93,8 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
 
 
 def get_transactions(company_id, cur_user=current_user, is_private=0, search=''):
+    search = search.lower()
+
     if search in ['private', 'hidden', 'invisible']:
         is_private = 1
         transactions = db.session.query(Transaction).filter(
@@ -113,7 +115,23 @@ def get_transactions(company_id, cur_user=current_user, is_private=0, search='')
             Transaction.company_id == company_id).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
 
-    if search == '':
+    if search.startswith('private '):
+        search = search.replace('private ', '')
+        transactions = db.session.query(Transaction).filter(
+            Transaction.description.ilike('%' + search.lower() + '%'),
+            Transaction.company_id == company_id,
+            Transaction.is_private == is_private).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+
+
+    if search and not ('transactions' in locals()):
+        transactions = db.session.query(Transaction).filter(
+            Transaction.description.ilike('%' + search.lower() + '%'),
+            Transaction.company_id == company_id,
+            Transaction.is_private == is_private).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+
+    if not search:
         transactions = db.session.query(Transaction).filter_by(company_id=company_id,
                                                                is_private=is_private).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
