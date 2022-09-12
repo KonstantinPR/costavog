@@ -93,43 +93,40 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
 
 
 def get_transactions(company_id, cur_user=current_user, is_private=0, search=''):
-    try:
-        if search:
-            if search in ['private', 'hidden', 'invisible']:
-                is_private = 1
-                transactions = db.session.query(Transaction).filter(
-                    Transaction.company_id == company_id,
-                    Transaction.is_private == is_private).order_by(
-                    desc(Transaction.date), desc(Transaction.id)).all()
+    if search in ['private', 'hidden', 'invisible']:
+        is_private = 1
+        transactions = db.session.query(Transaction).filter(
+            Transaction.company_id == company_id,
+            Transaction.is_private == is_private).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
 
-            elif search in ['all', 'visible', 'все', 'всё', 'вся']:
-                transactions = db.session.query(Transaction).filter(
-                    Transaction.company_id == company_id,
-                ).order_by(
-                    desc(Transaction.date), desc(Transaction.id)).all()
-            else:
-                transactions = db.session.query(Transaction).filter(
-                    Transaction.description.ilike('%' + search.lower() + '%'),
-                    Transaction.company_id == company_id,
-                    Transaction.is_private == is_private).order_by(
-                    desc(Transaction.date), desc(Transaction.id)).all()
-        else:
-            transactions = db.session.query(Transaction).filter_by(company_id=company_id,
-                                                                   is_private=is_private).order_by(
-                desc(Transaction.date), desc(Transaction.id)).all()
+    if search in ['all', 'visible', 'все', 'всё', 'вся']:
+        transactions = db.session.query(Transaction).filter(
+            Transaction.company_id == company_id,
+        ).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
 
-        users = UserModel.query.filter_by(id=current_user.id).first()
-        initial_sum = users.initial_sum
-        if not initial_sum:
-            initial_sum = 0
-        transactions_sum = initial_sum
-        for i in transactions:
-            if i.amount and not i.is_private:
-                transactions_sum += int(i.amount)
-    except ValueError:
-        transactions = ""
-        transactions_sum = ""
-        flash('something wrong in transactions')
+    if search.startswith('all '):
+        search = search.replace('all ', '')
+        transactions = db.session.query(Transaction).filter(
+            Transaction.description.ilike('%' + search.lower() + '%'),
+            Transaction.company_id == company_id).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+
+    if search == '':
+        transactions = db.session.query(Transaction).filter_by(company_id=company_id,
+                                                               is_private=is_private).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
+
+    users = UserModel.query.filter_by(id=current_user.id).first()
+    initial_sum = users.initial_sum
+    if not initial_sum:
+        initial_sum = 0
+    transactions_sum = initial_sum
+
+    for i in transactions:
+        if i.amount and not i.is_private:
+            transactions_sum += int(i.amount)
 
     return transactions, transactions_sum
 
