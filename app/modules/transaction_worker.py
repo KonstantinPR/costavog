@@ -108,13 +108,6 @@ def get_transactions(company_id, cur_user=current_user, is_private=0, search='')
         ).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
 
-    if search.startswith('all '):
-        search = search.replace('all ', '')
-        transactions = db.session.query(Transaction).filter(
-            Transaction.description.ilike('%' + search.lower() + '%'),
-            Transaction.company_id == company_id).order_by(
-            desc(Transaction.date), desc(Transaction.id)).all()
-
     if search.startswith('private '):
         search = search.replace('private ', '')
         transactions = db.session.query(Transaction).filter(
@@ -123,6 +116,12 @@ def get_transactions(company_id, cur_user=current_user, is_private=0, search='')
             Transaction.is_private == is_private).order_by(
             desc(Transaction.date), desc(Transaction.id)).all()
 
+    if search.startswith('all '):
+        search = search.replace('all ', '')
+        transactions = db.session.query(Transaction).filter(
+            Transaction.description.ilike('%' + search.lower() + '%'),
+            Transaction.company_id == company_id).order_by(
+            desc(Transaction.date), desc(Transaction.id)).all()
 
     if search and not ('transactions' in locals()):
         transactions = db.session.query(Transaction).filter(
