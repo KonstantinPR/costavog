@@ -73,6 +73,7 @@ class Transaction(db.Model):
     user_name = db.Column(db.String(100))
     date = db.Column(db.String(100))
     yandex_link = db.Column(db.String(1000))
+    is_private = db.Column(db.Integer, default=0)
 
 
 class Task(db.Model):

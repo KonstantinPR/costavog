@@ -62,7 +62,7 @@ def transactions():
             flash(is_adding_correct_msg)
 
     # вывод всех текущих операций под формой
-    transactions, transactions_sum = transaction_worker.get_all_transactions_user(company_id)
+    transactions, transactions_sum = transaction_worker.get_transactions(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
                            transactions_sum=transactions_sum, sort_type='asc', sort_sign='')
@@ -227,13 +227,11 @@ def transaction_search():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
-
     search = request.form['search']
-    transactions = db.session.query(Transaction).filter(
-        Transaction.description.ilike('%' + search.lower() + '%'), Transaction.company_id == company_id).order_by(
-        desc(Transaction.date), desc(Transaction.id)).all()
-
-    print(transactions)
+    transactions, transactions_sum = transaction_worker.get_transactions(company_id,
+                                                                         cur_user=current_user,
+                                                                         search=search)
+    print(f'search {search}')
 
     return render_template('transactions_div.html', transactions=transactions)
 
