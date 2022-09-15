@@ -22,7 +22,7 @@ def administrator_required(function):
         if current_user.role != 'administrator':
             flash(f'Для входа в раздел необходимы права администратора. Текущий статус {current_user.role}. '
                   f'Для изменения прав обратитесь к вашему администратору приложения. ')
-            return redirect('/company_register')
+            return redirect('/tasks')
         return function()
 
     return wrapper

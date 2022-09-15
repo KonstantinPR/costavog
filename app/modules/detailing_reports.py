@@ -129,7 +129,7 @@ def revenue_processing_module(request):
             days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
         date_from = date_from.strftime(DATE_FORMAT)
 
-    print(f"type is {type(date_from)}")
+    # print(f"type is {type(date_from)}")
 
     if request.form.get('date_end'):
         date_end = request.form.get('date_end')
@@ -276,10 +276,15 @@ def _insert_missing_values(val_col_in, val_col_from):
 def k_is_sell(sell_sum, qt_full):
     # нет продаж и товара много
     k = 1
+    if sell_sum == 0:
+        k = 1.02
     if sell_sum > 50:
         k = 0.96
     if sell_sum > 10:
         k = 0.98
+    if sell_sum > 5:
+        k = 0.99
+
     return k
 
 

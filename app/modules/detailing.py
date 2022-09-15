@@ -70,6 +70,7 @@ def zip_detail(zip_downloaded, df_net_cost):
             df_list.append(df)
 
     result = pd.concat(df_list)
+    result.to_excel('result.xlsx')
 
     if 'К перечислению за товар' not in result:
         result['К перечислению за товар'] = 0
@@ -164,10 +165,12 @@ def zip_detail(zip_downloaded, df_net_cost):
             ('Услуги по доставке товара покупателю', 'Логистика')]
 
         df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
+        df_result['Предмет_x'].fillna(df_result['Предмет_y'])
+        df_result.to_excel('df_result.xlsx')
 
         df_result = df_result[[
             'Бренд',
-            'Предмет',
+            'Предмет_x',
             'Артикул поставщика',
             'Код номенклатуры',
             'Маржа-себест.',

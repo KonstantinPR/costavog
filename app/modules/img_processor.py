@@ -24,16 +24,21 @@ size_translate = {
     "m1": "150 x 100 см.",
     "m2": "150 x 200 см.",
     "m3": "150 x 300 см.",
+    "m4": "150 x 300 см.",
+    "m5": "150 x 500 см.",
+    "m6": "150 x 500 см.",
+    "m7": "150 x 500 см.",
+    "m9": "150 x 500 см.",
 }
 
 
 def img_watermark(img_name, name):
-    print(f"img_name {img_name}")
-    print(f"name {name}")
+
+
     size = name[len(name) - 2:].lower()
-    print(f"size {size}")
+    # print(f"size {size}")
     size_text = size_translate[size]
-    print(f"size_text {size_text}")
+    # print(f"size_text {size_text}")
     base = Image.open(img_name).convert('RGBA')
     width, height = base.size
 
@@ -71,7 +76,7 @@ def img_watermark(img_name, name):
 
 
 def img_foldering(df):
-    print(f"file_txt {df}")
+    # print(f"file_txt {df}")
 
     images_folder = app.config['YANDEX_FOLDER_IMAGE']
     folder_folders = "folder_img"
@@ -109,14 +114,14 @@ def img_foldering(df):
             name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
             for j in os.listdir(folder_folders):
                 j_clear = j
-                if j.startswith("EVS") or j.startswith("WLP") or j.endswith("new"):
+                if j.startswith("LNF") or j.startswith("EVS") or j.startswith("WLP") or j.endswith("new"):
                     j_clear = j[:(len(j) - 3)]
                     j_clear_end = j[(len(j) - 3):]
                     # print(f"j_clear_end {j_clear_end}")
                 if name_clear == j_clear:
                     if typeWB_OZON == 0:
                         shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-                        if j.startswith("WLP") and name.endswith("-1.JPG"):
+                        if (j.startswith("LNF") or j.startswith("WLP")) and name.endswith("-1.JPG"):
                             img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
                     if typeWB_OZON == 1:
                         shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
@@ -139,6 +144,5 @@ def img_foldering(df):
 
         shutil.rmtree(folder_folders, ignore_errors=True)
 
-        print(f"zip_file_path {return_data}")
 
         return return_data
