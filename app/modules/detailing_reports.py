@@ -279,11 +279,11 @@ def k_is_sell(sell_sum, qt_full):
     if sell_sum == 0:
         k = 1.02
     if sell_sum > 50:
-        k = 0.96
+        k = 0.95
     if sell_sum > 10:
-        k = 0.98
+        k = 0.97
     if sell_sum > 5:
-        k = 0.99
+        k = 0.98
 
     return k
 
