@@ -129,7 +129,9 @@ def img_foldering(df):
         for j in os.listdir(folder_folders):
             for d in range(len(df.index)):
                 if df['Article'][d] == j:
-                    os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article_WB'][d]}")
+                    # os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article_WB'][d]}")
+                    # for updating wb on 20.09.2022
+                    os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article'][d]}")
 
         shutil.make_archive(folder_folders, 'zip', f"{folder_folders}")
         shutil.move(f"{folder_folders}.zip", folder_folders)

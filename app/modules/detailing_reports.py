@@ -12,7 +12,9 @@ import time
 
 IMPORTANT_COL_DESC = [
     'brand_name',
-    'subject_name',
+    # 'subject_name',
+    # updated 20/09/2022
+    'Предмет',
     'nm_id',
     'supplierArticle',
 ]
@@ -33,6 +35,7 @@ IMPORTANT_COL_REPORT = [
     'k_revenue',
     'k_logistic',
     'k_net_cost',
+    'k_qt_full',
 ]
 
 NEW_COL_ON_REVENUE = [
@@ -42,7 +45,7 @@ NEW_COL_ON_REVENUE = [
 DEFAULT_NET_COST = 1000
 
 DATE_FORMAT = "%Y-%m-%d"
-DAYS_DELAY_REPORT = 5
+DAYS_DELAY_REPORT = 1
 DATE_PARTS = 3
 
 
@@ -138,7 +141,6 @@ def revenue_processing_module(request):
         date_end = date_end.strftime(DATE_FORMAT)
         # date_end = time.strftime(date_format)- datetime.timedelta(3)
 
-    print(date_end)
 
     if request.form.get('days_step'):
         days_step = request.form.get('days_step')
@@ -196,6 +198,8 @@ def revenue_processing_module(request):
 
     df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
     df_revenue_col_name_list = df_revenue_column_name_list(df)
+
+    df.fillna(0, inplace=True, downcast='infer')
 
     # Формируем обобщающие показатели с префиксом _sum перед присоединением общей таблицы продаж
     df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
@@ -364,8 +368,14 @@ def k_net_cost(net_cost, price_disc):
         return 0.90
     if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.99
+    if price_disc >= net_cost * 4 * k_net_cost:
+        return 1.05
+    if price_disc >= net_cost * 3 * k_net_cost:
+        return 1.03
     if price_disc >= net_cost * 2 * k_net_cost:
         return 1.01
+
+
     return 1
 
 
@@ -487,18 +497,18 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
     date_from = date_from
     api_key = app.config['WB_API_TOKEN']
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     limit = 100000
     path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
     # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     response = requests.get(path_all)
-    print(response)
-    print(time.process_time() - t)
+    # print(response)
+    # print(time.process_time() - t)
     data = response.json()
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     df = pd.DataFrame(data)
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
 
     return df
 
@@ -701,17 +711,17 @@ def get_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
     date_from = date_from
     api_key = app.config['WB_API_TOKEN']
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     path_all = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2018-06-24T21:00:00.000Z&key={api_key}"
     # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     response = requests.get(path_all)
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     data = response.json()
-    print(time.process_time() - t)
+    # print(time.process_time() - t)
     df = pd.DataFrame(data)
-    print(df)
-    print(time.process_time() - t)
+    # print(df)
+    # print(time.process_time() - t)
     df = df.pivot_table(index=['nmId'],
                         values=['quantityFull',
                                 'daysOnSite',
