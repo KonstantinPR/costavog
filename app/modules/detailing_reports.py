@@ -224,7 +224,7 @@ def revenue_processing_module(request):
     df['k_discount'] = 1
     # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
     df = get_k_discount(df, df_revenue_col_name_list)
-    df['Согласованная скидка, %'] = round(df['discount'] * df['k_discount'], 0)
+    df['Согласованная скидка, %'] = round(df['discount'] - (1 - df['k_discount']), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 
@@ -325,8 +325,9 @@ def k_revenue(selqt, sum, mean, last):
 
 
 def k_logistic(log_rub, to_rub, from_rub, net_cost):
-    # если возвратов больше чем продаж за вычетом логистики - цену не меняем, смотрим на контент - почему возвращают
-    if to_rub == 0 and log_rub <= net_cost / 2:
+
+    k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
+    if to_rub == 0 and log_rub <= net_cost * k_net_cost:
         return 1
     if to_rub != 0 and to_rub - from_rub <= log_rub:
         return 0.97
