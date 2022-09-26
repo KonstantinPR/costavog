@@ -45,7 +45,7 @@ NEW_COL_ON_REVENUE = [
 DEFAULT_NET_COST = 1000
 
 DATE_FORMAT = "%Y-%m-%d"
-DAYS_DELAY_REPORT = 1
+DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
 
 
@@ -140,7 +140,6 @@ def revenue_processing_module(request):
         date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
         date_end = date_end.strftime(DATE_FORMAT)
         # date_end = time.strftime(date_format)- datetime.timedelta(3)
-
 
     if request.form.get('days_step'):
         days_step = request.form.get('days_step')
@@ -325,7 +324,7 @@ def k_revenue(selqt, sum, mean, last):
 
 
 def k_logistic(log_rub, to_rub, from_rub, net_cost):
-
+    if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     if to_rub == 0 and log_rub <= net_cost * k_net_cost:
         return 1
@@ -375,7 +374,6 @@ def k_net_cost(net_cost, price_disc):
         return 1.03
     if price_disc >= net_cost * 2 * k_net_cost:
         return 1.01
-
 
     return 1
 
@@ -614,6 +612,7 @@ def get_revenue_by_part(df: pd.DataFrame, period_dates_list: list = None) -> pd.
         else:
             date = f"_{str(date)[:10]}"
 
+        df.to_excel('result2.xlsx')
         df[f'Прибыль{date}'] = df[f'ppvz_for_pay_Продажа{date}'] - \
                                df[f'ppvz_for_pay_Возврат{date}'] - \
                                df[f'delivery_rub_Логистика{date}'] - \
