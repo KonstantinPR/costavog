@@ -66,6 +66,17 @@
                         <div class="invalid-feedback">
                             Что-то не так с прикрепленными файлами
                         </div>
+
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value=1 name="is_private"
+                                   id="is_private">
+                            <label class="form-check-label" for="is_private">
+                                Не учитывать в транзакциях
+                            </label>
+                        </div>
+
+
                         {% if transaction_yandex_disk_link %}
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <a href="#"

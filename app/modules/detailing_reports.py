@@ -223,7 +223,7 @@ def revenue_processing_module(request):
     df['k_discount'] = 1
     # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
     df = get_k_discount(df, df_revenue_col_name_list)
-    df['Согласованная скидка, %'] = round(df['discount'] * (1 - df['k_discount']), 0)
+    df['Согласованная скидка, %'] = round(df['discount'] * (df['k_discount']), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 

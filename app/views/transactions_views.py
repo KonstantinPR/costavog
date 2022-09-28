@@ -173,11 +173,16 @@ def transaction_edit(id):
         description = request.form['description']
         date = request.form['date']
         user_name = request.form['user_name']
+        is_private = 0
+        if request.form.get('is_private'):
+            is_private = request.form.get('is_private')
 
         transaction.amount = amount
         transaction.description = description
         transaction.date = date
         transaction.user_name = user_name
+        transaction.is_private = is_private
+
 
         uploaded_files = flask.request.files.getlist("files")
         print(flask.request.files.getlist("files"))
