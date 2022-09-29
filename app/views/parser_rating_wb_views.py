@@ -7,13 +7,16 @@ import requests
 from app.modules import io_output
 
 
-
 def get_rating(arts):
     rating = {}
     review_count = {}
     for i in arts:
         url = f"https://wbxcatalog-ru.wildberries.ru/nm-2-card/" \
               f"catalog?spp=0&pricemarginCoeff=1.0&reg=0&appType=1&emp=0&locale=ru&lang=ru&curr=rub&nm={str(i)}"
+        # not working on 29/09/2022
+        url = f"https://catalog.wb.ru/catalog/men_clothes/catalog?curr=rub&lang=ru&locale=ru" \
+              f"&sort=priceup&page=1&xsubject={str(i)}"
+
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 Firefox/100.0"
         }

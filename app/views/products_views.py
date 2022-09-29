@@ -161,6 +161,8 @@ def upload_turnover():
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
 def upload_detailing():
+    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
+
     if not current_user.is_authenticated:
         return redirect('/company_register')
 
