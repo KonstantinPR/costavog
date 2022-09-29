@@ -188,7 +188,7 @@ def upload_detailing():
 
         if is_get_stock:
             df_stock = detailing_reports.get_wb_stock_api()
-            df = df.merge(df_stock, left_on='Артикул поставщика', right_on='supplierArticle')
+            df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
         file = io_output.io_output(df)
 
