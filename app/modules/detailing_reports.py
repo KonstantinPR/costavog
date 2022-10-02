@@ -277,7 +277,6 @@ def _insert_missing_values(val_col_in, val_col_from):
 
 # /// --- K REVENUE FORMING ---
 def k_is_sell(sell_sum, net_cost):
-
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
@@ -327,39 +326,52 @@ def k_revenue(selqt, sum, mean, last):
 
 
 def k_logistic(log_rub, to_rub, from_rub, net_cost):
+
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
-    if to_rub == 0 and log_rub <= net_cost * k_net_cost:
-        return 1
-    if to_rub != 0 and to_rub - from_rub <= log_rub:
-        return 0.97
-    if to_rub < log_rub and log_rub > net_cost:
-        return 0.94
 
-    if to_rub < from_rub:
-        return 1.02
+    if to_rub > 0:
+        if log_rub > (to_rub - from_rub):
+            return 0.95
+        if log_rub > 0.25 * (to_rub - from_rub):
+            return 0.98
 
-    if to_rub - log_rub < from_rub or to_rub - from_rub < 0:
-        return 1
+    if log_rub > k_net_cost * net_cost:
+        return 0.99
 
-    tofrom_rub = to_rub - from_rub
-
-    # каково отношение денег к перечислению и денег, потраченных на логистику:
-    if tofrom_rub == 0:
-        return 0.98
-    k_log = log_rub / tofrom_rub
-    # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
-    if k_log > 1 or k_log < 0:
-        # если логистика = всему что к перечислению, то сильно уменьшаем скидку
-        return 0.90
-    if k_log > 0.5:
-        # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
-        return 0.90
-    if k_log > 0.25:
-        # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
-        return 0.98
-    # в остальных случаях оставляем скидку без изменения
     return 1
+
+    # if to_rub == 0 and log_rub <= net_cost * k_net_cost:
+    #     return 1
+    # if to_rub != 0 and to_rub - from_rub <= log_rub:
+    #     return 0.97
+    # if to_rub < log_rub and log_rub > net_cost:
+    #     return 0.94
+    #
+    # if to_rub < from_rub:
+    #     return 1.02
+    #
+    # if to_rub - log_rub < from_rub or to_rub - from_rub < 0:
+    #     return 1
+    #
+    # tofrom_rub = to_rub - from_rub
+    #
+    # # каково отношение денег к перечислению и денег, потраченных на логистику:
+    # if tofrom_rub == 0:
+    #     return 0.98
+    # k_log = log_rub / tofrom_rub
+    # # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
+    # if k_log > 1 or k_log < 0:
+    #     # если логистика = всему что к перечислению, то сильно уменьшаем скидку
+    #     return 0.90
+    # if k_log > 0.5:
+    #     # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
+    #     return 0.90
+    # if k_log > 0.25:
+    #     # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
+    #     return 0.98
+    # # в остальных случаях оставляем скидку без изменения
+    # return 1
 
 
 def k_net_cost(net_cost, price_disc):
@@ -369,6 +381,8 @@ def k_net_cost(net_cost, price_disc):
     if k_net_cost < 1:  k_net_cost = 1
     if price_disc <= net_cost * k_net_cost:
         return 0.90
+    if price_disc <= net_cost * 1.3 * k_net_cost:
+        return 0.98
     if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.97
     if price_disc >= net_cost * 4 * k_net_cost:
