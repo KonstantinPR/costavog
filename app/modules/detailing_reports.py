@@ -276,16 +276,18 @@ def _insert_missing_values(val_col_in, val_col_from):
 
 
 # /// --- K REVENUE FORMING ---
-def k_is_sell(sell_sum, qt_full):
+def k_is_sell(sell_sum, net_cost):
+    if not net_cost: net_cost = DEFAULT_NET_COST
+    k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
     k = 1
     if sell_sum == 0:
         k = 1.02
-    if sell_sum > 50:
+    if sell_sum > 10 * k_net_cost:
         k = 0.95
-    if sell_sum > 10:
+    if sell_sum > 5 * k_net_cost:
         k = 0.97
-    if sell_sum > 5:
+    if sell_sum > 3 * k_net_cost:
         k = 0.98
 
     return k
@@ -380,7 +382,7 @@ def k_net_cost(net_cost, price_disc):
 
 def get_k_discount(df, df_revenue_col_name_list):
     # если не было продаж увеличиваем скидку
-    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['quantityFull'])]
+    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['net_cost'])]
     # постоянно растет или падает прибыль, отрицательная или положительная
     df['k_revenue'] = [k_revenue(w, x, y, z) for w, x, y, z in
                        zip(df['quantity_Продажа_sum'], df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
