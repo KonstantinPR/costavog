@@ -277,20 +277,21 @@ def _insert_missing_values(val_col_in, val_col_from):
 
 # /// --- K REVENUE FORMING ---
 def k_is_sell(sell_sum, net_cost):
+
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
-    k = 1
-    if sell_sum == 0:
-        k = 1.02
-    if sell_sum > 10 * k_net_cost:
-        k = 0.95
-    if sell_sum > 5 * k_net_cost:
-        k = 0.97
-    if sell_sum > 3 * k_net_cost:
-        k = 0.98
 
-    return k
+    if sell_sum == 0:
+        return 1.02
+    if sell_sum > 10 * k_net_cost:
+        return 0.95
+    if sell_sum > 5 * k_net_cost:
+        return 0.97
+    if sell_sum > 3 * k_net_cost:
+        return 0.98
+
+    return 1.01
 
 
 def k_qt_full(qt):
