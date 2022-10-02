@@ -47,6 +47,7 @@ DEFAULT_NET_COST = 1000
 DATE_FORMAT = "%Y-%m-%d"
 DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
+K_SMOOTH = 2
 
 
 def _revenue_per_one(rev, sel, net, log):
@@ -151,6 +152,11 @@ def revenue_processing_module(request):
     else:
         date_parts = DATE_PARTS
 
+    if request.form.get('k_smooth'):
+        k_smooth = request.form.get('k_smooth')
+    else:
+        k_smooth = K_SMOOTH
+
     # --- GET DATA VIA WB API /// ---
     df_sales = get_wb_sales_realization_api(date_from, date_end, days_step)
     # df_sales.to_excel('df_sales_excel_new.xlsx')
@@ -223,7 +229,14 @@ def revenue_processing_module(request):
     df['k_discount'] = 1
     # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
     df = get_k_discount(df, df_revenue_col_name_list)
-    df['Согласованная скидка, %'] = round(df['discount'] * (df['k_discount']), 0)
+    df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
+    df['Согласованная скидка, %'] = [3 if 0 < x < 3 else x for x in df['Согласованная скидка, %']]
+    df['Согласованная скидка, %'] = [0 if x < 0 else x for x in df['Согласованная скидка, %']]
+    df['Согласованная скидка, %'] = round(['Согласованная скидка, %'] + \
+                                              (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
+
+
+    # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 
@@ -282,9 +295,9 @@ def k_is_sell(sell_sum, net_cost):
     # нет продаж и товара много
 
     if sell_sum == 0:
-        return 1.02
+        return 1.01
     if sell_sum > 10 * k_net_cost:
-        return 0.95
+        return 0.96
     if sell_sum > 5 * k_net_cost:
         return 0.97
     if sell_sum > 3 * k_net_cost:
@@ -304,7 +317,7 @@ def k_qt_full(qt):
     if 50 < qt <= 100:
         k = 1.03
     if 100 < qt <= 1000:
-        k = 1.05
+        k = 1.04
     return k
 
 
@@ -318,7 +331,7 @@ def k_revenue(selqt, sum, mean, last):
         return 0.99
     # если прибыль отрицательная и падает - минимизируем покатушки - сильно поднимаем цены
     if sum < 0 and mean < 0 and last < 0:
-        return 0.95
+        return 0.96
     # если последний период отрицательный - чуть поднимаем цену для минимизации эффекта покатушек
     if sum > 0 and mean > 0 and last < 0:
         return 0.98
@@ -326,18 +339,17 @@ def k_revenue(selqt, sum, mean, last):
 
 
 def k_logistic(log_rub, to_rub, from_rub, net_cost):
-
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
 
     if to_rub > 0:
-        if log_rub > (to_rub - from_rub):
-            return 0.95
-        if log_rub > 0.25 * (to_rub - from_rub):
+        if log_rub > 0.50 * to_rub:
+            return 0.96
+        if log_rub > 0.25 * to_rub:
             return 0.98
 
     if log_rub > k_net_cost * net_cost:
-        return 0.99
+        return 1.01
 
     return 1
 
@@ -379,16 +391,17 @@ def k_net_cost(net_cost, price_disc):
         net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost) * 2
     if k_net_cost < 1:  k_net_cost = 1
+
     if price_disc <= net_cost * k_net_cost:
-        return 0.90
+        return 0.95
     if price_disc <= net_cost * 1.3 * k_net_cost:
         return 0.98
     if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.97
     if price_disc >= net_cost * 4 * k_net_cost:
-        return 1.07
+        return 1.05
     if price_disc >= net_cost * 3 * k_net_cost:
-        return 1.04
+        return 1.03
     if price_disc >= net_cost * 2 * k_net_cost:
         return 1.01
 
