@@ -367,7 +367,7 @@ def k_net_cost(net_cost, price_disc):
     if price_disc <= net_cost * k_net_cost:
         return 0.90
     if price_disc <= net_cost * 1.1 * k_net_cost:
-        return 0.99
+        return 0.97
     if price_disc >= net_cost * 4 * k_net_cost:
         return 1.05
     if price_disc >= net_cost * 3 * k_net_cost:
