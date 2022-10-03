@@ -231,7 +231,7 @@ def revenue_processing_module(request):
     df = get_k_discount(df, df_revenue_col_name_list)
     df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
     df['Согласованная скидка, %'] = [3 if 0 < x < 3 else x for x in df['Согласованная скидка, %']]
-    df['Согласованная скидка, %'] = [0 if x < 0 else x for x in df['Согласованная скидка, %']]
+    df['Согласованная скидка, %'] = ['' if x < 0 or x == 0 else x for x in df['Согласованная скидка, %']]
     df['Согласованная скидка, %'] = round(['Согласованная скидка, %'] + \
                                               (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
 
