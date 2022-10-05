@@ -3,10 +3,10 @@ from app import app
 from flask import flash, render_template, request, send_file
 import pandas as pd
 from flask_login import login_required
-# from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 from app.modules import io_output, zip_handler
 import treepoem
+import os
 
 
 @app.route('/datamatrix', methods=['GET', 'POST'])
@@ -38,29 +38,32 @@ def datamatrix():
         i = 0
         images_zipped = []
         images_set = []
-        # for line in lines:
-        #     count_i = '{0:0>4}'.format(i)
-        #     line_name = f'bar_{count_i}.png'
-        #     encoded = encode(line.encode('utf8'))
-        #     img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
-        #     img = io_output.io_img_output(img)
-        #     images_set.append((line_name, img))
-        #     images_zipped = zip_handler.put_in_zip(images_set)
-        #     i += 1
 
-        i = 0
-        for line in lines:
-            count_i = '{0:0>3}'.format(i)
-            line_name = f'bar_{count_i}.png'
-            img = treepoem.generate_barcode(
-                barcode_type='datamatrix',  # One of the supported codes.
-                data=line,
-            )
-            img = io_output.io_img_output(img)
-            images_set.append((line_name, img))
-            images_zipped = zip_handler.put_in_zip(images_set)
-            i += 1
-
+        if 'DYNO' in os.environ:
+            for line in lines:
+                count_i = '{0:0>4}'.format(i)
+                line_name = f'bar_{count_i}.png'
+                img = treepoem.generate_barcode(
+                    barcode_type='datamatrix',  # One of the supported codes.
+                    data=line,
+                )
+                print(f'generate_finished {i}')
+                img = io_output.io_img_output(img)
+                images_set.append((line_name, img))
+                images_zipped = zip_handler.put_in_zip(images_set)
+                print(f'images_zipped {i}')
+                i += 1
+        else:
+            from pylibdmtx.pylibdmtx import encode
+            for line in lines:
+                count_i = '{0:0>4}'.format(i)
+                line_name = f'bar_{count_i}.png'
+                encoded = encode(line.encode('utf8'))
+                img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
+                img = io_output.io_img_output(img)
+                images_set.append((line_name, img))
+                images_zipped = zip_handler.put_in_zip(images_set)
+                i += 1
 
         return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
