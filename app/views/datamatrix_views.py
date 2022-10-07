@@ -7,6 +7,15 @@ from PIL import Image
 from app.modules import io_output, zip_handler
 import treepoem
 import os
+import barcode
+
+from barcode.writer import ImageWriter
+from io import BytesIO
+
+from barcode import EAN13
+from barcode import Code128
+from barcode.writer import SVGWriter
+from barcode import generate
 
 
 @app.route('/datamatrix', methods=['GET', 'POST'])
@@ -20,11 +29,12 @@ def datamatrix():
             flash("Не приложен файл")
             return render_template('upload_datamatrix.html')
 
-        # if not request.form['multiply_number']:
-        #     flash("Сколько фото делать то будем? Поле пустое")
-        #     return render_template('upload_datamatrix.html')
+        if not request.form['type-barcode']:
+            flash("Тип баркода который будем печатать")
+            return render_template('upload_datamatrix.html')
 
-        # multiply = int(request.form['multiply_number'])
+        type_barcode = request.form['type-barcode']
+        print(f'type_barcode {type_barcode}')
 
         df = pd.read_fwf(file_txt)
         col_name = "Датаматрикс"
@@ -39,7 +49,25 @@ def datamatrix():
         images_zipped = []
         images_set = []
 
+        # Write to a file-like object:
+        if type_barcode == 'code128':
+            from pylibdmtx.pylibdmtx import encode
+            for line in lines:
+                count_i = '{0:0>4}'.format(i)
+                line_name = f'bar_{count_i}.png'
+
+                rv = BytesIO()
+                Code128(str(line), writer=ImageWriter()).write(rv)
+                print(f'img {rv}')
+
+                images_set.append((line_name, rv))
+                images_zipped = zip_handler.put_in_zip(images_set)
+                i += 1
+
+            return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+
         if 'DYNO' in os.environ:
+            # run on HEROKU
             for line in lines:
                 count_i = '{0:0>4}'.format(i)
                 line_name = f'bar_{count_i}.png'
@@ -47,13 +75,12 @@ def datamatrix():
                     barcode_type='datamatrix',  # One of the supported codes.
                     data=line,
                 )
-                print(f'generate_finished {i}')
                 img = io_output.io_img_output(img)
                 images_set.append((line_name, img))
                 images_zipped = zip_handler.put_in_zip(images_set)
-                print(f'images_zipped {i}')
                 i += 1
         else:
+            # run LOCAL
             from pylibdmtx.pylibdmtx import encode
             for line in lines:
                 count_i = '{0:0>4}'.format(i)
