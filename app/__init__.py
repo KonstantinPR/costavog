@@ -63,4 +63,4 @@ from app.views import detailing_report_views
 from app.views import spec_views
 from app.views import routes_getter_views
 from app.views import images_foldering_views
-from app.views import datamatrix_views
+from app.views import barcode_views

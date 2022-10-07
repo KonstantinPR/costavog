@@ -7,31 +7,27 @@ from PIL import Image
 from app.modules import io_output, zip_handler
 import treepoem
 import os
-import barcode
 
 from barcode.writer import ImageWriter
 from io import BytesIO
 
-from barcode import EAN13
 from barcode import Code128
-from barcode.writer import SVGWriter
-from barcode import generate
 
 
-@app.route('/datamatrix', methods=['GET', 'POST'])
+@app.route('/barcode', methods=['GET', 'POST'])
 @login_required
-def datamatrix():
+def barcode():
     """png datamatrix from txt in zip"""
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']
 
         if not request.files['file']:
             flash("Не приложен файл")
-            return render_template('upload_datamatrix.html')
+            return render_template('upload_barcode.html')
 
         if not request.form['type-barcode']:
             flash("Тип баркода который будем печатать")
-            return render_template('upload_datamatrix.html')
+            return render_template('upload_barcode.html')
 
         type_barcode = request.form['type-barcode']
         print(f'type_barcode {type_barcode}')
@@ -49,9 +45,11 @@ def datamatrix():
         images_zipped = []
         images_set = []
 
-        # Write to a file-like object:
+        if len(lines[0]) > 100:
+            type_barcode = 'Datamatrix'
+            flash("Code128 can't contain more then 100 simbol so type_barcode is chenged on Datamatrix")
+
         if type_barcode == 'code128':
-            from pylibdmtx.pylibdmtx import encode
             for line in lines:
                 count_i = '{0:0>4}'.format(i)
                 line_name = f'bar_{count_i}.png'
@@ -67,7 +65,7 @@ def datamatrix():
             return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
         if 'DYNO' in os.environ:
-            # run on HEROKU
+            # run on HEROKU cause the one don't understand pylibdmtx library
             for line in lines:
                 count_i = '{0:0>4}'.format(i)
                 line_name = f'bar_{count_i}.png'
@@ -80,7 +78,7 @@ def datamatrix():
                 images_zipped = zip_handler.put_in_zip(images_set)
                 i += 1
         else:
-            # run LOCAL
+            # run LOCAL cause it much faster than pylibdmtx library
             from pylibdmtx.pylibdmtx import encode
             for line in lines:
                 count_i = '{0:0>4}'.format(i)
@@ -94,4 +92,4 @@ def datamatrix():
 
         return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
-    return render_template('upload_datamatrix.html', doc_string=datamatrix.__doc__)
+    return render_template('upload_barcode.html', doc_string=barcode.__doc__)
