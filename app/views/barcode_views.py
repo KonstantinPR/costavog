@@ -47,7 +47,7 @@ def barcode():
 
         if len(lines[0]) > 100:
             type_barcode = 'Datamatrix'
-            flash("Code128 can't contain more then 100 simbol so type_barcode is chenged on Datamatrix")
+            # flash("Code128 can't contain more then 100 simbol so type_barcode is chenged on Datamatrix")
 
         if type_barcode == 'code128':
             for line in lines:

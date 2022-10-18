@@ -114,7 +114,8 @@ def zip_detail(zip_downloaded, df_net_cost):
     df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
 
     if not isinstance(df_net_cost, bool):
-        df_result['Артикул поставщика'].fillna(df_result['supplierArticle'])
+        if 'Артикул поставщика' in df_result:
+            df_result['Артикул поставщика'].fillna(df_result['supplierArticle'])
         df_result = df_result.merge(df_net_cost.rename(columns={'article': 'Артикул поставщика'}), how='outer',
                                     on='Артикул поставщика')
 

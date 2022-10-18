@@ -153,7 +153,7 @@ def revenue_processing_module(request):
         date_parts = DATE_PARTS
 
     if request.form.get('k_smooth'):
-        k_smooth = request.form.get('k_smooth')
+        k_smooth = int(request.form.get('k_smooth'))
     else:
         k_smooth = K_SMOOTH
 
@@ -231,10 +231,10 @@ def revenue_processing_module(request):
     df = get_k_discount(df, df_revenue_col_name_list)
     df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
     df['Согласованная скидка, %'] = [3 if 0 < x < 3 else x for x in df['Согласованная скидка, %']]
-    df['Согласованная скидка, %'] = ['' if x < 0 or x == 0 else x for x in df['Согласованная скидка, %']]
-    df['Согласованная скидка, %'] = round(['Согласованная скидка, %'] + \
-                                              (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
-
+    df['Согласованная скидка, %'] = [0 if x < 0 or x == 0 else x for x in df['Согласованная скидка, %']]
+    df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
+                                          (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
+    df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
 
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
