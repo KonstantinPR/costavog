@@ -152,18 +152,18 @@ def parser(url, low_price, top_price):
         print('Ошибка! Вы забыли закрыть созданный ранее excel файл. Закройте и повторите попытку')
 
 
-if __name__ == '__main__':
-    """ссылку на каталог или подкаталог, указывать без фильтров (без ценовых, сортировки и тд.)"""
-    # url = input('Введите ссылку на категорию для сбора: ')
-    # low_price = int(input('Введите минимальную сумму товара: '))
-    # top_price = int(input('Введите максимульную сумму товара: '))
-
-    """данные для теста. собераем товар с раздела велосипеды в ценовой категории от 50тыс, до 100тыс"""
-    url = 'https://www.wildberries.ru/catalog/sport/vidy-sporta/velosport/velosipedy'
-    low_price = 50000
-    top_price = 100000
-
-    parser(url, low_price, top_price)
+# if __name__ == '__main__':
+#     """ссылку на каталог или подкаталог, указывать без фильтров (без ценовых, сортировки и тд.)"""
+#     # url = input('Введите ссылку на категорию для сбора: ')
+#     # low_price = int(input('Введите минимальную сумму товара: '))
+#     # top_price = int(input('Введите максимульную сумму товара: '))
+#
+#     """данные для теста. собераем товар с раздела велосипеды в ценовой категории от 50тыс, до 100тыс"""
+#     url = 'https://www.wildberries.ru/catalog/sport/vidy-sporta/velosport/velosipedy'
+#     low_price = 50000
+#     top_price = 100000
+#
+#     parser(url, low_price, top_price)
 
 
 

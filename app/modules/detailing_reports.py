@@ -22,6 +22,7 @@ IMPORTANT_COL_DESC = [
 IMPORTANT_COL_REPORT = [
     'Согласованная скидка, %',
     'discount',
+    'Согл. скидк - disc'
     'Перечисление руб',
     'Логистика руб',
     'Логистика шт',
@@ -47,7 +48,7 @@ DEFAULT_NET_COST = 1000
 DATE_FORMAT = "%Y-%m-%d"
 DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
-K_SMOOTH = 2
+K_SMOOTH = 1
 
 
 def _revenue_per_one(rev, sel, net, log):
@@ -421,7 +422,8 @@ def get_k_discount(df, df_revenue_col_name_list):
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_qt_full'] = [k_qt_full(x) for x in df['quantityFull']]
-    df['k_discount'] = df['k_is_sell'] * df['k_revenue'] * df['k_logistic'] * df['k_net_cost'] * df['k_qt_full']
+    df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
+        'k_qt_full']) / 5
 
     return df
 
@@ -604,7 +606,7 @@ def df_reorder_important_col_desc_first(df):
 
 def df_reorder_important_col_report_first(df):
     important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_DESC)
+    n = len(IMPORTANT_COL_REPORT)
     col_list = df.columns.tolist()
     for col in important_col_list:
         if col in col_list:
