@@ -23,7 +23,7 @@ import os
 # WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 # K_BOOT_LONG_LEGS = 4
 
-# shoes leg
+# # shoes leg
 # K_HEIGHT_LEFT_START = 0.15
 # K_HEIGHT_RIGHT_START = 0.85
 # K_BOTTOM_LEFT_START = 0.10
@@ -41,20 +41,20 @@ import os
 
 
 # shoes small leg
-K_HEIGHT_LEFT_START = 0.05
-K_HEIGHT_RIGHT_START = 0.95
-K_BOTTOM_LEFT_START = 0.10
-K_BOTTOM_RIGHT_START = 0.90
-STEP_ITERATION = 25
-STEP_ITERATION_BOTTOM = 20
-SENSIBILITY_COLOR = 210
-COUNT_STEP_J = 10
-DELIMITER = 4
-NEW_HEIGHT_IM = 3000
-K_WIDTH_HEIGHT_IM = 0.75
-WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
-WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-K_BOOT_LONG_LEGS = 2
+# K_HEIGHT_LEFT_START = 0.15
+# K_HEIGHT_RIGHT_START = 0.85
+# K_BOTTOM_LEFT_START = 0.2
+# K_BOTTOM_RIGHT_START = 0.98
+# STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 10
+# SENSIBILITY_COLOR = 210
+# COUNT_STEP_J = 10
+# DELIMITER = 4
+# NEW_HEIGHT_IM = 3000
+# K_WIDTH_HEIGHT_IM = 0.75
+# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+# K_BOOT_LONG_LEGS = 5
 
 # full clothes
 
@@ -73,6 +73,23 @@ K_BOOT_LONG_LEGS = 2
 # WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
 # K_BOOT_LONG_LEGS = 1
 
+
+# half-full clothes
+
+K_HEIGHT_LEFT_START = 0.10
+K_HEIGHT_RIGHT_START = 0.90
+K_BOTTOM_LEFT_START = 0.10
+K_BOTTOM_RIGHT_START = 0.90
+STEP_ITERATION = 25
+STEP_ITERATION_BOTTOM = 20
+SENSIBILITY_COLOR = 210
+COUNT_STEP_J = 10
+DELIMITER = 4
+NEW_HEIGHT_IM = 3000
+K_WIDTH_HEIGHT_IM = 0.75
+WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+K_BOOT_LONG_LEGS = 1
 
 def crop_images(images: Union[list[PIL.JpegImagePlugin.JpegImageFile], list]) -> BytesIO:
     images_zipped = None
@@ -188,11 +205,14 @@ def _crop_bottom(img, img_crop_height_top):
             if new_bottom != 0:
                 break
         count_i += step
-    left_border = min(left_right_border) - step * 12
-    right_border = width - (max(left_right_border) + step * 2)
+    # left_border = min(left_right_border) - step * 12
+    # right_border = width - (max(left_right_border) + step * 2)
+    left_border = min(left_right_border) - step * 24
+    right_border = width - (max(left_right_border) + step * 4)
     print("new bottom " + str(new_bottom))
     print("left_border " + str(left_border))
     print("right_border" + str(right_border))
+
     return new_bottom, left_border, right_border
 
 

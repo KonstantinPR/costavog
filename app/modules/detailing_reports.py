@@ -349,8 +349,8 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
         if log_rub > 0.25 * to_rub:
             return 0.98
 
-    if log_rub > k_net_cost * net_cost:
-        return 1.01
+    if log_rub > k_net_cost * net_cost and to_rub == 0:
+        return 0.99
 
     return 1
 
@@ -606,7 +606,7 @@ def df_reorder_important_col_desc_first(df):
 
 def df_reorder_important_col_report_first(df):
     important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_REPORT)
+    n = len(IMPORTANT_COL_DESC)
     col_list = df.columns.tolist()
     for col in important_col_list:
         if col in col_list:
