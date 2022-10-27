@@ -83,12 +83,12 @@ def picking_prefixes(df, df_art_prefixes):
                 df['Префикс'][idx] = pre
             if ' ' in pre:
                 print('YEA DETKS')
-                pre = pre.split()
-                print(f'pre_list is {pre}')
-                for i in pre:
+                pre_lst = pre.split()
+                print(f'pre_list is {pre_lst}')
+                for i in pre_lst:
                     print(f'i is {i} in {art}')
                     if i in art:
-                        df['Префикс'][idx] = i
+                        df['Префикс'][idx] = pre
 
         idx = idx + 1
 
