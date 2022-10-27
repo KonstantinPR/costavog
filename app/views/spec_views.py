@@ -20,10 +20,10 @@ def data_to_spec_wb_transcript():
         df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config['SPEC_EXAMPLE'])
         df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
-        df_verticalization_sizes = spec_modifiyer.verticalization_sizes(df_income_date)
-        df_merge_spec = spec_modifiyer.merge_dataframes(df_verticalization_sizes, df_spec_example, 'Артикул товара')
+        df_verticalization_sizes = spec_modifiyer.vertical_size(df_income_date)
+        df_merge_spec = spec_modifiyer.merge_spec(df_verticalization_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_merge_spec, df_art_prefixes)
-        df_merge_spec = spec_modifiyer.merge_dataframes(df_art_prefixes, df_art_prefixes_adding, 'Префикс')
+        df_merge_spec = spec_modifiyer.merge_spec(df_art_prefixes, df_art_prefixes_adding, 'Префикс')
         # df_selection = spec_modifiyer.df_selection(df_merge_spec, df_characters)
 
         print(df_merge_spec)

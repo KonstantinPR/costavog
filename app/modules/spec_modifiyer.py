@@ -24,7 +24,7 @@ def request_to_df(flask_request) -> pd.DataFrame:
     return df
 
 
-def verticalization_sizes(df):
+def vertical_size(df):
     df = df.assign(sizes=df['Размеры'].str.split()).explode('sizes')
     df = df.drop(['Размеры'], axis=1)
     df = df.rename({'sizes': 'Размер'}, axis='columns')
@@ -45,20 +45,20 @@ def verticalization_sizes(df):
     return df
 
 
-def merge_dataframes(df_income, df_spec_example, on) -> pd.DataFrame:
-    df_spec = df_spec_example.merge(df_income, how='outer', suffixes=("_drop_column_on", ""))
+def merge_spec(df_income, df_spec_example, on) -> pd.DataFrame:
+    df_spec = df_spec_example.merge(df_income, how='outer', on=on, suffixes=("_drop_column_on", ""))
     df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
     df_spec.dropna(how='all', axis=1, inplace=True)
-    # df_spec = df_spec[df_spec[on].notna()]
+    df_spec = df_spec[df_spec[on].notna()]
 
     return df_spec
 
 
-def merge_dataframes2(df_income, df_spec_example, on) -> pd.DataFrame:
-    df_spec = df_spec_example.merge(df_income, how='outer', on=on)
-    # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
-
-    return df_spec
+# def merge_dataframes2(df_income, df_spec_example, on) -> pd.DataFrame:
+#     df_spec = df_spec_example.merge(df_income, how='outer', on=on)
+#     # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
+#
+#     return df_spec
 
 
 def merge_nan_drop(df1, df2, on, cols):
@@ -71,6 +71,7 @@ def merge_nan_drop(df1, df2, on, cols):
 
 
 def picking_prefixes(df, df_art_prefixes):
+    """search what kind of product in spec via name of art, for example if begin SK and contain -B- then is eco-fur"""
     prefixes = set([x for x in df_art_prefixes['Префикс']])
     df['Префикс'] = ''
     idx = 0
@@ -78,8 +79,17 @@ def picking_prefixes(df, df_art_prefixes):
         for pre in prefixes:
             if art.startswith(pre):
                 df['Префикс'][idx] = pre
-            if pre in art:
+            if f'-{pre}-' in art:
                 df['Префикс'][idx] = pre
+            if ' ' in pre:
+                print('YEA DETKS')
+                pre = pre.split()
+                print(f'pre_list is {pre}')
+                for i in pre:
+                    print(f'i is {i} in {art}')
+                    if i in art:
+                        df['Префикс'][idx] = i
+
         idx = idx + 1
 
     print(prefixes)
