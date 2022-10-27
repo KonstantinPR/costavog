@@ -95,6 +95,19 @@ def picking_prefixes(df, df_art_prefixes):
     print(prefixes)
     return df
 
+def picking_colors (df, df_colors):
+    """colors picking from english"""
+    # colors_eng = set([x.lower() for x in df_colors['Цвет английский']])
+    idx = 0
+    for art in df['Артикул товара']:
+        jdx = 0
+        for color in df_colors['Цвет английский']:
+            if f'-{color.upper()}' in art:
+                print(df_colors['Цвет русский'][jdx])
+                df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
+            jdx = jdx + 1
+        idx = idx + 1
+    return df
 
 def df_selection(df_income, df_characters) -> pd.DataFrame:
     return df_income

@@ -20,17 +20,19 @@ def data_to_spec_wb_transcript():
         df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config['SPEC_EXAMPLE'])
         df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
+        df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df_verticalization_sizes = spec_modifiyer.vertical_size(df_income_date)
         df_merge_spec = spec_modifiyer.merge_spec(df_verticalization_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_merge_spec, df_art_prefixes)
-        df_merge_spec = spec_modifiyer.merge_spec(df_art_prefixes, df_art_prefixes_adding, 'Префикс')
+        df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors)
+        df = spec_modifiyer.merge_spec(df_art_prefixes, df_colors_adding, 'Префикс')
         # df_selection = spec_modifiyer.df_selection(df_merge_spec, df_characters)
 
-        print(df_merge_spec)
+        print(df)
         # df_is_new
         # df = df_picked_values
 
-        df_output = io_output.io_output(df_merge_spec)
+        df_output = io_output.io_output(df)
         return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
