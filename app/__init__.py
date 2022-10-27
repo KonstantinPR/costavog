@@ -30,7 +30,9 @@ app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВ�
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ/НОВЫЕ"
 app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
 app.config['CHARACTERS_PRODUCTS'] = "/TASKER/CHARACTERS"
+app.config['ECO_FURS_WOMEN'] = "/TASKER/CHARACTERS/ECO_FURS_WOMEN"
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
+
 
 
 db.init_app(app)

@@ -45,14 +45,46 @@ def verticalization_sizes(df):
     return df
 
 
-def picking_characters(df_income, df_spec_example) -> pd.DataFrame:
-    df_spec = df_spec_example.merge(df_income, how='outer', on='Артикул товара', suffixes=("_drop_column_on", ""))
+def merge_dataframes(df_income, df_spec_example, on) -> pd.DataFrame:
+    df_spec = df_spec_example.merge(df_income, how='outer', suffixes=("_drop_column_on", ""))
     df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
+    df_spec.dropna(how='all', axis=1, inplace=True)
+    # df_spec = df_spec[df_spec[on].notna()]
 
     return df_spec
 
 
+def merge_dataframes2(df_income, df_spec_example, on) -> pd.DataFrame:
+    df_spec = df_spec_example.merge(df_income, how='outer', on=on)
+    # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
+
+    return df_spec
+
+
+def merge_nan_drop(df1, df2, on, cols):
+    replace_list = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
+    df_merge = df1.merge(df2, how='outer', on=on, suffixes=('', '_drop'))
+    df_merge[cols] = np.where(df1[cols].isin(replace_list), df2[cols], df1[cols]).astype(int)
+    df_drop = df_merge.drop(columns=[x for x in df_merge.columns if '_drop' in x])
+
+    return df_drop
+
+
+def picking_prefixes(df, df_art_prefixes):
+    prefixes = set([x for x in df_art_prefixes['Префикс']])
+    df['Префикс'] = ''
+    idx = 0
+    for art in df['Артикул товара']:
+        for pre in prefixes:
+            if art.startswith(pre):
+                df['Префикс'][idx] = pre
+            if pre in art:
+                df['Префикс'][idx] = pre
+        idx = idx + 1
+
+    print(prefixes)
+    return df
+
+
 def df_selection(df_income, df_characters) -> pd.DataFrame:
-    for i in df_characters['Лекало']:
-        pass
     return df_income
