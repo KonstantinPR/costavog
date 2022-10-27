@@ -13,6 +13,7 @@ from typing import Union
 def get_excel_file_from_ydisk(path: str) -> pd.DataFrame:
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
+    print(f'ya_path {path_yandex_file}')
     # file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)

@@ -5,7 +5,7 @@ from io import BytesIO
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import pandas as pd
-from app.modules import text_handler, io_output, spec_modifiyer
+from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler
 import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 
@@ -18,8 +18,20 @@ def data_to_spec_wb_transcript():
        На входе файл с данными в эксель, на выходе эксель с данными пригодными для спецификации wb"""
 
     if request.method == 'POST':
-        df = spec_modifiyer.data_transcript(flask.request)
-        df_output = io_output.io_output(df)
+        df_income_date = spec_modifiyer.request_to_df(flask.request)
+        df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
+        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config['SPEC_EXAMPLE'])
+        df_verticalization_sizes = spec_modifiyer.verticalization_sizes(df_income_date)
+        df_merge_spec = spec_modifiyer.picking_characters(df_verticalization_sizes, df_spec_example)
+        df_selection = spec_modifiyer.df_selection(df_merge_spec, df_characters)
+
+
+
+        print(df_selection)
+        # df_is_new
+        # df = df_picked_values
+
+        df_output = io_output.io_output(df_selection)
         return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)

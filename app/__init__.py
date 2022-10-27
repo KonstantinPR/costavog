@@ -29,6 +29,9 @@ app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ/НОВЫЕ"
 app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
+app.config['CHARACTERS_PRODUCTS'] = "/TASKER/CHARACTERS"
+app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
+
 
 db.init_app(app)
 login.init_app(app)

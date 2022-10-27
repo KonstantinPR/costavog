@@ -30,6 +30,7 @@ IMPORTANT_COL_REPORT = [
     'net_cost',
     'quantity_Возврат_sum',
     'quantity_Продажа_sum',
+    'sells_qt_with_back'
     'quantityFull',
     'k_discount',
     'k_is_sell',

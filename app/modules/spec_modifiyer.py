@@ -17,84 +17,42 @@ import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 from dataclasses import dataclass
 
-col_names = [
-
-    'Номер карточки',
-    'Категория товара',
-    'Бренд',
-    'Артикул поставщика',
-    'Артикул цвета',
-    'Пол',
-    'Размер',
-    'Рос. размер',
-    'Штрихкод товара',
-    'Розничная цена',
-    'Состав',
-    'Комплектация',
-    'Фото',
-    'Страна производства',
-    'Тнвэд',
-    'Основной цвет',
-    'Доп. цвета',
-    'Ключевые слова',
-    'Описание',
-    'Вес (г)',
-    'Вид застежки',
-    'Вид каблука',
-    'Вид мыска',
-    'Высота голенища',
-    'Высота каблука',
-    'Высота обуви',
-    'Высота платформы',
-    'Высота подошвы',
-    'Декоративные элементы',
-    'Коллекция',
-    'Любимые герои',
-    'Материал подкладки обуви',
-    'Материал подошвы обуви',
-    'Материал стельки',
-    'Модель балеток',
-    'Модель босоножек/сандалий',
-    'Модель ботинок',
-    'Модель туфель',
-    'Назначение обуви',
-    'Наличие мембраны',
-    'Обхват голенища',
-    'Оптимальная скорость спортсмена',
-    'Оптимальный вес спортсмена',
-    'Ортопедия',
-    'Особенности модели',
-    'Перепад с пятки на носок',
-    'Полнота обуви (EUR)',
-    'Рисунок',
-    'Сезон',
-    'Стилистика',
-    'Тип покрытия',
-    'Тип пронации',
-
-]
-
-heel_shape = {
-
-    'ки': 'кирпичик',
-    'ст': 'столбик',
-    'ко': 'конусовидный',
-    'шп': 'шпилька',
-    'та': 'танкетка',
-
-}
-
 
 @decorators.flask_request_to_df
-def data_transcript(flask_request) -> pd.DataFrame:
+def request_to_df(flask_request) -> pd.DataFrame:
     df = flask_request
-    for col_name in col_names:
-        col_names_spec = [col for col in df.columns if col_name in col]
+    return df
 
+
+def verticalization_sizes(df):
+    df = df.assign(sizes=df['Размеры'].str.split()).explode('sizes')
+    df = df.drop(['Размеры'], axis=1)
+    df = df.rename({'sizes': 'Размер'}, axis='columns')
     print(df.columns)
-    print(col_names_spec)
 
-    for col_name_spec in col_names_spec:
-        df[col_name_spec] = df[col_name_spec].replace(heel_shape)
+    # OLD RIGHT
+    # lst_art = []
+    # lst_sizes = [x.split() for x in df['Размеры']]
+    # for i in range(len(lst_sizes)):
+    #     for j in range(len(lst_sizes[i])):
+    #         lst_art.append(df['Артикул полный'][i])
+    #
+    # lst_sizes = sum(lst_sizes, [])
+    # df = pd.DataFrame({'Артикул полный': lst_art, 'Размеры': lst_sizes})
+
+    print(df)
 
     return df
+
+
+def picking_characters(df_income, df_spec_example) -> pd.DataFrame:
+    df_spec = df_spec_example.merge(df_income, how='outer', on='Артикул товара', suffixes=("_drop_column_on", ""))
+    df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
+
+    return df_spec
+
+
+def df_selection(df_income, df_characters) -> pd.DataFrame:
+    for i in df_characters['Лекало']:
+        pass
+    return df_income
