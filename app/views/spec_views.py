@@ -25,7 +25,7 @@ def data_to_spec_wb_transcript():
         df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_merge_spec, df_art_prefixes)
         df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors)
-        df = spec_modifiyer.merge_spec(df_art_prefixes, df_colors_adding, 'Префикс')
+        df = spec_modifiyer.merge_spec(df_art_prefixes, df_colors_adding, 'Лекало')
         # df_selection = spec_modifiyer.df_selection(df_merge_spec, df_characters)
 
         print(df)
