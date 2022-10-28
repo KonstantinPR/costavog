@@ -62,6 +62,7 @@ def merge_spec(df_income, df_spec_example, on) -> pd.DataFrame:
 
 
 def merge_nan_drop(df1, df2, on, cols):
+    """not working variant on 28.10.2020 with not one dimension of matrix"""
     replace_list = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
     df_merge = df1.merge(df2, how='outer', on=on, suffixes=('', '_drop'))
     df_merge[cols] = np.where(df1[cols].isin(replace_list), df2[cols], df1[cols]).astype(int)
@@ -73,37 +74,34 @@ def merge_nan_drop(df1, df2, on, cols):
 def picking_prefixes(df, df_art_prefixes):
     """search what kind of product in spec via name of art, for example if begin SK and contain -B- then is eco-fur"""
     prefixes = set([x for x in df_art_prefixes['Префикс']])
+    print(prefixes)
     df['Префикс'] = ''
     idx = 0
     for art in df['Артикул товара']:
+        print(f'{art}')
         for pre in prefixes:
-            if art.startswith(pre):
-                df['Префикс'][idx] = pre
-            if f'-{pre}-' in art:
-                df['Префикс'][idx] = pre
+            print(f'-{pre}-')
             if ' ' in pre:
-                print('YEA DETKS')
                 pre_lst = pre.split()
-                print(f'pre_list is {pre_lst}')
                 for i in pre_lst:
-                    print(f'i is {i} in {art}')
-                    if i in art:
+                    if f'-{i}-' in art:
                         df['Префикс'][idx] = pre
-
+                print(f"Префикс ' ' style is {df['Префикс'][idx]}")
+            elif f'-{pre}-' in art:
+                df['Префикс'][idx] = pre
+            elif art.startswith(pre):
+                df['Префикс'][idx] = pre
+        print(f"Префикс {df['Префикс'][idx]}")
         idx = idx + 1
-
-    print(prefixes)
     return df
 
 def picking_colors (df, df_colors):
     """colors picking from english"""
-    # colors_eng = set([x.lower() for x in df_colors['Цвет английский']])
     idx = 0
     for art in df['Артикул товара']:
         jdx = 0
         for color in df_colors['Цвет английский']:
             if f'-{color.upper()}' in art:
-                print(df_colors['Цвет русский'][jdx])
                 df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
             jdx = jdx + 1
         idx = idx + 1
