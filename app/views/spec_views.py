@@ -17,22 +17,22 @@ def data_to_spec_wb_transcript():
 
     if request.method == 'POST':
         df_income_date = spec_modifiyer.request_to_df(flask.request)
-        # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
+        df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config['SPEC_EXAMPLE'])
         df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df_verticaling_sizes = spec_modifiyer.vertical_size(df_income_date)
+        # df_check_exist_art = spec_modifier.check_art_existing(df_verticaling_sizes)
         df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_merge_spec, df_art_prefixes)
         df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors)
-        df = spec_modifiyer.merge_spec(df_art_prefixes, df_colors_adding, 'Лекало')
-        # df_selection = spec_modifiyer.df_selection(df_merge_spec, df_characters)
+        df_pattern_merge = spec_modifiyer.merge_spec(df_art_prefixes, df_colors_adding, 'Лекало')
+        df_clear = spec_modifiyer.df_clear(df_pattern_merge)
+        df_added_some_col = spec_modifiyer.col_adding(df_clear)
 
-        print(df)
-        # df_is_new
-        # df = df_picked_values
+        print(df_added_some_col)
 
-        df_output = io_output.io_output(df)
+        df_output = io_output.io_output(df_added_some_col)
         return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)

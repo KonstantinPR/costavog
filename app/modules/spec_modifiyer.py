@@ -17,6 +17,11 @@ import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 from dataclasses import dataclass
 
+PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
+"""40 / 10000**0.3 = 2.52"""
+"""40 / 1000**0.3 = 5.03"""
+"""40 / 100**0.3 = 10.04"""
+
 
 @decorators.flask_request_to_df
 def request_to_df(flask_request) -> pd.DataFrame:
@@ -97,5 +102,39 @@ def picking_colors(df, df_colors):
     return df
 
 
-def df_selection(df_income, df_characters) -> pd.DataFrame:
+def df_clear(df_income) -> pd.DataFrame:
+    df_income['Артикул товара'].replace('', np.nan, inplace=True)
+    df_income.dropna(subset=['Артикул товара'], inplace=True)
+    return df_income
+
+
+def col_adding(df_income):
+    df_income['Рос. размер'] = ''
+    df_income['Номер карточки'] = ''
+
+    for art, idx in zip(df_income['Артикул товара'], range(len(df_income['Артикул товара']))):
+        print(art)
+        if not art.startswith('J'):
+            df_income['Рос. размер'][idx] = df_income['Размер'][idx]
+
+    df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
+
+    for color, idx in zip(df_income['Цвет'], range(len(df_income['Описание']))):
+        if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый']:
+            df_income['Описание'][idx] += f' Дополнительный аксессуар к свадебному гардеробу'
+
+    # выделяем номера карточек на основе лекал, если нет лекал - всем уникальные
+    set_patterns = set(df_income['Лекало'])
+    set_art = set(df_income['Артикул товара'])
+    dict_patterns = {k: v for k, v in zip(set_patterns, range(len(set_patterns)))}
+    dict_arts = {k: v for k, v in zip(set_art, range(len(set_art) + len(set_patterns)))}
+    print(dict_patterns)
+    for pattern, idx in zip(df_income['Лекало'], range(len(df_income['Лекало']))):
+        if dict_patterns[pattern]:
+            df_income['Номер карточки'][idx] = dict_patterns[pattern]
+
+    for art, idx in zip(df_income['Артикул товара'], range(len(df_income['Артикул товара']))):
+        if not df_income['Номер карточки'][idx]:
+            df_income['Номер карточки'][idx] = dict_arts[art]
+
     return df_income
