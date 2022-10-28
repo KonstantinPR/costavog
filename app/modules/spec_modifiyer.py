@@ -109,31 +109,38 @@ def df_clear(df_income) -> pd.DataFrame:
 
 
 def col_adding(df_income):
+    # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
     df_income['Номер карточки'] = ''
-
     for art, idx in zip(df_income['Артикул товара'], range(len(df_income['Артикул товара']))):
         print(art)
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
+    # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат с маркетинговым приемом
     df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
 
+    # дописываем описание для светлых изделий - как возможно подходящие к свадебному наряду
     for color, idx in zip(df_income['Цвет'], range(len(df_income['Описание']))):
         if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый']:
             df_income['Описание'][idx] += f' Дополнительный аксессуар к свадебному гардеробу'
 
-    # выделяем номера карточек на основе лекал, если нет лекал - всем уникальные
+    # нумеруем карточки на основе лекал, если нет лекал - на основе одинаковых артикулей
     set_patterns = set(df_income['Лекало'])
     set_art = set(df_income['Артикул товара'])
-    dict_patterns = {k: v for k, v in zip(set_patterns, range(len(set_patterns)))}
-    dict_arts = {k: v for k, v in zip(set_art, range(len(set_art) + len(set_patterns)))}
-    print(dict_patterns)
-    for pattern, idx in zip(df_income['Лекало'], range(len(df_income['Лекало']))):
+    print(f'set_art {set_art}')
+    print(f'len_patterns {len(set_patterns)}')
+    dict_patterns = {k: v for v, k in enumerate(set_patterns, 1)}
+    print(f'dict_arts {dict_patterns}')
+    dict_arts = {k: v for v, k in enumerate(set_art, len(set_art) + len(set_patterns) + 1)}
+    print(f'dict_arts {dict_arts}')
+
+    for idx, pattern in enumerate(df_income['Лекало']):
+        print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
         if dict_patterns[pattern]:
             df_income['Номер карточки'][idx] = dict_patterns[pattern]
 
-    for art, idx in zip(df_income['Артикул товара'], range(len(df_income['Артикул товара']))):
+    for idx, art in enumerate(df_income['Артикул товара']):
         if not df_income['Номер карточки'][idx]:
             df_income['Номер карточки'][idx] = dict_arts[art]
 
