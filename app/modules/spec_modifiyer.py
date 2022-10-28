@@ -84,37 +84,6 @@ def picking_prefixes(df, df_art_prefixes):
     return df
 
 
-# def picking_prefixes2(df, df_art_prefixes):
-#     """search what kind of product in spec via name of art, for example if begin SK and contain -B- then is eco-fur"""
-#     prefixes = set([x for x in df_art_prefixes['Префикс']])
-#     print(prefixes)
-#     df['Префикс'] = ''
-#     idx = 0
-#     for art in df['Артикул товара']:
-#         print(f'{art}')
-#         for pre in prefixes:
-#             if ' ' in pre:
-#                 pre_lst = pre.split()
-#                 for i in pre_lst:
-#                     if f'-{i}-' in art:
-#                         df['Префикс'][idx] = pre
-#                 # print(f"Префикс ' ' style is {df['Префикс'][idx]}")
-#                 print(f'case 1')
-#             elif f'-{pre}-' in art:
-#                 df['Префикс'][idx] = pre
-#                 print(f'case 2')
-#             elif art.startswith(pre):
-#                 df['Префикс'][idx] = pre
-#                 print(f'case 3')
-#
-#         print(idx)
-#         print(f"Префикс {df['Префикс'][idx]}")
-#
-#         idx = idx + 1
-#
-#     return df
-
-
 def picking_colors(df, df_colors):
     """colors picking from english"""
     idx = 0
