@@ -1,21 +1,7 @@
-from app import app
-from flask import render_template, request, redirect, send_file
-from flask_login import login_required, current_user
-from app.models import Product, db
-import datetime
 import pandas as pd
-from app.modules import detailing, detailing_reports, yandex_disk_handler, decorators
-from app.modules import io_output
-import time
-import flask
-from werkzeug.datastructures import FileStorage
-from io import BytesIO
-from app import app
-from flask import flash, render_template, request, redirect, send_file
-from app.modules import text_handler, io_output
+from app.modules import decorators
 import numpy as np
-from flask_login import login_required, current_user, login_user, logout_user
-from dataclasses import dataclass
+from random import randrange
 
 PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 10000**0.3 = 2.52"""
@@ -30,10 +16,10 @@ def request_to_df(flask_request) -> pd.DataFrame:
 
 
 def vertical_size(df):
-    df = df.assign(sizes=df['Размеры'].str.split()).explode('sizes')
-    df = df.drop(['Размеры'], axis=1)
-    df = df.rename({'sizes': 'Размер'}, axis='columns')
-    print(df.columns)
+    if 'Размеры' in df:
+        df = df.assign(sizes=df['Размеры'].str.split()).explode('sizes')
+        df = df.drop(['Размеры'], axis=1)
+        df = df.rename({'sizes': 'Размер'}, axis='columns')
 
     # OLD RIGHT
     # lst_art = []
@@ -45,18 +31,26 @@ def vertical_size(df):
     # lst_sizes = sum(lst_sizes, [])
     # df = pd.DataFrame({'Артикул полный': lst_art, 'Размеры': lst_sizes})
 
-    print(df)
-
     return df
 
 
-def merge_spec(df_income, df_spec_example, on) -> pd.DataFrame:
-    df_spec = df_spec_example.merge(df_income, how='outer', on=on, suffixes=("_drop_column_on", ""))
-    df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
-    df_spec.dropna(how='all', axis=1, inplace=True)
-    df_spec = df_spec[df_spec[on].notna()]
+def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
+    random_suffix = f'_on_drop_{randrange(1000000)}'
+    df = df1.merge(df2, how='outer', on=on, suffixes=('', random_suffix,))
+    for idx, col in enumerate(df.columns):
+        if f'{col}{random_suffix}' in df.columns:
+            for idj, val in enumerate(df[f'{col}{random_suffix}']):
+                if not pd.isna(val):
+                    df[col][idj] = val
+    df = df.drop(columns=[x for x in df.columns if random_suffix in x])
+    df = df[df[on].notna()]
 
-    return df_spec
+    # df_spec = df_spec_example.merge(df_income, how='outer', on=on, suffixes=("_drop_column_on", ""))
+    # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
+    # df_spec.dropna(how='all', axis=1, inplace=True)
+    # df_spec = df_spec[df_spec[on].notna()]
+
+    return df
 
 
 # def merge_dataframes2(df_income, df_spec_example, on) -> pd.DataFrame:
@@ -66,22 +60,22 @@ def merge_spec(df_income, df_spec_example, on) -> pd.DataFrame:
 #     return df_spec
 
 
-def merge_nan_drop(df1, df2, on, cols):
-    """not working variant on 28.10.2020 with not one dimension of matrix"""
-    replace_list = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
-    df_merge = df1.merge(df2, how='outer', on=on, suffixes=('', '_drop'))
-    df_merge[cols] = np.where(df1[cols].isin(replace_list), df2[cols], df1[cols]).astype(int)
-    df_drop = df_merge.drop(columns=[x for x in df_merge.columns if '_drop' in x])
-
-    return df_drop
+# def merge_nan_drop(df1, df2, on, cols):
+#     """not working variant on 28.10.2020 with not one dimension of matrix"""
+#     replace_list = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
+#     df_merge = df1.merge(df2, how='outer', on=on, suffixes=('', '_drop'))
+#     df_merge[cols] = np.where(df1[cols].isin(replace_list), df2[cols], df1[cols]).astype(int)
+#     df_drop = df_merge.drop(columns=[x for x in df_merge.columns if '_drop' in x])
+#
+#     return df_drop
 
 
 def picking_prefixes(df, df_art_prefixes):
     """to fill df on coincidence startwith and in"""
     df['Префикс'] = ''
     df['Лекало'] = ''
-    for art, idx in zip(df['Артикул товара'], range(len(df['Артикул товара']))):
-        for pattern, idy in zip(df_art_prefixes["Лекало"], range(len(df_art_prefixes["Лекало"]))):
+    for idx, art in enumerate(df['Артикул товара']):
+        for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 if f'-{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
                     df['Лекало'][idx] = pattern
@@ -112,17 +106,16 @@ def col_adding(df_income):
     # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
     df_income['Номер карточки'] = ''
-    for art, idx in zip(df_income['Артикул товара'], range(len(df_income['Артикул товара']))):
-        print(art)
+    for idx, art in enumerate(df_income['Артикул товара']):
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
     # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат с маркетинговым приемом
     df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
 
-    # дописываем описание для светлых изделий - как возможно подходящие к свадебному наряду
-    for color, idx in zip(df_income['Цвет'], range(len(df_income['Описание']))):
-        if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый']:
+    # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
+    for idx, color in enumerate(df_income['Цвет']):
+        if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый'] and df_income['Префикс'][idx] == 'SK':
             df_income['Описание'][idx] += f' Дополнительный аксессуар к свадебному гардеробу'
 
     # нумеруем карточки на основе лекал, если нет лекал - на основе одинаковых артикулей
@@ -145,3 +138,9 @@ def col_adding(df_income):
             df_income['Номер карточки'][idx] = dict_arts[art]
 
     return df_income
+
+
+def col_str(df, lst: list):
+    for col in lst:
+        df[col] = [str(x) for x in df[col]]
+    return df
