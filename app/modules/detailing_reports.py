@@ -23,6 +23,7 @@ IMPORTANT_COL_REPORT = [
     'Согласованная скидка, %',
     'discount',
     'Согл. скидк - disc',
+    'price_disc'
     'Перечисление руб',
     'Логистика руб',
     'Логистика шт',
@@ -81,6 +82,14 @@ def key_indicators_module(file_content):
 
     df['market_cost'] = df['price_disc'] * df['quantityFull']
     key_indicators['market_cost'] = df['market_cost'].sum()
+    key_indicators['Перечисление руб'] = df['Перечисление руб'].sum()
+    key_indicators['retail_price_Пр_Взвр'] = df['retail_price_withdisc_rub_Продажа_sum'].sum() - df[
+        'retail_price_withdisc_rub_Возврат_sum'].sum()
+    key_indicators['comission_and_exp_all'] = 1 - (
+            key_indicators['Перечисление руб'] / key_indicators['retail_price_Пр_Взвр'])
+    print(f"comission_to_wb {key_indicators['comission_and_exp_all']}")
+    key_indicators['our_income_for_all'] = key_indicators['market_cost'] * (1 - key_indicators['comission_and_exp_all'])
+
     key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
         "quantityFull"]).sum() / df[df["net_cost"] != 0]["quantityFull"].sum()
 
@@ -117,8 +126,9 @@ def key_indicators_module(file_content):
 
     for k, v in key_indicators.items():
         if not 'revenue_net_dif_med' in k:
-            key_indicators[k] = int(v)
-        print(f'{k} {key_indicators[k]}')
+            print(f'{k} {key_indicators[k]}')
+            if key_indicators[k] > 1000:
+                key_indicators[k] = int(v)
 
     df = df.from_dict(key_indicators, orient='index', columns=['key_indicator'])
 
@@ -224,8 +234,8 @@ def revenue_processing_module(request):
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
 
     df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
-                             df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1)
-
+                             df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1) - \
+                             df[[col for col in df.columns if "delivery_rub_Логистика" in col]].sum(axis=1)
     # Принятие решения о скидке на основе сформированных данных ---
     # коэффициент влияния на скидку
     df['k_discount'] = 1
@@ -248,7 +258,6 @@ def revenue_processing_module(request):
     df = df_reorder_important_col_report_first(df)
     df = df_reorder_revenue_col_first(df)
     df = df.sort_values(by='Прибыль_sum')
-
 
     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
     df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)
@@ -349,38 +358,6 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
         return 0.99
 
     return 1
-
-    # if to_rub == 0 and log_rub <= net_cost * k_net_cost:
-    #     return 1
-    # if to_rub != 0 and to_rub - from_rub <= log_rub:
-    #     return 0.97
-    # if to_rub < log_rub and log_rub > net_cost:
-    #     return 0.94
-    #
-    # if to_rub < from_rub:
-    #     return 1.02
-    #
-    # if to_rub - log_rub < from_rub or to_rub - from_rub < 0:
-    #     return 1
-    #
-    # tofrom_rub = to_rub - from_rub
-    #
-    # # каково отношение денег к перечислению и денег, потраченных на логистику:
-    # if tofrom_rub == 0:
-    #     return 0.98
-    # k_log = log_rub / tofrom_rub
-    # # в зависимости от цены товара (чем дороже - тем больше можно возить без вреда на прибыльности)
-    # if k_log > 1 or k_log < 0:
-    #     # если логистика = всему что к перечислению, то сильно уменьшаем скидку
-    #     return 0.90
-    # if k_log > 0.5:
-    #     # если логистика = половине от перечисляемого, то уменьшаем скидку в 2 раза
-    #     return 0.90
-    # if k_log > 0.25:
-    #     # если логистика = четверти от перечисляемого, то уменьшаем скидку на четверть
-    #     return 0.98
-    # # в остальных случаях оставляем скидку без изменения
-    # return 1
 
 
 def k_net_cost(net_cost, price_disc):
@@ -567,6 +544,7 @@ def get_important_columns(df):
         'quantity_Возврат',
         'quantity_Логистика',
         'net_cost',
+        'quantityFull',
         'delivery_rub_Возврат',
         'delivery_rub_Логистика',
         'delivery_rub_Продажа',
@@ -578,7 +556,6 @@ def get_important_columns(df):
         'delivery_amount_Логистика',
         'return_amount_Логистика',
         'daysOnSite',
-        'quantityFull',
         'article',
         'company_id',
         'sa_name',
@@ -602,7 +579,7 @@ def df_reorder_important_col_desc_first(df):
 
 def df_reorder_important_col_report_first(df):
     important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_DESC)
+    n = len(IMPORTANT_COL_REPORT)
     col_list = df.columns.tolist()
     for col in important_col_list:
         if col in col_list:

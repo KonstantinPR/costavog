@@ -2,7 +2,7 @@ from app import app
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
-from app.modules import detailing, detailing_reports, yandex_disk_handler
+from app.modules import detailing, detailing_reports, yandex_disk_handler, pandas_handler
 from app.modules import io_output
 import time
 
