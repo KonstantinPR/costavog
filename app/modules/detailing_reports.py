@@ -249,11 +249,6 @@ def revenue_processing_module(request):
     df = df_reorder_revenue_col_first(df)
     df = df.sort_values(by='Прибыль_sum')
 
-    # создаем стили для лучшей визуализации таблицы
-    # sf = StyleFrame(df)
-    # sf.apply_column_style(IMPORTANT_COL_REPORT,
-    #                       styler_obj=Styler(bg_color='FFFFCC'),
-    #                       style_header=True)
 
     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
     df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)

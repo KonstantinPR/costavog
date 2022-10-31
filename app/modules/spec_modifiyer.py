@@ -15,11 +15,11 @@ def request_to_df(flask_request) -> pd.DataFrame:
     return df
 
 
-def vertical_size(df):
-    if 'Размеры' in df:
-        df = df.assign(sizes=df['Размеры'].str.split()).explode('sizes')
-        df = df.drop(['Размеры'], axis=1)
-        df = df.rename({'sizes': 'Размер'}, axis='columns')
+def vertical_size(df, col: str = 'Размеры'):
+    if col in df:
+        df = df.assign(temp_col=df[col].str.split()).explode('temp_col')
+        df = df.drop([col], axis=1)
+        df = df.rename({'temp_col': col}, axis='columns')
 
     # OLD RIGHT
     # lst_art = []
@@ -35,7 +35,7 @@ def vertical_size(df):
 
 
 def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
-    random_suffix = f'_on_drop_{randrange(1000000)}'
+    random_suffix = f'_col_on_drop_{randrange(10)}'
     df = df1.merge(df2, how='outer', on=on, suffixes=('', random_suffix,))
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
@@ -45,29 +45,9 @@ def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
     df = df.drop(columns=[x for x in df.columns if random_suffix in x])
     df = df[df[on].notna()]
 
-    # df_spec = df_spec_example.merge(df_income, how='outer', on=on, suffixes=("_drop_column_on", ""))
-    # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
-    # df_spec.dropna(how='all', axis=1, inplace=True)
-    # df_spec = df_spec[df_spec[on].notna()]
 
     return df
 
-
-# def merge_dataframes2(df_income, df_spec_example, on) -> pd.DataFrame:
-#     df_spec = df_spec_example.merge(df_income, how='outer', on=on)
-#     # df_spec.drop([col for col in df_spec.columns if '_drop_column_on' in col], axis=1, inplace=True)
-#
-#     return df_spec
-
-
-# def merge_nan_drop(df1, df2, on, cols):
-#     """not working variant on 28.10.2020 with not one dimension of matrix"""
-#     replace_list = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
-#     df_merge = df1.merge(df2, how='outer', on=on, suffixes=('', '_drop'))
-#     df_merge[cols] = np.where(df1[cols].isin(replace_list), df2[cols], df1[cols]).astype(int)
-#     df_drop = df_merge.drop(columns=[x for x in df_merge.columns if '_drop' in x])
-#
-#     return df_drop
 
 
 def picking_prefixes(df, df_art_prefixes):
@@ -142,5 +122,5 @@ def col_adding(df_income):
 
 def col_str(df, lst: list):
     for col in lst:
-        df[col] = [str(x) for x in df[col]]
+        df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
     return df
