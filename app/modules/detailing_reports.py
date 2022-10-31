@@ -579,7 +579,7 @@ def df_reorder_important_col_desc_first(df):
 
 def df_reorder_important_col_report_first(df):
     important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_REPORT)
+    n = len(IMPORTANT_COL_DESC)
     col_list = df.columns.tolist()
     for col in important_col_list:
         if col in col_list:
