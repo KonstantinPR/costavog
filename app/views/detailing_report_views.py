@@ -22,9 +22,14 @@ def key_indicators():
 
     file_content, file_name = yandex_disk_handler.download_from_yandex_disk()
     df = detailing_reports.key_indicators_module(file_content)
+
+    file_name_key_indicator = f'key_indicator_of_{file_name}'
+    file_content = io_output.io_output(df)
+    yandex_disk_handler.upload_to_yandex_disk(file_content, file_name_key_indicator)
+
     file = io_output.io_output(df)
 
-    return send_file(file, download_name=f'key_indicator_of_{file_name}', as_attachment=True)
+    return send_file(file, download_name=file_name_key_indicator, as_attachment=True)
 
 
 @app.route('/revenue_processing', methods=['POST', 'GET'])
