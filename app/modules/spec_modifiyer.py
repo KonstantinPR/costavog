@@ -32,7 +32,7 @@ def spec_definition(df):
 
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df:
-        df = df.assign(temp_col=df[col].str.split()).explode('temp_col')
+        df = df.assign(temp_col=df[col].str.split()).explode('temp_col', ignore_index=True)
         df = df.drop(columns=col, axis=1)
         df = df.rename({'temp_col': col_re}, axis='columns')
         print(df)
@@ -61,34 +61,39 @@ def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
                 if not pd.isna(val):
                     df[col][idj] = val
     df = df.drop(columns=[x for x in df.columns if random_suffix in x])
-    df = df[df[on].notna()]
+    # df = df[df[on].notna()]
 
     return df
 
 
 def picking_prefixes(df, df_art_prefixes):
     """to fill df on coincidence startwith and in"""
+    print(df_art_prefixes)
     df['Префикс'] = ''
     df['Лекало'] = ''
     for idx, art in enumerate(df['Артикул товара']):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 if f'-{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
-                    df['Лекало'][idx] = pattern
+                    print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
+                    # df['Лекало'][idx] = pattern
+                    df.at[idx, 'Лекало'] = pattern
+                    # df['Префикс'][idx] = df_art_prefixes['Префикс'][idy]
+                    df.at[idx, 'Префикс'] = df_art_prefixes.at[idy, 'Префикс']
+                    print(
+                        f"art {art} pattern {pattern} df.at[idx, 'Лекало'] {df.at[idx, 'Лекало']} df.at[idx, 'Префикс'] {df.at[idx, 'Префикс']} ")
                     break
     return df
 
 
 def picking_colors(df, df_colors):
     """colors picking from english"""
-    idx = 0
-    for art in df['Артикул товара']:
-        jdx = 0
-        for color in df_colors['Цвет английский']:
+    for idx, art in enumerate(df['Артикул товара']):
+        for jdx, color in enumerate(df_colors['Цвет английский']):
+            print(f'art {art}')
             if f'-{color.upper()}' in art:
-                df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
-            jdx = jdx + 1
-        idx = idx + 1
+                # df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
+                df.loc[idx, 'Цвет'] = df_colors.loc[jdx, 'Цвет русский']
     return df
 
 

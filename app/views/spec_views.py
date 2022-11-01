@@ -32,11 +32,11 @@ def data_to_spec_wb_transcript():
         df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало')
         df_clear = spec_modifiyer.df_clear(df_pattern_merge)
         df_added_some_col = spec_modifiyer.col_adding(df_clear)
-        df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
+        # df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
 
-        print(df_to_str)
+        print(df_verticaling_sizes)
 
-        df_output = io_output.io_output(df_to_str)
+        df_output = io_output.io_output(df_verticaling_sizes)
         return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
