@@ -30,6 +30,12 @@ def spec_definition(df):
     return spec_type
 
 
+def df_col_to_str(df, columns=['Префикс', 'Лекало']):
+    for col in columns:
+        df[col] = df[col].astype(str)
+    return df
+
+
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df:
         df = df.assign(temp_col=df[col].str.split()).explode('temp_col', ignore_index=True)
@@ -69,11 +75,13 @@ def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
 def picking_prefixes(df, df_art_prefixes):
     """to fill df on coincidence startwith and in"""
     print(df_art_prefixes)
+    print(df)
     df['Префикс'] = ''
     df['Лекало'] = ''
     for idx, art in enumerate(df['Артикул товара']):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
+                print(f"i {i} pattern {pattern}")
                 if f'-{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
                     print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
                     # df['Лекало'][idx] = pattern

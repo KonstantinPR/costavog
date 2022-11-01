@@ -10,14 +10,16 @@ import copy
 from typing import Union
 
 
-def get_excel_file_from_ydisk(path: str) -> pd.DataFrame:
+def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
+    if to_str is None:
+        to_str = []
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     print(f'ya_path {path_yandex_file}')
     # file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)
-    file_content = pd.read_excel(bytes_io)
+    file_content = pd.read_excel(bytes_io, converters={x: str for x in to_str})
     return file_content
 
 

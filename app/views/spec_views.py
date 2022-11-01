@@ -18,13 +18,13 @@ def data_to_spec_wb_transcript():
     if request.method == 'POST':
         df_income_date = spec_modifiyer.request_to_df(flask.request)
         print(df_income_date)
-        df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
+        # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
-        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type])
+        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type], to_str=['Лекало', 'Префикс'])
+        df_spec_example = spec_modifiyer.df_col_to_str(df_spec_example)
         # df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df_verticaling_sizes = spec_modifiyer.vertical_size(df_income_date)
-        print(df_verticaling_sizes)
         # df_check_exist_art = spec_modifier.check_art_existing(df_verticaling_sizes)
         # df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example)
@@ -32,11 +32,11 @@ def data_to_spec_wb_transcript():
         df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало')
         df_clear = spec_modifiyer.df_clear(df_pattern_merge)
         df_added_some_col = spec_modifiyer.col_adding(df_clear)
-        # df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
+        df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
 
-        print(df_verticaling_sizes)
+        print(df_to_str)
 
-        df_output = io_output.io_output(df_verticaling_sizes)
+        df_output = io_output.io_output(df_to_str)
         return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
