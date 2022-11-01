@@ -8,6 +8,11 @@ PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 1000**0.3 = 5.03"""
 """40 / 100**0.3 = 10.04"""
 
+SPEC_TYPE = {
+    'OAJCAPRON': 'APRON',
+    'SK': 'ECO_FURS_WOMEN'
+}
+
 
 @decorators.flask_request_to_df
 def request_to_df(flask_request) -> pd.DataFrame:
@@ -15,11 +20,22 @@ def request_to_df(flask_request) -> pd.DataFrame:
     return df
 
 
-def vertical_size(df, col: str = 'Размеры'):
+def spec_definition(df):
+    prefix = df['Артикул товара'][0].split('-')[0]
+    if SPEC_TYPE[prefix]:
+        spec_type = SPEC_TYPE[prefix]
+    else:
+        spec_type = SPEC_TYPE['DEFAULT']
+    print(spec_type)
+    return spec_type
+
+
+def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df:
         df = df.assign(temp_col=df[col].str.split()).explode('temp_col')
-        df = df.drop([col], axis=1)
-        df = df.rename({'temp_col': col}, axis='columns')
+        df = df.drop(columns=col, axis=1)
+        df = df.rename({'temp_col': col_re}, axis='columns')
+        print(df)
 
     # OLD RIGHT
     # lst_art = []
@@ -35,6 +51,8 @@ def vertical_size(df, col: str = 'Размеры'):
 
 
 def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
+    print(df2)
+    print(df1)
     random_suffix = f'_col_on_drop_{randrange(10)}'
     df = df1.merge(df2, how='outer', on=on, suffixes=('', random_suffix,))
     for idx, col in enumerate(df.columns):
@@ -45,9 +63,7 @@ def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
     df = df.drop(columns=[x for x in df.columns if random_suffix in x])
     df = df[df[on].notna()]
 
-
     return df
-
 
 
 def picking_prefixes(df, df_art_prefixes):
@@ -121,6 +137,8 @@ def col_adding(df_income):
 
 
 def col_str(df, lst: list):
+    print(df)
     for col in lst:
-        df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
+        if col in df.columns:
+            df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
     return df
