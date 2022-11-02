@@ -30,12 +30,6 @@ def spec_definition(df):
     return spec_type
 
 
-def df_col_to_str(df, columns=['Префикс', 'Лекало']):
-    for col in columns:
-        df[col] = df[col].astype(str)
-    return df
-
-
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df:
         df = df.assign(temp_col=df[col].str.split()).explode('temp_col', ignore_index=True)

@@ -25,14 +25,14 @@ IMPORTANT_COL_REPORT = [
     'Согл. скидк - disc',
     'price_disc'
     'Перечисление руб',
+    'quantityFull',
     'Логистика руб',
     'Логистика шт',
     'price_disc',
     'net_cost',
     'quantity_Возврат_sum',
     'quantity_Продажа_sum',
-    'sells_qt_with_back'
-    'quantityFull',
+    'sells_qt_with_back',
     'k_discount',
     'k_is_sell',
     'k_revenue',

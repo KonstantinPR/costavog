@@ -9,7 +9,6 @@ from app.modules import io_output
 import requests
 import json
 
-
 """
 Парсер wildberries по ссылке на каталог (указывать без фильтров)
 Парсер не идеален, есть множество вариантов реализации, со своими идеями 
@@ -166,29 +165,29 @@ def parser(url, low_price, top_price):
 #     parser(url, low_price, top_price)
 
 
-
-
 # ///// BY MYSELF ////////////
 
-def get_rating(arts):
-    rating = {}
-    review_count = {}
-    for i in arts:
-        url = f"https://wbxcatalog-ru.wildberries.ru/nm-2-card/" \
-              f"catalog?spp=0&pricemarginCoeff=1.0&reg=0&appType=1&emp=0&locale=ru&lang=ru&curr=rub&nm={str(i)}"
-        # not working on 29/09/2022
-        url = f"https://catalog.wb.ru/catalog/men_clothes/catalog?curr=rub&lang=ru&locale=ru" \
-              f"&sort=priceup&page=1&xsubject={str(i)}"
 
+def get_rating(goods_id_list):
+    """извлечение значения рейтинга и количества отзывов"""
+
+    rating_list = []
+    for good_id in goods_id_list:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 Firefox/100.0"
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'ru,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) YaBrowser/22.9.4.866 Yowser/2.5 Safari/537.36'
         }
-        data = requests.get(url, headers=headers).json()["data"]["products"][0]
-        print(f"{data['name']}\n{data['rating']} stars from {data['feedbacks']} reviews.")
-        rating[i] = data['rating']
-        review_count[i] = data['feedbacks']
 
-    return rating, review_count
+        url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
+        r = requests.get(url=url, headers=headers)
+        good_id = r.json()['data']['products'][0]['id']
+        rating = r.json()['data']['products'][0]['rating']
+        feedbacks = r.json()['data']['products'][0]['feedbacks']
+        rating_list.append([rating, feedbacks])
+
+    return rating_list
 
 
 @app.route('/parser-rating-wb', methods=['GET', 'POST'])
@@ -196,43 +195,15 @@ def get_rating(arts):
 def parser_rating_wb():
     """Обработка файла excel  - шапка нужна"""
     if request.method == 'POST':
-        uploaded_files = flask.request.files.getlist("file")
-        df = pd.read_excel(uploaded_files[0])
-        arts = df["Номенклатура"].tolist()
-
-        rating, review_count = get_rating(arts)
-
-        d = {}
-        good_value = []
-        rating_value = []
-        review_count_value = []
-
-        for key, value in rating.items():
-
-            good_value.append(key)
-            try:
-                rating_value.append(value.text)
-            except BaseException:
-                rating_value.append(value)
-
-        d["Номенклатура"] = good_value
-        d["Рейтинг"] = rating_value
-
-        for key, value in review_count.items():
-            # отсекаем слова от чисел с отзывами
-
-            try:
-                value = value.text.split()
-                value = value[0]
-                print(value)
-                review_count_value.append(value.text)
-            except BaseException:
-                review_count_value.append(value)
-
-        d["Кол-во отзывов"] = review_count_value
-
-        d = pd.DataFrame(data=d)
-        file = io_output.io_output(d)
+        col_name = 'Артикул'
+        rating = 'Рейтинг'
+        feedbacks = 'Кол-во отзывов'
+        df_column = io_output.io_txt_request(request, inp_name='file', col_name=col_name)
+        art_list = [x for x in df_column[col_name]]
+        rating_list = get_rating(art_list)
+        df_column[rating] = [x[0] for x in rating_list]
+        df_column[feedbacks] = [x[1] for x in rating_list]
+        file = io_output.io_output(df_column)
 
         return send_file(file, attachment_filename="parser-rating-wb.xlsx", as_attachment=True)
     return render_template("upload_parser_rating_wb.html")

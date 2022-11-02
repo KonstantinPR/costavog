@@ -20,8 +20,8 @@ def data_to_spec_wb_transcript():
         print(df_income_date)
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
-        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type], to_str=['Лекало', 'Префикс'])
-        df_spec_example = spec_modifiyer.df_col_to_str(df_spec_example)
+        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],
+                                                                        to_str=['Лекало', 'Префикс'])
         # df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df_verticaling_sizes = spec_modifiyer.vertical_size(df_income_date)
@@ -46,31 +46,16 @@ def data_to_spec_wb_transcript():
 @login_required
 def image_name_multiply():
     """Обработка файла txt - размножит названия артикулей с префиксом -1, -2 и т.д требуемое кол-во раз"""
+
     if request.method == 'POST':
-        file_txt: FileStorage = request.files['file']
-
-        if not request.files['file']:
-            flash("Не приложен файл")
-            return render_template('upload_txt.html')
-
+        df_column = io_output.io_txt_request(request, inp_name='file', col_name='Артикул')
         if not request.form['multiply_number']:
             flash("Сколько фото делать то будем? Поле пустое")
             return render_template('upload_txt.html')
-
         multiply = int(request.form['multiply_number'])
-
-        df = pd.read_fwf(file_txt)
-        df_column = df.T.reset_index().set_axis(['Артикул']).T.reset_index(drop=True)
         df_multilpy = text_handler.names_multiply(df_column, multiply)
         df_output = io_output.io_output_txt_csv(df_multilpy)
-
-        return send_file(
-            df_output,
-            as_attachment=True,
-            attachment_filename='art.txt',
-            mimetype='text/csv'
-        )
-
+        return send_file(df_output, as_attachment=True, attachment_filename='art.txt', mimetype='text/csv')
     return render_template('upload_txt.html')
 
 
