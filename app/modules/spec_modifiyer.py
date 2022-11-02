@@ -50,11 +50,11 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     return df
 
 
-def merge_spec(df2, df1, on='Артикул товара') -> pd.DataFrame:
+def merge_spec(df1, df2, left_on='Артикул товара', right_on='Артикул товара') -> pd.DataFrame:
     print(df2)
     print(df1)
     random_suffix = f'_col_on_drop_{randrange(10)}'
-    df = df1.merge(df2, how='outer', on=on, suffixes=('', random_suffix,))
+    df = df1.merge(df2, how='outer', left_on=left_on, right_on=right_on, suffixes=('', random_suffix,))
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
             for idj, val in enumerate(df[f'{col}{random_suffix}']):

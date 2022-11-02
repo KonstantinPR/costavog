@@ -26,6 +26,7 @@ IMPORTANT_COL_REPORT = [
     'price_disc'
     'Перечисление руб',
     'quantityFull',
+    'Остаток в розничных ценах',
     'Логистика руб',
     'Логистика шт',
     'price_disc',
@@ -247,7 +248,7 @@ def revenue_processing_module(request):
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
-
+    df['Остаток в розничных ценах'] = df['price_disc']*df['quantityFull']
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
