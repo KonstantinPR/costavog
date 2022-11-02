@@ -68,25 +68,8 @@ def data_to_spec_merging():
         df_from = pd.read_excel(uploaded_files[0])
         df_to = pd.read_excel(uploaded_files[1])
         df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул', right_on='nm_id')
-
-        # if request.form.get('name_on'):
-        #     name_on = request.form.get('name_on')
-        #     if ',' in name_on:
-        #         name_on = name_on.split(',')
-        # # df_from.replace(np.NaN, "", inplace=True)
-        #
-        # df_to = df_to.merge(df_from, copy=False, how='inner', on=name_on, suffixes=("", "_drop_column_on"))
-        # # Drop the duplicate columns
-        # df_to.drop([col for col in df_to.columns if '_drop_column_on' in col], axis=1, inplace=True)
-        # df_to.drop([col for col in df_to.columns if 'Unnamed:' in col], axis=1, inplace=True)
-        # df_to.set_index(name_on, inplace=True)
-        # df_to[barcode_column_name] = df_to[barcode_column_name].apply(lambda x: '{:d}'.format(x))
         df = io_output.io_output(df)
 
-        return send_file(
-            df,
-            as_attachment=True,
-            attachment_filename='spec.xlsx'
-        )
+        return send_file(df, as_attachment=True, attachment_filename='spec.xlsx')
 
     return render_template('upload_specs.html')
