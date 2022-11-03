@@ -73,3 +73,15 @@ def data_to_spec_merging():
         return send_file(df, as_attachment=True, attachment_filename='spec.xlsx')
 
     return render_template('upload_specs.html')
+
+
+@app.route('/take_off_boxes', methods=['GET', 'POST'])
+@login_required
+def take_off_boxes():
+    """Удаляет коробки с товарами, которых много, на входе эксель таблица с артикулами и кол-вом ограничителем"""
+    if request.method == 'POST':
+        dfs = spec_modifiyer.request_to_df(flask.request)
+        dfs = io_output.io_output(dfs)
+        return send_file(dfs, as_attachment=True, attachment_filename='table_take_off_boxes.xlsx')
+
+    return render_template('upload_take_off_boxes.html', doc_string=take_off_boxes.__doc__)
