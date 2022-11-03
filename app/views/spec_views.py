@@ -5,7 +5,7 @@ from io import BytesIO
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import pandas as pd
-from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler
+from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker
 import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 
@@ -81,7 +81,10 @@ def take_off_boxes():
     """Удаляет коробки с товарами, которых много, на входе эксель таблица с артикулами и кол-вом ограничителем"""
     if request.method == 'POST':
         dfs = spec_modifiyer.request_to_df(flask.request)
-        dfs = io_output.io_output(dfs)
-        return send_file(dfs, as_attachment=True, attachment_filename='table_take_off_boxes.xlsx')
+        df = spec_modifiyer.merge_spec(dfs[0], dfs[1], how='left')
+        print(df)
+        df = df_worker.df_take_off_boxes(df)
+        df = io_output.io_output(df)
+        return send_file(df, as_attachment=True, attachment_filename='table_take_off_boxes.xlsx')
 
     return render_template('upload_take_off_boxes.html', doc_string=take_off_boxes.__doc__)

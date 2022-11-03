@@ -9,8 +9,10 @@ def flask_request_to_df(function):
     @wraps(function)
     def wrapper(flask_request, *args, **kwargs):
         files = flask_request.files.getlist("file")
-        df = pd.read_excel(files[0])
-        result = function(df, *args, **kwargs)
+        dfs = []
+        for idx, file in enumerate(files):
+            dfs.append(pd.read_excel(files[idx]))
+        result = function(dfs, *args, **kwargs)
         return result
 
     return wrapper
