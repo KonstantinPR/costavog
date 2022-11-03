@@ -78,7 +78,8 @@ def data_to_spec_merging():
 @app.route('/take_off_boxes', methods=['GET', 'POST'])
 @login_required
 def take_off_boxes():
-    """Удаляет коробки с товарами, которых много, на входе эксель таблица с артикулами и кол-вом ограничителем"""
+    """Удаляет коробки с товарами, которых много, на входе эксель таблица с артикулами и кол-вом ограничителем,
+    шапка первого Артикул товара (полный с размером) и Артикул, второго Артикул товара и Можно"""
     if request.method == 'POST':
         dfs = spec_modifiyer.request_to_df(flask.request)
         df = spec_modifiyer.merge_spec(dfs[0], dfs[1], how='left')
