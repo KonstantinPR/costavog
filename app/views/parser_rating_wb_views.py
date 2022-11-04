@@ -193,7 +193,7 @@ def get_rating(goods_id_list):
 @app.route('/parser-rating-wb', methods=['GET', 'POST'])
 @login_required
 def parser_rating_wb():
-    """Обработка файла excel  - шапка нужна"""
+    """Обработка файла txt  - шапка нужна"""
     if request.method == 'POST':
         col_name = 'Артикул'
         rating = 'Рейтинг'
@@ -206,4 +206,4 @@ def parser_rating_wb():
         file = io_output.io_output(df_column)
 
         return send_file(file, attachment_filename="parser-rating-wb.xlsx", as_attachment=True)
-    return render_template("upload_parser_rating_wb.html")
+    return render_template("upload_parser_rating_wb.html", doc_string=parser_rating_wb.__doc__)

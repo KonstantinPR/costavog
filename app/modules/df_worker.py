@@ -14,6 +14,7 @@ def df_take_off_boxes(df, sep_boxes: str = 'end'):
     print(df)
     art_size_col = 'Артикул товара'
     art_col = 'Артикул'
+    if not art_col in df.columns: art_col = art_size_col
     qt_col = 'Кол-во'
     sep_col = 'Разметка'
     box_number = 'Номер коробки'
