@@ -17,7 +17,7 @@ def data_to_spec_wb_transcript():
 
     if request.method == 'POST':
         df_income_date = spec_modifiyer.request_to_df(flask.request)
-        print(df_income_date)
+        df_income_date = df_income_date[0]
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],

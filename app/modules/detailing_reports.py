@@ -29,7 +29,6 @@ IMPORTANT_COL_REPORT = [
     'Остаток в розничных ценах',
     'Логистика руб',
     'Логистика шт',
-    'price_disc',
     'net_cost',
     'quantity_Возврат_sum',
     'quantity_Продажа_sum',

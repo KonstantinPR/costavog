@@ -21,6 +21,8 @@ def request_to_df(flask_request) -> pd.DataFrame:
 
 
 def spec_definition(df):
+    print(df['Артикул товара'])
+    print(df['Артикул товара'][0].split('-')[0])
     prefix = df['Артикул товара'][0].split('-')[0]
     if SPEC_TYPE[prefix]:
         spec_type = SPEC_TYPE[prefix]
@@ -31,7 +33,7 @@ def spec_definition(df):
 
 
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
-    if col in df:
+    if col in df.columns:
         df = df.assign(temp_col=df[col].str.split()).explode('temp_col', ignore_index=True)
         df = df.drop(columns=col, axis=1)
         df = df.rename({'temp_col': col_re}, axis='columns')
