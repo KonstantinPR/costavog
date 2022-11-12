@@ -10,6 +10,24 @@ import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
 
 
+@app.route('/vertical_sizes', methods=['GET', 'POST'])
+@login_required
+def vertical_sizes():
+    """Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонк.
+    В первой колонке - Артикул товара, вторая - Размеры"""
+
+    if request.method == 'POST':
+        df = spec_modifiyer.request_to_df(flask.request)
+        df = df[0]
+        print(df)
+        df = spec_modifiyer.vertical_size(df)
+        df = spec_modifiyer.to_keep_for_photo(df)
+        df_output = io_output.io_output(df)
+        return send_file(df_output, as_attachment=True, attachment_filename='vertical_sizes.xlsx', )
+
+    return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
+
+
 @app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])
 @login_required
 def data_to_spec_wb_transcript():
@@ -79,7 +97,7 @@ def data_to_spec_merging():
 @login_required
 def take_off_boxes():
     """Удаляет коробки с товарами, которых много, на входе эксель таблица с артикулами и кол-вом ограничителем,
-    шапка первого Артикул товара (полный с размером) и Артикул, второго Артикул товара и Можно"""
+    шапка первого: Артикул товара (полный с размером), второго: Артикул, третьего: Можно"""
     if request.method == 'POST':
         dfs = spec_modifiyer.request_to_df(flask.request)
         df = spec_modifiyer.merge_spec(dfs[0], dfs[1], how='left')

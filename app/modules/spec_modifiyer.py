@@ -13,6 +13,8 @@ SPEC_TYPE = {
     'SK': 'ECO_FURS_WOMEN'
 }
 
+BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
+
 
 @decorators.flask_request_to_df
 def request_to_df(flask_request) -> pd.DataFrame:
@@ -21,6 +23,7 @@ def request_to_df(flask_request) -> pd.DataFrame:
 
 
 def spec_definition(df):
+    print(df)
     print(df['Артикул товара'])
     print(df['Артикул товара'][0].split('-')[0])
     prefix = df['Артикул товара'][0].split('-')[0]
@@ -48,6 +51,23 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     #
     # lst_sizes = sum(lst_sizes, [])
     # df = pd.DataFrame({'Артикул полный': lst_art, 'Размеры': lst_sizes})
+
+    return df
+
+
+def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):
+    arts = list(set(df.loc[df[is_photo_col_name] == 1, art_col_name]))
+
+    for size in BEST_SIZES:
+        for idx, value in enumerate(df[is_photo_col_name]):
+            if value and df[art_col_name][idx] in arts and str(df[size_col_name][idx]) == str(size):
+                arts.remove(df[art_col_name][idx])
+                df[is_photo_col_name][idx] = 2
+
+    df[is_photo_col_name] = ['' if x == 1 else x for x in df[is_photo_col_name]]
+    df[is_photo_col_name] = df[is_photo_col_name].replace(2, 1)
+    re_cols = [art_col_name, size_col_name, is_photo_col_name]
+    df = df[re_cols]
 
     return df
 

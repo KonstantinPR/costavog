@@ -31,7 +31,7 @@ def io_output_txt_csv(df: pd.DataFrame, sep: str = ",", header: bool = False, in
 def io_output(df: pd.DataFrame) -> BytesIO:
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer)
+    df.to_excel(writer, index=False)
     writer.close()
     output.seek(0)
     return output

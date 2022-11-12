@@ -68,10 +68,19 @@ def images_foldering_yandisk():
 @app.route('/images_foldering', methods=['POST', 'GET'])
 @login_required
 def images_foldering():
-    """Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
+    """
+    on 12.11.2022:
+    txt with one columns no name
+    for wb is our article
+    for ozon is article without -size (-38)
+
+    Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
     if good is wool then watermark will be placed like 150 x 300 см.
+    if Article_WB is in columns (in second column) then - folder will be named by it, if not - then our art
+
+
     """
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']

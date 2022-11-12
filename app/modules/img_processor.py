@@ -33,8 +33,6 @@ size_translate = {
 
 
 def img_watermark(img_name, name):
-
-
     size = name[len(name) - 2:].lower()
     # print(f"size {size}")
     size_text = size_translate[size]
@@ -90,61 +88,67 @@ def img_foldering(df):
     if not os.path.exists(folder_folders):
         os.makedirs(folder_folders)
 
-    if typeWB_OZON == 0:
+    img_name_list_files = {}
 
-        img_name_list_files = {}
+    for entry in os.scandir(images_folder):
+        for subentry in os.scandir(entry.path):
+            if subentry.is_dir():
+                for file in os.scandir(subentry.path):
+                    if file.is_file():
+                        img_name_list_files[file.name] = subentry.path
 
-        for entry in os.scandir(images_folder):
-            for subentry in os.scandir(entry.path):
-                if subentry.is_dir():
-                    for file in os.scandir(subentry.path):
-                        if file.is_file():
-                            img_name_list_files[file.name] = subentry.path
+    # print(f"files {img_name_list_files}")
 
-        # print(f"files {img_name_list_files}")
+    for i in df['Article']:
+        os.makedirs(f"{folder_folders}/{i}/photo")
 
-        for i in df['Article']:
-            os.makedirs(f"{folder_folders}/{i}/photo")
+    val = df['Article'].values[0]
+    # print(f"Article_by_index {val}")
 
-        val = df['Article'].values[0]
-        # print(f"Article_by_index {val}")
-
-        for name, path in img_name_list_files.items():
-            # name_clear = re.sub(r'(-9)?-\d.JPG', '', name)
-            name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
-            for j in os.listdir(folder_folders):
-                j_clear = j
-                if j.startswith("LNF") or j.startswith("EVS") or j.startswith("WLP") or j.endswith("new"):
-                    j_clear = j[:(len(j) - 3)]
-                    j_clear_end = j[(len(j) - 3):]
-                    # print(f"j_clear_end {j_clear_end}")
-                if name_clear == j_clear:
-                    if typeWB_OZON == 0:
-                        shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-                        if (j.startswith("LNF") or j.startswith("WLP")) and name.endswith("-1.JPG"):
-                            img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
-                    if typeWB_OZON == 1:
-                        shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
-
+    for name, path in img_name_list_files.items():
+        # name_clear = re.sub(r'(-9)?-\d.JPG', '', name)
+        name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
         for j in os.listdir(folder_folders):
-            for d in range(len(df.index)):
-                if df['Article'][d] == j:
-                    # os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article_WB'][d]}")
-                    # for updating wb on 20.09.2022
-                    os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article'][d]}")
+            j_clear = j
+            if j.startswith("FUR") or j.startswith("LNF") or j.startswith("EVS") or j.startswith(
+                    "WLP") or j.endswith("new"):
+                j_clear = j[:(len(j) - 3)]
+                j_clear_end = j[(len(j) - 3):]
+                # print(f"j_clear_end {j_clear_end}")
+            if name_clear == j_clear:
+                if typeWB_OZON == 0:
+                    shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
+                    if (j.startswith("FUR") or j.startswith("LNF") or j.startswith("WLP")) and name.endswith(
+                            "-1.JPG"):
+                        img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
+                if typeWB_OZON == 1:
+                    shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
 
-        shutil.make_archive(folder_folders, 'zip', f"{folder_folders}")
-        shutil.move(f"{folder_folders}.zip", folder_folders)
+    for j in os.listdir(folder_folders):
+        for d in range(len(df.index)):
+            if df['Article'][d] == j:
+                # os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article_WB'][d]}")
+                # for updating wb on 20.09.2022
+                os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article'][d]}")
 
-        zip_file = os.path.abspath(f"{folder_folders}\{folder_folders}.zip")
+    if typeWB_OZON == 1:
+        for j in os.listdir(folder_folders):
+            if j.endswith('-1.JPG'):
+                os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{j.replace('-1.JPG', '.JPG')}")
+            else:
+                os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{'_'.join(j.rsplit('-', 1))}")
 
-        return_data = io.BytesIO()
-        with open(zip_file, 'rb') as file:
-            return_data.write(file.read())
-        # (after writing, cursor will be at last byte, so move it to start)
-        return_data.seek(0)
+    shutil.make_archive(folder_folders, 'zip', f"{folder_folders}")
+    shutil.move(f"{folder_folders}.zip", folder_folders)
 
-        shutil.rmtree(folder_folders, ignore_errors=True)
+    zip_file = os.path.abspath(f"{folder_folders}\{folder_folders}.zip")
 
+    return_data = io.BytesIO()
+    with open(zip_file, 'rb') as file:
+        return_data.write(file.read())
+    # (after writing, cursor will be at last byte, so move it to start)
+    return_data.seek(0)
 
-        return return_data
+    shutil.rmtree(folder_folders, ignore_errors=True)
+
+    return return_data

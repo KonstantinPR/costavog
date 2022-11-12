@@ -67,6 +67,9 @@
 
 
 
+
+
+
     </style>
 </head>
 
@@ -92,16 +95,6 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('upload_products')}}">Загрузки</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkSpec" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Спецификация
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkSpec">
-                        <a class="dropdown-item" href="{{url_for('image_name_multiply')}}">Размножить имена</a>
-                        <a class="dropdown-item" href="{{url_for('data_to_spec_wb_transcript')}}">Заполнить спецификацию</a>
-                    </ul>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkAnalitics" role="button"
@@ -134,6 +127,10 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
                         <a class="dropdown-item" href="{{url_for('data_to_spec_merging')}}">Объединить данные</a>
                         <a class="dropdown-item" href="{{url_for('barcode')}}">Баркод</a>
+                        <a class="dropdown-item" href="{{url_for('image_name_multiply')}}">Размножить имена</a>
+                        <a class="dropdown-item" href="{{url_for('data_to_spec_wb_transcript')}}">Заполнить
+                        <a class="dropdown-item" href="{{url_for('vertical_sizes')}}">Вертикальные
+                            размеры</a>
                         <a class="dropdown-item" href="{{url_for('take_off_boxes')}}">Выделить лишние коробки</a>
                     </ul>
                 </li>
