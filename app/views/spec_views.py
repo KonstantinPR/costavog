@@ -1,4 +1,6 @@
 # /// CATALOG ////////////
+import time
+
 import flask
 from werkzeug.datastructures import FileStorage
 from io import BytesIO
@@ -8,6 +10,7 @@ import pandas as pd
 from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker
 import numpy as np
 from flask_login import login_required, current_user, login_user, logout_user
+import datetime
 
 
 @app.route('/vertical_sizes', methods=['GET', 'POST'])
@@ -23,7 +26,8 @@ def vertical_sizes():
         df = spec_modifiyer.vertical_size(df)
         df = spec_modifiyer.to_keep_for_photo(df)
         df_output = io_output.io_output(df)
-        return send_file(df_output, as_attachment=True, attachment_filename='vertical_sizes.xlsx', )
+        file_name = f"vertical_sizes_{str(datetime.datetime.now())}_.xlsx"
+        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
 
     return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
 
