@@ -26,7 +26,7 @@ def vertical_sizes():
         df = spec_modifiyer.vertical_size(df)
         df = spec_modifiyer.to_keep_for_photo(df)
         df_output = io_output.io_output(df)
-        file_name = f"vertical_sizes_{str(datetime.datetime.now())}_.xlsx"
+        file_name = f"vertical_sizes_{str(datetime.datetime.now())}.xlsx"
         return send_file(df_output, as_attachment=True, attachment_filename=file_name)
 
     return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
