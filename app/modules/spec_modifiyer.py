@@ -37,7 +37,9 @@ def spec_definition(df):
 
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df.columns:
-        df = df.assign(temp_col=df[col].str.split()).explode('temp_col', ignore_index=True)
+        re_size = [str(x).split(' ') if ' ' in str(x) else str(x) for x in df[col]]
+        print(re_size)
+        df = df.assign(temp_col=re_size).explode('temp_col', ignore_index=True)
         df = df.drop(columns=col, axis=1)
         df = df.rename({'temp_col': col_re}, axis='columns')
         print(df)
