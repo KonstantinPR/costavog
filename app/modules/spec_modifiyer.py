@@ -58,6 +58,9 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
 
 
 def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):
+    f"""На вход подается Data Frame со столбцами {size_col_name}, {art_col_name}, {is_photo_col_name}.
+    На выходе получаем отмеченные в столбце {is_photo_col_name} как 1 размеры для фотосессии"""
+
     qt_col_name = 'Кол-во'
     arts = list(set(df.loc[df[is_photo_col_name] == 1, art_col_name]))
 
