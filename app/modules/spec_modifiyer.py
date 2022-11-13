@@ -58,6 +58,7 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
 
 
 def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):
+    qt_col_name = 'Кол-во'
     arts = list(set(df.loc[df[is_photo_col_name] == 1, art_col_name]))
 
     for size in BEST_SIZES:
@@ -68,7 +69,8 @@ def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артик
 
     df[is_photo_col_name] = ['' if x == 1 else x for x in df[is_photo_col_name]]
     df[is_photo_col_name] = df[is_photo_col_name].replace(2, 1)
-    re_cols = [art_col_name, size_col_name, is_photo_col_name]
+    df[qt_col_name] = 1
+    re_cols = [art_col_name, size_col_name, qt_col_name, is_photo_col_name]
     df = df[re_cols]
 
     return df
