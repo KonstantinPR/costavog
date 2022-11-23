@@ -180,11 +180,18 @@ def get_rating(goods_id_list):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) YaBrowser/22.9.4.866 Yowser/2.5 Safari/537.36'
         }
 
+        print(good_id)
         url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
         r = requests.get(url=url, headers=headers)
-        good_id = r.json()['data']['products'][0]['id']
-        rating = r.json()['data']['products'][0]['rating']
-        feedbacks = r.json()['data']['products'][0]['feedbacks']
+        if r.json()['data']['products']:
+            print(r.json()['data']['products'])
+            # good_id = r.json()['data']['products'][0]['id']
+            rating = r.json()['data']['products'][0]['rating']
+            feedbacks = r.json()['data']['products'][0]['feedbacks']
+        else:
+            rating = ''
+            feedbacks = ''
+
         rating_list.append([rating, feedbacks])
 
     return rating_list
@@ -201,8 +208,8 @@ def parser_rating_wb():
         df_column = io_output.io_txt_request(request, inp_name='file', col_name=col_name)
         art_list = [x for x in df_column[col_name]]
         rating_list = get_rating(art_list)
-        df_column[rating] = [x[0] for x in rating_list]
-        df_column[feedbacks] = [x[1] for x in rating_list]
+        df_column[rating] = [x[0] if x else '' for x in rating_list]
+        df_column[feedbacks] = [x[1] if x else '' for x in rating_list]
         file = io_output.io_output(df_column)
 
         return send_file(file, attachment_filename="parser-rating-wb.xlsx", as_attachment=True)
