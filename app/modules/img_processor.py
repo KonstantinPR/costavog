@@ -20,7 +20,7 @@ import io
 from app.modules import yandex_disk_handler
 from PIL import Image, ImageDraw, ImageFont
 
-size_translate = {
+SIZE_TRANSLATE_150 = {
     "m1": "150 x 100 см.",
     "m2": "150 x 200 см.",
     "m3": "150 x 300 см.",
@@ -31,17 +31,29 @@ size_translate = {
     "m9": "150 x 500 см.",
 }
 
+SIZE_TRANSLATE_300 = {
+    "m2": "300 x 200 см.",
+    "m3": "300 x 300 см.",
+    "m5": "300 x 500 см.",
+}
+
+PREF_LIST = ['FUR', 'LNF', 'WLP', 'GL0']
+
 
 def img_watermark(img_name, name):
     size = name[len(name) - 2:].lower()
     # print(f"size {size}")
-    size_text = size_translate[size]
+    if name.startswith('GL0'):
+        size_text = SIZE_TRANSLATE_300[size]
+    else:
+        size_text = SIZE_TRANSLATE_150[size]
     # print(f"size_text {size_text}")
     base = Image.open(img_name).convert('RGBA')
     width, height = base.size
 
     # make a blank image for the text, initialized to transparent text color
-    txt = Image.new('RGBA', base.size, (255, 255, 255, 0))
+    # txt = Image.new('RGBA', base.size, (255, 255, 255, 0))
+    txt = Image.new('RGBA', base.size, (50, 50, 50, 0))
 
     fontsize = 1  # starting font size
 
@@ -66,7 +78,8 @@ def img_watermark(img_name, name):
     y = height - fontsize * 2
 
     # draw text, half opacity
-    d.text((x, y), text, font=fnt, fill=(255, 255, 255, 200))
+    d.text((x, y), text, font=fnt, stroke_width=4, stroke_fill=(150, 150, 150, 200), fill=(255, 255, 255, 200))
+    # d.text((x, y), text, font=fnt, fill=(50, 50, 50, 200))
     txt = txt.rotate(0)
 
     out = Image.alpha_composite(base, txt)
@@ -110,16 +123,14 @@ def img_foldering(df):
         name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
         for j in os.listdir(folder_folders):
             j_clear = j
-            if j.startswith("FUR") or j.startswith("LNF") or j.startswith("EVS") or j.startswith(
-                    "WLP") or j.endswith("new"):
+            if j.startswith(tuple(PREF_LIST)) or j.endswith("new"):
                 j_clear = j[:(len(j) - 3)]
                 j_clear_end = j[(len(j) - 3):]
                 # print(f"j_clear_end {j_clear_end}")
             if name_clear == j_clear:
                 if typeWB_OZON == 0:
                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-                    if (j.startswith("FUR") or j.startswith("LNF") or j.startswith("WLP")) and name.endswith(
-                            "-1.JPG"):
+                    if j.startswith(tuple(PREF_LIST)):
                         img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
                 if typeWB_OZON == 1:
                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")

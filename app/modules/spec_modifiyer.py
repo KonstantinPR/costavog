@@ -10,7 +10,8 @@ PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 
 SPEC_TYPE = {
     'OAJCAPRON': 'APRON',
-    'SK': 'ECO_FURS_WOMEN'
+    'SK': 'ECO_FURS_WOMEN',
+    'MIT': 'MIT',
 }
 
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
@@ -58,7 +59,8 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
 
 
 def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):
-    f"""На вход подается Data Frame со столбцами {size_col_name}, {art_col_name}, {is_photo_col_name}.
+    f"""На вход подается Data Frame с вертикальными размерами и столбцами 
+    {art_col_name}, {size_col_name}, {is_photo_col_name}.
     На выходе получаем отмеченные в столбце {is_photo_col_name} как 1 размеры для фотосессии"""
 
     qt_col_name = 'Кол-во'

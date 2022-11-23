@@ -24,7 +24,7 @@ def key_indicators():
     df = detailing_reports.key_indicators_module(file_content)
 
     file_name_key_indicator = f'key_indicator_of_{file_name}'
-    file_content = io_output.io_output(df)
+    file_content = io_output.io_output(df, is_index=True)
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name_key_indicator)
 
     file = io_output.io_output(df)

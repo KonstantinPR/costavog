@@ -28,10 +28,10 @@ def io_output_txt_csv(df: pd.DataFrame, sep: str = ",", header: bool = False, in
     return output
 
 
-def io_output(df: pd.DataFrame) -> BytesIO:
+def io_output(df: pd.DataFrame, is_index=False) -> BytesIO:
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False)
+    df.to_excel(writer, index=is_index)
     writer.close()
     output.seek(0)
     return output

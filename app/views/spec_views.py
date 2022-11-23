@@ -16,15 +16,17 @@ import datetime
 @app.route('/vertical_sizes', methods=['GET', 'POST'])
 @login_required
 def vertical_sizes():
-    """Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонк.
-    В первой колонке - Артикул товара, вторая - Размеры"""
+    """Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонку.
+    В первой колонке - Артикул товара, вторая - Размеры, если нет колонки кол-во, то - добавится с 1 каждый артикул"""
 
     if request.method == 'POST':
         df = spec_modifiyer.request_to_df(flask.request)
         df = df[0]
         print(df)
         df = spec_modifiyer.vertical_size(df)
-        df = spec_modifiyer.to_keep_for_photo(df)
+        is_photo_col_name = 'На фото'
+        if is_photo_col_name in df.columns:
+            df = spec_modifiyer.to_keep_for_photo(df)
         df_output = io_output.io_output(df)
         file_name = f"vertical_sizes_{str(datetime.datetime.now())}.xlsx"
         return send_file(df_output, as_attachment=True, attachment_filename=file_name)
@@ -42,6 +44,7 @@ def data_to_spec_wb_transcript():
         df_income_date = df_income_date[0]
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
+        print(spec_type)
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],
                                                                         to_str=['Лекало', 'Префикс'])
         # df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])

@@ -10,6 +10,34 @@ from app.modules import yandex_disk_handler
 from app.modules import io_output
 import time
 
+VISIBLE_COL = [
+    'brand_name',
+    'Предмет',
+    'nm_id',
+    'supplierArticle',
+    'Согласованная скидка, %',
+    'discount',
+    'Согл. скидк - disc',
+    'price_disc',
+    'Перечисление руб',
+    'Прибыль_sum',
+    'quantityFull',
+    'Остаток в розничных ценах',
+    'Логистика руб',
+    'Логистика шт',
+    'net_cost',
+    'quantity_Возврат_sum',
+    'quantity_Продажа_sum',
+    'Продажи_уч_возврат_sum',
+    'k_discount',
+    'k_is_sell',
+    'k_revenue',
+    'k_logistic',
+    'k_net_cost',
+    'k_qt_full',
+    'Номенклатура (код 1С)'
+]
+
 IMPORTANT_COL_DESC = [
     'brand_name',
     # 'subject_name',
@@ -32,7 +60,6 @@ IMPORTANT_COL_REPORT = [
     'net_cost',
     'quantity_Возврат_sum',
     'quantity_Продажа_sum',
-    'sells_qt_with_back',
     'k_discount',
     'k_is_sell',
     'k_revenue',
@@ -171,9 +198,10 @@ def revenue_processing_module(request):
 
     # --- GET DATA VIA WB API /// ---
     df_sales = get_wb_sales_realization_api(date_from, date_end, days_step)
-    # df_sales.to_excel('df_sales_excel_new.xlsx')
-    # df_sales = pd.read_excel("wb_sales_report-2022-06-01-2022-06-30-00_00_00.xlsx")
+    df_sales.to_excel('df_sales_excel.xlsx')
+    # df_sales = pd.read_excel("df_sales_excel.xlsx")
     df_stock = get_wb_stock_api()
+    df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
     # --- GET NET_COST FROM DB /// ---
@@ -230,8 +258,11 @@ def revenue_processing_module(request):
     df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
     df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
 
+
     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+    df['Продажи_уч_возврат_sum'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
+
 
     df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
                              df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1) - \
@@ -247,17 +278,12 @@ def revenue_processing_module(request):
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
-    df['Остаток в розничных ценах'] = df['price_disc']*df['quantityFull']
+    df['Остаток в розничных ценах'] = df['price_disc'] * df['quantityFull']
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
-    # реорганизуем порядок следования столбцов для лучшей читаемости
-    df = df_reorder_important_col_desc_first(df)
-    df = df_reorder_important_col_report_first(df)
-    df = df_reorder_revenue_col_first(df)
-    df = df.sort_values(by='Прибыль_sum')
 
     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
     df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)
@@ -269,6 +295,15 @@ def revenue_processing_module(request):
     df = df.drop(drop_list, axis=1)
     df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
     df = df_stay_column_not_null(df)
+
+    # реорганизуем порядок следования столбцов для лучшей читаемости
+    # df = df_reorder_important_col_desc_first(df)
+    # df = df_reorder_important_col_report_first(df)
+    # df = df_reorder_revenue_col_first(df)
+    print(df.columns)
+    df = df[VISIBLE_COL]
+    df = df.sort_values(by='Прибыль_sum')
+
     file_name = f"wb_dynamic_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
     file_content = io_output.io_output(df)
     # добавляем полученный файл на яндекс.диск
@@ -366,6 +401,8 @@ def k_net_cost(net_cost, price_disc):
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost) * 2
     if k_net_cost < 1:  k_net_cost = 1
 
+    if price_disc <= net_cost:
+        return 0.93
     if price_disc <= net_cost * k_net_cost:
         return 0.95
     if price_disc <= net_cost * 1.3 * k_net_cost:
