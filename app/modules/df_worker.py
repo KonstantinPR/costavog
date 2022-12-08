@@ -6,8 +6,19 @@ from app.models import Product, db
 import datetime
 import pandas as pd
 import numpy as np
-from app.modules import yandex_disk_handler
+from app.modules import yandex_disk_handler, pandas_handler
 from app.modules import io_output
+
+
+def qt_to_order(df):
+    """
+    stay only goods for order that 0 on wherehouse
+    :param df:
+    :return df:
+    """
+    false_list = pandas_handler.FALSE_LIST
+    df['Кол-во'] = [1 if pd.isna(x) or x in false_list else 0 for x in df['quantity']]
+    return df
 
 
 def df_take_off_boxes(df, sep_boxes: str = 'end'):

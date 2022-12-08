@@ -1,9 +1,10 @@
+import app.modules.pdf_processor
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required
 from app.models import db
 from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, spec_modifiyer, detailing_reports
+from app.modules import img_cropper, io_output, img_processor, spec_modifiyer, detailing_reports, df_worker
 import pandas as pd
 import flask
 import requests
@@ -15,7 +16,7 @@ import shutil
 from PIL import Image
 import glob
 from flask_login import login_required, current_user, login_user, logout_user
-from app.modules import yandex_disk_handler
+from app.modules import yandex_disk_handler, pdf_processor
 from werkzeug.datastructures import FileStorage
 from flask import send_from_directory
 
@@ -37,22 +38,22 @@ def image_from_yadisk_on_art():
     if request.method == 'POST':
         file_txt: FileStorage = request.files['file']
         df = pd.read_csv(file_txt, sep='	', names=['Article'])
+
         df_all_cards = detailing_reports.get_all_cards_api_wb()
-        file_content, file_name = yandex_disk_handler.download_from_yandex_disk()
-        df_report = file_content
-        df_output = df.merge(df_all_cards, how='left', left_on='Article', right_on='vendorCode')
-        df_output = df_output.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
-        # df_output = spec_modifiyer.merge_spec(df, df_all_cards, left_on='Article', right_on='vendorCode')
-        # df_output = spec_modifiyer.merge_spec(df_output, df_report, left_on='vendorCode', right_on='supplierArticle')
+        df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
+        df_wb_stock = detailing_reports.df_wb_stock_api()
+        df = df.merge(df_all_cards, how='left', left_on='Article', right_on='vendorCode')
+        df = df.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
+        df = df.merge(df_wb_stock, how='left',
+                                    left_on=['vendorCode', 'techSize'],
+                                    right_on=['supplierArticle', 'techSize'])
 
-        df_output.to_excel("df_output.xlsx")
-
-        # print(df_output)
-        exit()
-        print(df)
-        img_name_list_files = img_processor.download_images_from_yandex_to_folder(df)
-        print(img_name_list_files)
-        path_pdf = img_processor.images_into_pdf_2(df)
+        # df = pd.read_excel("df_output.xlsx")
+        df = df_worker.qt_to_order(df)
+        df = df.sort_values(by=['Article', 'techSize'], ascending=False, inplace=True)
+        df.to_excel("df_output.xlsx")
+        img_name_list_files = img_processor.download_images_from_yandex_to_folder(df, art_col_name="Article")
+        path_pdf = pdf_processor.images_into_pdf_2(df, art_col_name='Article', size_col_name='techSize')
         pdf = os.path.abspath(path_pdf)
         return send_file(pdf, as_attachment=True)
     return render_template('upload_image_from_yadisk_on_art.html', doc_string=image_from_yadisk_on_art.__doc__)
@@ -71,10 +72,10 @@ def image_from_yadisk():
         # file_txt: FileStorage = request.files['file']
         # df = pd.read_csv(file_txt, sep='	', names=['Article'])
         df = spec_modifiyer.request_to_df(flask.request)[0]
-        print(df)
+        # print(df)
         img_name_list_files = img_processor.download_images_from_yandex_to_folder(df)
-        print(img_name_list_files)
-        path_pdf = img_processor.images_into_pdf_2(df)
+        # print(img_name_list_files)
+        path_pdf = app.modules.pdf_processor.images_into_pdf_2(df)
         pdf = os.path.abspath(path_pdf)
         return send_file(pdf, as_attachment=True)
     return render_template('upload_image_from_yadisk.html', doc_string=image_from_yadisk.__doc__)

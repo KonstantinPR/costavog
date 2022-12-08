@@ -22,7 +22,9 @@ def is_url_image(arts):
 
 @app.route('/catalog', methods=['GET', 'POST'])
 def catalog():
-    """Обработка файла excel  - шапка нужна, Номенклатура, Характеристика, Кол-во"""
+    """
+    Не актуален на 08.12.2022. Заменен на Изображения с яндекс.диска.
+    Обработка файла excel  - шапка нужна, Номенклатура, Характеристика, Кол-во"""
     if request.method == 'POST':
         uploaded_files = flask.request.files.getlist("file")
         df_input_order = pd.read_excel(uploaded_files[0])

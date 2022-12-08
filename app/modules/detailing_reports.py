@@ -820,38 +820,47 @@ def get_all_cards_api_wb():
 #     return key_value
 
 
-def get_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
-    """get sales as api wb sales realization describe"""
-    t = time.process_time()
-    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
-    date_from = date_from
-    api_key = app.config['WB_API_TOKEN']
-    # print(time.process_time() - t)
-    path_all = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2018-06-24T21:00:00.000Z&key={api_key}"
-    # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
-    # print(time.process_time() - t)
-    response = requests.get(path_all)
-    # print(time.process_time() - t)
-    data = response.json()
-    # print(time.process_time() - t)
-    df = pd.DataFrame(data)
-    # print(df)
-    # print(time.process_time() - t)
+def get_wb_stock_api():
+    """to modify wb stock"""
+
+    df = df_wb_stock_api()
+
     df = df.pivot_table(index=['nmId'],
-                        values=['quantityFull',
+                        values=['quantity',
                                 'daysOnSite',
                                 'supplierArticle',
                                 ],
-                        aggfunc={'quantityFull': sum,
+                        aggfunc={'quantity': sum,
                                  'daysOnSite': max,
                                  'supplierArticle': max,
                                  },
                         margins=False)
+
+
     df = df.reset_index().rename_axis(None, axis=1)
     df = df.rename(columns={'nmId': 'nm_id'})
     df.replace(np.NaN, 0, inplace=True)
 
     return df
+
+def df_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
+    """
+    get wb stock via api put in df
+    :return: df
+    """
+    t = time.process_time()
+    date_from = date_from
+
+    api_key = app.config['WB_API_TOKEN']
+    path_start= "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
+    # print(time.process_time() - t)
+    path_all = f"{path_start}dateFrom=2018-06-24T21:00:00.000Z&key={api_key}"
+    response = requests.get(path_all)
+    data = response.json()
+    df = pd.DataFrame(data)
+    return df
+
+
 
 
 def get_wb_sales_realization_pivot2(df):
