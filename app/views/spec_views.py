@@ -79,12 +79,12 @@ def image_name_multiply():
         df_column = io_output.io_txt_request(request, inp_name='file', col_name='Артикул')
         if not request.form['multiply_number']:
             flash("Сколько фото делать то будем? Поле пустое")
-            return render_template('upload_txt.html')
+            return render_template('upload_image_name_multiply.html')
         multiply = int(request.form['multiply_number'])
         df_multilpy = text_handler.names_multiply(df_column, multiply)
         df_output = io_output.io_output_txt_csv(df_multilpy)
         return send_file(df_output, as_attachment=True, attachment_filename='art.txt', mimetype='text/csv')
-    return render_template('upload_txt.html')
+    return render_template('upload_image_name_multiply.html')
 
 
 @app.route('/data_to_spec_merging', methods=['GET', 'POST'])

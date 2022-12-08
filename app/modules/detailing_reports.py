@@ -747,7 +747,7 @@ def get_wb_price_api():
     return df
 
 
-def get_all_cards_api_wb():
+def get_all_cards_api_wb(textSearch: str = None):
     limit = 1000
     total = 1000
     updatedAt = None
@@ -767,7 +767,7 @@ def get_all_cards_api_wb():
                     "nmID": nmId,
                 },
                 "filter": {
-                    "textSearch": "SK",
+                    "textSearch": textSearch,
                     "withPhoto": -1
                 }
             }
@@ -836,12 +836,12 @@ def get_wb_stock_api():
                                  },
                         margins=False)
 
-
     df = df.reset_index().rename_axis(None, axis=1)
     df = df.rename(columns={'nmId': 'nm_id'})
     df.replace(np.NaN, 0, inplace=True)
 
     return df
+
 
 def df_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
     """
@@ -852,15 +852,13 @@ def df_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
     date_from = date_from
 
     api_key = app.config['WB_API_TOKEN']
-    path_start= "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
+    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
     # print(time.process_time() - t)
     path_all = f"{path_start}dateFrom=2018-06-24T21:00:00.000Z&key={api_key}"
     response = requests.get(path_all)
     data = response.json()
     df = pd.DataFrame(data)
     return df
-
-
 
 
 def get_wb_sales_realization_pivot2(df):
