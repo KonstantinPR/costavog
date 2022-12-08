@@ -17,7 +17,7 @@ import datetime
 @login_required
 def vertical_sizes():
     """Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонку.
-    В первой колонке - Артикул товара, вторая - Размеры, если нет колонки кол-во, то - добавится с 1 каждый артикул"""
+    В первой колонке - Артикул товара, вторая - Размеры, На фото, если нет колонки кол-во, то - добавится с 1 каждый артикул"""
 
     if request.method == 'POST':
         df = spec_modifiyer.request_to_df(flask.request)
@@ -37,7 +37,8 @@ def vertical_sizes():
 @app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])
 @login_required
 def data_to_spec_wb_transcript():
-    """Заполняется спецификация на основе справочников с яндекс.диска в таскере"""
+    """Заполняется спецификация на основе справочников с яндекс.диска в таскере
+    Загружаем 1 файл с шапкой Артикул товара, Цена если надо, Размеры (размерный ряд товара)"""
 
     if request.method == 'POST':
         df_income_date = spec_modifiyer.request_to_df(flask.request)
@@ -62,7 +63,7 @@ def data_to_spec_wb_transcript():
         print(df_to_str)
 
         df_output = io_output.io_output(df_to_str)
-        return send_file(df_output, as_attachment=True, attachment_filename='test.xlsx', )
+        return send_file(df_output, as_attachment=True, attachment_filename='spec_created.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
 
@@ -92,7 +93,7 @@ def data_to_spec_merging():
         uploaded_files = flask.request.files.getlist("file")
         df_from = pd.read_excel(uploaded_files[0])
         df_to = pd.read_excel(uploaded_files[1])
-        df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул', right_on='nm_id')
+        df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул товара', right_on='Артикул товара')
         df = io_output.io_output(df)
 
         return send_file(df, as_attachment=True, attachment_filename='spec.xlsx')

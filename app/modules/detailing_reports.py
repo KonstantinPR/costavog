@@ -1,3 +1,5 @@
+import json
+
 from app import app
 from functools import reduce
 import math
@@ -258,11 +260,9 @@ def revenue_processing_module(request):
     df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
     df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
 
-
     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
     df['Продажи_уч_возврат_sum'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
-
 
     df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
                              df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1) - \
@@ -745,6 +745,79 @@ def get_wb_price_api():
     df = pd.DataFrame(data)
     df = df.rename(columns={'nmId': 'nm_id'})
     return df
+
+
+def get_all_cards_api_wb():
+    limit = 1000
+    total = 1000
+    updatedAt = None
+    nmId = None
+    dfs = []
+    while total >= limit:
+        headers = {
+            'accept': 'application/json',
+            'Authorization': app.config['WB_API_TOKEN2'],
+        }
+
+        data = {
+            "sort": {
+                "cursor": {
+                    "limit": total,
+                    "updatedAt": updatedAt,
+                    "nmID": nmId,
+                },
+                "filter": {
+                    "textSearch": "SK",
+                    "withPhoto": -1
+                }
+            }
+        }
+
+        data = json.dumps(data)
+        url = 'https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list'
+
+        response = requests.post(url, data=data, headers=headers)
+
+        print(type(response))
+        print(response)
+        df_json = response.json()
+        print(type(df_json))
+        print(df_json)
+        print(df_json['data']['cursor']['total'])
+        print(df_json['data']['cursor']['updatedAt'])
+        print(df_json['data']['cursor']['nmID'])
+
+        total = df_json['data']['cursor']['total']
+        updatedAt = df_json['data']['cursor']['updatedAt']
+        nmId = df_json['data']['cursor']['nmID']
+        # df = pd.DataFrame(df_json['data']['cards'])
+        dfs = dfs + df_json['data']['cards']
+
+    # df = pd.concat(dfs)
+    # dfs = dfs.explode('sizes')
+    # df = dfs.join(pd.json_normalize(dfs.pop('sizes')))
+    # df_n = pd.json_normalize(dfs, 'sizes')
+    # df = dfs.join(df_n)
+    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'])
+
+    # df['sizes'] = [list_dict_to_str(x) for x in df['sizes']]
+
+    # df = df.rename(columns={'nmId': 'nm_id'})
+    return df
+
+
+# def list_dict_to_str(x):
+#     key_value = ""
+#     for i in x:
+#         for index, (key, value) in enumerate(i.items()):
+#             new_value = value
+#             if index % 2:
+#                 sep = ","
+#             else:
+#                 sep = ":"
+#             key_value = [key_value + f"{new_value}{sep}"]
+#
+#     return key_value
 
 
 def get_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):

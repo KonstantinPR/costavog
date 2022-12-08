@@ -12,6 +12,7 @@ SPEC_TYPE = {
     'OAJCAPRON': 'APRON',
     'SK': 'ECO_FURS_WOMEN',
     'MIT': 'MIT',
+    'MHSU': 'SHOES',
 }
 
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]

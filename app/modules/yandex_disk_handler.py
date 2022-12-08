@@ -10,6 +10,14 @@ import copy
 from typing import Union
 
 
+def get_image_from_yadisk():
+    """on 06/12/2022 not working correctly. to get images from non local yandisk"""
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    y.get_files(fields=['path', 'file'], media_type='image')
+    # print(list(y.listdir(app.config['YANDEX_FOLDER_IMAGE_YANDISK'])))
+    print("hello")
+
+
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     if to_str is None:
         to_str = []

@@ -7,37 +7,40 @@ import PIL
 from typing import Union
 import os
 
-# # shoes boot
+# shoes boot
 # K_HEIGHT_LEFT_START = 0.10
 # K_HEIGHT_RIGHT_START = 0.90
 # K_BOTTOM_LEFT_START = 0.10
 # K_BOTTOM_RIGHT_START = 0.97
+# # STEP_ITERATION = 25
 # STEP_ITERATION = 25
+# # STEP_ITERATION_BOTTOM = 20
 # STEP_ITERATION_BOTTOM = 20
-# SENSIBILITY_COLOR = 210
+# SENSIBILITY_COLOR = 215
 # COUNT_STEP_J = 10
 # DELIMITER = 4
-# NEW_HEIGHT_IM = 3000
+# NEW_HEIGHT_IM = 3200
 # K_WIDTH_HEIGHT_IM = 0.75
 # WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 # WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-# K_BOOT_LONG_LEGS = 4
+# K_BOOT_LONG_LEGS = 1
 
-# # shoes leg
-# K_HEIGHT_LEFT_START = 0.15
-# K_HEIGHT_RIGHT_START = 0.85
-# K_BOTTOM_LEFT_START = 0.10
-# K_BOTTOM_RIGHT_START = 0.90
-# STEP_ITERATION = 25
-# STEP_ITERATION_BOTTOM = 20
-# SENSIBILITY_COLOR = 210
-# COUNT_STEP_J = 10
-# DELIMITER = 4
-# NEW_HEIGHT_IM = 3000
-# K_WIDTH_HEIGHT_IM = 0.75
-# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
-# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-# K_BOOT_LONG_LEGS = 2
+
+# shoes leg
+K_HEIGHT_LEFT_START = 0.15
+K_HEIGHT_RIGHT_START = 0.85
+K_BOTTOM_LEFT_START = 0.10
+K_BOTTOM_RIGHT_START = 0.90
+STEP_ITERATION = 25
+STEP_ITERATION_BOTTOM = 20
+SENSIBILITY_COLOR = 210
+COUNT_STEP_J = 10
+DELIMITER = 4
+NEW_HEIGHT_IM = 3000
+K_WIDTH_HEIGHT_IM = 0.75
+WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+K_BOOT_LONG_LEGS = 2
 
 
 # shoes small leg
@@ -58,20 +61,20 @@ import os
 
 # full clothes
 
-K_HEIGHT_LEFT_START = 0.30
-K_HEIGHT_RIGHT_START = 0.70
-K_BOTTOM_LEFT_START = 0.20
-K_BOTTOM_RIGHT_START = 0.80
-STEP_ITERATION = 25
-STEP_ITERATION_BOTTOM = 20
-SENSIBILITY_COLOR = 210
-COUNT_STEP_J = 10
-DELIMITER = 4
-NEW_HEIGHT_IM = 3000
-K_WIDTH_HEIGHT_IM = 0.75
-WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
-WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-K_BOOT_LONG_LEGS = 1
+# K_HEIGHT_LEFT_START = 0.30
+# K_HEIGHT_RIGHT_START = 0.70
+# K_BOTTOM_LEFT_START = 0.20
+# K_BOTTOM_RIGHT_START = 0.80
+# STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 20
+# SENSIBILITY_COLOR = 210
+# COUNT_STEP_J = 10
+# DELIMITER = 4
+# NEW_HEIGHT_IM = 3000
+# K_WIDTH_HEIGHT_IM = 0.75
+# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+# K_BOOT_LONG_LEGS = 1
 
 
 # half-full clothes
@@ -207,8 +210,13 @@ def _crop_bottom(img, img_crop_height_top):
         count_i += step
     # left_border = min(left_right_border) - step * 12
     # right_border = width - (max(left_right_border) + step * 2)
-    left_border = min(left_right_border) - step * 24
-    right_border = width - (max(left_right_border) + step * 4)
+    if left_right_border:
+        left_border = min(left_right_border) - step * 24
+        right_border = width - (max(left_right_border) + step * 4)
+    else:
+        left_border = 0
+        right_border = 0
+
     print("new bottom " + str(new_bottom))
     print("left_border " + str(left_border))
     print("right_border" + str(right_border))

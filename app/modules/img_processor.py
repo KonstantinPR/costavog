@@ -19,6 +19,12 @@ from flask import send_file
 import io
 from app.modules import yandex_disk_handler
 from PIL import Image, ImageDraw, ImageFont
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import os
+import img2pdf
+import glob
+from fpdf import FPDF
 
 SIZE_TRANSLATE_150 = {
     "m1": "150 x 100 см.",
@@ -84,6 +90,76 @@ def img_watermark(img_name, name):
 
     out = Image.alpha_composite(base, txt)
     out.convert('RGB').save(img_name, format="JPEG")
+
+
+def images_into_pdf_1():
+    """
+    Не актуально, переписано на images_into_pdf2
+    """
+    path_pdf = "folder_img/output.pdf"
+    with open(path_pdf, "wb") as f:
+        f.write(img2pdf.convert(glob.glob("folder_img/*-1.jpg")))
+    return path_pdf
+
+
+def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_name="Размер", qt_col_name="Кол-во"):
+    path_pdf = "folder_img/output.pdf"
+
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+
+    step = 10
+    sheet_height = 297
+    sheet_width = 210
+    pdf.set_font('arial', 'B', 24)
+    pdf.set_text_color(0, 0, 0)
+
+    for idx, art_set in enumerate(set(df[art_col_name])):
+        pdf.add_page()
+        pdf.image(f"folder_img/{art_set}-1.JPG", x=0, y=0, w=sheet_width, h=sheet_height)
+        txt = f"{art_set}"
+        new_y = step
+        pdf.add_page()
+        pdf.cell(0, step, txt, border=0)
+        for jdx, art_df in enumerate(df[art_col_name]):
+            if art_df == art_set:
+                size = df[size_col_name][jdx]
+                qt = df[qt_col_name][jdx]
+                info = f"{size}-{qt}"
+                new_y = new_y + 10
+                pdf.set_xy(x=step, y=new_y)
+                pdf.cell(0, step * 2, info, border=0)
+
+    pdf.output(path_pdf)
+
+    return path_pdf
+
+
+def download_images_from_yandex_to_folder(df, art_col_name="Артикул товара"):
+    print(df[art_col_name])
+    images_folder = app.config['YANDEX_FOLDER_IMAGE']
+    folder_folders = "folder_img"
+    shutil.rmtree(folder_folders, ignore_errors=True)
+
+    if not os.path.exists(folder_folders):
+        os.makedirs(folder_folders)
+
+    img_name_list_files = {}
+
+    for entry in os.scandir(images_folder):
+        for subentry in os.scandir(entry.path):
+            if subentry.is_dir():
+                for file in os.scandir(subentry.path):
+                    if file.is_file():
+                        img_name_list_files[file.name] = subentry.path
+
+    print(df[art_col_name])
+    for name, path in img_name_list_files.items():
+        for jdx, j in enumerate(df[art_col_name]):
+            print(f'j is {j}')
+            if j in name:
+                shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
+
+    return img_name_list_files
 
 
 def img_foldering(df):
