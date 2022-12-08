@@ -50,18 +50,16 @@ def image_from_yadisk_on_art():
         df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
         df_wb_stock = detailing_reports.df_wb_stock_api()
 
-
-        # if file_txt.filename and not search_string:
-        #     df = pd.read_csv(file_txt, sep='	', names=['Article'])
-        # else:
-        #     df = pd.DataFrame(df_all_cards['vendorCode'].unique(), columns=['Article'])
-        #     print(df)
-
-        # df = df.merge(df_all_cards, how='left', left_on='Article', right_on='vendorCode')
         df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
         df = df.merge(df_wb_stock, how='left',
                       left_on=['vendorCode', 'techSize'],
                       right_on=['supplierArticle', 'techSize'])
+
+        df.to_excel("df_all_actual_stock_and_art.xlsx")
+
+        if file_txt.filename:
+            df_input = pd.read_csv(file_txt, sep='	', names=['vendorCode'])
+            df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')
 
         # df = pd.read_excel("df_output.xlsx")
         cols = ['vendorCode']
@@ -73,11 +71,13 @@ def image_from_yadisk_on_art():
 
         df = df_worker.qt_to_order(df)
         df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
+        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0).astype(np.int64)
         df = df.sort_values(by=['vendorCode', 'techSize'], ascending=True)
         df.to_excel("df_output.xlsx")
         df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
         img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
-        path_pdf, no_photo_list = pdf_processor.images_into_pdf_2(df, art_col_name='vendorCode', size_col_name='techSize')
+        path_pdf, no_photo_list = pdf_processor.images_into_pdf_2(df, art_col_name='vendorCode',
+                                                                  size_col_name='techSize')
         pdf = os.path.abspath(path_pdf)
 
         return send_file(pdf, as_attachment=True)
