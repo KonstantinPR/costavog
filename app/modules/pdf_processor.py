@@ -1,4 +1,5 @@
 from fpdf import FPDF
+import os.path
 
 
 def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_name="Размер", qt_col_name="Кол-во",
@@ -12,10 +13,15 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     sheet_width = 210
     pdf.set_font('arial', 'B', 24)
     pdf.set_text_color(0, 0, 0)
-
+    no_photo_list = []
     for idx, art_set in enumerate(set(df[art_col_name])):
         pdf.add_page()
-        pdf.image(f"folder_img/{art_set}-1.JPG", x=0, y=0, w=sheet_width, h=sheet_height)
+        if os.path.isfile(f"folder_img/{art_set}-1.JPG"):
+            pdf.image(f"folder_img/{art_set}-1.JPG", x=0, y=0, w=sheet_width, h=sheet_height)
+        else:
+            no_photo_list.append(art_set)
+            continue
+
         more = ""
 
         if df[df[art_col_name] == art_set][rev].values[0] >= 0: more = "   * 1"
@@ -47,4 +53,12 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     pdf.cell(0, step * 2, note, border=0)
     pdf.output(path_pdf)
 
-    return path_pdf
+    no_photo_str = ''.join(str(x) for x in no_photo_list)
+    pdf.set_font('arial', 'B', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_xy(x=step, y=new_y + step * 2)
+    pdf.cell(0, step * 2, no_photo_str, border=0)
+    pdf.output(path_pdf)
+
+
+    return path_pdf, no_photo_list

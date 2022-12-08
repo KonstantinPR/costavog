@@ -33,7 +33,9 @@ def image_from_yadisk_on_art():
     """
     Делает PDF каталог с потребностями. С фото артикула и другой информацией.
     Работает на локальном яндекс.диске.
-    Артикулы Без шапки.
+    Напечатает то что передали в прикрепленном файле с шапкой vendorCode.
+    В строке пишем через пробел вхождения в артикул, которые хотим вывести в каталог.
+    Если передали файл - то приоритет у файла, строка работать не будет.
     """
 
     if request.method == 'POST':
@@ -44,35 +46,40 @@ def image_from_yadisk_on_art():
         print(search_string_list)
         search_string_first = search_string_list[0]
 
-        df = pd.DataFrame
-        if file_txt.filename:
-            df = pd.read_csv(file_txt, sep='	', names=['Article'])
+        df_all_cards = detailing_reports.get_all_cards_api_wb(textSearch=search_string_first)
+        df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
+        df_wb_stock = detailing_reports.df_wb_stock_api()
 
-        # df_all_cards = detailing_reports.get_all_cards_api_wb(textSearch=search_string_first)
-        # df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
-        # df_wb_stock = detailing_reports.df_wb_stock_api()
+
+        # if file_txt.filename and not search_string:
+        #     df = pd.read_csv(file_txt, sep='	', names=['Article'])
+        # else:
+        #     df = pd.DataFrame(df_all_cards['vendorCode'].unique(), columns=['Article'])
+        #     print(df)
+
         # df = df.merge(df_all_cards, how='left', left_on='Article', right_on='vendorCode')
-        # df = df.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
-        # df = df.merge(df_wb_stock, how='left',
-        #               left_on=['vendorCode', 'techSize'],
-        #               right_on=['supplierArticle', 'techSize'])
+        df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
+        df = df.merge(df_wb_stock, how='left',
+                      left_on=['vendorCode', 'techSize'],
+                      right_on=['supplierArticle', 'techSize'])
 
-        df = pd.read_excel("df_output.xlsx")
-        cols = ['Article']
+        # df = pd.read_excel("df_output.xlsx")
+        cols = ['vendorCode']
         print(cols)
         m = pd.concat([df[cols].agg("".join, axis=1).str.contains(s) for s in search_string_list], axis=1).all(1)
         print(m)
-        df = df.drop_duplicates(subset=['Article', 'techSize'])
+        df = df.drop_duplicates(subset=['vendorCode', 'techSize'])
         df = df[m].reset_index()
-
 
         df = df_worker.qt_to_order(df)
         df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
-        df = df.sort_values(by=['Article', 'techSize'], ascending=True)
-        # df.to_excel("df_output.xlsx")
-        img_name_list_files = img_processor.download_images_from_yandex_to_folder(df, art_col_name="Article")
-        path_pdf = pdf_processor.images_into_pdf_2(df, art_col_name='Article', size_col_name='techSize')
+        df = df.sort_values(by=['vendorCode', 'techSize'], ascending=True)
+        df.to_excel("df_output.xlsx")
+        df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
+        img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
+        path_pdf, no_photo_list = pdf_processor.images_into_pdf_2(df, art_col_name='vendorCode', size_col_name='techSize')
         pdf = os.path.abspath(path_pdf)
+
         return send_file(pdf, as_attachment=True)
     return render_template('upload_image_from_yadisk_on_art.html', doc_string=image_from_yadisk_on_art.__doc__)
 
