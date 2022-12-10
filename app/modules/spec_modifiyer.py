@@ -122,14 +122,17 @@ def picking_prefixes(df, df_art_prefixes):
     return df
 
 
-def picking_colors(df, df_colors):
+def picking_colors(df, df_colors,
+                   df_col_name='Артикул товара',
+                   df_colors_col_eng_name='Цвет английский',
+                   df_colors_col_rus_name='Цвет русский'):
     """colors picking from english"""
-    for idx, art in enumerate(df['Артикул товара']):
-        for jdx, color in enumerate(df_colors['Цвет английский']):
+    for idx, art in enumerate(df[df_col_name]):
+        for jdx, color in enumerate(df_colors[df_colors_col_eng_name]):
             print(f'art {art}')
             if f'-{color.upper()}' in art:
                 # df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
-                df.loc[idx, 'Цвет'] = df_colors.loc[jdx, 'Цвет русский']
+                df.loc[idx, 'Цвет'] = df_colors.loc[jdx, df_colors_col_rus_name]
     return df
 
 

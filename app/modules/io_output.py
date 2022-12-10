@@ -7,12 +7,12 @@ from openpyxl.utils import get_column_letter
 from flask import flash, render_template
 
 
-def io_txt_request(request, inp_name, col_name):
+def io_txt_request(request, name_html, inp_name, col_name):
     file_txt = request.files[inp_name]
 
     if not request.files[inp_name]:
         flash("Не приложен файл")
-        return render_template('upload_image_name_multiply.html')
+        return render_template(name_html)
 
     df = pd.read_fwf(file_txt)
     df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)

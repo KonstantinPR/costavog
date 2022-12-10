@@ -2,15 +2,36 @@
 import time
 
 import flask
-from werkzeug.datastructures import FileStorage
-from io import BytesIO
 from app import app
-from flask import flash, render_template, request, redirect, send_file
+from flask import flash, render_template, request, send_file
 import pandas as pd
 from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker
-import numpy as np
-from flask_login import login_required, current_user, login_user, logout_user
+from flask_login import login_required
 import datetime
+
+
+@app.route('/color_translate', methods=['GET', 'POST'])
+@login_required
+def color_translate():
+    """
+    Выбирает из каждого артикула в передаваемом текстовом файле цвет на английском и переводит его на русский.
+    На входе - txt с артикулами без шапки.
+    """
+
+    if request.method == 'POST':
+        col_name = 'Артикул'
+        df = io_output.io_txt_request(request,
+                                      name_html='upload_image_name_multiply.html',
+                                      inp_name='file',
+                                      col_name=col_name)
+
+        df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
+        df = spec_modifiyer.picking_colors(df, df_colors, df_col_name=col_name)
+        df_output = io_output.io_output(df)
+        file_name = f"colors_rus_{str(datetime.datetime.now())}.xlsx"
+        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+
+    return render_template('upload_color_translate.html', doc_string=color_translate.__doc__)
 
 
 @app.route('/vertical_sizes', methods=['GET', 'POST'])
@@ -76,7 +97,10 @@ def image_name_multiply():
     """Обработка файла txt - размножит названия артикулей с префиксом -1, -2 и т.д требуемое кол-во раз"""
 
     if request.method == 'POST':
-        df_column = io_output.io_txt_request(request, inp_name='file', col_name='Артикул')
+        df_column = io_output.io_txt_request(request,
+                                             name_html='upload_image_name_multiply.html',
+                                             inp_name='file',
+                                             col_name='Артикул')
         if not request.form['multiply_number']:
             flash("Сколько фото делать то будем? Поле пустое")
             return render_template('upload_image_name_multiply.html')

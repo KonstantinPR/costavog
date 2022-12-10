@@ -12,23 +12,20 @@
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
 
-    <div class="g-5 text-left">
+    <div class="text-left">
         <div class="row p-2 bg-light">
             <div>{{doc_string}}</div>
         </div>
     </div>
 
-    <div class="row g-5 text-left">
+    <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" target="blank" enctype=multipart/form-data action="{{url_for('image_from_yadisk_on_art')}}">
+                <form method="post" target="blank" enctype=multipart/form-data
+                      action="{{url_for('color_translate')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="form-control form-control-lg" type="file" name="file">
-                        </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input placeholder="Строка поиска, через пробел вхождения" class="form-control form-control-lg" type="text"
-                                   name="search_string">
+                            <input class="form-control form-control-lg" type="file" name="file" multiple>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">
