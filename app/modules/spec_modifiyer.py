@@ -2,6 +2,7 @@ import pandas as pd
 from app.modules import decorators
 import numpy as np
 from random import randrange
+from flask import flash, render_template
 
 PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 10000**0.3 = 2.52"""
@@ -25,16 +26,55 @@ def request_to_df(flask_request) -> pd.DataFrame:
 
 
 def spec_definition(df):
-    print(df)
-    print(df['Артикул товара'])
-    print(df['Артикул товара'][0].split('-')[0])
+    # print(df)
+    # print(df['Артикул товара'])
+    # print(df['Артикул товара'][0].split('-')[0])
     prefix = df['Артикул товара'][0].split('-')[0]
     if SPEC_TYPE[prefix]:
         spec_type = SPEC_TYPE[prefix]
     else:
         spec_type = SPEC_TYPE['DEFAULT']
-    print(spec_type)
+    # print(spec_type)
     return spec_type
+
+
+def str_input_to_full_str(df, request, size_col_name, input_name, html_template):
+    if request.form[input_name] and not size_col_name in df:
+        str_reduction_size = str(request.form[input_name])
+        reduction_sizes_list = sizes_str_to_list(str_reduction_size)
+        if len(reduction_sizes_list) <= 1:
+            flash("Не указано с какого и до какого размера создаем список размеров")
+            return render_template(html_template)
+        df[size_col_name] = ""
+        df = str_reduction_size_to_full(df, reduction_sizes_list, size_col_name)
+    return df
+
+
+def sizes_str_to_list(sizes_str):
+    str_reduction_size_list = sizes_str.split()
+    print(str_reduction_size_list)
+    return str_reduction_size_list
+
+
+def str_reduction_size_to_full(df, reduction_sizes_list: list, size_col_name="Размеры"):
+    str_size_list_full = []
+
+    size_from = int(reduction_sizes_list[0])
+    size_to = int(reduction_sizes_list[1])
+    if len(reduction_sizes_list) <= 2:
+        size_step = 1
+    else:
+        size_step = int(reduction_sizes_list[2])
+
+    for i in range(size_from, size_to + size_step, size_step):
+        str_size_list_full.append(str(i))
+
+    str_sizes_for_df = ' '.join(str_size_list_full)
+    print(str_sizes_for_df)
+
+    df[size_col_name] = [str_sizes_for_df for value in df[size_col_name]]
+
+    return df
 
 
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):

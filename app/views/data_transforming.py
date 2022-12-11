@@ -36,15 +36,21 @@ def color_translate():
 @login_required
 def vertical_sizes():
     """
-    Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонку.
+    Делает вертикальными размеры записанные в строку в одной ячейке.
     В первой колонке - Артикул товара, вторая - Размеры, третья - На фото.
     Если нет колонки кол-во, то - добавится 1 на каждый артикул.
+
+    В поле можно прописать размеры, которые будут созданы, например:
+    40 56 2 - создаст размеры 40 42 44 46 ... 56 (т.е с 40 по 56 включительно с шагом 2)
+    (Если в файле есть поле Размеры - то поле игнорируется)
     """
 
     if request.method == 'POST':
+        size_col_name = "Размеры"
         df = spec_modifiyer.request_to_df(flask.request)
         df = df[0]
-        print(df)
+        df = spec_modifiyer.str_input_to_full_str(df, request, size_col_name, input_name='size_forming',
+                                                  html_template='upload_vertical_sizes.html')
         df = spec_modifiyer.vertical_size(df)
         is_photo_col_name = 'На фото'
         if is_photo_col_name in df.columns:
