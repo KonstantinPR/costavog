@@ -8,39 +8,39 @@ from typing import Union
 import os
 
 # shoes boot
-# K_HEIGHT_LEFT_START = 0.10
-# K_HEIGHT_RIGHT_START = 0.90
-# K_BOTTOM_LEFT_START = 0.10
-# K_BOTTOM_RIGHT_START = 0.97
-# # STEP_ITERATION = 25
-# STEP_ITERATION = 25
-# # STEP_ITERATION_BOTTOM = 20
-# STEP_ITERATION_BOTTOM = 20
-# SENSIBILITY_COLOR = 215
-# COUNT_STEP_J = 10
-# DELIMITER = 4
-# NEW_HEIGHT_IM = 3200
-# K_WIDTH_HEIGHT_IM = 0.75
-# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
-# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-# K_BOOT_LONG_LEGS = 1
-
-
-# shoes leg
-K_HEIGHT_LEFT_START = 0.15
-K_HEIGHT_RIGHT_START = 0.85
+K_HEIGHT_LEFT_START = 0.10
+K_HEIGHT_RIGHT_START = 0.90
 K_BOTTOM_LEFT_START = 0.10
-K_BOTTOM_RIGHT_START = 0.90
+K_BOTTOM_RIGHT_START = 0.97
+# STEP_ITERATION = 25
 STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 20
 STEP_ITERATION_BOTTOM = 20
-SENSIBILITY_COLOR = 210
+SENSIBILITY_COLOR = 215
 COUNT_STEP_J = 10
-DELIMITER = 4
-NEW_HEIGHT_IM = 3000
+DELIMITER = 6
+NEW_HEIGHT_IM = 3200
 K_WIDTH_HEIGHT_IM = 0.75
 WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
 WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
-K_BOOT_LONG_LEGS = 2
+K_BOOT_LONG_LEGS = 1
+
+
+# # shoes leg
+# K_HEIGHT_LEFT_START = 0.15
+# K_HEIGHT_RIGHT_START = 0.85
+# K_BOTTOM_LEFT_START = 0.10
+# K_BOTTOM_RIGHT_START = 0.90
+# STEP_ITERATION = 25
+# STEP_ITERATION_BOTTOM = 20
+# SENSIBILITY_COLOR = 210
+# COUNT_STEP_J = 10
+# DELIMITER = 4
+# NEW_HEIGHT_IM = 3000
+# K_WIDTH_HEIGHT_IM = 0.75
+# WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+# WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+# K_BOOT_LONG_LEGS = 2
 
 
 # shoes small leg
@@ -199,8 +199,9 @@ def _crop_bottom(img, img_crop_height_top):
                     count_row += 1
                     if count_row >= (
                             width * K_BOTTOM_RIGHT_START - width * K_BOTTOM_LEFT_START) - 5 and count_i > height / DELIMITER:
-                        print(new_bottom)
                         new_bottom = height - img_crop_height_top - count_i - step
+                        # new_bottom = height - img_crop_height_top * 0.96 - count_i
+                        print(new_bottom)
                         break
                 else:
                     left_right_border.append(count_j)
@@ -211,7 +212,7 @@ def _crop_bottom(img, img_crop_height_top):
     # left_border = min(left_right_border) - step * 12
     # right_border = width - (max(left_right_border) + step * 2)
     if left_right_border:
-        left_border = min(left_right_border) - step * 24
+        left_border = min(left_right_border) - step * 16
         right_border = width - (max(left_right_border) + step * 4)
     else:
         left_border = 0

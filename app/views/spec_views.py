@@ -1,58 +1,11 @@
 # /// CATALOG ////////////
-import time
 
 import flask
 from app import app
-from flask import flash, render_template, request, send_file
+from flask import render_template, request, send_file
 import pandas as pd
-from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker
+from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker
 from flask_login import login_required
-import datetime
-
-
-@app.route('/color_translate', methods=['GET', 'POST'])
-@login_required
-def color_translate():
-    """
-    Выбирает из каждого артикула в передаваемом текстовом файле цвет на английском и переводит его на русский.
-    На входе - txt с артикулами без шапки.
-    """
-
-    if request.method == 'POST':
-        col_name = 'Артикул'
-        df = io_output.io_txt_request(request,
-                                      name_html='upload_image_name_multiply.html',
-                                      inp_name='file',
-                                      col_name=col_name)
-
-        df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
-        df = spec_modifiyer.picking_colors(df, df_colors, df_col_name=col_name)
-        df_output = io_output.io_output(df)
-        file_name = f"colors_rus_{str(datetime.datetime.now())}.xlsx"
-        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
-
-    return render_template('upload_color_translate.html', doc_string=color_translate.__doc__)
-
-
-@app.route('/vertical_sizes', methods=['GET', 'POST'])
-@login_required
-def vertical_sizes():
-    """Делает вертикальными размеры записанные в строку в одной ячейке вертикальными в колонку.
-    В первой колонке - Артикул товара, вторая - Размеры, На фото, если нет колонки кол-во, то - добавится с 1 каждый артикул"""
-
-    if request.method == 'POST':
-        df = spec_modifiyer.request_to_df(flask.request)
-        df = df[0]
-        print(df)
-        df = spec_modifiyer.vertical_size(df)
-        is_photo_col_name = 'На фото'
-        if is_photo_col_name in df.columns:
-            df = spec_modifiyer.to_keep_for_photo(df)
-        df_output = io_output.io_output(df)
-        file_name = f"vertical_sizes_{str(datetime.datetime.now())}.xlsx"
-        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
-
-    return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
 
 
 @app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])
@@ -89,26 +42,6 @@ def data_to_spec_wb_transcript():
         return send_file(df_output, as_attachment=True, attachment_filename='spec_created.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
-
-
-@app.route('/image_name_multiply', methods=['GET', 'POST'])
-@login_required
-def image_name_multiply():
-    """Обработка файла txt - размножит названия артикулей с префиксом -1, -2 и т.д требуемое кол-во раз"""
-
-    if request.method == 'POST':
-        df_column = io_output.io_txt_request(request,
-                                             name_html='upload_image_name_multiply.html',
-                                             inp_name='file',
-                                             col_name='Артикул')
-        if not request.form['multiply_number']:
-            flash("Сколько фото делать то будем? Поле пустое")
-            return render_template('upload_image_name_multiply.html')
-        multiply = int(request.form['multiply_number'])
-        df_multilpy = text_handler.names_multiply(df_column, multiply)
-        df_output = io_output.io_output_txt_csv(df_multilpy)
-        return send_file(df_output, as_attachment=True, attachment_filename='art.txt', mimetype='text/csv')
-    return render_template('upload_image_name_multiply.html')
 
 
 @app.route('/data_to_spec_merging', methods=['GET', 'POST'])
