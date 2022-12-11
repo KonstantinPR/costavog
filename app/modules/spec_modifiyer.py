@@ -1,3 +1,4 @@
+import flask
 import pandas as pd
 from app.modules import decorators
 import numpy as np
@@ -38,7 +39,7 @@ def spec_definition(df):
     return spec_type
 
 
-def str_input_to_full_str(df, request, size_col_name, input_name, html_template):
+def str_input_to_full_str(df, request: flask.Request, size_col_name: str, input_name: str, html_template: str):
     if request.form[input_name] and not size_col_name in df:
         str_reduction_size = str(request.form[input_name])
         reduction_sizes_list = sizes_str_to_list(str_reduction_size)
