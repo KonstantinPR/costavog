@@ -3,9 +3,10 @@ import flask
 from app import app
 from flask import flash, render_template, request, send_file
 import pandas as pd
-from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker
+from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker, detailing_reports
 from flask_login import login_required
 import datetime
+from random import randrange
 
 
 @app.route('/color_translate', methods=['GET', 'POST'])
@@ -36,25 +37,48 @@ def color_translate():
 @login_required
 def vertical_sizes():
     """
-    Делает вертикальными размеры записанные в строку в одной ячейке.
+    Делает вертикальными размеры записанные в строку в одной ячейке и откладывает на фотосессию новинки.
     В первой колонке - Артикул товара, вторая - Размеры, третья - На фото.
     Если нет колонки кол-во, то - добавится 1 на каждый артикул.
+    Если нет колонки 'На фото' - тогда программа вытащит через апи все артикулы с WB и если
+    там нет какого-то артикула (т.е. он новы) то напротив него поставится 1 (выбирется подходящий размер).
 
-    В поле можно прописать размеры, которые будут созданы, например:
+    В поле input можно прописать размеры, которые будут созданы, например:
     40 56 2 - создаст размеры 40 42 44 46 ... 56 (т.е с 40 по 56 включительно с шагом 2)
     (Если в файле есть поле Размеры - то поле игнорируется)
     """
 
     if request.method == 'POST':
+        main_col = ['Артикул товара', 'Размер', 'Кол-во', 'На фото']
         size_col_name = "Размеры"
         df = spec_modifiyer.request_to_df(flask.request)
         df = df[0]
         df = spec_modifiyer.str_input_to_full_str(df, request, size_col_name, input_name='size_forming',
                                                   html_template='upload_vertical_sizes.html')
-        df = spec_modifiyer.vertical_size(df)
+
         is_photo_col_name = 'На фото'
         if is_photo_col_name in df.columns:
+            df = spec_modifiyer.vertical_size(df)
             df = spec_modifiyer.to_keep_for_photo(df)
+        else:
+            # df_all_cards_api_wb = detailing_reports.get_all_cards_api_wb()
+            df_all_cards_api_wb = pd.read_excel('all_cards_wb.xlsx')
+            df_all_cards_api_wb = df_all_cards_api_wb.drop_duplicates(subset=['vendorCode'])
+            df_photo = df.merge(df_all_cards_api_wb,
+                                left_on=['Артикул товара'],
+                                right_on=['vendorCode'],
+                                how='outer',
+                                suffixes=['', '_'],
+                                indicator=True)
+
+            random_suffix = f'_col_on_drop_{randrange(10)}'
+            df = df.merge(df_photo, how='left', on='Артикул товара', suffixes=('', random_suffix))
+            df = df.drop(columns=[x for x in df.columns if random_suffix in x])
+            df['На фото'] = [1 if x == 'left_only' else "" for x in df['_merge']]
+            df = spec_modifiyer.vertical_size(df)
+            df = spec_modifiyer.to_keep_for_photo(df)
+            df = df[main_col]
+
         df_output = io_output.io_output(df)
         file_name = f"vertical_sizes_{str(datetime.datetime.now())}.xlsx"
         return send_file(df_output, as_attachment=True, attachment_filename=file_name)

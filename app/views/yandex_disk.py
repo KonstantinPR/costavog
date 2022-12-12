@@ -48,12 +48,14 @@ def image_from_yadisk_on_art():
 
         df_all_cards = detailing_reports.get_all_cards_api_wb(textSearch=search_string_first)
         df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
+        print(file_name)
         df_wb_stock = detailing_reports.df_wb_stock_api()
 
-        df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle')
+        df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
+                                suffixes=("", "_drop"))
         df = df.merge(df_wb_stock, how='left',
                       left_on=['vendorCode', 'techSize'],
-                      right_on=['supplierArticle', 'techSize'])
+                      right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
 
         df.to_excel("df_all_actual_stock_and_art.xlsx")
 
@@ -63,15 +65,15 @@ def image_from_yadisk_on_art():
 
         # df = pd.read_excel("df_output.xlsx")
         cols = ['vendorCode']
-        print(cols)
+        # print(cols)
         m = pd.concat([df[cols].agg("".join, axis=1).str.contains(s) for s in search_string_list], axis=1).all(1)
-        print(m)
+        # print(m)
         df = df.drop_duplicates(subset=['vendorCode', 'techSize'])
         df = df[m].reset_index()
 
         df = df_worker.qt_to_order(df)
         df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
-        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0).astype(np.int64)
+        df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
         df = df.sort_values(by=['vendorCode', 'techSize'], ascending=True)
         df.to_excel("df_output.xlsx")
         df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])

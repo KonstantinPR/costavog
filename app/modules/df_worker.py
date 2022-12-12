@@ -17,7 +17,7 @@ def qt_to_order(df):
     :return df:
     """
     false_list = pandas_handler.FALSE_LIST
-    df['Кол-во'] = [1 if pd.isna(x) or x in false_list else 0 for x in df['quantity']]
+    df['Кол-во'] = [1 if pd.isna(x) or x in false_list else 0 for x in df['quantityFull']]
     return df
 
 

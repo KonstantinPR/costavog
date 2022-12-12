@@ -23,7 +23,7 @@ VISIBLE_COL = [
     'price_disc',
     'Перечисление руб',
     'Прибыль_sum',
-    'quantityFull',
+    'quantity',
     'Остаток в розничных ценах',
     'Логистика руб',
     'Логистика шт',
@@ -55,7 +55,7 @@ IMPORTANT_COL_REPORT = [
     'Согл. скидк - disc',
     'price_disc'
     'Перечисление руб',
-    'quantityFull',
+    'quantity',
     'Остаток в розничных ценах',
     'Логистика руб',
     'Логистика шт',
@@ -109,7 +109,7 @@ def key_indicators_module(file_content):
     key_indicators = {}
     df = file_content
 
-    df['market_cost'] = df['price_disc'] * df['quantityFull']
+    df['market_cost'] = df['price_disc'] * df['quantity']
     key_indicators['market_cost'] = df['market_cost'].sum()
     key_indicators['Перечисление руб'] = df['Перечисление руб'].sum()
     key_indicators['retail_price_Пр_Взвр'] = df['retail_price_withdisc_rub_Продажа_sum'].sum() - df[
@@ -120,11 +120,11 @@ def key_indicators_module(file_content):
     key_indicators['our_income_for_all'] = key_indicators['market_cost'] * (1 - key_indicators['comission_and_exp_all'])
 
     key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
-        "quantityFull"]).sum() / df[df["net_cost"] != 0]["quantityFull"].sum()
+        "quantity"]).sum() / df[df["net_cost"] != 0]["quantity"].sum()
 
     df['net_cost'] = np.where(df.net_cost == 0, key_indicators['net_cost_med'], df.net_cost)
 
-    df['nets_cost'] = df['net_cost'] * df['quantityFull']
+    df['nets_cost'] = df['net_cost'] * df['quantity']
     key_indicators['nets_cost'] = df['nets_cost'].sum()
     df['sells_qt_with_back'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
     key_indicators['sells_qt_with_back'] = df['sells_qt_with_back'].sum()
@@ -148,7 +148,7 @@ def key_indicators_module(file_content):
         rev_per, net, qt in
         zip(df['revenue_per_one'],
             df['net_cost'],
-            df['quantityFull'],
+            df['quantity'],
             )]
 
     key_indicators['revenue_potential_cost'] = df['revenue_potential_cost'].sum()
@@ -278,7 +278,7 @@ def revenue_processing_module(request):
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
-    df['Остаток в розничных ценах'] = df['price_disc'] * df['quantityFull']
+    df['Остаток в розничных ценах'] = df['price_disc'] * df['quantity']
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
@@ -431,7 +431,7 @@ def get_k_discount(df, df_revenue_col_name_list):
                             df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
-    df['k_qt_full'] = [k_qt_full(x) for x in df['quantityFull']]
+    df['k_qt_full'] = [k_qt_full(x) for x in df['quantity']]
     df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
         'k_qt_full']) / 5
 
@@ -581,7 +581,7 @@ def get_important_columns(df):
         'quantity_Возврат',
         'quantity_Логистика',
         'net_cost',
-        'quantityFull',
+        'quantity',
         'delivery_rub_Возврат',
         'delivery_rub_Логистика',
         'delivery_rub_Продажа',

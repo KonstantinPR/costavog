@@ -31,9 +31,9 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     return file_content
 
 
-def upload_to_yandex_disk(file: BytesIO, file_name: str):
+def upload_to_yandex_disk(file: BytesIO, file_name: str, app_config_path=app.config['YANDEX_KEY_FILES_PATH']):
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-    path_full_to = f"{app.config['YANDEX_KEY_FILES_PATH']}/{file_name}"
+    path_full_to = f"{app_config_path}/{file_name}"
     print(path_full_to)
     y.upload(file, path_full_to, overwrite=True)
 

@@ -26,6 +26,7 @@ app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
 app.config['NOBODY'] = 'nobody'
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
+app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ/НОВЫЕ"
 app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
@@ -36,6 +37,7 @@ app.config['MIT'] = "/TASKER/CHARACTERS/MIT"
 app.config['APRON'] = "/TASKER/CHARACTERS/APRON"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
+
 
 
 
