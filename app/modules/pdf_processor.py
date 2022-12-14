@@ -24,18 +24,18 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
 
         more = ""
 
-        if df[df[art_col_name] == art_set][rev].values[0] >= 0: more = "   * 1"
-        if df[df[art_col_name] == art_set][rev].values[0] >= 1000: more = "   * * 2"
-        if df[df[art_col_name] == art_set][rev].values[0] >= 10000: more = "   * * * 3"
+        if df[df[art_col_name] == art_set][rev].values[0] >= 1000: more = "   * 1"
+        if df[df[art_col_name] == art_set][rev].values[0] >= 10000: more = "   * *  2"
+
         txt = f"{art_set}{more}"
         new_y = step
         pdf.add_page()
         pdf.cell(0, step, txt, border=0)
         for jdx, art_df in enumerate(df[art_col_name]):
-            print(art_df)
-            print(jdx)
-            print(df[qt_col_name])
-            print(df[qt_col_name][jdx])
+            # print(art_df)
+            # print(jdx)
+            # print(df[qt_col_name])
+            # print(df[qt_col_name][jdx])
             qt = df[qt_col_name][jdx]
             if art_df == art_set and qt:
                 size = df[size_col_name][jdx]
@@ -43,8 +43,6 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
                 new_y = new_y + 10
                 pdf.set_xy(x=step, y=new_y)
                 pdf.cell(0, step * 2, info, border=0)
-
-
 
     pdf.set_font('arial', 'B', 12)
     pdf.set_text_color(0, 0, 0)
@@ -59,6 +57,6 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     pdf.set_xy(x=step, y=new_y + step * 2)
     pdf.cell(0, step * 2, no_photo_str, border=0)
     pdf.output(path_pdf)
-
+    print('images_into_pdf_2 is completed')
 
     return path_pdf, no_photo_list

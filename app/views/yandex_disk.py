@@ -44,14 +44,13 @@ def get_info_wb():
     return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
 
 
-@app.route('/image_from_yadisk_on_art', methods=['POST', 'GET'])
+@app.route('/demand_calculation_excel', methods=['POST', 'GET'])
 @login_required
-def image_from_yadisk_on_art():
+def demand_calculation_excel():
     """
-    Делает PDF каталог с потребностями. С фото артикула и другой информацией.
-    Работает на локальном яндекс.диске.
+    Присылает excel с потребностями.
     Напечатает те артикулы, которые передали в excel с шапкой vendorCode.
-    В строке пишем через пробел подстроки, которые ищем в артикуле, которые хотим вывести в каталог.
+    В строке пишем через пробел подстроки, которые ищем в артикуле, которые хотим вывести в excel.
     Если передали файл - то приоритет у файла, строка работать не будет, Если файла нет - работает строка.
     """
 
@@ -61,6 +60,9 @@ def image_from_yadisk_on_art():
         search_string = str(request.form['search_string'])
         search_string_list = search_string.split()
         print(search_string_list)
+        search_string_list = [x for x in search_string_list]
+        print(search_string_list)
+
         search_string_first = search_string_list[0]
 
         df_all_cards = detailing_reports.get_all_cards_api_wb(textSearch=search_string_first)
@@ -91,7 +93,69 @@ def image_from_yadisk_on_art():
         df = df_worker.qt_to_order(df)
         df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
         df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
-        df = df.sort_values(by=['vendorCode', 'techSize'], ascending=True)
+        df = df.sort_values(by=['Прибыль_sum', 'vendorCode', 'techSize'], ascending=True)
+        df = df.reset_index(drop=True)
+        df = io_output.io_output(df)
+        file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
+        # df.to_excel("df_output.xlsx")
+
+
+        return send_file(df, attachment_filename=file_name, as_attachment=True)
+    return render_template('upload_demand_calculation_with_image_catalog.html',
+                           doc_string=demand_calculation_excel.__doc__)
+
+@app.route('/demand_calculation_with_image_catalog', methods=['POST', 'GET'])
+@login_required
+def demand_calculation_with_image_catalog():
+    """
+    Делает PDF каталог с потребностями. С фото артикула и другой информацией.
+    Работает на локальном яндекс.диске.
+    Напечатает те артикулы, которые передали в excel с шапкой vendorCode.
+    В строке пишем через пробел подстроки, которые ищем в артикуле, которые хотим вывести в каталог.
+    Если передали файл - то приоритет у файла, строка работать не будет, Если файла нет - работает строка.
+    """
+
+    if request.method == 'POST':
+        file_txt: FileStorage = request.files['file']
+
+        search_string = str(request.form['search_string'])
+        search_string_list = search_string.split()
+        print(search_string_list)
+        search_string_list = [x for x in search_string_list]
+        print(search_string_list)
+
+        search_string_first = search_string_list[0]
+
+        df_all_cards = detailing_reports.get_all_cards_api_wb(textSearch=search_string_first)
+        df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
+        print(file_name)
+        df_wb_stock = detailing_reports.df_wb_stock_api()
+
+        df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
+                                suffixes=("", "_drop"))
+        df = df.merge(df_wb_stock, how='left',
+                      left_on=['vendorCode', 'techSize'],
+                      right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
+
+        df.to_excel("df_all_actual_stock_and_art.xlsx")
+
+        if file_txt.filename:
+            df_input = pd.read_csv(file_txt, sep='	', names=['vendorCode'])
+            df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')
+
+        # df = pd.read_excel("df_output.xlsx")
+        cols = ['vendorCode']
+        # print(cols)
+        m = pd.concat([df[cols].agg("".join, axis=1).str.contains(s) for s in search_string_list], axis=1).all(1)
+        # print(m)
+        df = df.drop_duplicates(subset=['vendorCode', 'techSize'])
+        df = df[m].reset_index()
+
+        df = df_worker.qt_to_order(df)
+        df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
+        df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
+        df = df.sort_values(by=['Прибыль_sum', 'vendorCode', 'techSize'], ascending=False)
+        df = df.reset_index(drop=True)
         df.to_excel("df_output.xlsx")
         df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
         img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
@@ -100,7 +164,8 @@ def image_from_yadisk_on_art():
         pdf = os.path.abspath(path_pdf)
 
         return send_file(pdf, as_attachment=True)
-    return render_template('upload_image_from_yadisk_on_art.html', doc_string=image_from_yadisk_on_art.__doc__)
+    return render_template('upload_demand_calculation_with_image_catalog.html',
+                           doc_string=demand_calculation_with_image_catalog.__doc__)
 
 
 @app.route('/image_from_yadisk', methods=['POST', 'GET'])

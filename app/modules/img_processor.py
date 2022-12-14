@@ -108,7 +108,7 @@ def download_images_from_yandex_to_folder(df, art_col_name="Артикул то�
             # print(f'j is {j}')
             if j in name:
                 shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
-
+    print('download_images_from_yandex_to_folder is completed')
     return img_name_list_files
 
 

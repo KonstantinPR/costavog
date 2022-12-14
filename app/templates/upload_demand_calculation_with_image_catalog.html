@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
+    <div class="g-5 text-left">
+        <div class="row p-2 bg-light">
+            <div>{{doc_string}}</div>
+        </div>
+    </div>
+
+    <div class="row g-5 text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" target="blank" enctype=multipart/form-data
+                      action="{{url_for('demand_calculation_with_image_catalog')}}">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="form-control form-control-lg" type="file" name="file">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input placeholder="Строка поиска, через пробел вхождения"
+                                   class="form-control form-control-lg" type="text"
+                                   name="search_string">
+                        </div>
+<!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+<!--                            <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">-->
+<!--                        </div>-->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('demand_calculation_with_image_catalog')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Каталог PDF с потребностями">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('demand_calculation_excel')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Excel с потребностями">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}
