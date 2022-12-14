@@ -19,8 +19,11 @@ def data_to_spec_wb_transcript():
 
     if request.method == 'POST':
         size_col_name = "Размеры"
+        art_col_name = "Артикул товара"
         df_income_date = spec_modifiyer.request_to_df(flask.request)
         df_income_date = df_income_date[0]
+        df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
+        df_income_date = df_income_date.reset_index(drop=True)
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
         print(spec_type)
@@ -58,11 +61,11 @@ def data_to_spec_wb_transcript():
         #                             right_on=['vendorCode', 'techSize'], )
 
         df_output = df_to_str.merge(df_all_card_on_wb,
-                                            left_on=['Артикул товара', 'Размер'],
-                                            right_on=['vendorCode', 'techSize'],
-                                            how='outer',
-                                            suffixes=['', '_'],
-                                            indicator=True)
+                                    left_on=['Артикул товара', 'Размер'],
+                                    right_on=['vendorCode', 'techSize'],
+                                    how='outer',
+                                    suffixes=['', '_'],
+                                    indicator=True)
 
         df_output = df_output[df_output['_merge'] == 'left_only']
 

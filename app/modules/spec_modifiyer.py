@@ -15,6 +15,7 @@ SPEC_TYPE = {
     'SK': 'ECO_FURS_WOMEN',
     'MIT': 'MIT',
     'MHSU': 'SHOES',
+    'MHBB': 'SHOES',
 }
 
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
@@ -195,7 +196,6 @@ def df_clear(df_income) -> pd.DataFrame:
 def col_adding(df_income):
     # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
-    df_income['Номер карточки'] = ''
     for idx, art in enumerate(df_income['Артикул товара']):
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
@@ -218,10 +218,14 @@ def col_adding(df_income):
     dict_arts = {k: v for v, k in enumerate(set_art, len(set_art) + len(set_patterns) + 1)}
     # print(f'dict_arts {dict_arts}')
 
-    for idx, pattern in enumerate(df_income['Лекало']):
-        # print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
-        if dict_patterns[pattern]:
-            df_income['Номер карточки'][idx] = dict_patterns[pattern]
+
+    number_card_col_name = 'Номер карточки'
+    if not number_card_col_name in df_income.columns:
+        df_income[number_card_col_name] = ''
+        for idx, pattern in enumerate(df_income['Лекало']):
+            # print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
+            if dict_patterns[pattern]:
+                df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
     for idx, art in enumerate(df_income['Артикул товара']):
         if not df_income['Номер карточки'][idx]:
