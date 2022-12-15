@@ -67,7 +67,7 @@ from app.views import crop_images_views
 from app.views import profile_views
 from app.views import transactions_views
 from app.views import tasks_views
-from app.views import catalog_views
+from app.views import demand_calculation_views
 from app.views import parser_rating_wb_views
 from app.views import products_views
 from app.views import yandex_disk
