@@ -1,3 +1,4 @@
+import app.modules.API_WB
 from app import app
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
@@ -82,7 +83,7 @@ def get_wb_sales_realization_api():
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df_sales_wb_api = app.modules.API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
@@ -120,9 +121,9 @@ def get_wb_pivot_sells_api():
         else:
             days_step = app.config['DAYS_STEP_DEFAULT']
 
-        df = detailing_reports.get_wb_sales_realization_api(date_from, date_end, days_step)
+        df = app.modules.API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
-        df_stock = detailing_reports.get_wb_stock_api(date_from)
+        df_stock = app.modules.API_WB.get_wb_stock_api(date_from)
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
         df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
@@ -187,7 +188,7 @@ def get_wb_stock_api():
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = detailing_reports.get_wb_stock_api()
+        df_sales_wb_api = app.modules.API_WB.get_wb_stock_api()
         print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)

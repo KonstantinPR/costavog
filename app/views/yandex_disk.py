@@ -1,8 +1,7 @@
-import app.modules.pdf_processor
 from app import app
 from flask import render_template, request, redirect, send_file
 from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, spec_modifiyer, detailing_reports
+from app.modules import img_cropper, io_output, img_processor, detailing_reports, base_module, API_WB, pdf_processor
 import pandas as pd
 import flask
 import requests
@@ -30,7 +29,7 @@ def get_info_wb():
     """
 
     if request.method == 'POST':
-        df_all_cards = detailing_reports.get_all_cards_api_wb()
+        df_all_cards = API_WB.get_all_cards_api_wb()
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, attachment_filename=file_name, as_attachment=True)
@@ -49,11 +48,11 @@ def image_from_yadisk():
     if request.method == 'POST':
         # file_txt: FileStorage = request.files['file']
         # df = pd.read_csv(file_txt, sep='	', names=['Article'])
-        df = spec_modifiyer.request_to_df(flask.request)[0]
+        df = base_module.request_excel_to_df(flask.request)[0]
         # print(df)
         img_name_list_files = img_processor.download_images_from_yandex_to_folder(df)
         # print(img_name_list_files)
-        path_pdf = app.modules.pdf_processor.images_into_pdf_2(df)
+        path_pdf = pdf_processor.images_into_pdf_2(df)
         pdf = os.path.abspath(path_pdf)
         return send_file(pdf, as_attachment=True)
     return render_template('upload_image_from_yadisk.html', doc_string=image_from_yadisk.__doc__)

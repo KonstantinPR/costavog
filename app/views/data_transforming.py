@@ -1,9 +1,11 @@
 # /// DATA_TRANSFORMING ////////////
+
 import flask
 from app import app
 from flask import flash, render_template, request, send_file
 import pandas as pd
-from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, df_worker, detailing_reports
+from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, base_module, \
+    data_transforming_module
 from flask_login import login_required
 import datetime
 from random import randrange
@@ -51,18 +53,21 @@ def vertical_sizes():
     if request.method == 'POST':
         main_col = ['Артикул товара', 'Размер', 'Кол-во', 'На фото']
         size_col_name = "Размеры"
-        df = spec_modifiyer.request_to_df(flask.request)
+        df = base_module.request_excel_to_df(flask.request)
         df = df[0]
-        df = spec_modifiyer.str_input_to_full_str(df, request, size_col_name, input_name='size_forming',
-                                                  html_template='upload_vertical_sizes.html')
+        df = data_transforming_module.str_input_to_full_str(df, request, size_col_name,
+                                                            input_name='size_forming',
+                                                            html_template='upload_vertical_sizes.html')
 
         is_photo_col_name = 'На фото'
+        all_cards_wb = "all_cards_wb.xlsx"
         if is_photo_col_name in df.columns:
-            df = spec_modifiyer.vertical_size(df)
-            df = spec_modifiyer.to_keep_for_photo(df)
+            df = data_transforming_module.vertical_size(df)
+            df = data_transforming_module.to_keep_for_photo(df)
         else:
             # df_all_cards_api_wb = detailing_reports.get_all_cards_api_wb()
-            df_all_cards_api_wb = pd.read_excel('all_cards_wb.xlsx')
+
+            df_all_cards_api_wb = pd.read_excel(all_cards_wb)
             df_all_cards_api_wb = df_all_cards_api_wb.drop_duplicates(subset=['vendorCode'])
             df_photo = df.merge(df_all_cards_api_wb,
                                 left_on=['Артикул товара'],
@@ -75,8 +80,8 @@ def vertical_sizes():
             df = df.merge(df_photo, how='left', on='Артикул товара', suffixes=('', random_suffix))
             df = df.drop(columns=[x for x in df.columns if random_suffix in x])
             df['На фото'] = [1 if x == 'left_only' else "" for x in df['_merge']]
-            df = spec_modifiyer.vertical_size(df)
-            df = spec_modifiyer.to_keep_for_photo(df)
+            df = data_transforming_module.vertical_size(df)
+            df = data_transforming_module.to_keep_for_photo(df)
             df = df[main_col]
 
         df_output = io_output.io_output(df)

@@ -1,10 +1,10 @@
-# /// CATALOG ////////////
-
 import flask
+
 from app import app
 from flask import render_template, request, send_file
 import pandas as pd
-from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker, detailing_reports
+from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker, base_module, API_WB, \
+    data_transforming_module
 from flask_login import login_required
 import numpy as np
 
@@ -13,14 +13,16 @@ import numpy as np
 @login_required
 def data_to_spec_wb_transcript():
     """
-    Заполняется спецификация на основе справочников с яндекс.диска в таскере.
-    На входе excel с шапкой: Артикул товара, Размеры (размерный ряд товара), Цена - не обящатеьльна
+    Заполняется спецификация на основе справочников с яндекс.диска в TASKER.
+    На входе excel с шапкой: Артикул товара, Размеры (размерный ряд товара в строку), Цена - не обязательная (оптовая).
+    В строку вбиваем размеры в формате 40 56 2 (где 40 первый размер, 56 последний, 2 шаг - т.е. на выходе получим
+    40 42 44 46 ... 56 (строка может быть пустой - если в прикрепляемом файле будет заполненный столбец с размерами).
     """
 
     if request.method == 'POST':
         size_col_name = "Размеры"
         art_col_name = "Артикул товара"
-        df_income_date = spec_modifiyer.request_to_df(flask.request)
+        df_income_date = base_module.request_excel_to_df(flask.request)
         df_income_date = df_income_date[0]
         df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
         df_income_date = df_income_date.reset_index(drop=True)
@@ -31,10 +33,11 @@ def data_to_spec_wb_transcript():
                                                                         to_str=['Лекало', 'Префикс'])
         # df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
-        df_income_date = spec_modifiyer.str_input_to_full_str(df_income_date, request, size_col_name,
-                                                              input_name='size_forming',
-                                                              html_template='upload_vertical_sizes.html')
-        df_verticaling_sizes = spec_modifiyer.vertical_size(df_income_date)
+        df_income_date = data_transforming_module.str_input_to_full_str(df_income_date, request,
+                                                                        size_col_name,
+                                                                        input_name='size_forming',
+                                                                        html_template='upload_vertical_sizes.html')
+        df_verticaling_sizes = data_transforming_module.vertical_size(df_income_date)
         # df_check_exist_art = spec_modifier.check_art_existing(df_verticaling_sizes)
         # df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example)
@@ -44,8 +47,9 @@ def data_to_spec_wb_transcript():
         df_added_some_col = spec_modifiyer.col_adding(df_clear)
         df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
 
-        all_cards_wb = 'all_cards_wb.xlsx'
-        df_all_card_on_wb = pd.read_excel(all_cards_wb)
+        all_cards_wb_df = API_WB.get_all_cards_api_wb()
+        name_excel_all_cards_wb = "all_cards_wb.xlsx"
+        all_cards_wb_df.to_excel(name_excel_all_cards_wb)
         # df_all_card_on_wb = detailing_reports.get_all_cards_api_wb()
         # df_all_card_on_wb.to_excel(all_cards_wb)
         # df = io_output.io_output(df_all_card_on_wb)
@@ -60,7 +64,7 @@ def data_to_spec_wb_transcript():
         #                             left_on=['Артикул товара', 'Размер'],
         #                             right_on=['vendorCode', 'techSize'], )
 
-        df_output = df_to_str.merge(df_all_card_on_wb,
+        df_output = df_to_str.merge(all_cards_wb_df,
                                     left_on=['Артикул товара', 'Размер'],
                                     right_on=['vendorCode', 'techSize'],
                                     how='outer',
@@ -102,7 +106,7 @@ def take_off_boxes():
     шапка первого: Артикул товара (полный с размером), второго: Артикул, третьего: Можно
     """
     if request.method == 'POST':
-        dfs = spec_modifiyer.request_to_df(flask.request)
+        dfs = base_module.request_excel_to_df(flask.request)
         df = spec_modifiyer.merge_spec(dfs[0], dfs[1], how='left')
         print(df)
         df = df_worker.df_take_off_boxes(df)

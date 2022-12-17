@@ -3,7 +3,7 @@ import os.path
 
 
 def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_name="Размер", qt_col_name="Кол-во",
-                      rev='Прибыль_sum'):
+                      rev='Прибыль_sum', qt_sum=0):
     path_pdf = "folder_img/output.pdf"
 
     pdf = FPDF(orientation='P', unit='mm', format='A4')
@@ -14,11 +14,14 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     pdf.set_font('arial', 'B', 24)
     pdf.set_text_color(0, 0, 0)
     no_photo_list = []
+    new_y = 0
+
     for idx, art_set in enumerate(set(df[art_col_name])):
-        pdf.add_page()
         if os.path.isfile(f"folder_img/{art_set}-1.JPG"):
+            pdf.add_page()
             pdf.image(f"folder_img/{art_set}-1.JPG", x=0, y=0, w=sheet_width, h=sheet_height)
         else:
+            print(f"No photo for {art_set}")
             no_photo_list.append(art_set)
             continue
 
@@ -49,13 +52,18 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     pdf.set_xy(x=step, y=new_y + step * 2)
     note = "* Can be produced more (* 1 - one more, * * 2 - two more ... etc)"
     pdf.cell(0, step * 2, note, border=0)
-    pdf.output(path_pdf)
 
     no_photo_str = ''.join(str(x) for x in no_photo_list)
-    pdf.set_font('arial', 'B', 12)
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_xy(x=step, y=new_y + step * 2)
-    pdf.cell(0, step * 2, no_photo_str, border=0)
+
+    if no_photo_list:
+        no_photo_info = f", No_photo_for_art: {no_photo_str}"
+    else:
+        no_photo_info = ""
+
+    base_info = f"All: {qt_sum}{no_photo_info}"
+    pdf.set_xy(x=step, y=new_y + step * 4)
+    pdf.cell(0, step * 2, base_info, border=0)
+
     pdf.output(path_pdf)
     print('images_into_pdf_2 is completed')
 
