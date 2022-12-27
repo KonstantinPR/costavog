@@ -42,11 +42,13 @@ def data_to_spec_wb_transcript():
         # df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
         df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example)
         df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors)
-        df_pattern_merge = spec_modifiyer.merge_spec(df_colors_adding, df_spec_example, 'Лекало', 'Лекало')
+        # df_pattern_merge = spec_modifiyer.merge_spec(df_colors_adding, df_spec_example, 'Лекало', 'Лекало')
+        df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало', 'Лекало')
         df_clear = spec_modifiyer.df_clear(df_pattern_merge)
         df_added_some_col = spec_modifiyer.col_adding(df_clear)
         df_to_str = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
-
+        print("finish")
+        exit()
         all_cards_wb_df = API_WB.get_all_cards_api_wb()
         name_excel_all_cards_wb = "all_cards_wb.xlsx"
         all_cards_wb_df.to_excel(name_excel_all_cards_wb)

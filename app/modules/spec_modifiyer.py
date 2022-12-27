@@ -11,15 +11,20 @@ SPEC_TYPE = {
     'OAJCAPRON': 'APRON',
     'SK': 'ECO_FURS_WOMEN',
     'SH': 'ECO_FURS_WOMEN',
+    'MHOJ': 'ECO_FURS_WOMEN',
+    'MHOC': 'ECO_FURS_WOMEN',
+    'MHOF': 'ECO_FURS_WOMEN',
     'MIT': 'MIT',
     'MHSU': 'SHOES',
     'MHBB': 'SHOES',
+
 }
 
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
 
 
 def spec_definition(df):
+    print("spec_definition ...")
     # print(df)
     # print(df['Артикул товара'])
     # print(df['Артикул товара'][0].split('-')[0])
@@ -37,6 +42,7 @@ def spec_definition(df):
 
 
 def merge_spec(df1, df2, left_on='Артикул товара', right_on='Артикул товара', how='outer') -> pd.DataFrame:
+    print("merge_spec ...")
     # print(df1)
     # print(df2)
     random_suffix = f'_col_on_drop_{randrange(10)}'
@@ -55,6 +61,7 @@ def merge_spec(df1, df2, left_on='Артикул товара', right_on='Арт
 
 
 def picking_prefixes(df, df_art_prefixes):
+    print("picking_prefixes ...")
     """to fill df on coincidence startwith and in"""
     # print(df_art_prefixes)
     # print(df)
@@ -80,6 +87,7 @@ def picking_colors(df, df_colors,
                    df_colors_col_eng_name='Цвет английский',
                    df_colors_col_rus_name='Цвет русский'):
     """colors picking from english"""
+    print("picking_colors ...")
     for idx, art in enumerate(df[df_col_name]):
         for jdx, color in enumerate(df_colors[df_colors_col_eng_name]):
             # print(f'art {art}')
@@ -90,15 +98,20 @@ def picking_colors(df, df_colors,
 
 
 def df_clear(df_income) -> pd.DataFrame:
+    print("df_clear ...")
     df_income['Артикул товара'].replace('', np.nan, inplace=True)
     df_income.dropna(subset=['Артикул товара'], inplace=True)
+    df_income = df_income.reset_index(drop=True)
     return df_income
 
 
 def col_adding(df_income):
+    print("col_adding ...")
+
     # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
     for idx, art in enumerate(df_income['Артикул товара']):
+        # print(idx)
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
@@ -132,6 +145,7 @@ def col_adding(df_income):
         if not df_income['Номер карточки'][idx]:
             df_income['Номер карточки'][idx] = dict_arts[art]
 
+    # df_income.to_excel('df_income.xlsx')
     return df_income
 
 

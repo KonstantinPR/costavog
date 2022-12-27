@@ -7,9 +7,10 @@ import PIL
 from typing import Union
 import os
 
+from PIL import Image
+
 
 def set_parameters_via_type_clothes(type_clothes_to_crop):
-
     global K_HEIGHT_LEFT_START
     global K_HEIGHT_RIGHT_START
     global K_BOTTOM_LEFT_START
