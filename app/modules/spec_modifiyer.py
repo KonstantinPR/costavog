@@ -10,6 +10,7 @@ PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 SPEC_TYPE = {
     'OAJCAPRON': 'APRON',
     'SK': 'ECO_FURS_WOMEN',
+    'SH': 'ECO_FURS_WOMEN',
     'MIT': 'MIT',
     'MHSU': 'SHOES',
     'MHBB': 'SHOES',
@@ -22,7 +23,11 @@ def spec_definition(df):
     # print(df)
     # print(df['Артикул товара'])
     # print(df['Артикул товара'][0].split('-')[0])
-    prefix = df['Артикул товара'][0].split('-')[0]
+    if str(df['Артикул товара'][0]).startswith("SH"):
+        prefix = "SH"
+    else:
+        prefix = df['Артикул товара'][0].split('-')[0]
+
     if SPEC_TYPE[prefix]:
         spec_type = SPEC_TYPE[prefix]
     else:
@@ -59,7 +64,7 @@ def picking_prefixes(df, df_art_prefixes):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 # print(f"i {i} pattern {pattern}")
-                if f'-{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
+                if f'{i}' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
                     # print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
                     # df['Лекало'][idx] = pattern
                     df.at[idx, 'Лекало'] = pattern
@@ -114,7 +119,6 @@ def col_adding(df_income):
     # print(f'dict_arts {dict_patterns}')
     dict_arts = {k: v for v, k in enumerate(set_art, len(set_art) + len(set_patterns) + 1)}
     # print(f'dict_arts {dict_arts}')
-
 
     number_card_col_name = 'Номер карточки'
     if not number_card_col_name in df_income.columns:

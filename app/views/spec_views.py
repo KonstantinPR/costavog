@@ -72,6 +72,7 @@ def data_to_spec_wb_transcript():
                                     indicator=True)
 
         df_output = df_output[df_output['_merge'] == 'left_only']
+        df_output = df_output.drop_duplicates(subset=['Артикул товара', 'Размер'], keep=False)
 
         print('df_output.xlsx')
 
