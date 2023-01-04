@@ -13,7 +13,7 @@ from io import BytesIO
 import numpy as np
 from sqlalchemy import create_engine
 from urllib.parse import urlencode
-from app.modules import discount, detailing, detailing_reports
+from app.modules import discount, detailing, detailing_reports, API_WB
 from app.modules import io_output, yandex_disk_handler
 import time
 
@@ -190,7 +190,7 @@ def upload_detailing():
         is_get_stock = request.form.get('is_get_stock')
 
         if is_get_stock:
-            df_stock = app.modules.API_WB.get_wb_stock_api()
+            df_stock = API_WB.get_wb_stock_api()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
         file = io_output.io_output(df)

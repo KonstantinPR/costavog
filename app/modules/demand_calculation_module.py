@@ -2,7 +2,8 @@ import flask
 import pandas as pd
 
 import app.modules.API_WB
-from app.modules import decorators, detailing_reports, yandex_disk_handler, df_worker, img_processor, pdf_processor
+from app.modules import decorators, API_WB, detailing_reports, yandex_disk_handler, df_worker, img_processor, \
+    pdf_processor
 import numpy as np
 import os
 from random import randrange
@@ -26,10 +27,10 @@ def demand_calculation_to_df(input_txt, search_string):
         search_string_first = search_string_list[0]
     else:
         search_string_first = None
-    df_all_cards = app.modules.API_WB.get_all_cards_api_wb(textSearch=search_string_first)
+    df_all_cards = API_WB.get_all_cards_api_wb(textSearch=search_string_first)
     df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
     # print(file_name)
-    df_wb_stock = app.modules.API_WB.df_wb_stock_api()
+    df_wb_stock = API_WB.df_wb_stock_api()
 
     df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
                             suffixes=("", "_drop"))

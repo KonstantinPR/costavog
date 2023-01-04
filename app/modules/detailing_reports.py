@@ -199,7 +199,7 @@ def revenue_processing_module(request):
     df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
     df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
-    df_stock = get_wb_stock_api()
+    df_stock = API_WB.get_wb_stock_api()
     df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
