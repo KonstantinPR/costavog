@@ -1,13 +1,8 @@
-import flask
 import pandas as pd
-
-import app.modules.API_WB
-from app.modules import decorators, API_WB, detailing_reports, yandex_disk_handler, df_worker, img_processor, \
-    pdf_processor
+from app.modules import API_WB, yandex_disk_handler, df_worker, img_processor, pdf_processor
 import numpy as np
 import os
-from random import randrange
-from flask import flash, render_template
+
 
 
 def demand_calculation_df_to_pdf(df):

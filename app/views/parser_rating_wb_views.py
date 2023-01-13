@@ -205,7 +205,8 @@ def parser_rating_wb():
         col_name = 'Артикул'
         rating = 'Рейтинг'
         feedbacks = 'Кол-во отзывов'
-        df_column = io_output.io_txt_request(request, inp_name='file', col_name=col_name)
+        df_column = io_output.io_txt_request(request, name_html="upload_parser_rating_wb.html",
+                                             inp_name='file', col_name=col_name)
         art_list = [x for x in df_column[col_name]]
         rating_list = get_rating(art_list)
         df_column[rating] = [x[0] if x else '' for x in rating_list]

@@ -90,7 +90,7 @@ def data_to_spec_merging():
         uploaded_files = flask.request.files.getlist("file")
         df_from = pd.read_excel(uploaded_files[0])
         df_to = pd.read_excel(uploaded_files[1])
-        df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул товара', right_on='Артикул товара')
+        df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул продавца', right_on='Артикул продавца')
         df = io_output.io_output(df)
 
         return send_file(df, as_attachment=True, attachment_filename='spec.xlsx')
