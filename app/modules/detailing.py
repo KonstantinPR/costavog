@@ -166,7 +166,10 @@ def zip_detail(zip_downloaded, df_net_cost):
             'Возврат шт.',
             'Логистика',
             'Доставки/Возвраты, руб.',
-            'Себестоимость продаж']]
+            'Себестоимость продаж',
+            'Поставщик',
+
+        ]]
 
         df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
 
