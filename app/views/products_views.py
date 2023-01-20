@@ -159,6 +159,55 @@ def upload_turnover():
     return render_template('upload_turnover.html')
 
 
+@app.route('/concatenate_detailing', methods=['POST', 'GET'])
+@login_required
+def concatenate_detailing():
+    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
+
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        # zip to the input html
+        uploaded_files = flask.request.files.get("file")
+        print(uploaded_files)
+
+        is_net_cost = request.form.get('is_net_cost')
+        print(is_net_cost == 'is_net_cost')
+
+        if not uploaded_files:
+            flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
+            return render_template('upload_detailing.html')
+
+        if is_net_cost:
+            df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+        else:
+            df_net_cost = False
+
+        print(df_net_cost)
+
+        df = detailing.concatenate_detailing_modul(uploaded_files, df_net_cost)
+
+        date_end = df['Дата заказа покупателем'].max()
+        df['Дата заказа покупателем'] = df['Дата заказа покупателем'].replace("1900-01-01", date_end)
+        date_start = df['Дата заказа покупателем'].min()
+        print(date_start)
+
+        is_get_stock = request.form.get('is_get_stock')
+
+        if is_get_stock:
+            df_stock = API_WB.get_wb_stock_api()
+            df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
+
+        file = io_output.io_output(df)
+
+        flash("Отчет успешно выгружен в excel файл")
+        return send_file(file, attachment_filename=f"concatenated_detailing_{str(date_start)}_{str(date_end)}.xlsx",
+                         as_attachment=True)
+
+    return render_template('upload_detailing.html')
+
+
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
 def upload_detailing():

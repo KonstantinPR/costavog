@@ -25,9 +25,8 @@ def to_round_df(df_result):
     return df_result
 
 
-
-
-def zip_detail(zip_downloaded, df_net_cost):
+def zips_to_list(zip_downloaded):
+    print(f"type of zip_downloaded {type(zip_downloaded)}")
     df_list = []
 
     z = zipfile.ZipFile(zip_downloaded)
@@ -39,7 +38,17 @@ def zip_detail(zip_downloaded, df_net_cost):
             excel_0 = zip_file.read(i)
             df = pd.read_excel(excel_0)
             df_list.append(df)
+    return df_list
 
+
+def concatenate_detailing_modul(zip_downloaded, df_net_cost):
+    df_list = zips_to_list(zip_downloaded)
+    result = pd.concat(df_list)
+    return result
+
+
+def zip_detail(zip_downloaded, df_net_cost):
+    df_list = zips_to_list(zip_downloaded)
     result = pd.concat(df_list)
     result.to_excel('result.xlsx')
 

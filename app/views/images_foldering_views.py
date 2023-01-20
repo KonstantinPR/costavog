@@ -69,22 +69,31 @@ def images_foldering_yandisk():
 @login_required
 def images_foldering():
     """
-    on 12.11.2022:
-    txt with one columns no name
+    on 21.01.2022:
+    Text is expected in first place!
+    if via txt then it with one columns no name
     for wb is our article
     for ozon is article without -size (-38)
-
     Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
     if good is wool then watermark will be placed like 150 x 300 см.
     if Article_WB is in columns (in second column) then - folder will be named by it, if not - then our art
 
-
     """
     if request.method == 'POST':
-        file_txt: FileStorage = request.files['file']
-        df = pd.read_csv(file_txt, sep='	', names=['Article', 'Article_WB'])
+        if request.form['text_input']:
+            input_text = request.form['text_input']
+            input_text = input_text.split()
+            print(input_text)
+            df = pd.DataFrame(input_text, columns=['Article'])
+            print(df)
+        elif request.files['file']:
+            file_txt: FileStorage = request.files['file']
+            df = pd.read_csv(file_txt, sep='	', names=['Article', 'Article_WB'])
+        else:
+            flash(f"No one file of text is passed")
+            return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)
 
         return_data = img_processor.img_foldering(df)
 

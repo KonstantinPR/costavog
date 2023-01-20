@@ -30,6 +30,8 @@ def spec_definition(df):
     # print(df['Артикул товара'][0].split('-')[0])
     if str(df['Артикул товара'][0]).startswith("SH"):
         prefix = "SH"
+    elif str(df['Артикул товара'][0]).startswith("SK"):
+        prefix = "SK"
     else:
         prefix = df['Артикул товара'][0].split('-')[0]
 
@@ -119,16 +121,17 @@ def col_adding(df_income):
     df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
 
     # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
+    random_wedding_desc = [
+        f' Дополнительный аксессуар к свадебному образу.',
+        f' Теплый аксессуар к свадебному платью в прохладный сезон.',
+        f' Незаменимый атрибут к свадебному наряду в холодный сезон.',
+        f' Отличный аксессуар к образу невесты и незаменимый атрибут к свадебному платью в прохладный сезон.'
+    ]
+    wedding_desc = random_wedding_desc[randrange(len(random_wedding_desc))]
+
     for idx, color in enumerate(df_income['Цвет']):
         if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый'] and df_income['Префикс'][idx] == 'SK':
-            random_wedding_desc = [
-                f' Дополнительный аксессуар к свадебному образу.',
-                f' Теплый аксессуар к свадебному платью в прохладный сезон.',
-                f' Незаменимый аттрибут к свадебному нарядку в холодный сезон.',
-                f' Отличный аксессуар к образу невесты и незаменимый аттрибут к свадебному платью в прохладный сезон.'
-            ]
-
-            df_income['Описание'][idx] += random_wedding_desc[randrange(len(random_wedding_desc))]
+            df_income['Описание'][idx] += wedding_desc
 
     # нумеруем карточки на основе лекал, если нет лекал - на основе одинаковых артикулей
     set_patterns = set(df_income['Лекало'])
@@ -151,6 +154,9 @@ def col_adding(df_income):
     for idx, art in enumerate(df_income['Артикул товара']):
         if not df_income['Номер карточки'][idx]:
             df_income['Номер карточки'][idx] = dict_arts[art]
+
+    # создаем дополнительный столбец равный категории
+    # df_income['Категория'] = df_income['Предмет']
 
     # df_income.to_excel('df_income.xlsx')
     return df_income

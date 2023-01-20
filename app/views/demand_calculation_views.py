@@ -59,4 +59,4 @@ def demand_calculation_with_image_catalog():
         return send_file(pdf, as_attachment=True)
 
     return render_template('upload_demand_calculation_with_image_catalog.html',
-                           doc_string=demand_calculation_with_image_catalog.__doc__ + demand_calculation_excel.__doc__)
+                           doc_string=demand_calculation_with_image_catalog.__doc__)

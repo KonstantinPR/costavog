@@ -43,9 +43,17 @@
                                     href="{{url_for('upload_products')}}">здесь</a>)
                             </label>
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('upload_detailing')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Создать сводную таблицу">
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('concatenate_detailing')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Соединить в один">
+                        </div>
+
                     </div>
                 </form>
             </div>

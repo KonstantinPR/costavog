@@ -200,7 +200,7 @@ def get_rating(goods_id_list):
 @app.route('/parser-rating-wb', methods=['GET', 'POST'])
 @login_required
 def parser_rating_wb():
-    """Обработка файла txt  - шапка нужна"""
+    """Обработка файла txt  - шапка нужна - Артикул"""
     if request.method == 'POST':
         col_name = 'Артикул'
         rating = 'Рейтинг'

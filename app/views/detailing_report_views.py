@@ -96,7 +96,7 @@ def get_wb_sales_realization_api():
 
 @app.route('/get_wb_pivot_sells_api', methods=['POST', 'GET'])
 @login_required
-def get_wb_pivot_sells_api():
+def get_wb_pivot_sells_api() -> object:
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':
