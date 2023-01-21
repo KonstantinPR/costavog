@@ -77,3 +77,4 @@ from app.views import routes_getter_views
 from app.views import images_foldering_views
 from app.views import barcode_views
 from app.views import data_transforming
+from app.views import warehouse_views
