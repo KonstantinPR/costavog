@@ -1,7 +1,7 @@
 from app import app
-from flask import render_template, request, redirect, send_file
+from flask import render_template, request, redirect, send_file, flash
 from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, detailing_reports, base_module, API_WB, pdf_processor
+from app.modules import warehouse_module, io_output
 import pandas as pd
 import flask
 import requests
@@ -25,42 +25,40 @@ URL = app.config['URL']
 @login_required
 def arrivals_of_products():
     """
-    Вытягивает с яндекс.диска из эксель файлов поступления товаров
+    Вытягивает файлы приходов из папок приходов на яндекс диске
     """
 
-    folder_path = app.config["YANDEX_FOLDER"]
-    print(folder_path)
-    folder_warehouse = app.config["WAREHOUSE"]
-    path_to_files = f'{folder_path}/{folder_warehouse}'
-    print(path_to_files)
-
-    # specify the directory to iterate through
-    directory = '/path/to/your/folder'
-
-    # create an empty list to store the DataFrames of the Excel files
-    excel_dfs = []
-
-    # use os.walk() to iterate through the subfolders
-    for root, dirs, files in os.walk(path_to_files):
-        for file in files:
-            # check if the file name contains what you need
-            if 'Приход.xlsx' in file:
-                if not file.startswith('.') and not file.startswith('~$'):
-                    print(root)
-                    print(file)
-                    # read the Excel file into a DataFrame
-                    print(os.path.join(root, file))
-                    df = pd.read_excel(os.path.join(root, file))
-                    # add the DataFrame to the list
-                    excel_dfs.append(df)
-
-    # concatenate the list of DataFrames into a single DataFrame
-    if excel_dfs:
-        result = pd.concat(excel_dfs)
-        # print the concatenated DataFrame
-        print(result)
-
-
     if request.method == 'POST':
-        pass
+
+        # create an empty list to store the DataFrames of the Excel files
+
+        path_to_files = f'{app.config["YANDEX_FOLDER"]}/{app.config["WAREHOUSE"]}'
+        list_paths_files = glob.glob(path_to_files + '/*/Приход*.xlsx', recursive=True)
+        df = warehouse_module.df_from_list_paths_files_excel(list_paths_files)
+
+        # # use os.walk() to iterate through the subfolders - the second var
+        # for root, dirs, files in os.walk(path_to_files):
+        #     for file in files:
+        #         # check if the file name contains what you need
+        #         if 'Приход' in file:
+        #             if not file.startswith('.') and not file.startswith('~$'):
+        #                 print(root)
+        #                 print(file)
+        #                 # read the Excel file into a DataFrame
+        #                 print(os.path.join(root, file))
+        #                 df = pd.read_excel(os.path.join(root, file))
+        #                 # add the DataFrame to the list
+        #                 excel_dfs.append(df)
+
+        # concatenate the list of DataFrames into a single DataFrame
+        if df:
+            result = pd.concat(df)
+            # print the concatenated DataFrame
+            print(result)
+            df_output = io_output.io_output(result)
+            file_name = f"arrivals_of_products_on_{datetime.datetime.now().strftime('%Y-%m-%d')}.xlsx"
+            return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+
+    # flash("Нет файлов приходов. Проверье настройки путей до папок приходов.")
+
     return render_template('upload_warehouse.html', doc_string=arrivals_of_products.__doc__)
