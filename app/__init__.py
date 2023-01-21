@@ -25,6 +25,7 @@ app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
 app.config['ADMINISTRATOR'] = 'administrator'
 app.config['NOBODY'] = 'nobody'
+app.config['YANDEX_FOLDER'] = "C:\Yandex.Disk"
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ"
@@ -38,6 +39,7 @@ app.config['APRON'] = "/TASKER/CHARACTERS/APRON"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
+app.config['WAREHOUSE'] = "/ПОСТАВЩИКИ/TEST"
 
 
 
@@ -70,7 +72,7 @@ from app.views import tasks_views
 from app.views import demand_calculation_views
 from app.views import parser_rating_wb_views
 from app.views import products_views
-from app.views import yandex_disk
+from app.views import yandex_disk_views
 from app.views import detailing_report_views
 from app.views import spec_views
 from app.views import routes_getter_views

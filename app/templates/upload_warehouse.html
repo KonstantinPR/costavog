@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
+    <div class="g-5 text-left">
+        <div class="row p-2 bg-light">
+            <div>{{doc_string}}
+            </div>
+        </div>
+    </div>
+
+    <div class="row text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data action="{{url_for('arrivals_of_products')}}">
+                    <div class="row">
+<!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
+<!--                            <input type="date" class="form-control form-control-lg" id="date_from" name="date_from"-->
+<!--                                   placeholder="Загружать данные с указанной даты"-->
+<!--                                   value="">-->
+<!--                        </div>-->
+<!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
+<!--                            <input type="date" class="form-control form-control-lg" id="date_end" name="date_end"-->
+<!--                                   placeholder="Загружать данные до указанной даты"-->
+<!--                                   value="">-->
+<!--                        </div>-->
+<!--                        <div class="invalid-feedback">-->
+<!--                            Что-то не так с датой-->
+<!--                        </div>-->
+
+<!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+<!--                            <input placeholder="На сколько частей делим период" class="form-control form-control-lg"-->
+<!--                                   type="number"-->
+<!--                                   name="part_by">-->
+<!--                        </div>-->
+
+<!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+<!--                            <input placeholder="Коэффициент скидки = 1 (делит скидку). Целое"-->
+<!--                                   class="form-control form-control-lg"-->
+<!--                                   type="number"-->
+<!--                                   name="k_smooth">-->
+<!--                        </div>-->
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('arrivals_of_products')}}"
+                                   class="btn btn-primary form-control form-control-lg" type="submit"
+                                   value="Приходы в эксель с яндекс диска">
+                        </div>
+
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}
