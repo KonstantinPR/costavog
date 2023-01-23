@@ -41,6 +41,15 @@ def correct_desc(description, desc_income):
 @login_required
 @decorators.administrator_required
 def transactions():
+    """
+    Учет расходов. Данные сохраняются в базе. Баланс - текущее кол-во денег, если отрицательное число - долг фирмы.
+    Сумма - в рублях. Дата - когда была совершена транзакция. Можно выбрать и прикрепить изображение (скриншот)
+    документа или чека, а также любой другой картинки. Чекбокс "не учитывать в транзакциях" значит, что эта сумма
+    не будет влиять на Баланс, но будет присутствовать в списке и базе транзакций (т.е. вносится для личных целей).
+    Есть поиск, в котором можно фильтровать транзакции по части строки, ищет вхождения - в описании. Также если в начале
+    добавить слово all а затем через пробел то что ищем - то будут показаны все транзакции, включая не учитывающиеся.
+
+    """
     if not current_user.is_authenticated:
         return redirect('/company_register')
     company_id = current_user.company_id
@@ -65,7 +74,8 @@ def transactions():
     transactions, transactions_sum = transaction_worker.get_transactions(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
-                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='')
+                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='',
+                           doc_string=transactions.__doc__)
 
 
 @app.route('/transactions_by/<field_type>/<sort_type>', methods=['POST', 'GET'])
@@ -182,7 +192,6 @@ def transaction_edit(id):
         transaction.date = date
         transaction.user_name = user_name
         transaction.is_private = is_private
-
 
         uploaded_files = flask.request.files.getlist("files")
         print(flask.request.files.getlist("files"))

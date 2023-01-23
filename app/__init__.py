@@ -40,9 +40,7 @@ app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
 app.config['WAREHOUSE'] = "/ПОСТАВЩИКИ/TEST"
-
-
-
+app.config['ARRIVALS'] = "/Приходы"
 
 db.init_app(app)
 login.init_app(app)

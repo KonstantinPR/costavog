@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template, request, redirect, send_file, flash
 from urllib.parse import urlencode
-from app.modules import warehouse_module, io_output
+from app.modules import warehouse_module, io_output, data_transforming_module
 import pandas as pd
 import flask
 import requests
@@ -10,55 +10,43 @@ import os
 from random import randrange
 import shutil
 from PIL import Image
-import glob
 from flask_login import login_required, current_user
-
 import datetime
-
-# /// YANDEX DISK ////////////
-
-
-URL = app.config['URL']
 
 
 @app.route('/arrivals_of_products', methods=['POST', 'GET'])
 @login_required
 def arrivals_of_products():
     """
-    Вытягивает файлы приходов из папок приходов на яндекс диске
+    Вытягивает файлы приходов из папок приходов на яндекс диске.
+    Проходит по папкам имеющих следующую структуру.
+    example path:
+    path/PARTNERS/TRANSACTIONS/NUMBER_TRANSACTIONS/FILE
+    example
+    C/yadisk/test/КОНТРАГЕНТЫ/ПРИХОДЫ/N086_2022-01-21/Приход.xlsx
+    Все приходы объединяются в один файл excel.
+    Чекбокс - для вертикализирования размеров. Т.е из строки размеров, например 40, 42, 44, написанных в строку
+    получим запись, где каждый размер с переносом строки.
     """
 
     if request.method == 'POST':
-
         # create an empty list to store the DataFrames of the Excel files
 
-        path_to_files = f'{app.config["YANDEX_FOLDER"]}/{app.config["WAREHOUSE"]}'
-        list_paths_files = glob.glob(path_to_files + '/*/Приход*.xlsx', recursive=True)
+        list_paths_files = warehouse_module.preparing_paths()
         df = warehouse_module.df_from_list_paths_files_excel(list_paths_files)
 
-        # # use os.walk() to iterate through the subfolders - the second var
-        # for root, dirs, files in os.walk(path_to_files):
-        #     for file in files:
-        #         # check if the file name contains what you need
-        #         if 'Приход' in file:
-        #             if not file.startswith('.') and not file.startswith('~$'):
-        #                 print(root)
-        #                 print(file)
-        #                 # read the Excel file into a DataFrame
-        #                 print(os.path.join(root, file))
-        #                 df = pd.read_excel(os.path.join(root, file))
-        #                 # add the DataFrame to the list
-        #                 excel_dfs.append(df)
+        if not df:
+            flash("DataFrame пустой, возможно неверно настроены пути или папки не существуют")
+            return render_template('upload_warehouse.html', doc_string=arrivals_of_products.__doc__)
 
-        # concatenate the list of DataFrames into a single DataFrame
-        if df:
-            result = pd.concat(df)
-            # print the concatenated DataFrame
-            print(result)
-            df_output = io_output.io_output(result)
-            file_name = f"arrivals_of_products_on_{datetime.datetime.now().strftime('%Y-%m-%d')}.xlsx"
-            return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+        df = pd.concat(df)
 
-    # flash("Нет файлов приходов. Проверье настройки путей до папок приходов.")
+        if 'checkbox_is_vertical' in request.form:
+            df = data_transforming_module.vertical_size(df)
+
+        df_output = io_output.io_output(df)
+        file_name = f"arrivals_of_products_on_{datetime.datetime.now().strftime('%Y-%m-%d')}.xlsx"
+        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
 
     return render_template('upload_warehouse.html', doc_string=arrivals_of_products.__doc__)
+

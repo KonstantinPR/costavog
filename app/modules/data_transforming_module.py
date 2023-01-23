@@ -54,12 +54,12 @@ def str_reduction_size_to_full(df, reduction_sizes_list: list, size_col_name="Р
 def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     if col in df.columns:
         re_size = [str(x).split(' ') if ' ' in str(x) else str(x) for x in df[col]]
-        print(re_size)
         df = df.assign(temp_col=re_size).explode('temp_col', ignore_index=True)
         df = df.drop(columns=col, axis=1)
         df = df.rename({'temp_col': col_re}, axis='columns')
-        print(df)
-
+        return df
+    flash(f"В ДатаФрейме нет колонки с именем {col}")
+    return df
     # OLD RIGHT
     # lst_art = []
     # lst_sizes = [x.split() for x in df['Размеры']]
@@ -69,8 +69,6 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
     #
     # lst_sizes = sum(lst_sizes, [])
     # df = pd.DataFrame({'Артикул полный': lst_art, 'Размеры': lst_sizes})
-
-    return df
 
 
 def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):
