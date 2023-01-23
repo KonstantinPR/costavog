@@ -39,8 +39,10 @@ app.config['APRON'] = "/TASKER/CHARACTERS/APRON"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
-app.config['WAREHOUSE'] = "/ПОСТАВЩИКИ/TEST"
-app.config['ARRIVALS'] = "/Приходы"
+app.config['PARTNERS_FOLDER'] = "ПОСТАВЩИКИ/TEST"
+app.config['ARRIVALS_FOLDER'] = "Приходы"
+app.config['ARRIVAL_FILE_NAMES'] = "Приход"
+app.config['EXTENSION_EXCEL'] = ".xlsx"
 
 db.init_app(app)
 login.init_app(app)

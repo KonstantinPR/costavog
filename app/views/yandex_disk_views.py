@@ -24,23 +24,6 @@ import io
 URL = app.config['URL']
 
 
-@app.route('/ya_gpt', methods=['POST', 'GET'])
-@login_required
-def ya_gpt():
-    """22/01/2022 chatGPT testing solving problems"""
-    if request.method == 'POST':
-        # Example usage
-        api_key = app.config['YANDEX_TOKEN']
-        path = "TEST"
-        filenames = "one.xlsx"
-        dfs = warehouse_module.search_file(api_key, path, filenames)
-
-        # print out the dfs list
-        print(dfs)
-
-    return render_template('upload_ya_gpt.html', doc_string=ya_gpt.__doc__)
-
-
 @app.route('/get_stock_wb', methods=['POST', 'GET'])
 @login_required
 def get_stock_wb():

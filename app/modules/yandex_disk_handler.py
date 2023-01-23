@@ -8,14 +8,86 @@ import os
 from app.modules import io_output
 import copy
 from typing import Union
+import requests
 
 
-def get_image_from_yadisk():
-    """on 06/12/2022 not working correctly. to get images from non local yandisk"""
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-    y.get_files(fields=['path', 'file'], media_type='image')
-    # print(list(y.listdir(app.config['YANDEX_FOLDER_IMAGE_YANDISK'])))
-    print("hello")
+
+def search_file():
+    # Yandex.Disk API endpoint for listing files
+    list_url = 'https://cloud-api.yandex.net/v1/disk/resources'
+
+    # Your Yandex.Disk API token
+    api_token = app.config['YANDEX_TOKEN']
+
+    # The folder you want to search in
+    folder = 'TEST'
+
+    # The file name you want to search for
+    file_name = 'one.xlsx'
+
+    # List to store the paths of the files you're looking for
+    paths_seek_files = []
+
+    # Get a list of all files and folders in the specified folder
+    params = {'path': folder}
+    headers = {'Authorization': f'OAuth {api_token}'}
+    response = requests.get(list_url, params=params, headers=headers)
+    print(f"response {response}")
+    files = response.json()['_embedded']['items']
+
+    # Iterate over the files and folders
+    for item in files:
+        # if file has the name that you're looking for
+        if item['name'] == file_name:
+            paths_seek_files.append(item['path'])
+        elif item['type'] == 'dir':
+            sub_folder_path = item['path']
+            # get all files in subfolder
+            sub_folder_params = {'path': sub_folder_path}
+            sub_folder_response = requests.get(list_url, params=sub_folder_params, headers=headers)
+            print(f"sub_folder_response {sub_folder_response}")
+            sub_folder_files = sub_folder_response.json()['_embedded']['items']
+            for sub_file in sub_folder_files:
+                if sub_file['name'] == file_name:
+                    paths_seek_files.append(sub_file['path'])
+
+    # for recursive
+    # def find_files(folder_path, file_name):
+    #     # get all files in folder
+    #     params = {'path': folder_path}
+    #     response = requests.get(list_url, params=params, headers=headers)
+    #     files = response.json()['_embedded']['items']
+    #     for item in files:
+    #         if item['name'] == file_name:
+    #             paths_seek_files.append(item['path'])
+    #         elif item['type'] == 'dir':
+    #             sub_folder_path = item['path']
+    #             find_files(sub_folder_path, file_name)
+    #
+    # find_files(folder, file_name)
+
+    # iterate over the paths of the files you're looking for and convert them to a DataFrame
+    dfs = []
+    for path in paths_seek_files:
+        # get file's metadata
+        params = {'path': path}
+        response = requests.get(list_url, params=params, headers=headers)
+        print(f"response {response}")
+        file_metadata = response.json()
+        file_url = file_metadata['file']
+        file_response = requests.get(file_url)
+        df = pd.read_excel(file_response.content)
+        dfs.append(df)
+    final_df = pd.concat(dfs)
+    print(final_df)
+
+
+# def get_image_from_yadisk():
+#     """on 06/12/2022 not working correctly. to get images from non local yandisk"""
+#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+#     y.get_files(fields=['path', 'file'], media_type='image')
+#     # print(list(y.listdir(app.config['YANDEX_FOLDER_IMAGE_YANDISK'])))
+#     print("hello")
 
 
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:

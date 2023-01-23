@@ -31,9 +31,10 @@ def arrivals_of_products():
 
     if request.method == 'POST':
         # create an empty list to store the DataFrames of the Excel files
-
-        list_paths_files = warehouse_module.preparing_paths()
-        df = warehouse_module.df_from_list_paths_files_excel(list_paths_files)
+        path = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
+        print(path)
+        list_paths_files = warehouse_module.get_list_paths_files(path, file_names=["Приход"])
+        df = warehouse_module.df_from_list_paths_excel_files(list_paths_files)
 
         if not df:
             flash("DataFrame пустой, возможно неверно настроены пути или папки не существуют")
@@ -50,3 +51,19 @@ def arrivals_of_products():
 
     return render_template('upload_warehouse.html', doc_string=arrivals_of_products.__doc__)
 
+
+@app.route('/ya_gpt', methods=['POST', 'GET'])
+@login_required
+def ya_gpt():
+    """22/01/2022 chatGPT testing solving problems"""
+    if request.method == 'POST':
+        # Example usage
+        api_key = app.config['YANDEX_TOKEN']
+        path = "TEST"
+        filenames = "one.xlsx"
+        dfs = warehouse_module.search_file()
+
+        # print out the dfs list
+        print(dfs)
+
+    return render_template('upload_ya_gpt.html', doc_string=ya_gpt.__doc__)
