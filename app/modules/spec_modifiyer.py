@@ -117,7 +117,7 @@ def col_adding(df_income):
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
-    # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат с маркетинговым приемом
+    # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат красиво например 1990 или 790
     df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
 
     # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
@@ -148,15 +148,18 @@ def col_adding(df_income):
         df_income[number_card_col_name] = ''
     for idx, pattern in enumerate(df_income['Лекало']):
         # print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
-        if dict_patterns[pattern]:
+        if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
             df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
     for idx, art in enumerate(df_income['Артикул товара']):
-        if not df_income['Номер карточки'][idx]:
-            df_income['Номер карточки'][idx] = dict_arts[art]
+        if not df_income[number_card_col_name][idx]:
+            df_income[number_card_col_name][idx] = dict_arts[art]
+
+    # создаем дополнительный столбец равный артикулу поствщика
+    df_income['Артику поставщика'] = df_income['Артикул товара']
 
     # создаем дополнительный столбец равный категории
-    # df_income['Категория'] = df_income['Предмет']
+    df_income['Предмет'] = df_income['Категория']
 
     # df_income.to_excel('df_income.xlsx')
     return df_income

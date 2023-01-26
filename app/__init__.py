@@ -43,6 +43,8 @@ app.config['PARTNERS_FOLDER'] = "ПОСТАВЩИКИ/TEST"
 app.config['ARRIVALS_FOLDER'] = "Приходы"
 app.config['ARRIVAL_FILE_NAMES'] = "Приход"
 app.config['EXTENSION_EXCEL'] = ".xlsx"
+app.config["FULL_PATH_ARRIVALS"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
+app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
 
 db.init_app(app)
 login.init_app(app)

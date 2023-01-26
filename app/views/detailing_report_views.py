@@ -8,6 +8,7 @@ from app.modules import io_output
 import time
 
 
+
 @app.route('/key_indicators', methods=['POST', 'GET'])
 @login_required
 def key_indicators():
@@ -158,6 +159,9 @@ def get_wb_price_api():
 #     return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
 
 
+
+
+
 @app.route('/get_wb_stock_api', methods=['POST', 'GET'])
 @login_required
 def get_wb_stock_api():
@@ -197,3 +201,52 @@ def get_wb_stock_api():
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

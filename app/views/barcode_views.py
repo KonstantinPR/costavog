@@ -7,11 +7,11 @@ from PIL import Image
 from app.modules import io_output, zip_handler
 import treepoem
 import os
-
 from barcode.writer import ImageWriter
 from io import BytesIO
-
 from barcode import Code128
+
+
 
 
 @app.route('/barcode', methods=['GET', 'POST'])
@@ -19,9 +19,17 @@ from barcode import Code128
 def barcode():
     """png datamatrix from txt in zip"""
     if request.method == 'POST':
-        file_txt: FileStorage = request.files['file']
 
-        if not request.files['file']:
+        if request.form['text_input']:
+            input_text = request.form['text_input']
+            input_text = input_text.split(" ")
+            df = pd.DataFrame(input_text)
+            print(df)
+        elif request.files['file']:
+            file: FileStorage = request.files['file']
+            df = pd.read_table(file, delim_whitespace=False, header=None)
+            print(df)
+        else:
             flash("Не приложен файл")
             return render_template('upload_barcode.html')
 
@@ -32,10 +40,11 @@ def barcode():
         type_barcode = request.form['type-barcode']
         print(f'type_barcode {type_barcode}')
 
-        df = pd.read_fwf(file_txt)
-        col_name = "Датаматрикс"
-        df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
-        lines = df_column[col_name].to_list()
+        # col_name = "Датаматрикс"
+        # df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
+        print(df)
+        lines = df[0].to_list()
+        lines = [str(x) for x in lines]
         print(lines)
 
         # N = 3

@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div class="row g-5 text-left">
+    <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
                 <form method="post" enctype=multipart/form-data action="{{url_for('upload_img_crop')}}">
@@ -31,14 +31,14 @@
                             <input class="form-control form-control-lg" type="file" multiple name="images">
                         </div>
                         <div class="input-group">
-                            <select class="form-control rounded" id="type_clothes_to_crop"
+                            <select class="col-xs-12 col-sm-12 col-lg-12 p-2 form-control rounded" id="type_clothes_to_crop"
                                     name="type_clothes_to_crop">
                                 <option>Одежда по пояс</option>
                                 <option>Обувь без модели</option>
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="btn btn-primary form-control form-control-lg" type="submit"
+                            <input class="w-100 btn btn-primary btn-lg" type="submit"
                                    value="Отправить">
                         </div>
                     </div>
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <div class="row g-5 text-left">
+    <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
                 <form method="post" enctype=multipart/form-data action="{{url_for('yandex_disk_crop_images')}}">
@@ -70,7 +70,7 @@
                             <input class="form-control form-control-lg" type="text" name="yandex_path">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="btn btn-primary form-control form-control-lg" type="submit"
+                            <input class="w-100 btn btn-primary btn-lg" type="submit"
                                    value="Обработать">
                         </div>
                     </div>

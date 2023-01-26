@@ -12,28 +12,27 @@
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
 
-    <div class="g-5 text-left">
-        <div class="row p-2 bg-light">
-            <div>{{doc_string}}</div>
-        </div>
-    </div>
 
-    <div class="row g-5 text-left">
+    <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
                 <form method="post" target="blank" enctype=multipart/form-data
                       action="{{url_for('barcode')}}">
                     <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-control form-control-lg" placeholder="Копипаста" type="text"
+                                   name="text_input">
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file">
                         </div>
                         <!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
                         <!--                            <textarea class="form-control form-control-lg" ROWS="5" name="multiply_number_text"></textarea>-->
                         <!--                        </div>-->
-<!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
-<!--                            <input placeholder="Тип штрихкода" class="form-control form-control-lg" type="text"-->
-<!--                                   name="type-barcode" value="code128">-->
-<!--                        </div>-->
+                        <!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+                        <!--                            <input placeholder="Тип штрихкода" class="form-control form-control-lg" type="text"-->
+                        <!--                                   name="type-barcode" value="code128">-->
+                        <!--                        </div>-->
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <select class="form-control rounded" id="type-barcode" name="type-barcode">
                                 <option selected="selected" value="code128">code128</option>
@@ -41,7 +40,7 @@
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input class="btn btn-primary form-control form-control-lg" type="submit" value="Отправить">
+                            <input class="w-100 btn btn-primary btn-lg" type="submit" value="Отправить">
                         </div>
                     </div>
                 </form>

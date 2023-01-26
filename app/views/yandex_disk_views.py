@@ -18,10 +18,14 @@ import datetime
 import openpyxl
 import io
 
+
 # /// YANDEX DISK ////////////
 
 
 URL = app.config['URL']
+
+
+
 
 
 @app.route('/get_stock_wb', methods=['POST', 'GET'])
