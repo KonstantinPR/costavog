@@ -1,11 +1,13 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 from collections import defaultdict
 import pickle
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import f1_score
 from math import sqrt
 from sklearn.impute import SimpleImputer
 import numpy as np
@@ -29,7 +31,7 @@ def train(file_name, encoded_col_name, goal_col):
     X_train = imputer.fit_transform(X_train)
     X_test = imputer.transform(X_test)
 
-    model = train_model(X_train, X_test, y_train, y_test)
+    model = train_model_forest(X_train, X_test, y_train, y_test)
 
     # evaluate model on test set
     score = model.score(X_test, y_test)
@@ -99,14 +101,24 @@ def get_mae(model, max_leaf_nodes, X_test, y_test):
     return mae
 
 
-def train_model(X_train, X_test, y_train, y_test, depth_leaf_list=[5, 50, 500, 5000], random_state=0):
+def train_model_tree(X_train, X_test, y_train, y_test, depth_leaf_list=[5, 50, 500, 5000], random_state=0):
     # compare MAE with different values of max_leaf_nodes
     best_mae, best_model = float('inf'), None
     for max_leaf_nodes in depth_leaf_list:
-        model = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes, random_state=random_state)
+        model = RandomForestRegressor(random_state=random_state)
         model.fit(X_train, y_train)
         mae = get_mae(model, max_leaf_nodes, X_test, y_test)
         if mae < best_mae:
             best_mae = mae
             best_model = model
     return best_model
+
+
+def train_model_forest(X_train, X_test, y_train, y_test, random_state=0):
+    model = RandomForestRegressor(n_estimators=100, random_state=random_state)
+    model.fit(X_train, y_train)
+    preds_val = model.predict(X_test)
+    mae = mean_absolute_error(y_test, preds_val)
+    print(f"Mean Absolute Error: {mae}")
+
+    return model
