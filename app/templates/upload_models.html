@@ -7,10 +7,6 @@
 {{ super() }}
 
 <main>
-
-
-
-
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
@@ -35,22 +31,26 @@
                         <!--                                   type="number"-->
                         <!--                                   name="part_by">-->
                         <!--                        </div>-->
-
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('train_model')}}"
+                                   class="w-100 btn btn-primary btn-lg" type="submit"
+                                   value="Train">
+                        </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input formaction="{{url_for('ya_gpt_train')}}"
+                            <input formaction="{{url_for('predict_by_model')}}"
                                    class="w-100 btn btn-primary btn-lg" type="submit"
                                    value="Predict">
                         </div>
 
-<!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
-<!--                            <input class="form-check-input" type="checkbox" value="checkbox_is_vertical"-->
-<!--                                   name="checkbox_is_vertical"-->
-<!--                                   id="checkbox_is_vertical" checked>-->
-<!--                            <label class="form-check-label" for="checkbox_is_vertical">-->
-<!--                                 Сделать размеры вертикальными (из строки в столбец)-->
-<!--                            </label>-->
-<!--                        </div>-->
+                        <!--                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">-->
+                        <!--                            <input class="form-check-input" type="checkbox" value="checkbox_is_vertical"-->
+                        <!--                                   name="checkbox_is_vertical"-->
+                        <!--                                   id="checkbox_is_vertical" checked>-->
+                        <!--                            <label class="form-check-label" for="checkbox_is_vertical">-->
+                        <!--                                 Сделать размеры вертикальными (из строки в столбец)-->
+                        <!--                            </label>-->
+                        <!--                        </div>-->
 
                     </div>
                 </form>

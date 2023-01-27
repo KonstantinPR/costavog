@@ -13,6 +13,7 @@ VISIBLE_COL = [
     'brand_name',
     'Предмет',
     'nm_id',
+    'Артикул WB',
     'supplierArticle',
     'Согласованная скидка, %',
     'discount',
@@ -291,6 +292,7 @@ def revenue_processing_module(request):
     drop_list = list_re_col_names_brand + list_re_col_names_art + list_re_col_names_subject
     df = df.drop(drop_list, axis=1)
     df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
+    df['Артикул WB'] = df['nm_id']
     df = df_stay_column_not_null(df)
 
     # реорганизуем порядок следования столбцов для лучшей читаемости
