@@ -2,12 +2,7 @@ import pandas as pd
 import yadisk
 from app import app
 from io import BytesIO
-from random import randrange
-import shutil
 import os
-from app.modules import io_output
-import copy
-from typing import Union
 import requests
 
 

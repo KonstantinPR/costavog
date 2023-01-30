@@ -1,16 +1,11 @@
 from app import app
-from flask import flash, render_template, request, redirect, send_file
-import flask
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Task, Task, Product, db
+from flask import flash
+from flask_login import current_user
+from app.models import UserModel, Task, db
 import datetime
 from sqlalchemy import desc
-import pandas as pd
-from io import BytesIO
-import numpy as np
 import yadisk
 from random import randrange
-from flask import url_for
 import os
 import shutil
 import requests

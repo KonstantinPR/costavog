@@ -1,9 +1,7 @@
 from functools import wraps
-import flask
 import pandas as pd
 from flask import redirect, flash
 from flask_login import current_user
-import inspect
 
 
 def flask_request_to_df(function):

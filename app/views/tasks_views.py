@@ -1,9 +1,9 @@
 from app.modules import task_worker, sql_query_main
 from app import app
-from flask import flash, render_template, request, redirect, send_file
+from flask import flash, render_template, request, redirect
 import flask
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from flask_login import login_required, current_user
+from app.models import UserModel, Task, db
 import datetime
 from sqlalchemy import desc
 

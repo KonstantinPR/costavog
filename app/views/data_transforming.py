@@ -3,7 +3,6 @@
 import flask
 from app import app
 from flask import flash, render_template, request, send_file
-import pandas as pd
 from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, base_module, \
     data_transforming_module
 from flask_login import login_required

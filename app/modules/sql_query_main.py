@@ -1,6 +1,6 @@
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from app.models import UserModel
 from app import app
-import pandas as pd
+
 
 
 def get_unique_users_company():

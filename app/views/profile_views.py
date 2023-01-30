@@ -1,7 +1,7 @@
 from app import app
-from flask import flash, render_template, request, redirect, send_file
+from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from app.models import Company, UserModel, db
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -86,6 +86,8 @@ def user_register():
             company_id = company.id
         else:
             print("Нет такой компании")
+            flash("Нет такой компании или пароль не верен. Проверьте")
+            return redirect('/user_register')
 
         if UserModel.query.filter_by(user_email=user_email).first():
             flash('Пользователь с таким email уже существует')
@@ -148,7 +150,7 @@ def profile():
                                wb_api_token2=wb_api_token2,
 
                                )
-
+    print(f"current_user.id {current_user.id}")
     current_role = current_user.role
     roles = app.config['ROLES']
     administrator = app.config['ADMINISTRATOR']

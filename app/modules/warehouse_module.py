@@ -1,20 +1,8 @@
-import flask
 from app import app
-import pandas as pd
-from app.modules import decorators
-import numpy as np
-from random import randrange
-from flask import flash, render_template
 import inspect
-import os
 import glob
-import openpyxl
-import json
-import requests
 import pandas as pd
-import io
-from io import BytesIO
-from yadisk import YaDisk
+
 
 
 def get_list_paths_files(path_to_files_glob: str,

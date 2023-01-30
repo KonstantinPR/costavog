@@ -1,16 +1,11 @@
-import os
 from app import app
 import zipfile
 import pandas as pd
 import numpy as np
-import os
 import io
-from app.modules import io_output
-from os import listdir
-import datetime
 from datetime import datetime
 import requests
-import time
+
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 

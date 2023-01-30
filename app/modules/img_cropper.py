@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps, JpegImagePlugin
+from PIL import ImageOps, JpegImagePlugin
 import numpy as np
 from io import BytesIO
 from app.modules import io_output

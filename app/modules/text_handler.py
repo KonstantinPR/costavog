@@ -1,11 +1,5 @@
-import flask
-from werkzeug.datastructures import FileStorage
-from io import BytesIO
-from app import app
-from flask import flash, render_template, request, redirect, send_file
 import pandas as pd
-from app.modules.io_output import io_output
-import numpy as np
+
 
 
 def names_multiply(df, multiply):

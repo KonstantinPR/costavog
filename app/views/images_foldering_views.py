@@ -1,24 +1,16 @@
 from app import app
-from flask import render_template, request, redirect, send_file, flash, abort
-from flask_login import login_required, current_user
-from app.models import Product, db
-import datetime
+from flask import render_template, request, flash
+from flask_login import login_required
 import pandas as pd
-from app.modules import detailing, detailing_reports, yandex_disk_handler, img_processor
-from app.modules import io_output
-import time
-import numpy as np
-import os
+from app.modules import img_processor
 import shutil
 import re
-import string
 import fileinput
 from werkzeug.datastructures import FileStorage
 import os
 from flask import send_file
-import io
 from app.modules import yandex_disk_handler
-from PIL import Image, ImageDraw, ImageFont
+
 
 
 # Make folders for wb photo that way:

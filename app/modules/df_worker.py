@@ -1,13 +1,5 @@
-from app import app
-from functools import reduce
-import math
-import requests
-from app.models import Product, db
-import datetime
 import pandas as pd
-import numpy as np
-from app.modules import yandex_disk_handler, pandas_handler
-from app.modules import io_output
+from app.modules import pandas_handler
 
 
 def qt_to_order(df):

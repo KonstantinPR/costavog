@@ -1,13 +1,7 @@
 from app import app
-from flask import render_template, request, redirect, send_file, flash, jsonify, url_for
-from flask_login import login_required, current_user
-from app.models import Product, db
-import datetime
-import pandas as pd
-from app.modules import detailing, detailing_reports, yandex_disk_handler
-from app.modules import io_output
-import time
-import numpy as np
+from flask import jsonify, url_for
+from flask_login import login_required
+
 
 
 def has_no_empty_params(rule):

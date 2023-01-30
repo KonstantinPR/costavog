@@ -1,22 +1,14 @@
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from flask_login import login_required, current_user
+from app.models import Transaction, db
 import datetime
-from sqlalchemy import desc, asc, cast, Integer
 import pandas as pd
 from io import BytesIO
 import numpy as np
-import re
-import yadisk
-from random import randrange
-from flask import url_for
-import os
-import shutil
 from app.modules import transaction_worker, decorators
-import urllib.request
-import requests
+
 
 
 # ///TRANSACTIONS////////////

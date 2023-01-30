@@ -1,21 +1,15 @@
 import app.modules.API_WB
 from app import app
 import flask
-import requests
 from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required, current_user, login_user, logout_user
-from app.models import Company, UserModel, Transaction, Task, Product, db
+from flask_login import login_required, current_user
+from app.models import Company, Product, db
 import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import desc
 import pandas as pd
-from io import BytesIO
 import numpy as np
 from sqlalchemy import create_engine
-from urllib.parse import urlencode
-from app.modules import discount, detailing, detailing_reports, API_WB
+from app.modules import discount, detailing, API_WB
 from app.modules import io_output, yandex_disk_handler
-import time
 
 
 # ///PRODUCTS////////////

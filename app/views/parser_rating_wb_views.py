@@ -1,9 +1,7 @@
-import flask
 from app import app
-from flask import flash, render_template, request, send_file
+from flask import render_template, request, send_file
 from flask_login import login_required
 import pandas as pd
-import requests
 from app.modules import io_output
 
 import requests

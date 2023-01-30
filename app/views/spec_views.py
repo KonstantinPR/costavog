@@ -6,7 +6,6 @@ import pandas as pd
 from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker, base_module, API_WB, \
     data_transforming_module
 from flask_login import login_required
-import numpy as np
 
 
 @app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])

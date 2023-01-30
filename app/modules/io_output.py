@@ -1,9 +1,6 @@
 from io import BytesIO
 import pandas as pd
 from PIL import Image
-import openpyxl
-from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
-from openpyxl.utils import get_column_letter
 from flask import flash, render_template
 
 

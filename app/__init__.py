@@ -14,9 +14,9 @@ uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
 # print(uri)
 
-if uri:
-    if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
+# if uri:
+#     if uri.startswith("postgres://"):
+#         uri = uri.replace("postgres://", "postgresql://", 1)
 
 # app config
 app.config['APP_NAME'] = 'TASKER'
