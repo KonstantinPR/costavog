@@ -102,8 +102,14 @@ def user_register():
 
 @app.route('/logout')
 def logout():
+    company_name = "Название компании"
+    user_name = "Имя пользователя"
+    if current_user.is_authenticated:
+        company = Company.query.filter_by(id=current_user.company_id).first()
+        company_name = company.company_name
+        user_name = current_user.user_name
     logout_user()
-    return redirect('/transactions')
+    return render_template('login.html', company_name=company_name, user_name=user_name)
 
 
 @app.route('/profile', methods=['POST', 'GET'])
@@ -130,8 +136,6 @@ def profile():
         company = Company.query.filter_by(id=current_user.id).first()
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
-
-
 
         db.session.commit()
 

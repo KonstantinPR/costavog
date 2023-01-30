@@ -8,51 +8,52 @@
 {{ super() }}
 
 <div class="centered">
-<main class="form-signin">
-    {% for cat, msg in get_flashed_messages(True) %}
-    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-    {% endfor %}
+    <main class="form-signin">
+<!--        {% for cat, msg in get_flashed_messages(True) %}-->
+<!--        <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>-->
+<!--        {% endfor %}-->
 
-    <form action="{{url_for('login')}}" method="post">
-        <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
+        <form action="{{url_for('login')}}" method="post">
+            <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
 
-        <div class="form-floating">
-            <input type="text" class="form-control" placeholder="Company Name" value="{{company_name}}"
-                   name="company_name">
-            <label for="floatingInput">Company Name</label>
-        </div>
-        <div class="form-floating">
-            <input type="text" class="form-control" id="floatingInput" placeholder="Name" value="{{user_name}}"
-                   name="user_name">
-            <label for="floatingInput">User Name</label>
-        </div>
-        <div class="form-floating">
-            <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password">
-            <label for="floatingPassword">Password</label>
-        </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" placeholder="Company Name" value="{{company_name}}"
+                       name="company_name">
+                <label for="floatingInput">Company Name</label>
+            </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput" placeholder="Name" value="{{user_name}}"
+                       name="user_name">
+                <label for="floatingInput">User Name</label>
+            </div>
+            <div class="form-floating">
+                <input type="password" class="form-control" id="floatingPassword" placeholder="Password"
+                       name="password">
+                <label for="floatingPassword">Password</label>
+            </div>
 
 
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Войти</button>
-        <br>
-        <br>
+            <button class="w-100 btn btn-lg btn-primary" type="submit">Войти</button>
+            <br>
+            <br>
 
-        <div class="text-left checkbox mb-3">
-            <label>
-                <input type="checkbox" value="remember-me" name="remember"> Запомнить меня?
-            </label>
-        </div>
-        <div class="pull-left mb-3">
-            <label>
-                <a href="{{url_for('company_register')}}">Зарегистрировать компанию</a>
-            </label>
-        </div>
-        <div class="text-left mb-3">
-            <label>
-                <a href="{{url_for('user_register')}}">Зарегистрироваться как пользователь</a>
-            </label>
-        </div>
-    </form>
-</main>
+            <div class="text-left checkbox mb-3">
+                <label>
+                    <input type="checkbox" value="remember-me" name="remember"> Запомнить меня?
+                </label>
+            </div>
+            <div class="pull-left mb-3">
+                <label>
+                    <a href="{{url_for('company_register')}}">Зарегистрировать компанию</a>
+                </label>
+            </div>
+            <div class="text-left mb-3">
+                <label>
+                    <a href="{{url_for('user_register')}}">Зарегистрироваться как пользователь</a>
+                </label>
+            </div>
+        </form>
+    </main>
 </div>
 
 {% endblock %}
