@@ -1,23 +1,80 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from collections import defaultdict
-import pickle
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import f1_score
 from math import sqrt
-from sklearn.impute import SimpleImputer
 import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from xgboost import XGBRegressor
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from datetime import datetime
 
 
-def train(file_name, encoded_col_name, goal_col):
+def mean_absolute_percentage_error(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+
+def process_date(df, date_col=None):
+    if date_col in df:
+        df[date_col] = [int(str(x).split()[0].replace('-', '')) for x in df[date_col]]
+    return df
+
+
+def xgb():
+    # Load the data
+    df = pd.read_excel("clothes_dataset_train.xlsx")
+    # Convert produced_data to numerical representation
+    df = process_date(df, 'produced_date')
+    # Split the data into features and target
+    X = df.drop("price", axis=1)
+    y = df["price"]
+
+    # Split the data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    # Define the pipeline
+    pipeline = Pipeline([
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown='ignore')),
+        ("scaler", StandardScaler(with_mean=False)),
+        ("model", XGBRegressor()),
+    ])
+
+    # Fit the pipeline on the training data
+    pipeline.fit(X_train, y_train)
+
+    # Predict on the validation data
+    y_pred = pipeline.predict(X_val)
+
+    # Calculate MAE
+    mae = mean_absolute_error(y_val, y_pred)
+    mape = mean_absolute_percentage_error(y_val, y_pred)
+    print(f"MAE: {mae:.4f}")
+    print(f"MAPE: {mape:.4f}%")
+
+    df_test = pd.read_excel("clothes_dataset_test.xlsx")
+    df_test = process_date(df_test, 'produced_date')
+    X_2_val = df_test.drop("price", axis=1)
+    y_test_predict = pipeline.predict(X_2_val)
+    df_test['price_predict'] = [int(x) for x in y_test_predict]
+
+    return df_test
+
+
+def train(data, encoded_col_name, goal_col):
     # load data
-    data = pd.read_excel(file_name)
+
+    data = nan_correction(data)
     data, d = mapping_categorical(data, encoded_col_name)
-    data.to_excel('data_converted.xlsx')
+    # data.to_excel('data_converted.xlsx')
 
     # split data into training and test sets
     X = data.drop(columns=[goal_col])
@@ -49,28 +106,28 @@ def train(file_name, encoded_col_name, goal_col):
     return model
 
 
-def predict(model, data, encoded_col_name, goal_col, default_encoder):
-    data = nan_correction(data)
+def predict(model, data_test, encoded_col_name, goal_col, default_encoder):
+    data_test = nan_correction(data_test)
     # Encode the categorical variables
 
-    if set(encoded_col_name).issubset(data.columns):
-        data, default_encoder = mapping_categorical(data, encoded_col_name, default_encoder=default_encoder)
+    if set(encoded_col_name).issubset(data_test.columns):
+        data_test, default_encoder = mapping_categorical(data_test, encoded_col_name, default_encoder=default_encoder)
 
     # Make predictions
-    predictions = model.predict(data)
+    predictions = model.predict(data_test)
 
     # Add predictions as a new column in the dataframe
-    data[goal_col] = [int(x) for x in predictions]
-    print(f"data['goal_col] = {data[goal_col]}")
+    data_test[goal_col] = [int(x) for x in predictions]
+    print(f"data['goal_col] = {data_test[goal_col]}")
     # Decode the categorical variables
-    data = mapping_categorical(data, encoded_col_name, inverse=True, default_encoder=default_encoder)
+    data_test = mapping_categorical(data_test, encoded_col_name, inverse=True, default_encoder=default_encoder)
 
-    return data
+    return data_test
 
 
-def redundant_col_name(df_train, df_predict):
-    col_to_be = [x for x in df_predict if x in df_train]
-    df_predict = df_predict[col_to_be]
+def redundant_col_name(df_train, df_test):
+    col_to_be = [x for x in df_test if x in df_train]
+    df_predict = df_test[col_to_be]
     print(f"col_to_be {col_to_be}")
     return df_predict
 
@@ -82,16 +139,18 @@ def mapping_categorical(data: pd.DataFrame, col_to_mapping: list = None, inverse
     if inverse:
         data[col_to_mapping] = data[col_to_mapping].apply(lambda x: default_encoder[x.name].inverse_transform(x))
         return data
+    print(f"data[col_to_mapping] {data[col_to_mapping]}")
     data[col_to_mapping] = data[col_to_mapping].apply(lambda x: default_encoder[x.name].fit_transform(x))
     print(f"d = {default_encoder}")
     return data, default_encoder
 
 
-def nan_correction(data):
-    for col in data.columns:
-        data[col] = data[col].fillna(data[col].mode().iat[0])
-        print(data[col])
-    return data
+def nan_correction(df):
+    for col in df.columns:
+        df = df.dropna(subset=[col])
+        # data[col] = data[col].fillna(data[col].mode().iat[0])
+        # print(data[col])
+    return df
 
 
 def get_mae(model, max_leaf_nodes, X_test, y_test):
