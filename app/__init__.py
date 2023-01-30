@@ -12,7 +12,7 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
-
+print(uri)
 
 if uri:
     if uri.startswith("postgres://"):
@@ -21,7 +21,8 @@ if uri:
 # app config
 app.config['APP_NAME'] = 'TASKER'
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
-app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost:8000/data'
+# app.config['SQLALCHEMY_DATABASE_URI'] = uri or 'postgresql://postgres:19862814@localhost:8000/data'
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['URL'] = 'https://cloud-api.yandex.net/v1/disk/resources'
 app.config['ROLES'] = ['administrator', 'user', 'guest']
@@ -45,8 +46,10 @@ app.config['PARTNERS_FOLDER'] = "ПОСТАВЩИКИ/TEST"
 app.config['ARRIVALS_FOLDER'] = "Приходы"
 app.config['ARRIVAL_FILE_NAMES'] = "Приход"
 app.config['EXTENSION_EXCEL'] = ".xlsx"
-app.config["FULL_PATH_ARRIVALS"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
-app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
+app.config[
+    "FULL_PATH_ARRIVALS"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
+app.config[
+    "FULL_PATH_ARRIVALS_RECURSIVELY"] = f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
 
 db.init_app(app)
 login.init_app(app)
