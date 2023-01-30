@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 import os
 from os import environ
 from app.models import db, login, Company, UserModel, Task
-from flask_login import login_required, current_user, login_user, logout_user, LoginManager
+from flask_login import current_user
 
 app = Flask(__name__)
 migrate = Migrate(app, db)
@@ -12,11 +12,11 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
-# print(uri)
+print(f"uri in __init__ {uri}")
 
-# if uri:
-#     if uri.startswith("postgres://"):
-#         uri = uri.replace("postgres://", "postgresql://", 1)
+if uri:
+    if uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
 
 # app config
 app.config['APP_NAME'] = 'TASKER'

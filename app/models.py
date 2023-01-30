@@ -6,16 +6,16 @@ import os
 
 uri = os.getenv("DATABASE_URL")  # or other relevant config var
 
+if uri:
+    if uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
 
-# if uri:
-#     if uri.startswith("postgres://"):
-#         uri = uri.replace("postgres://", "postgresql://", 1)
+print(f"uri in models {uri}")
 
 # rest of connection code using the connection string `uri`
 
 login = LoginManager()
 db = SQLAlchemy()
-
 
 
 class UserModel(UserMixin, db.Model):
