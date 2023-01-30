@@ -13,9 +13,10 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
 
-# if uri:
-#     if uri.startswith("postgres://"):
-#         uri = uri.replace("postgres://", "postgresql://", 1)
+
+if uri:
+    if uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
 
 # app config
 app.config['APP_NAME'] = 'TASKER'
