@@ -73,7 +73,7 @@ def picking_prefixes(df, df_art_prefixes):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 # print(f"i {i} pattern {pattern}")
-                if f'{i}' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
+                if f'{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
                     # print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
                     # df['Лекало'][idx] = pattern
                     df.at[idx, 'Лекало'] = pattern
@@ -148,7 +148,8 @@ def col_adding(df_income):
         df_income[number_card_col_name] = ''
     for idx, pattern in enumerate(df_income['Лекало']):
         # print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
-        if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
+        # if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
+        if dict_patterns[pattern]:
             df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
     for idx, art in enumerate(df_income['Артикул товара']):

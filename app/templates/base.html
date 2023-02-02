@@ -84,11 +84,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
-                {% if current_user.role == 'administrator' %}
+<!--                {% if current_user.role == 'administrator' %}-->
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('transactions')}}">Финансы</a>
                 </li>
-                {% endif %}
+<!--                {% endif %}-->
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('tasks')}}">Задачи</a>
                 </li>

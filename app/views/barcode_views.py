@@ -4,14 +4,13 @@ from flask import flash, render_template, request, send_file
 import pandas as pd
 from flask_login import login_required
 from PIL import Image
+from PIL import ImageDraw, ImageFont
 from app.modules import io_output, zip_handler
 import treepoem
 import os
 from barcode.writer import ImageWriter
 from io import BytesIO
 from barcode import Code128
-
-
 
 
 @app.route('/barcode', methods=['GET', 'POST'])
@@ -89,15 +88,60 @@ def barcode():
         else:
             # run LOCAL cause it much faster than pylibdmtx library
             from pylibdmtx.pylibdmtx import encode
-            for line in lines:
-                count_i = '{0:0>4}'.format(i)
+            # for line in lines:
+            #     count_i = '{0:0>4}'.format(i)
+            #     line_name = f'bar_{count_i}.png'
+            #     encoded = encode(line.encode('utf8'))
+            #     img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
+            #     img = io_output.io_img_output(img)
+            #     images_set.append((line_name, img))
+            #     images_zipped = zip_handler.put_in_zip(images_set)
+            #     i += 1
+
+            # for i, line in enumerate(lines):
+            #     count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
+            #     line_name = f'bar_{count_i}.png'
+            #     img = treepoem.generate_barcode(
+            #         barcode_type='datamatrix',  # One of the supported codes.
+            #         data=line,
+            #     )
+            #     draw = ImageDraw.Draw(img)
+            #     draw.text((0, 0), count_i, font=ImageFont.truetype("arial.ttf", 20),
+            #               fill=(0, 0, 0))  # add count_i to top left corner of image
+            #     img = io_output.io_img_output(img)
+            #     images_set.append((line_name, img))
+            #     images_zipped = zip_handler.put_in_zip(images_set)
+
+            for i, line in enumerate(lines):
+                count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
                 line_name = f'bar_{count_i}.png'
-                encoded = encode(line.encode('utf8'))
-                img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
-                img = io_output.io_img_output(img)
+                datamatrix = treepoem.generate_barcode(
+                    barcode_type='datamatrix',  # One of the supported codes.
+                    data=line,
+                )
+                padded_image = Image.new(mode="RGB", size=(datamatrix.width + 10, datamatrix.height + 40),
+                                         color=(255, 255, 255, 0))
+                padded_image.paste(datamatrix, (5, 20))  # Offset the pasting by 20 pixels to add padding
+                draw = ImageDraw.Draw(padded_image)
+                draw.text((5, 0), count_i, font=ImageFont.truetype("arial.ttf", 20),
+                          fill=(0, 0, 0))  # add count_i to top left corner of image
+                img = io_output.io_img_output(padded_image)
                 images_set.append((line_name, img))
                 images_zipped = zip_handler.put_in_zip(images_set)
-                i += 1
+
+            # for i, line in enumerate(lines):
+            #     count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
+            #     line_name = f'bar_{count_i}.png'
+            #     img = treepoem.generate_barcode(
+            #         barcode_type='datamatrix',  # One of the supported codes.
+            #         data=line,
+            #     )
+            #     draw = ImageDraw.Draw(img)
+            #     draw.text((0, 0), count_i, font=ImageFont.truetype("arial.ttf", 20),
+            #               fill=(0, 0, 0))  # add count_i to top left corner of image
+            #     img = io_output.io_img_output(img)
+            #     images_set.append((line_name, img))
+            #     images_zipped = zip_handler.put_in_zip(images_set)
 
         return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 
