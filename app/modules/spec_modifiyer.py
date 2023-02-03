@@ -17,6 +17,8 @@ SPEC_TYPE = {
     'MIT': 'MIT',
     'MHSU': 'SHOES',
     'MHBB': 'SHOES',
+    'MHSD': 'SHOES',
+    'MHSB': 'SHOES',
 
 }
 
@@ -149,7 +151,7 @@ def col_adding(df_income):
     for idx, pattern in enumerate(df_income['Лекало']):
         # print(f'idx {idx} and pattern {pattern} and dict_patterns[patterns] {dict_patterns[pattern]}')
         # if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
-        if dict_patterns[pattern]:
+        if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
             df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
     for idx, art in enumerate(df_income['Артикул товара']):
