@@ -4,7 +4,8 @@ from flask_login import login_required
 from werkzeug.datastructures import FileStorage
 from app import app
 from flask import render_template, request, send_file, flash
-from app.modules import io_output, demand_calculation_module
+from app.modules import io_output, demand_calculation_module, request_handler
+import pandas as pd
 
 
 @app.route('/demand_calculation_excel', methods=['POST', 'GET'])
@@ -19,9 +20,9 @@ def demand_calculation_excel():
     """
 
     if request.method == 'POST':
-        input_txt: FileStorage = request.files['file']
+        df = request_handler.to_df(request)
         search_string = str(request.form['search_string'])
-        df = demand_calculation_module.demand_calculation_to_df(input_txt, search_string)
+        df = demand_calculation_module.demand_calculation_to_df(df, search_string)
         df = io_output.io_output(df)
         file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
         # df.to_excel("df_output.xlsx")
@@ -44,16 +45,17 @@ def demand_calculation_with_image_catalog():
     """
 
     if request.method == 'POST':
-        input_txt: FileStorage = request.files['file']
 
+        df = request_handler.to_df(request)
         search_string = str(request.form['search_string'])
         search_string_list = search_string.split()
-        print(search_string_list)
-        if not search_string_list and not input_txt:
+
+        if not search_string_list and df.empty:
             flash("ОШИБКА. Прикрепите файл или заполните инпут строку !")
             return render_template('upload_demand_calculation_with_image_catalog.html',
-                                   doc_string=demand_calculation_with_image_catalog.__doc__ + demand_calculation_excel.__doc__)
-        df = demand_calculation_module.demand_calculation_to_df(input_txt, search_string)
+                                   doc_string=demand_calculation_with_image_catalog.__doc__)
+
+        df = demand_calculation_module.demand_calculation_to_df(df, search_string)
         pdf = demand_calculation_module.demand_calculation_df_to_pdf(df)
 
         return send_file(pdf, as_attachment=True)

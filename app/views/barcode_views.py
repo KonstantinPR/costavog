@@ -86,32 +86,6 @@ def barcode():
                 images_zipped = zip_handler.put_in_zip(images_set)
                 i += 1
         else:
-            # run LOCAL cause it much faster than pylibdmtx library
-            from pylibdmtx.pylibdmtx import encode
-            # for line in lines:
-            #     count_i = '{0:0>4}'.format(i)
-            #     line_name = f'bar_{count_i}.png'
-            #     encoded = encode(line.encode('utf8'))
-            #     img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
-            #     img = io_output.io_img_output(img)
-            #     images_set.append((line_name, img))
-            #     images_zipped = zip_handler.put_in_zip(images_set)
-            #     i += 1
-
-            # for i, line in enumerate(lines):
-            #     count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
-            #     line_name = f'bar_{count_i}.png'
-            #     img = treepoem.generate_barcode(
-            #         barcode_type='datamatrix',  # One of the supported codes.
-            #         data=line,
-            #     )
-            #     draw = ImageDraw.Draw(img)
-            #     draw.text((0, 0), count_i, font=ImageFont.truetype("arial.ttf", 20),
-            #               fill=(0, 0, 0))  # add count_i to top left corner of image
-            #     img = io_output.io_img_output(img)
-            #     images_set.append((line_name, img))
-            #     images_zipped = zip_handler.put_in_zip(images_set)
-
             for i, line in enumerate(lines):
                 count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
                 line_name = f'bar_{count_i}.png'
@@ -129,19 +103,6 @@ def barcode():
                 images_set.append((line_name, img))
                 images_zipped = zip_handler.put_in_zip(images_set)
 
-            # for i, line in enumerate(lines):
-            #     count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
-            #     line_name = f'bar_{count_i}.png'
-            #     img = treepoem.generate_barcode(
-            #         barcode_type='datamatrix',  # One of the supported codes.
-            #         data=line,
-            #     )
-            #     draw = ImageDraw.Draw(img)
-            #     draw.text((0, 0), count_i, font=ImageFont.truetype("arial.ttf", 20),
-            #               fill=(0, 0, 0))  # add count_i to top left corner of image
-            #     img = io_output.io_img_output(img)
-            #     images_set.append((line_name, img))
-            #     images_zipped = zip_handler.put_in_zip(images_set)
 
         return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
 

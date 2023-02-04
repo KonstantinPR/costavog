@@ -162,7 +162,8 @@ def col_adding(df_income):
     df_income['Артику поставщика'] = df_income['Артикул товара']
 
     # создаем дополнительный столбец равный категории
-    df_income['Категория'] = df_income['Предмет']
+    if not 'Категория' in df_income.columns and 'Предмет' in df_income.columns:
+        df_income['Категория'] = df_income['Предмет']
 
     # df_income.to_excel('df_income.xlsx')
     return df_income

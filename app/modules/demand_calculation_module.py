@@ -4,7 +4,6 @@ import numpy as np
 import os
 
 
-
 def demand_calculation_df_to_pdf(df):
     df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
     qt_sum = int(df['Кол-во'].sum())
@@ -15,7 +14,7 @@ def demand_calculation_df_to_pdf(df):
     return pdf
 
 
-def demand_calculation_to_df(input_txt, search_string):
+def demand_calculation_to_df(df_input, search_string):
     search_string_list = search_string.split()
     print(search_string_list)
     if search_string_list:
@@ -35,8 +34,7 @@ def demand_calculation_to_df(input_txt, search_string):
 
     df.to_excel("df_all_actual_stock_and_art.xlsx")
 
-    if input_txt.filename:
-        df_input = pd.read_csv(input_txt, sep='	', names=['vendorCode'])
+    if not df_input.empty:
         df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')
 
     # df = pd.read_excel("df_output.xlsx")
