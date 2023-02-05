@@ -4,7 +4,7 @@ import flask
 from app import app
 from flask import flash, render_template, request, send_file
 from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, base_module, \
-    data_transforming_module
+    data_transforming_module, request_handler
 from flask_login import login_required
 import datetime
 from random import randrange
@@ -21,10 +21,7 @@ def color_translate():
 
     if request.method == 'POST':
         col_name = 'Артикул'
-        df = io_output.io_txt_request(request,
-                                      name_html='upload_image_name_multiply.html',
-                                      inp_name='file',
-                                      col_name=col_name)
+        df = request_handler.to_df(request, col_art_name=col_name)
 
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df = spec_modifiyer.picking_colors(df, df_colors, df_col_name=col_name)

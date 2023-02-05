@@ -7,18 +7,14 @@
 {{ super() }}
 
 <main>
-    <br>
-    {% for cat, msg in get_flashed_messages(True) %}
-    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-    {% endfor %}
+<!--    <br>-->
+<!--    {% for cat, msg in get_flashed_messages(True) %}-->
+<!--    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>-->
+<!--    {% endfor %}-->
 
     <div class="g-5 text-left">
         <div class="row p-2 bg-light">
-            <div>Форма возвращает отчет в excel о прибыльности на основе анализа отчетов о продажах, остатков с сайта wb
-                и данных о себестоимости с яндексдиска. Отчет формируется От и до указанных дат - в случае с "динамикой"
-                отчет будет делиться на указанное количество частей, в каждой из которых будет высчитываться прибыль и
-                далее рассчитыватья показатели на основе изменения прибыли от одного периода к другому. На выходе
-                получим сводную таблицу с реккомендациями по скидке.
+            <div>
             </div>
         </div>
     </div>

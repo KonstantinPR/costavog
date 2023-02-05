@@ -106,7 +106,7 @@ def _revenue_potential_cost(rev_per, net, qt, k_dif):
 def key_indicators_module(file_content):
     key_indicators = {}
     df = file_content
-
+    df.to_excel('key_indocators_begin.xlsx')
     df['market_cost'] = df['price_disc'] * df['quantity']
     key_indicators['market_cost'] = df['market_cost'].sum()
     key_indicators['Перечисление руб'] = df['Перечисление руб'].sum()
@@ -281,6 +281,7 @@ def revenue_processing_module(request):
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
 
+
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 
     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
@@ -299,11 +300,13 @@ def revenue_processing_module(request):
     # df = df_reorder_important_col_desc_first(df)
     # df = df_reorder_important_col_report_first(df)
     # df = df_reorder_revenue_col_first(df)
-    print(df.columns)
-    df = df[VISIBLE_COL]
+    # print(df.columns)
+
+    df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
+    # df = df[VISIBLE_COL]
     df = df.sort_values(by='Прибыль_sum')
 
-    file_name = f"wb_dynamic_revenue_report-{str(date_from)}-{str(date_end)}.xlsx"
+    file_name = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
     file_content = io_output.io_output(df)
     # добавляем полученный файл на яндекс.диск
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)

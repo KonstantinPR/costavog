@@ -29,22 +29,58 @@ def get_wb_stock_api():
     return df
 
 
-def df_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
+def df_wb_stock_api(date_from: str = '2019-01-01'):
     """
     get wb stock via api put in df
     :return: df
     """
-    t = time.process_time()
-    date_from = date_from
 
     api_key = app.config['WB_API_TOKEN']
-    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?"
-    # print(time.process_time() - t)
-    path_all = f"{path_start}dateFrom=2018-06-24T21:00:00.000Z&key={api_key}"
-    response = requests.get(path_all)
-    data = response.json()
-    df = pd.DataFrame(data)
+    url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
+    headers = {'Authorization': api_key}
+
+    response = requests.get(url, headers=headers)
+    df = response.json()
+    df = pd.json_normalize(df)
+
     return df
+
+
+# def df_wb_stock_api(date_from: str = '2018-06-24T21:00:00.000Z'):
+#
+#     headers = {
+#         'accept': 'application/json',
+#         # 'Authorization': app.config['WB_API_TOKEN2'],
+#         'Authorization': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6Ijk2NTVkZjNhLWRiNDUtNDU5Yy05YjlkLTkxZTgxZmQzMTMzMiJ9.Nou94qpGHLZjgR5VpglTNyRjFK6ELoOeZdSpkPr2m9A",
+#     }
+#
+#     # data = {
+#     #     "sort": {
+#     #         "cursor": {
+#     #             "limit": total,
+#     #             "updatedAt": updatedAt,
+#     #             "nmID": nmId,
+#     #         },
+#     #         "filter": {
+#     #             "textSearch": textSearch,
+#     #             "withPhoto": -1
+#     #         }
+#     #     }
+#     # }
+#
+#     # data = json.dumps(data)
+#     # url = 'https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list'
+#     url = 'https://statistics-api.wildberries.ru/api/v1/supplier/stocks'
+#
+#     print("content here")
+#     response = requests.post(url, headers=headers)
+#
+#     print(type(response))
+#     print(response)
+#     df_json = response.json()
+#     print(type(df_json))
+#
+#     return None
 
 
 def get_all_cards_api_wb(textSearch: str = None):
@@ -75,13 +111,15 @@ def get_all_cards_api_wb(textSearch: str = None):
 
         data = json.dumps(data)
         url = 'https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list'
+        # url = 'https://statistics-api.wildberries.ru/content/v1/cards/cursor/list'
 
+        print("content here")
         response = requests.post(url, data=data, headers=headers)
 
         print(type(response))
-        # print(response)
+        print(response)
         df_json = response.json()
-        # print(type(df_json))
+        print(type(df_json))
         # print(df_json)
         # print(df_json['data']['cursor']['total'])
         # print(df_json['data']['cursor']['updatedAt'])
@@ -106,23 +144,49 @@ def get_all_cards_api_wb(textSearch: str = None):
     return df
 
 
+# def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
+#     """get sales as api wb sales realization describe"""
+#     t = time.process_time()
+#     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+#     date_from = date_from
+#     api_key = app.config['WB_API_TOKEN2']
+#     # print(time.process_time() - t)
+#     limit = 100000
+#     path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
+#     # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
+#     # print(time.process_time() - t)
+#     response = requests.get(path_all)
+#     print(response)
+#     # print(response)
+#     # print(time.process_time() - t)
+#     data = response.json()
+#     print(data)
+#     # print(time.process_time() - t)
+#     df = pd.DataFrame(data)
+#     print(df)
+#     # print(time.process_time() - t)
+#
+#     return df
+
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     """get sales as api wb sales realization describe"""
     t = time.process_time()
-    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-    date_from = date_from
     api_key = app.config['WB_API_TOKEN']
+    headers = {'Authorization': api_key}
+    url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+
+    url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
+
     # print(time.process_time() - t)
-    limit = 100000
-    path_all = f"{path_start}dateFrom={date_from}&key={api_key}&limit={limit}&rrdid=0&dateto={date_end}"
-    # path_all_test = f"https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2022-06-01&key={api_key}&limit=1000&rrdid=0&dateto=2022-06-25"
-    # print(time.process_time() - t)
-    response = requests.get(path_all)
+    response = requests.get(url_all, headers=headers)
+
+    print(response)
     # print(response)
-    # print(time.process_time() - t)
-    data = response.json()
-    # print(time.process_time() - t)
-    df = pd.DataFrame(data)
+
+    df = response.json()
+    df = pd.json_normalize(df)
+
+    print(df)
     # print(time.process_time() - t)
 
     return df

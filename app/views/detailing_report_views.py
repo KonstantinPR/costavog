@@ -8,7 +8,6 @@ from app.modules import io_output
 import time
 
 
-
 @app.route('/key_indicators', methods=['POST', 'GET'])
 @login_required
 def key_indicators():
@@ -29,7 +28,7 @@ def key_indicators():
     file_content = io_output.io_output(df, is_index=True)
     yandex_disk_handler.upload_to_yandex_disk(file_content, file_name_key_indicator)
 
-    file = io_output.io_output(df)
+    file = io_output.io_output(df, is_index=True)
 
     return send_file(file, download_name=file_name_key_indicator, as_attachment=True)
 
@@ -98,6 +97,13 @@ def get_wb_sales_realization_api():
 @app.route('/get_wb_pivot_sells_api', methods=['POST', 'GET'])
 @login_required
 def get_wb_pivot_sells_api() -> object:
+    """
+    Форма возвращает отчет в excel о прибыльности на основе анализа отчетов о продажах, остатков с сайта wb
+    и данных о себестоимости с яндексдиска. Отчет формируется От и до указанных дат - в случае с "динамикой"
+    отчет будет делиться на указанное количество частей, в каждой из которых будет высчитываться прибыль и
+    далее рассчитыватья показатели на основе изменения прибыли от одного периода к другому. На выходе
+    получим сводную таблицу с реккомендациями по скидке.
+    """
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':
@@ -134,7 +140,7 @@ def get_wb_pivot_sells_api() -> object:
         name_of_file = f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
         return send_file(file, attachment_filename=name_of_file, as_attachment=True)
 
-    return render_template('upload_get_dynamic_sales.html')
+    return render_template('upload_get_dynamic_sales.html', doc_string=get_wb_pivot_sells_api.__doc__)
 
 
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])
@@ -157,9 +163,6 @@ def get_wb_price_api():
 #     file = io_output.io_output(df)
 #
 #     return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
-
-
-
 
 
 @app.route('/get_wb_stock_api', methods=['POST', 'GET'])
@@ -201,52 +204,3 @@ def get_wb_stock_api():
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

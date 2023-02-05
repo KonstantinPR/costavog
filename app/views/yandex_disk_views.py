@@ -14,15 +14,10 @@ import glob
 from flask_login import login_required, current_user
 import datetime
 
-
-
 # /// YANDEX DISK ////////////
 
 
 URL = app.config['URL']
-
-
-
 
 
 @app.route('/get_stock_wb', methods=['POST', 'GET'])
