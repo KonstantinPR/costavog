@@ -113,13 +113,13 @@ def get_all_cards_api_wb(textSearch: str = None):
         url = 'https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list'
         # url = 'https://statistics-api.wildberries.ru/content/v1/cards/cursor/list'
 
-        print("content here")
+
         response = requests.post(url, data=data, headers=headers)
 
-        print(type(response))
-        print(response)
+        # print(type(response))
+        # print(response)
         df_json = response.json()
-        print(type(df_json))
+        # print(type(df_json))
         # print(df_json)
         # print(df_json['data']['cursor']['total'])
         # print(df_json['data']['cursor']['updatedAt'])

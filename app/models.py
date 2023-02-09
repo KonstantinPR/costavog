@@ -78,6 +78,7 @@ class Transaction(db.Model):
     yandex_link = db.Column(db.String(1000))
     is_private = db.Column(db.Integer, default=0)
 
+
 class Task(db.Model):
     __tablename__ = 'tasks'
 

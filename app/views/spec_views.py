@@ -4,7 +4,7 @@ from app import app
 from flask import render_template, request, send_file
 import pandas as pd
 from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker, base_module, API_WB, \
-    data_transforming_module
+    data_transforming_module, request_handler
 from flask_login import login_required
 
 
@@ -22,10 +22,12 @@ def data_to_spec_wb_transcript():
     if request.method == 'POST':
         size_col_name = "Размеры"
         art_col_name = "Артикул товара"
-        df_income_date = base_module.request_excel_to_df(flask.request)
-        df_income_date = df_income_date[0]
+
+        df_income_date = request_handler.to_df(request, col_art_name=art_col_name)
         df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
         df_income_date = df_income_date.reset_index(drop=True)
+        # print(df_income_date)
+
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
         print(spec_type)
@@ -52,11 +54,11 @@ def data_to_spec_wb_transcript():
         name_excel_all_cards_wb = "all_cards_wb.xlsx"
         all_cards_wb_df.to_excel(name_excel_all_cards_wb)
         df = df.merge(all_cards_wb_df,
-                                    left_on=['Артикул товара', 'Размер'],
-                                    right_on=['vendorCode', 'techSize'],
-                                    how='outer',
-                                    suffixes=['', '_'],
-                                    indicator=True)
+                      left_on=['Артикул товара', 'Размер'],
+                      right_on=['vendorCode', 'techSize'],
+                      how='outer',
+                      suffixes=['', '_'],
+                      indicator=True)
         df = df[df['_merge'] == 'left_only']
 
         df_output = df.drop_duplicates(subset=['Артикул товара', 'Размер'], keep=False)

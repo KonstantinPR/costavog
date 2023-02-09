@@ -5,6 +5,7 @@ from flask_login import current_user
 
 
 def flask_request_to_df(function):
+    # Не актуально на 09.02.2022 - заменено на request_handler.py
     @wraps(function)
     def wrapper(flask_request, *args, **kwargs):
         files = flask_request.files.getlist("file")

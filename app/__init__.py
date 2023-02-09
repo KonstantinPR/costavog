@@ -2,6 +2,7 @@ from flask import Flask
 from flask_migrate import Migrate
 import os
 from os import environ
+# from models import db, login, Company, UserModel, Task
 from app.models import db, login, Company, UserModel, Task
 from flask_login import current_user
 

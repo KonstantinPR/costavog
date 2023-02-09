@@ -1,4 +1,4 @@
-#!e:\python\env\finance\venv\scripts\python.exe
+#!C:\python_projects\venv\Scripts\python.exe
 
 ##############################################################################
 #

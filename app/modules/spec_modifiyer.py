@@ -75,7 +75,8 @@ def picking_prefixes(df, df_art_prefixes):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 # print(f"i {i} pattern {pattern}")
-                if f'-{i}-' in art and art.startswith(df_art_prefixes['Префикс'][idy]):
+                # if f"-{i}-" in art and art.startswith(df_art_prefixes['Префикс'][idy]):
+                if f"{i}" in art and art.startswith(df_art_prefixes['Префикс'][idy]):
                     # print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
                     # df['Лекало'][idx] = pattern
                     df.at[idx, 'Лекало'] = pattern
@@ -120,7 +121,9 @@ def col_adding(df_income):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
     # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат красиво например 1990 или 790
-    df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in df_income['Цена']]
+    if 'Цена' in df_income.columns:
+        df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in
+                             df_income['Цена']]
 
     # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
     random_wedding_desc = [

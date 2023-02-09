@@ -64,7 +64,26 @@ def set_parameters_via_type_clothes(type_clothes_to_crop):
         WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
         K_BOOT_LONG_LEGS = 1
 
+    elif type_clothes_to_crop == "Модель в полный рост":
+        # full clothes
+
+        K_HEIGHT_LEFT_START = 0.30
+        K_HEIGHT_RIGHT_START = 0.70
+        K_BOTTOM_LEFT_START = 0.20
+        K_BOTTOM_RIGHT_START = 0.80
+        STEP_ITERATION = 25
+        STEP_ITERATION_BOTTOM = 20
+        SENSIBILITY_COLOR = 210
+        COUNT_STEP_J = 10
+        DELIMITER = 4
+        NEW_HEIGHT_IM = 3000
+        K_WIDTH_HEIGHT_IM = 0.75
+        WHITE_BLOCK_WIDTH = int(NEW_HEIGHT_IM * K_WIDTH_HEIGHT_IM)
+        WHITE_BLOCK_HEIGHT = NEW_HEIGHT_IM
+        K_BOOT_LONG_LEGS = 1
+
     else:
+
         # full clothes
 
         K_HEIGHT_LEFT_START = 0.30
