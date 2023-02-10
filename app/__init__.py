@@ -65,12 +65,12 @@ def create_all():
 # app key and tokens form db config
 @app.before_first_request
 def config():
-    if hasattr(current_user, 'company_id'):
-        app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
-        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-        app.config['DAYS_STEP_DEFAULT'] = 15
+    # if hasattr(current_user, 'company_id'):
+    app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
+    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+    app.config['DAYS_STEP_DEFAULT'] = 15
 
 
 from app.views import crop_images_views
