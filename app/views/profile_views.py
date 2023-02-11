@@ -162,7 +162,6 @@ def profile():
                                yandex_disk_token=yandex_disk_token,
                                wb_api_token=wb_api_token,
                                wb_api_token2=wb_api_token2,
-
                                )
     print(f"current_user.id {current_user.id}")
     current_role = current_user.role
