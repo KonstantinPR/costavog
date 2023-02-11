@@ -15,7 +15,7 @@ def task_adding_in_db(request, company_id):
     description = request.form['description']
 
     if request.form['description'] == "":
-        flash("Вы не ввели оиписание задачи, задача не добавлена")
+        flash("Вы не ввели описание задачи, задача не добавлена")
         return None
 
     if request.form['date'] == "":
@@ -103,7 +103,7 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
 def get_all_tasks_user(company_id):
     try:
         current_user_id = current_user.id
-        if current_user.role == app.config['ADMINISTRATOR']:
+        if current_user.role == app.config['ADMINISTRATOR_ROLE']:
             tasks = db.session.query(Task).filter_by(company_id=company_id).order_by(
                 desc(Task.condition), desc(Task.date), desc(Task.id)).all()
         else:

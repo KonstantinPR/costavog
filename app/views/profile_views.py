@@ -2,6 +2,7 @@ from app import app
 from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, db
+from flask import url_for
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -19,7 +20,8 @@ def login():
 
         company = Company.query.filter_by(company_name=company_name).first()
         if not company:
-            flash("Нет такой компании")
+            flash("Нет такой компании. Зарегистрируйте.")
+
             return render_template('login.html', company_name=request.form['company_name'])
 
         user = UserModel.query.filter_by(user_name=user_name, company_id=company.id).first()
@@ -34,7 +36,8 @@ def login():
 
         if user is not None:
             login_user(user, remember=remember)
-            return redirect('/transactions')
+            # return redirect('/transactions')
+            return redirect('/profile')
 
     if current_user.is_authenticated:
         company = Company.query.filter_by(id=current_user.company_id).first()
@@ -49,7 +52,7 @@ def login():
 def company_register():
     if request.method == 'POST':
         company_name = request.form['company_name']
-        user_name = request.form['user_name']
+        # user_name = request.form['user_name']
         password = request.form['password']
 
         company = Company(company_name=company_name)
@@ -57,15 +60,15 @@ def company_register():
         db.session.add(company)
         db.session.commit()
 
-        company_id = company.id
-        user = UserModel(user_name=user_name, company_id=company_id)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
+        # company_id = company.id
+        # user = UserModel(user_name=user_name, company_id=company_id)
+        # user.set_password(password)
+        # db.session.add(user)
+        # db.session.commit()
 
-        db.session.commit()
-        flash(f"Компания {company_name} с пользователем {user_name} зарегистрирована")
-        return render_template('login.html', company_name=company_name, user_name=user_name)
+        # flash(f"Компания {company_name} с пользователем {user_name} зарегистрирована")
+        flash(f"Компания {company_name} зарегистрирована")
+        return render_template('user_register.html', company_name=company_name)
 
     return render_template('company_register.html')
 
@@ -91,13 +94,24 @@ def user_register():
 
         if UserModel.query.filter_by(user_email=user_email).first():
             flash('Пользователь с таким email уже существует')
-            return ('Пользователь с таким email уже существует')
+            return render_template('login.html', company_name=company_name, user_name=user_name)
+
+        if UserModel.query.filter_by(company_id=company.id).count() > 0:
+            # There are users in the database
+            print(f"Users exist {UserModel.query.filter_by(company_id=company.id).count()}")
+            user_role = app.config['USER_ROLE']
+        else:
+            user_role = app.config['ADMINISTRATOR_ROLE']
+            # There are no users in the database
+            print("No users exist")
 
         user = UserModel(user_name=user_name, company_id=company_id, password_hash=new_user_password_hash,
-                         user_email=user_email)
+                         user_email=user_email, role=user_role)
+
         db.session.add(user)
         db.session.commit()
-        return redirect('/transactions')
+        flash(f"Пользователь {user_name} зарегистрирован в компании {company_name} с правами {user_role}. ")
+        return render_template('profile.html', company_name=company_name, user_name=user_name)
 
     return render_template('user_register.html')
 
@@ -135,7 +149,7 @@ def profile():
         user.yandex_disk_token = yandex_disk_token
         # user.role = role
 
-        company = Company.query.filter_by(id=current_user.id).first()
+        company = Company.query.filter_by(id=current_user.company_id).first()
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
 
@@ -153,7 +167,7 @@ def profile():
     print(f"current_user.id {current_user.id}")
     current_role = current_user.role
     roles = app.config['ROLES']
-    administrator = app.config['ADMINISTRATOR']
+    administrator = app.config['ADMINISTRATOR_ROLE']
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
     yandex_disk_token = app.config['YANDEX_TOKEN']
@@ -170,5 +184,4 @@ def profile():
                            roles=roles,
                            current_role=current_role,
                            administrator=administrator,
-
                            )
