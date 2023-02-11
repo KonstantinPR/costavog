@@ -13,7 +13,7 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
-print(f"uri in __init__ {uri}")
+# print(f"uri in __init__ {uri}")
 
 if uri:
     if uri.startswith("postgres://"):
@@ -65,12 +65,13 @@ def create_all():
 # app key and tokens form db config
 @app.before_first_request
 def config():
-    # if hasattr(current_user, 'company_id'):
-    app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
-    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-    app.config['DAYS_STEP_DEFAULT'] = 15
+    if hasattr(current_user, 'company_id'):
+        print("ye it has")
+        app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
+        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+        app.config['DAYS_STEP_DEFAULT'] = 15
 
 
 from app.views import crop_images_views
