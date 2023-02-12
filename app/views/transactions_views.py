@@ -1,5 +1,3 @@
-from sqlalchemy import func
-
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask
@@ -30,7 +28,7 @@ def correct_desc(description, desc_income):
 
 
 @app.route('/transactions', methods=['POST', 'GET'])
-@app.route('/', methods=['POST', 'GET'])
+# @app.route('/', methods=['POST', 'GET'])
 @login_required
 @decorators.administrator_required
 def transactions():

@@ -8,8 +8,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # /// PROFILE //////////////////
-
 @app.route('/login', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
         company_name = request.form['company_name']
@@ -94,7 +94,7 @@ def user_register():
 
         if UserModel.query.filter_by(user_email=user_email).first():
             flash('Пользователь с таким email уже существует')
-            return render_template('login.html', company_name=company_name, user_name=user_name)
+            return redirect('/user_register')
 
         if UserModel.query.filter_by(company_id=company.id).count() > 0:
             # There are users in the database
@@ -111,7 +111,7 @@ def user_register():
         db.session.add(user)
         db.session.commit()
         flash(f"Пользователь {user_name} зарегистрирован в компании {company_name} с правами {user_role}. ")
-        return render_template('profile.html',
+        return render_template('login.html',
                                company_name=company_name,
                                user_name=user_name,
                                current_role=user_role,

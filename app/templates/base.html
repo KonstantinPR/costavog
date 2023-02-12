@@ -71,6 +71,8 @@
 
 
 
+
+
     </style>
 </head>
 
@@ -174,11 +176,10 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkUser">
                         <a class="dropdown-item" href="{{url_for('login')}}">Login</a>
-                        <a class="dropdown-item" href="{{url_for('logout')}}">Logout</a>
                         <a class="dropdown-item" href="{{url_for('user_register')}}">User register</a>
                         <a class="dropdown-item" href="{{url_for('company_register')}}">Company register</a>
                         <a class="dropdown-item" href="{{url_for('profile')}}">Profile</a>
-                        <a class="dropdown-item" href="{{url_for('logout')}}">Log out</a>
+                        <a class="dropdown-item" href="{{url_for('logout')}}">Logout</a>
                     </ul>
                 </li>
             </ul>
@@ -226,6 +227,8 @@
                 isTextShown = true;
             }
         }
+
+
 
 
 
