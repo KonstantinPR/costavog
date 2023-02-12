@@ -14,9 +14,9 @@
 
 
     <br>
-<!--    {% for cat, msg in get_flashed_messages(True) %}-->
-<!--    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>-->
-<!--    {% endfor %}-->
+    <!--    {% for cat, msg in get_flashed_messages(True) %}-->
+    <!--    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>-->
+    <!--    {% endfor %}-->
 
 
     <div class="row">
@@ -36,6 +36,10 @@
                         </div>
                     </div>
                     <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
+                        <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
+                    </div>
+
+                    <div class="col-xs-12  col-sm-12 col-lg-6 p-2">
                         <input type="number" class="form-control form-control-lg" id="amount"
                                name="amount"
                                placeholder="Длительность" value=""
@@ -52,8 +56,8 @@
                             Что-то не так с датой
                         </div>
                     </div>
-                    <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                        <select id="all_users" name="all_users" class="form-select form-control form-control-lg"
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                        <select id="all_users" name="all_users" class="form-select-lg form-control"
                                 aria-label="Пользователи">
                             <option selected value="">Ничья задача</option>
                             {% for user in all_users %}
@@ -71,47 +75,40 @@
                     </div>
 
                 </div>
-                <div class="my-4"></div>
 
-                <!--                <div class="text-left col-xs-12 col-sm-12 col-md-12 col-lg-12">-->
-                <!--                    <input class="form-check-input" type="checkbox" name="is_create_task_yandex_disk"-->
-                <!--                           id="flexCheckChecked">-->
-                <!--                    <label class="form-check-label" for="flexCheckChecked">-->
-                <!--                        Создать каталог с задачей на яндекс.диске-->
-                <!--                    </label>-->
-                <!--                    <div class="my-4"></div>-->
-                <!--                </div>-->
-
-                <button class="w-100 btn btn-primary btn-lg" type="submit">Добавить</button>
 
             </form>
 
-            <br>
             <form novalidate>
-                <div class="input-group">
-                    <input type="search" class="form-control rounded" name="search" placeholder="Поиск"
-                           aria-label="Найти"
-                           aria-describedby="search-addon"/>
-                    <button hx-post="{{url_for('tasks_search')}}" hx-target="#tasks_div" type="submit"
-                            class="btn btn-outline-primary">
-                        Поиск по описанию
-                    </button>
-                    <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">&times;</a>
+                <div class="row">
+                    <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                        <input type="search" class="form-control form-control-lg" name="search" placeholder="Поиск"
+                               aria-label="Найти"
+                               aria-describedby="search-addon"/>
+                        <button hx-post="{{url_for('tasks_search')}}" hx-target="#tasks_div" type="submit"
+                                class="btn-lg btn btn-outline-primary">
+                            Поиск по описанию
+                        </button>
+                        <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">&times;</a>
+                    </div>
                 </div>
             </form>
-            <br>
+
             <form novalidate>
-                <div class="input-group">
-                    <select class="form-control rounded" id="task_type_condition" name="task_type_condition">
-                        <option>progress</option>
-                        <option>completed</option>
-                    </select>
-                    <!--                    <button type="submit" class="btn btn-outline-primary">Показать</button>-->
-                    <button hx-post="{{url_for('show_task_by_condition')}}" hx-target="#tasks_div" type="submit"
-                            class="btn btn-outline-primary">
-                        Показать
-                    </button>
-                    <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">&times;</a>
+                <div class="row">
+                    <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                        <select class="form-control form-control-lg" id="task_type_condition"
+                                name="task_type_condition">
+                            <option>progress</option>
+                            <option>completed</option>
+                        </select>
+                        <!--                    <button type="submit" class="btn btn-outline-primary">Показать</button>-->
+                        <button hx-post="{{url_for('show_task_by_condition')}}" hx-target="#tasks_div" type="submit"
+                                class="btn-lg btn btn-outline-primary">
+                            Показать
+                        </button>
+                        <a href="{{url_for('tasks')}}" type="submit" class="btn btn-outline-primary">&times;</a>
+                    </div>
                 </div>
             </form>
 
