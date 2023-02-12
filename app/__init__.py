@@ -13,6 +13,8 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
 
+uri = "postgres://costavog_tmqr_user:82cIh0J7AxHfNWMR54SHGfZFBzKFwClx@dpg-cfjqpt9mbjsn9e98s1kg-a.oregon-postgres.render.com/costavog_tmqr"
+
 if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)

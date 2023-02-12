@@ -26,5 +26,4 @@ def administrator_required(function):
                   f'Для изменения прав обратитесь к вашему администратору приложения. ')
             return redirect('/profile')
         return function()
-
     return wrapper
