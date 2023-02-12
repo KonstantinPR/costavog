@@ -140,7 +140,6 @@ def get_transactions(company_id, cur_user=current_user, is_private=0, search='')
     for i in transactions:
         if i.amount and not i.is_private:
             transactions_sum += int(i.amount)
-            print(transactions_sum)
 
     return transactions, transactions_sum
 
