@@ -67,8 +67,7 @@ def transactions():
     transactions, transactions_sum = transaction_worker.get_transactions(company_id)
 
     return render_template('transactions.html', transactions=transactions, user_name=user_name,
-                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='',
-                           doc_string=transactions.__doc__)
+                           transactions_sum=transactions_sum, sort_type='asc', sort_sign='', )
 
 
 @app.route('/transactions_by/<field_type>/<sort_type>', methods=['POST', 'GET'])

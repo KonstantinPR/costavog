@@ -91,6 +91,28 @@
                                 Valid last name is required.
                             </div>
                         </div>
+
+
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <button class="w-100 btn btn-primary btn-lg p-2"
+                                    formaction="{{url_for('task_edit', id=id)}}"
+                                    type="submit">Изменить
+                            </button>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <button class="w-100 btn btn-warning btn-lg p-2" formaction="{{url_for('task_copy')}}"
+                                    type="submit">Копировать
+                            </button>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+
+                            <div><a class="btn btn-danger w-100 btn btn-primary btn-lg"
+                                    href="{{url_for('task_delete', id=id)}}"
+                                    role="button">Удалить запись</a></div>
+                        </div>
+
                         <div class="col-xs-12 col-sm-12 col-lg-6 p-2">
                             <input type="file" class="form-control form-control-lg" id="files" name="files"
                                    placeholder="Приложить файлы"
@@ -126,21 +148,10 @@
                         {% endif %}
 
                     </div>
-                    <div class="my-4"></div>
-                    <button class="w-100 btn btn-primary btn-lg p-2" formaction="{{url_for('task_edit', id=id)}}"
-                            type="submit">Изменить
-                    </button>
-                    <br><br>
-                    <button class="w-100 btn btn-warning btn-lg p-2" formaction="{{url_for('task_copy')}}"
-                            type="submit">Копировать
-                    </button>
 
 
                 </form>
-                <br>
 
-                <div><a class="btn btn-danger w-100 btn btn-primary btn-lg" href="{{url_for('task_delete', id=id)}}"
-                        role="button">Удалить запись</a></div>
 
             </div>
         </div>
