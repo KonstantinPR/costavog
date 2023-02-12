@@ -13,8 +13,6 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
 
-uri = "postgres://costavog_tmqr_user:82cIh0J7AxHfNWMR54SHGfZFBzKFwClx@dpg-cfjqpt9mbjsn9e98s1kg-a.oregon-postgres.render.com/costavog_tmqr"
-
 if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
@@ -63,22 +61,30 @@ def create_all():
     db.create_all()
 
 
+if hasattr(current_user, 'company_id'):
+    app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
+    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+    app.config['DAYS_STEP_DEFAULT'] = 15
+
 # app key and tokens form db config
-@app.before_first_request
-def config():
-    if hasattr(current_user, 'company_id'):
-        print("ye it has")
-        app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
-        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-        app.config['DAYS_STEP_DEFAULT'] = 15
-    else:
-        app.config['CURRENT_COMPANY_ID'] = 0
-        app.config['YANDEX_TOKEN'] = 0
-        app.config['WB_API_TOKEN'] = 0
-        app.config['WB_API_TOKEN2'] = 0
-        app.config['DAYS_STEP_DEFAULT'] = 15
+# @app.before_first_request
+# def config():
+#     if hasattr(current_user, 'company_id'):
+#         print("ye it has")
+#         print(current_user)
+#         app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
+#         app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+#         app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+#         app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+#         app.config['DAYS_STEP_DEFAULT'] = 15
+#     else:
+#         app.config['CURRENT_COMPANY_ID'] = 0
+#         app.config['YANDEX_TOKEN'] = 0
+#         app.config['WB_API_TOKEN'] = 0
+#         app.config['WB_API_TOKEN2'] = 0
+#         app.config['DAYS_STEP_DEFAULT'] = 15
 
 
 from app.views import crop_images_views
