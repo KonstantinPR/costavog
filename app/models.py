@@ -10,8 +10,6 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
-print(f"uri in models {uri}")
-
 # rest of connection code using the connection string `uri`
 
 login = LoginManager()

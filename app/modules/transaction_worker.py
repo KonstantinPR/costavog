@@ -140,24 +140,31 @@ def get_transactions(company_id, cur_user=current_user, is_private=0, search='')
     for i in transactions:
         if i.amount and not i.is_private:
             transactions_sum += int(i.amount)
+            print(transactions_sum)
 
     return transactions, transactions_sum
 
 
 def get_link_yandex_disk_transaction(id):
     transaction = Transaction.query.filter_by(id=id).one()
+    print(transaction)
+    print(id)
+    print(Transaction.id)
     yandex_disk_token = app.config['YANDEX_TOKEN']
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
+    print(y)
     if transaction.yandex_link:
         transaction_yandex_disk_link = True
+        print(transaction_yandex_disk_link)
         # if y.exists(transaction.yandex_link):
         #     transaction_yandex_disk_link = y.get_download_link(transaction.yandex_link)
         #     return transaction_yandex_disk_link
         return transaction_yandex_disk_link
 
     transaction_yandex_disk_link = ""
+    print(transaction.yandex_link)
     transaction.yandex_link = ""
     db.session.commit()
 

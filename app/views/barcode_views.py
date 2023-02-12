@@ -70,7 +70,7 @@ def barcode():
                 images_zipped = zip_handler.put_in_zip(images_set)
                 i += 1
 
-            return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+            return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 
         if 'DYNO' in os.environ:
             # run on HEROKU cause the one don't understand pylibdmtx library
@@ -104,6 +104,6 @@ def barcode():
                 images_zipped = zip_handler.put_in_zip(images_set)
 
 
-        return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+        return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 
     return render_template('upload_barcode.html', doc_string=barcode.__doc__)

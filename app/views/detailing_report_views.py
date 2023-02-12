@@ -87,8 +87,7 @@ def get_wb_sales_realization_api():
         print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
-        return send_file(file,
-                         attachment_filename=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
+        return send_file(file, download_name=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
@@ -138,7 +137,7 @@ def get_wb_pivot_sells_api() -> object:
         df = detailing_reports.get_important_columns(df)
         file = io_output.io_output(df)
         name_of_file = f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
-        return send_file(file, attachment_filename=name_of_file, as_attachment=True)
+        return send_file(file, download_name=name_of_file, as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html', doc_string=get_wb_pivot_sells_api.__doc__)
 
@@ -150,7 +149,7 @@ def get_wb_price_api():
         return redirect('/company_register')
     df = detailing_reports.get_wb_price_api()
     file_content = io_output.io_output(df)
-    return send_file(file_content, attachment_filename='price.xlsx', as_attachment=True)
+    return send_file(file_content, download_name='price.xlsx', as_attachment=True)
 
 
 # @app.route('/get_wb_stock', methods=['POST', 'GET'])
@@ -162,7 +161,7 @@ def get_wb_price_api():
 #     df = detailing.get_wb_stock()
 #     file = io_output.io_output(df)
 #
-#     return send_file(file, attachment_filename='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
+#     return send_file(file, download_name='report' + str(datetime.date.today()) + ".xlsx", as_attachment=True)
 
 
 @app.route('/get_wb_stock_api', methods=['POST', 'GET'])
@@ -200,7 +199,7 @@ def get_wb_stock_api():
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)
         return send_file(file,
-                         attachment_filename='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
+                         download_name='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')

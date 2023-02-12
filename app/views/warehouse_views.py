@@ -34,6 +34,6 @@ def arrivals_of_products():
 
         df_output = io_output.io_output(df)
         file_name = f"arrivals_of_products_on_{datetime.datetime.now().strftime('%Y-%m-%d')}.xlsx"
-        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+        return send_file(df_output, as_attachment=True, download_name=file_name)
 
     return render_template('upload_warehouse.html', doc_string=arrivals_of_products.__doc__)

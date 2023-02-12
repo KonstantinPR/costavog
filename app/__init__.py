@@ -2,7 +2,6 @@ from flask import Flask
 from flask_migrate import Migrate
 import os
 from os import environ
-# from models import db, login, Company, UserModel, Task
 from app.models import db, login, Company, UserModel, Task
 from flask_login import current_user
 
@@ -13,10 +12,6 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
-# print(f"uri in __init__ {uri}")
-
-
-uri = "postgres://costavog_tmqr_user:82cIh0J7AxHfNWMR54SHGfZFBzKFwClx@dpg-cfjqpt9mbjsn9e98s1kg-a.oregon-postgres.render.com/costavog_tmqr"
 
 if uri:
     if uri.startswith("postgres://"):
@@ -64,7 +59,6 @@ app.app_context().push()
 @app.before_first_request
 def create_all():
     db.create_all()
-
 
 
 # app key and tokens form db config

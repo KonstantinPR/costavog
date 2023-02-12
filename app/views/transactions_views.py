@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask
@@ -8,7 +10,6 @@ import pandas as pd
 from io import BytesIO
 import numpy as np
 from app.modules import transaction_worker, decorators
-
 
 
 # ///TRANSACTIONS////////////
@@ -127,7 +128,7 @@ def transactions_to_excel():
     writer.close()
     output.seek(0)
 
-    return send_file(output, attachment_filename="excel.xlsx", as_attachment=True)
+    return send_file(output, download_name="excel.xlsx", as_attachment=True)
 
 
 @app.route('/upload_transaction_excel', methods=['POST', 'GET'])
@@ -217,7 +218,14 @@ def transaction_copy():
         amount = request.form['amount']
         description = request.form['description']
         date = datetime.date.today()
+        if request.form['date']:
+            date = request.form['date']
         user_name = request.form['user_name']
+        # max_id = Transaction.query.with_entities(func.max(Transaction.id)).scalar()
+        # if max_id is None:
+        #     next_id = 1
+        # else:
+        #     next_id = max_id + 1
         transaction = Transaction(amount=amount, description=description, date=date, user_name=user_name,
                                   company_id=company_id)
         db.session.add(transaction)

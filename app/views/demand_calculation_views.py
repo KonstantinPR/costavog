@@ -27,7 +27,7 @@ def demand_calculation_excel():
         file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
         # df.to_excel("df_output.xlsx")
 
-        return send_file(df, attachment_filename=file_name, as_attachment=False)
+        return send_file(df, download_name=file_name, as_attachment=False)
     return render_template('upload_demand_calculation_with_image_catalog.html',
                            doc_string=demand_calculation_excel.__doc__)
 

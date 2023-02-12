@@ -40,6 +40,7 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
     headers = {'Authorization': api_key}
 
     response = requests.get(url, headers=headers)
+    print(response)
     df = response.json()
     df = pd.json_normalize(df)
 

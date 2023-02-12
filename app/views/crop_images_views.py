@@ -12,6 +12,6 @@ def upload_img_crop():
         type_clothes_to_crop = request.form['type_clothes_to_crop']
         print('type_clothes_to_crop: ' + type_clothes_to_crop)
         images_zipped = img_cropper.crop_images(upload_images, type_clothes_to_crop)
-        return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+        return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 
     return render_template('upload_img_crop.html')

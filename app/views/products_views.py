@@ -84,7 +84,7 @@ def read_products():
     file = io_output.io_output(df)
     flash("Себестоимость товаров скачана в excel")
 
-    return send_file(file, attachment_filename="products.xlsx", as_attachment=True)
+    return send_file(file, download_name="products.xlsx", as_attachment=True)
 
 
 @app.route('/delete_products', methods=['POST', 'GET'])
@@ -148,7 +148,7 @@ def upload_turnover():
         df = discount.discount(df, df_products)
         file = io_output.io_output(df)
 
-        return send_file(file, attachment_filename="excel.xlsx", as_attachment=True)
+        return send_file(file, download_name="excel.xlsx", as_attachment=True)
 
     return render_template('upload_turnover.html')
 
@@ -196,7 +196,7 @@ def concatenate_detailing():
         file = io_output.io_output(df)
 
         flash("Отчет успешно выгружен в excel файл")
-        return send_file(file, attachment_filename=f"concatenated_detailing_{str(date_start)}_{str(date_end)}.xlsx",
+        return send_file(file, download_name=f"concatenated_detailing_{str(date_start)}_{str(date_end)}.xlsx",
                          as_attachment=True)
 
     return render_template('upload_detailing.html')
@@ -239,7 +239,7 @@ def upload_detailing():
         file = io_output.io_output(df)
 
         flash("Отчет успешно выгружен в excel файл")
-        return send_file(file, attachment_filename='report_detailing' + str(datetime.date.today()) + ".xlsx",
+        return send_file(file, download_name='report_detailing' + str(datetime.date.today()) + ".xlsx",
                          as_attachment=True)
 
     return render_template('upload_detailing.html')

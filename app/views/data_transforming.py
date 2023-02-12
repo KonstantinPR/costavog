@@ -27,7 +27,7 @@ def color_translate():
         df = spec_modifiyer.picking_colors(df, df_colors, df_col_name=col_name)
         df_output = io_output.io_output(df)
         file_name = f"colors_rus_{str(datetime.datetime.now())}.xlsx"
-        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+        return send_file(df_output, as_attachment=True, download_name=file_name)
 
     return render_template('upload_color_translate.html', doc_string=color_translate.__doc__)
 
@@ -83,7 +83,7 @@ def vertical_sizes():
 
         df_output = io_output.io_output(df)
         file_name = f"vertical_sizes_{str(datetime.datetime.now())}.xlsx"
-        return send_file(df_output, as_attachment=True, attachment_filename=file_name)
+        return send_file(df_output, as_attachment=True, download_name=file_name)
 
     return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
 
@@ -116,5 +116,5 @@ def image_name_multiply():
         multiply = int(request.form['multiply_number'])
         df_multilpy = text_handler.names_multiply(df, multiply)
         df_output = io_output.io_output_txt_csv(df_multilpy)
-        return send_file(df_output, as_attachment=True, attachment_filename='art.txt', mimetype='text/csv')
+        return send_file(df_output, as_attachment=True, download_name='art.txt', mimetype='text/csv')
     return render_template('upload_image_name_multiply.html', doc_string=image_name_multiply.__doc__)

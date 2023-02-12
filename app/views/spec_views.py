@@ -66,7 +66,7 @@ def data_to_spec_wb_transcript():
         print('df_output.xlsx')
 
         df = io_output.io_output(df_output)
-        return send_file(df, as_attachment=True, attachment_filename='spec_created.xlsx', )
+        return send_file(df, as_attachment=True, download_name='spec_created.xlsx', )
 
     return render_template('upload_data_to_spec_wb_transcript.html', doc_string=data_to_spec_wb_transcript.__doc__)
 
@@ -82,7 +82,7 @@ def data_to_spec_merging():
         df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул продавца', right_on='Артикул продавца')
         df = io_output.io_output(df)
 
-        return send_file(df, as_attachment=True, attachment_filename='spec.xlsx')
+        return send_file(df, as_attachment=True, download_name='spec.xlsx')
 
     return render_template('upload_specs.html')
 
@@ -101,6 +101,6 @@ def take_off_boxes():
         print(df)
         df = df_worker.df_take_off_boxes(df)
         df = io_output.io_output(df)
-        return send_file(df, as_attachment=True, attachment_filename='table_take_off_boxes.xlsx')
+        return send_file(df, as_attachment=True, download_name='table_take_off_boxes.xlsx')
 
     return render_template('upload_take_off_boxes.html', doc_string=take_off_boxes.__doc__)

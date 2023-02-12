@@ -89,7 +89,7 @@ def images_foldering():
 
         return_data = img_processor.img_foldering(df)
 
-        return send_file(return_data, as_attachment=True, attachment_filename='image_zip.zip')
+        return send_file(return_data, as_attachment=True, download_name='image_zip.zip')
 
         exit()
         # HERE I STAY ON 08.08.2022

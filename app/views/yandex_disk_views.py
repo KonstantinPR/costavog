@@ -31,7 +31,7 @@ def get_stock_wb():
         df_all_cards = API_WB.get_wb_stock_api()
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
-        return send_file(df, attachment_filename=file_name, as_attachment=True)
+        return send_file(df, download_name=file_name, as_attachment=True)
     return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
 
 
@@ -46,7 +46,7 @@ def get_info_wb():
         df_all_cards = API_WB.get_all_cards_api_wb()
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
-        return send_file(df, attachment_filename=file_name, as_attachment=True)
+        return send_file(df, download_name=file_name, as_attachment=True)
     return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
 
 
@@ -119,7 +119,7 @@ def yandex_disk_crop_images():
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
-        return send_file(images_zipped, attachment_filename='zip.zip', as_attachment=True)
+        return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 
     return redirect('/yandex_disk_crop_images')
 
@@ -138,4 +138,4 @@ def download_yandex_disk_excel():
     df = pd.read_excel(download_response.content)
     file = io_output.io_output(df)
 
-    return send_file(file, attachment_filename="excel_yandex.xlsx", as_attachment=True)
+    return send_file(file, download_name="excel_yandex.xlsx", as_attachment=True)
