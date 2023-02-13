@@ -1,5 +1,5 @@
 from app import app
-from flask import flash, render_template, request, redirect, g
+from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, db
 from flask import url_for
@@ -48,6 +48,13 @@ def login():
 
     company_name = ""
     if current_user:
+
+        print(f"current_user {current_user}")
+        app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+
         if current_user.is_authenticated:
             company = Company.query.filter_by(id=current_user.company_id).first()
             company_name = company.company_name
@@ -172,6 +179,8 @@ def profile():
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
 
+        print(f"profile current_user.id {current_user.id}")
+        print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
         if current_user:
             app.config['CURRENT_COMPANY_ID'] = current_user.company_id
             app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
@@ -200,7 +209,7 @@ def profile():
         app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
         app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
 
-    print(f"current_user.id {current_user.id}")
+    print(f"profile current_user.id {current_user.id}")
     print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
     current_role = current_user.role
     roles = app.config['ROLES']

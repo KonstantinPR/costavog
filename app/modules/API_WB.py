@@ -35,7 +35,6 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
     :return: df
     """
 
-
     api_key = app.config['WB_API_TOKEN']
     url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
     headers = {'Authorization': api_key}
@@ -91,6 +90,7 @@ def get_all_cards_api_wb(textSearch: str = None):
     updatedAt = None
     nmId = None
     dfs = []
+
     while total >= limit:
         headers = {
             'accept': 'application/json',
@@ -172,7 +172,6 @@ def get_all_cards_api_wb(textSearch: str = None):
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     """get sales as api wb sales realization describe"""
     t = time.process_time()
-    print(f"app.config['WB_API_TOKEN'] {app.config['WB_API_TOKEN']}")
     api_key = app.config['WB_API_TOKEN']
     headers = {'Authorization': api_key}
     url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"

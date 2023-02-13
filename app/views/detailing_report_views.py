@@ -129,7 +129,7 @@ def get_wb_pivot_sells_api() -> object:
 
         df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
-        df_stock = API_WB.get_wb_stock_api(date_from)
+        df_stock = API_WB.get_wb_stock_api()
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
         df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')

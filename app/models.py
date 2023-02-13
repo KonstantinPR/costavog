@@ -1,16 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
+from flask_login import UserMixin, LoginManager, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, current_user
-import os
 
-uri = os.getenv("DATABASE_URL")  # or other relevant config var
-
-if uri:
-    if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
-
-# rest of connection code using the connection string `uri`
 
 login = LoginManager()
 db = SQLAlchemy()
