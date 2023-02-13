@@ -1,10 +1,11 @@
 import pandas as pd
 import yadisk
-from app import app
+from flask_login import current_user
+
+from app import app, Company
 from io import BytesIO
 import os
 import requests
-
 
 
 def search_file():
@@ -12,7 +13,7 @@ def search_file():
     list_url = 'https://cloud-api.yandex.net/v1/disk/resources'
 
     # Your Yandex.Disk API token
-    api_token = app.config['YANDEX_TOKEN']
+    api_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
 
     # The folder you want to search in
     folder = 'TEST'
@@ -79,7 +80,7 @@ def search_file():
 
 # def get_image_from_yadisk():
 #     """on 06/12/2022 not working correctly. to get images from non local yandisk"""
-#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+#     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
 #     y.get_files(fields=['path', 'file'], media_type='image')
 #     # print(list(y.listdir(app.config['YANDEX_FOLDER_IMAGE_YANDISK'])))
 #     print("hello")
@@ -88,7 +89,7 @@ def search_file():
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     if to_str is None:
         to_str = []
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     print(f'ya_path {path_yandex_file}')
     # file_name = os.path.basename(os.path.normpath(path_yandex_file))
@@ -99,7 +100,7 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 
 
 def upload_to_yandex_disk(file: BytesIO, file_name: str, app_config_path=app.config['YANDEX_KEY_FILES_PATH']):
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
     path_full_to = f"{app_config_path}/{file_name}"
     print(path_full_to)
     y.upload(file, path_full_to, overwrite=True)
@@ -108,7 +109,7 @@ def upload_to_yandex_disk(file: BytesIO, file_name: str, app_config_path=app.con
 
 
 def download_from_yandex_disk():
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
     path_yandex_file = f"{list(y.listdir(app.config['YANDEX_KEY_FILES_PATH']))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
@@ -120,7 +121,7 @@ def download_from_yandex_disk():
 
 
 # def yadisk_get_files():
-#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+#     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
 #     all_files = y.listdir(path="/ФОТОГРАФИИ/НОВЫЕ/2/Часть 122")
 #     img_names = 'SK-KR34-MUTON-1.JPG'
 #     print(all_files)
@@ -205,7 +206,7 @@ def run_fast_scandir(y, dir, ext):  # dir: str, ext: list
 
 
 def download_images_from_yandex_disk():
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
 
     subfolders, files = run_fast_scandir(y, app.config['YANDEX_FOLDER_IMAGE_YANDISK'], '.jpg')
 

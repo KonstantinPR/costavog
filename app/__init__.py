@@ -1,4 +1,4 @@
-from flask import Flask, redirect
+from flask import Flask
 from flask_migrate import Migrate
 import os
 from os import environ
@@ -49,6 +49,7 @@ app.config["FULL_PATH_ARRIVALS"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
 app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
+app.config['DAYS_STEP_DEFAULT'] = 15
 
 db.init_app(app)
 login.init_app(app)
@@ -64,22 +65,43 @@ with app.app_context():
     def create_all():
         db.create_all()
 
-
-    print(f"app.app_context current_user {current_user}")
     if current_user:
-        print(f"app.app_context current_user {current_user}")
-        app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
+        app.config['CURRENT_COMPANY_ID'] = current_user.company_id
         app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
         app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
         app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-        app.config['DAYS_STEP_DEFAULT'] = 15
     else:
-        print(f"app.app_context current_user {current_user}")
         app.config['CURRENT_COMPANY_ID'] = 0
         app.config['YANDEX_TOKEN'] = 0
         app.config['WB_API_TOKEN'] = 0
         app.config['WB_API_TOKEN2'] = 0
-        app.config['DAYS_STEP_DEFAULT'] = 0
+
+
+
+
+# if current_user:
+#     print(f"app.app_context current_user {current_user}")
+#     current_user.company_id = current_user.company_id
+#     app.config['YANDEX_TOKEN']  = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+#     Company.query.filter_by(id=current_user.company_id).one().wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+#     Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+#
+# with app.app_context():
+#     def create_all():
+#         db.create_all()
+#
+#     if current_user:
+#         current_user.company_id = current_user.company_id
+#         app.config['YANDEX_TOKEN']  = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+#
+#     else:
+#         print(f"app.app_context current_user {current_user}")
+#         current_user.company_id = 0
+#         app.config['YANDEX_TOKEN']  = 0
+#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token = 0
+#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = 0
 
 from app.views import crop_images_views
 from app.views import profile_views

@@ -1,4 +1,4 @@
-from app import app
+from app import app, Company
 from flask import render_template, request, redirect, send_file
 from urllib.parse import urlencode
 from app.modules import img_cropper, io_output, img_processor, detailing_reports, base_module, API_WB, pdf_processor
@@ -83,7 +83,7 @@ def yandex_disk_crop_images():
         company_id = current_user.company_id
 
         # create object that work with yandex disk using TOKEN
-        yandex_disk_token = app.config['YANDEX_TOKEN']
+        yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                    'Authorization': f'OAuth {yandex_disk_token}'}
         y = yadisk.YaDisk(token=yandex_disk_token)

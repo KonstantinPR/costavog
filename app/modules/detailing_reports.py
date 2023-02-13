@@ -1,4 +1,5 @@
 from app import app
+from flask_login import current_user
 from functools import reduce
 import math
 import requests
@@ -206,7 +207,7 @@ def revenue_processing_module(request):
 
     # --- GET NET_COST FROM DB /// ---
     # df_net_cost = pd.read_sql(
-    #     db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+    #     db.session.query(Product).filter_by(company_id=current_user.company_id).statement, db.session.bind)
 
     # --- GET NET_COST FROM YADISK /// ---
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
@@ -280,7 +281,6 @@ def revenue_processing_module(request):
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
-
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 
@@ -523,11 +523,11 @@ def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format=
 
 
 def combine_date_to_revenue(date_from, date_end, days_step=7):
-    df = get_wb_sales_realization_api(date_from, date_end, days_step)
+    df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
     df_sales = get_wb_sales_realization_pivot(df)
-    df_stock = get_wb_stock_api(date_from)
+    df_stock = API_WB.get_wb_stock_api(date_from)
     df_net_cost = pd.read_sql(
-        db.session.query(Product).filter_by(company_id=app.config['CURRENT_COMPANY_ID']).statement, db.session.bind)
+        db.session.query(Product).filter_by(company_id=current_user.company_id).statement, db.session.bind)
     df = df_sales.merge(df_stock, how='outer', on='nm_id')
     df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
     df = get_revenue(df)
@@ -714,7 +714,7 @@ def get_wb_sales_realization_pivot(df):
     return df
 
 
-def get_wb_price_api():
+def get_wb_price_api(g=None):
     headers = {
         'accept': 'application/json',
         'Authorization': app.config['WB_API_TOKEN2'],

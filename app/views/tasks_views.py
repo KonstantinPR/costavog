@@ -1,6 +1,6 @@
 from app.modules import task_worker, sql_query_main
 from app import app
-from flask import flash, render_template, request, redirect
+from flask import flash, render_template, request, redirect, g
 import flask
 from flask_login import login_required, current_user
 from app.models import UserModel, Task, db
@@ -207,7 +207,7 @@ def tasks_copy():
                              description=task.description,
                              date=datetime.date.today(),
                              user_name=current_user.user_name,
-                             company_id=app.config['CURRENT_COMPANY_ID'])
+                             company_id=app.config['CURRENT_COMPANY_ID'] )
             db.session.add(task_copy)
             db.session.commit()
 

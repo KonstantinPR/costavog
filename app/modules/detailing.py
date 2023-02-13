@@ -6,7 +6,6 @@ import io
 from datetime import datetime
 import requests
 
-
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
 

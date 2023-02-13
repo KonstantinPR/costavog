@@ -1,7 +1,7 @@
 from app import app
 from flask import flash
 from flask_login import current_user
-from app.models import UserModel, Task, db
+from app.models import UserModel, Task, db, Company
 import datetime
 from sqlalchemy import desc
 import yadisk
@@ -53,7 +53,7 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
     print("uploaded_file" + str(uploaded_files))
 
     task = Task.query.filter_by(id=added_task_id).one()
-    yandex_disk_token = app.config['YANDEX_TOKEN']
+    yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
@@ -120,7 +120,7 @@ def get_all_tasks_user(company_id):
 
 def download_yandex_disk_tasks(id):
     task = Task.query.filter_by(id=id).one()
-    yandex_disk_token = app.config['YANDEX_TOKEN']
+    yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                'Authorization': f'OAuth {yandex_disk_token}'}
     y = yadisk.YaDisk(token=yandex_disk_token)
@@ -139,7 +139,7 @@ def download_yandex_disk_tasks(id):
 
 
 def get_tasks_files(task_id):
-    yandex_disk_token = app.config['YANDEX_TOKEN']
+    yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     y = yadisk.YaDisk(token=yandex_disk_token)
     task = Task.query.filter_by(id=task_id).first()
     files = y.listdir(task.yandex_link)

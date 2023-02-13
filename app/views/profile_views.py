@@ -1,5 +1,5 @@
 from app import app
-from flask import flash, render_template, request, redirect
+from flask import flash, render_template, request, redirect, g
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, db
 from flask import url_for
@@ -34,16 +34,23 @@ def login():
             flash("Неверно указан пароль")
             return render_template('login.html', company_name=request.form['company_name'])
 
-        if user is not None:
+        if user:
             login_user(user, remember=remember)
-            # return redirect('/transactions')
-            return redirect('/profile')
 
-    if current_user.is_authenticated:
-        company = Company.query.filter_by(id=current_user.company_id).first()
-        company_name = company.company_name
-    else:
-        company_name = ""
+        if current_user:
+            print(f"current_user {current_user}")
+            app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+            app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+            app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+            app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+
+        return redirect('/profile')
+
+    company_name = ""
+    if current_user:
+        if current_user.is_authenticated:
+            company = Company.query.filter_by(id=current_user.company_id).first()
+            company_name = company.company_name
 
     return render_template('login.html', company_name=company_name)
 
@@ -121,6 +128,7 @@ def user_register():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     company_name = "Название компании"
     user_name = "Имя пользователя"
@@ -164,10 +172,11 @@ def profile():
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
 
-        app.config['CURRENT_COMPANY_ID'] = company.id
-        app.config['YANDEX_TOKEN'] = company.yandex_disk_token
-        app.config['WB_API_TOKEN'] = company.wb_api_token
-        app.config['WB_API_TOKEN2'] = company.wb_api_token2
+        if current_user:
+            app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+            app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+            app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+            app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
 
         db.session.add(company)
         db.session.commit()
@@ -185,10 +194,11 @@ def profile():
                                roles=app.config['ROLES']
                                )
 
-    app.config['CURRENT_COMPANY_ID'] = Company.query.filter_by(id=current_user.company_id).one().id
-    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+    if current_user:
+        app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
 
     print(f"current_user.id {current_user.id}")
     print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
@@ -197,9 +207,9 @@ def profile():
     administrator = app.config['ADMINISTRATOR_ROLE']
     initial_sum = current_user.initial_sum
     initial_file_path = current_user.initial_file_path
-    yandex_disk_token = app.config['YANDEX_TOKEN']
-    wb_api_token = app.config['WB_API_TOKEN']
-    wb_api_token2 = app.config['WB_API_TOKEN2']
+    yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+    wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+    wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
     points = current_user.points
 
     return render_template('profile.html',
