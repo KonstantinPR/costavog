@@ -42,7 +42,7 @@ def transactions():
 
     """
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
     user_name = current_user.user_name
 
@@ -72,7 +72,7 @@ def transactions():
 @login_required
 def transactions_by(field_type, sort_type):
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
     user_name = current_user.user_name
     # все текущие операции отсортированные по field_type (дата, описание ...)
@@ -112,7 +112,7 @@ def transactions_by(field_type, sort_type):
 @login_required
 def transactions_to_excel():
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
     try:
         df = pd.read_sql(db.session.query(Transaction).filter_by(company_id=company_id).statement, db.session.bind)
@@ -132,7 +132,7 @@ def transactions_to_excel():
 @login_required
 def upload_transaction_excel():
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
 
     # if request.method == 'POST':
@@ -165,10 +165,10 @@ def upload_transaction_excel():
 @app.route('/transaction_edit/<int:id>', methods=['POST', 'GET'])
 @login_required
 def transaction_edit(id):
+    if not current_user.is_authenticated:
+        return redirect('/login')
     if request.method == 'POST':
-
         transaction = Transaction.query.filter_by(id=id).one()
-
         amount = request.form['amount']
         description = request.form['description']
         date = request.form['date']
@@ -193,7 +193,7 @@ def transaction_edit(id):
 
         db.session.add(transaction)
         db.session.commit()
-        flash("Changing completed")
+        flash("Изменения внесены")
 
     else:
         transaction = Transaction.query.filter_by(id=id).first()
@@ -208,7 +208,7 @@ def transaction_edit(id):
 @login_required
 def transaction_copy():
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
 
     if request.method == 'POST':
@@ -236,7 +236,7 @@ def transaction_copy():
 @login_required
 def transaction_search():
     if not current_user.is_authenticated:
-        return redirect('/company_register')
+        return redirect('/login')
     company_id = current_user.company_id
     search = request.form['search']
     transactions, transactions_sum = transaction_worker.get_transactions(company_id,
@@ -250,6 +250,8 @@ def transaction_search():
 @app.route('/transaction_delete/<int:id>', methods=['POST', 'GET'])
 @login_required
 def transaction_delete(id):
+    if not current_user.is_authenticated:
+        return redirect('/login')
     flash("Запись удалена")
     transaction = Transaction.query.filter_by(id=id).one()
     db.session.delete(transaction)
@@ -261,5 +263,7 @@ def transaction_delete(id):
 @app.route('/show_yandex_transaction_files/<int:transaction_id>', methods=['POST', 'GET'])
 @login_required
 def show_yandex_transaction_files(transaction_id):
+    if not current_user.is_authenticated:
+        return redirect('/login')
     images_path_list = transaction_worker.get_transactions_files(transaction_id)
     return render_template('transactions_files_div.html', images=images_path_list)

@@ -13,12 +13,16 @@ import requests
 
 
 def transaction_adding_in_db(request, company_id):
-    amount = request.form['amount']
     description = request.form['description']
+
     if request.form['date'] == "":
         date = datetime.date.today()
     else:
         date = request.form['date']
+
+    amount = 0
+    if request.form['amount']:
+        amount = request.form['amount']
 
     is_private = 0
     if request.form.get('is_private'):

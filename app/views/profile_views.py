@@ -125,9 +125,11 @@ def logout():
     company_name = "Название компании"
     user_name = "Имя пользователя"
     if current_user.is_authenticated:
-        company = Company.query.filter_by(id=current_user.company_id).first()
-        company_name = company.company_name
-        user_name = current_user.user_name
+        if current_user:
+            print(f"current_user.company_id {current_user.company_id}")
+            company = Company.query.filter_by(id=current_user.company_id).first()
+            company_name = company.company_name
+            user_name = current_user.user_name
     logout_user()
     return render_template('login.html', company_name=company_name, user_name=user_name)
 

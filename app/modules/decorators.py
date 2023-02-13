@@ -25,10 +25,11 @@ def administrator_required(function):
     def wrapper(*args, **kwargs):
         print(f"decorator {current_user}")
         print(f"decorator {current_user.role}")
-        if current_user.role != app.config['ADMINISTRATOR_ROLE']:
-            flash(f'Для входа в раздел необходимы права администратора. Текущий статус {current_user.role}. '
-                  f'Для изменения прав обратитесь к вашему администратору приложения. ')
-            return redirect('/profile')
+        if current_user:
+            if current_user.role != app.config['ADMINISTRATOR_ROLE']:
+                flash(f'Для входа в раздел необходимы права администратора. Текущий статус {current_user.role}. '
+                      f'Для изменения прав обратитесь к вашему администратору приложения. ')
+                return redirect('/profile')
         return function()
 
     return wrapper

@@ -187,7 +187,7 @@ def task_copy():
         db.session.add(task)
         db.session.commit()
 
-        flash("Changing completed")
+        flash("Изменения внесены")
 
     return redirect('/tasks')
 
