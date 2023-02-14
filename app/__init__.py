@@ -12,7 +12,6 @@ login_manager.init_app(app)
 login.init_app(app)
 migrate = Migrate(app, db)
 
-
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri_old = os.getenv("DATABASE_URL")  # or other relevant config var
 uri = environ.get('DATABASE_URL')
@@ -58,62 +57,22 @@ app.config['DAYS_STEP_DEFAULT'] = 15
 db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
-# app.app_context().push()
-
-# @app.before_first_request
-# def create_all():
-#     db.create_all()
-
+app.app_context().push()
 
 with app.app_context():
     def create_all():
         db.create_all()
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return UserModel.get(user_id)
+
 
 @login.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
 
-
-# print(f"current_user before context outside {current_user}")
-# if current_user:
-#     print(f"current_user before context {current_user}")
-#     app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-#     app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-#     app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-#     app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-# else:
-#     app.config['CURRENT_COMPANY_ID'] = 0
-#     app.config['YANDEX_TOKEN'] = 0
-#     app.config['WB_API_TOKEN'] = 0
-#     app.config['WB_API_TOKEN2'] = 0
-
-# if current_user:
-#     print(f"app.app_context current_user {current_user}")
-#     current_user.company_id = current_user.company_id
-#     app.config['YANDEX_TOKEN']  = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-#     Company.query.filter_by(id=current_user.company_id).one().wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-#     Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-#
-# with app.app_context():
-#     def create_all():
-#         db.create_all()
-#
-#     if current_user:
-#         current_user.company_id = current_user.company_id
-#         app.config['YANDEX_TOKEN']  = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-#
-#     else:
-#         print(f"app.app_context current_user {current_user}")
-#         current_user.company_id = 0
-#         app.config['YANDEX_TOKEN']  = 0
-#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token = 0
-#         Company.query.filter_by(id=current_user.company_id).one().wb_api_token2 = 0
 
 from app.views import crop_images_views
 from app.views import profile_views
