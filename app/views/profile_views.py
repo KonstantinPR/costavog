@@ -1,8 +1,7 @@
-from app import app, config
+from app import app
 from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, db
-from flask import url_for
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -173,7 +172,7 @@ def profile():
         company.wb_api_token2 = wb_api_token2
 
         # установка в config паролей и токенов из базы данных
-        config.set()
+        # set_config()
 
         db.session.add(company)
         db.session.commit()
@@ -192,10 +191,10 @@ def profile():
                                )
 
     # установка в config паролей и токенов из базы данных
-    config.set()
+    # set_config()
 
-    print(f"profile current_user.id {current_user.id}")
-    print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
+    # print(f"profile current_user.id {current_user.id}")
+    # print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
     current_role = current_user.role
     roles = app.config['ROLES']
     administrator = app.config['ADMINISTRATOR_ROLE']

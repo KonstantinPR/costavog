@@ -73,6 +73,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -172,7 +173,11 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkUser" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if current_user %}
+                        {{current_user.user_name}}
+                        {% else %}
                         User
+                        {% endif %}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkUser">
                         <a class="dropdown-item" href="{{url_for('login')}}">Login</a>
@@ -227,6 +232,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

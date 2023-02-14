@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session, redirect
 from flask_migrate import Migrate
 import os
 from os import environ
@@ -57,16 +57,39 @@ app.config['DAYS_STEP_DEFAULT'] = 15
 db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
-app.app_context().push()
 
-with app.app_context():
-    def create_all():
-        db.create_all()
+
+def set_config():
+    print(f"Setting config for current_user {current_user}")
+    app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).first().yandex_disk_token
+    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).first().wb_api_token
+    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).first().wb_api_token2
+    print(f"For current_user {current_user} config is updated")
+
+
+@login_manager.request_loader
+def load_user_from_request(request):
+    user_id = request.headers.get('User-ID')
+    print(f"request.headers.get('User-ID') {request.headers.get('User-ID')}")
+    if user_id:
+        return UserModel.query.get(user_id)
+    return None
+
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        set_config()
+
+@app.before_first_request
+def create_all():
+    db.create_all()
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return UserModel.get(user_id)
+    return UserModel.query.get(user_id)
 
 
 @login.user_loader
