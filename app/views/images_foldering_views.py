@@ -12,7 +12,6 @@ from flask import send_file
 from app.modules import yandex_disk_handler
 
 
-
 # Make folders for wb photo that way:
 # we place in txt file 2 columns article our and article wb with sep = " "
 # in folder img must be img with number 1...2...4 ect
@@ -22,29 +21,8 @@ from app.modules import yandex_disk_handler
 # for ozon the name of photo must be from 0 to 9 on the end for example JBG-8954-AB-0.JPG, JBG-8954-AB-1.JPG...
 
 
-@app.route('/path')
-def dir_listing():
-    BASE_DIR = 'C:\Yandex.Disk\ФОТОГРАФИИ\НОВЫЕ\\2\Часть 102 Сапоги'
-
-    # Joining the base and the requested path
-    abs_path = os.path.join(BASE_DIR)
-    print(abs_path)
-    #
-    # # Return 404 if path doesn't exist
-    # if not os.path.exists(abs_path):
-    #     return abort(404)
-    #
-    # # Check if path is a file and serve
-    # if os.path.isfile(abs_path):
-    #     return send_file(abs_path)
-    #
-    # # Show directory contents
-    # files = os.listdir(abs_path)
-    # print(files)
-    return abs_path
-
-
 @app.route('/watermark')
+@login_required
 def watermark():
     """test watermark placing on image for example"""
     img_processor.img_watermark("NO8B9709.JPG", "NO8B9717.JPG")

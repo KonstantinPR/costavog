@@ -78,18 +78,18 @@ def load_user(id):
     return UserModel.query.get(int(id))
 
 
-print(f"current_user before context outside {current_user}")
-if current_user:
-    print(f"current_user before context {current_user}")
-    app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-else:
-    app.config['CURRENT_COMPANY_ID'] = 0
-    app.config['YANDEX_TOKEN'] = 0
-    app.config['WB_API_TOKEN'] = 0
-    app.config['WB_API_TOKEN2'] = 0
+# print(f"current_user before context outside {current_user}")
+# if current_user:
+#     print(f"current_user before context {current_user}")
+#     app.config['CURRENT_COMPANY_ID'] = current_user.company_id
+#     app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
+#     app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
+#     app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+# else:
+#     app.config['CURRENT_COMPANY_ID'] = 0
+#     app.config['YANDEX_TOKEN'] = 0
+#     app.config['WB_API_TOKEN'] = 0
+#     app.config['WB_API_TOKEN2'] = 0
 
 # if current_user:
 #     print(f"app.app_context current_user {current_user}")

@@ -1,4 +1,4 @@
-from app import app
+from app import app, config
 from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user
 from app.models import Company, UserModel, db
@@ -37,23 +37,10 @@ def login():
         if user:
             login_user(user, remember=remember)
 
-        if current_user:
-            print(f"current_user {current_user}")
-            app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-            app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-            app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-            app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
-
         return redirect('/profile')
 
     company_name = ""
     if current_user:
-
-        print(f"current_user {current_user}")
-        app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
 
         if current_user.is_authenticated:
             company = Company.query.filter_by(id=current_user.company_id).first()
@@ -152,6 +139,12 @@ def logout():
 @app.route('/profile', methods=['POST', 'GET'])
 @login_required
 def profile():
+    """
+    Извлечение всех токенов из базы данных и сохранение их в app.config происходит здесь.
+    В дальнейшем при заходе в приложение они автоматом подтягиваютя до истечения срока сессии,
+    или удаления куков
+
+    """
     if not current_user.is_authenticated:
         return redirect('/company_register')
     user_name = current_user.user_name
@@ -179,13 +172,8 @@ def profile():
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
 
-        print(f"profile current_user.id {current_user.id}")
-        print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")
-        if current_user:
-            app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-            app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-            app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-            app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+        # установка в config паролей и токенов из базы данных
+        config.set()
 
         db.session.add(company)
         db.session.commit()
@@ -203,11 +191,8 @@ def profile():
                                roles=app.config['ROLES']
                                )
 
-    if current_user:
-        app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-        app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
-        app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
-        app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+    # установка в config паролей и токенов из базы данных
+    config.set()
 
     print(f"profile current_user.id {current_user.id}")
     print(f"current_company.id {app.config['CURRENT_COMPANY_ID']}")

@@ -1,3 +1,4 @@
+from flask_login import login_required
 from app import app
 from flask import render_template, request, send_file
 from app.modules import img_cropper
@@ -5,6 +6,7 @@ import flask
 
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])
+@login_required
 def upload_img_crop():
     if request.method == "POST":
         print(flask.request.files.getlist("images"))
