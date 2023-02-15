@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, session, redirect
 from flask_migrate import Migrate
 import os
@@ -61,11 +63,18 @@ login.login_view = 'login'
 
 def set_config():
     print(f"Setting config for current_user {current_user}")
-    app.config['CURRENT_COMPANY_ID'] = current_user.company_id
-    app.config['YANDEX_TOKEN'] = Company.query.filter_by(id=current_user.company_id).first().yandex_disk_token
-    app.config['WB_API_TOKEN'] = Company.query.filter_by(id=current_user.company_id).first().wb_api_token
-    app.config['WB_API_TOKEN2'] = Company.query.filter_by(id=current_user.company_id).first().wb_api_token2
+    start_time = time.time()
+    company = Company.query.filter_by(id=current_user.company_id).first()
+    print(company)
+    app.config['CURRENT_COMPANY_ID'] = company.id
+    app.config['YANDEX_TOKEN'] = company.yandex_disk_token
+    app.config['WB_API_TOKEN'] = company.wb_api_token
+    app.config['WB_API_TOKEN2'] = company.wb_api_token2
+    end_time = time.time()
+    # Calculate the elapsed time in seconds
+    elapsed_time = end_time - start_time
     print(f"For current_user {current_user} config is updated")
+    print(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
 
 
 @login_manager.request_loader
@@ -81,6 +90,7 @@ def load_user_from_request(request):
 def before_request():
     if current_user.is_authenticated:
         set_config()
+
 
 @app.before_first_request
 def create_all():

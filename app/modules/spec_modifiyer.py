@@ -22,6 +22,17 @@ SPEC_TYPE = {
 
 }
 
+
+def wrap_prefix_by_dash(prefix, i):
+    if not prefix:
+        return None
+    if prefix == 'SK':
+        return f"-{i}-"
+    if prefix == 'SH':
+        return f"{i}-"
+    return i
+
+
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
 
 
@@ -74,15 +85,13 @@ def picking_prefixes(df, df_art_prefixes):
     for idx, art in enumerate(df['Артикул товара']):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
-                # print(f"i {i} pattern {pattern}")
-                # if f"-{i}-" in art and art.startswith(df_art_prefixes['Префикс'][idy]):
-                if f"{i}" in art and art.startswith(df_art_prefixes['Префикс'][idy]):
-                    # print(f"idx {idx} idy {idy} i {i} art {art} pre {df_art_prefixes['Префикс'][idy]} patt {pattern}")
-                    # df['Лекало'][idx] = pattern
+                art_prefix = df_art_prefixes['Префикс'][idy]
+                print(art_prefix)
+                dash_prefix = wrap_prefix_by_dash(art_prefix, i)
+                print(dash_prefix)
+                if dash_prefix in art and art.startswith(art_prefix):
                     df.at[idx, 'Лекало'] = pattern
-                    # df['Префикс'][idx] = df_art_prefixes['Префикс'][idy]
                     df.at[idx, 'Префикс'] = df_art_prefixes.at[idy, 'Префикс']
-                    # print(f"art {art} pattern {pattern} df.at[idx, 'Лекало'] {df.at[idx, 'Лекало']} df.at[idx, 'Префикс'] {df.at[idx, 'Префикс']} ")
                     break
     return df
 

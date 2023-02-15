@@ -151,9 +151,11 @@ def profile():
     if request.method == 'POST':
         # role = request.form.get('roles')
         role = app.config['USER_ROLE']
-        if request.form.get('roles'): role = request.form.get('roles')
+        if request.form.get('roles'):
+            role = request.form.get('roles')
         initial_sum = request.form['initial_sum']
-        if initial_sum == '': initial_sum = 0
+        if initial_sum == '':
+            initial_sum = 0
         initial_file_path = request.form['initial_file_path']
         yandex_disk_token = request.form['yandex_disk_token']
         wb_api_token = request.form['wb_api_token']

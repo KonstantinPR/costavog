@@ -1,23 +1,62 @@
+import io
 from app import app, Company
-from flask import render_template, request, redirect, send_file
+from flask import render_template, request, redirect
 from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, detailing_reports, base_module, API_WB, pdf_processor
+from app.modules import img_cropper, io_output, img_processor, base_module, API_WB, pdf_processor, yandex_disk_handler
 import pandas as pd
 import flask
-import requests
-import yadisk
-import os
 from random import randrange
 import shutil
 from PIL import Image
 import glob
 from flask_login import login_required, current_user
 import datetime
+import yadisk
+import os
+import requests
+import zipfile
+from flask import send_file
+
 
 # /// YANDEX DISK ////////////
 
 
-URL = app.config['URL']
+# Return the zip file as a response
+@app.route("/get_files_from_dir_ydisk", methods=['POST', 'GET'])
+def get_files_from_dir_ydisk():
+    """
+    Взаимодействует с хранилищем яндекс.диска через API,
+    Вытаскивает из указанной папки все найденные файлы в листе.
+    На 15.02.2023 - рабочий вариант
+    :return:
+    """
+    if request.method == "POST":
+        y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+        text_input = request.form["text_input"]
+        file_name_list = text_input.split()
+        print(file_name_list)
+        # dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
+        dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
+        zip_name = "zip.zip"
+
+        subfolder_names = []
+        all_file_urls = []
+        for item in y.listdir(dir_path):
+            if item.type == 'dir':
+                subfolder_names.append(item.name)
+        print(f"subfolder_names {subfolder_names}")
+
+        for sub in reversed(subfolder_names):
+            path = os.path.join(dir_path, sub).replace("\\", "/")
+            file_urls = yandex_disk_handler.get_urls(path, file_name_list)
+            all_file_urls += file_urls
+
+        zip_buffer = yandex_disk_handler.zip_buffer_files(all_file_urls, file_name_list)
+
+        zip_buffer.seek(0)
+        return send_file(zip_buffer, download_name=zip_name, as_attachment=True)
+
+    return render_template("upload_yandex_disk_file.html", doc_string=get_files_from_dir_ydisk.__doc__)
 
 
 @app.route('/get_stock_wb', methods=['POST', 'GET'])
