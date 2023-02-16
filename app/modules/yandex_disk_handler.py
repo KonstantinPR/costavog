@@ -1,5 +1,5 @@
 import zipfile
-
+import asyncio
 import pandas as pd
 import requests
 import yadisk
@@ -103,7 +103,7 @@ def get_urls(dir_path, files_path: list):
     return file_urls
 
 
-def zip_buffer_files(file_urls, file_name_list):
+def zip_buffer_files(file_urls, file_name_list) -> BytesIO:
     # Download the images and save them to an in-memory buffer
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
@@ -111,3 +111,96 @@ def zip_buffer_files(file_urls, file_name_list):
             response = requests.get(file_url)
             zip_file.writestr(file_name, response.content)
     return zip_buffer
+
+
+def get_subfolders_names(dir_path):
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+    subfolder_names = []
+    for item in y.listdir(dir_path):
+        if item.type == 'dir':
+            subfolder_names.append(item.name)
+    print(f"subfolder_names {subfolder_names}")
+    return subfolder_names
+
+
+def get_all_file_urls(subfolder_names, file_name_list, dir_path):
+    all_file_urls = []
+    found_files = set()  # to keep track of found files
+    file_name_copy = file_name_list.copy()  # make a copy of the list
+    for sub in reversed(subfolder_names):
+        print(f"file_name_copy {file_name_copy}")
+        if not file_name_copy:  # all files have been found, break out of the loop
+            break
+        path = os.path.join(dir_path, sub).replace("\\", "/")
+        file_urls = get_urls(path, file_name_list)
+        all_file_urls += file_urls
+        for url, file_name in zip(file_urls, file_name_list):
+            if file_name not in found_files and url is not None:  # file not already found and exists
+                found_files.add(file_name)
+                file_name_copy.remove(file_name)  # remove the found file from the copy
+    if len(found_files) != len(file_name_list):
+        print(f"Warning: Some files were not found: {set(file_name_list) - found_files}")
+    return all_file_urls
+
+#
+# async def get_url(y, file_path):
+#     try:
+#         return await y.get_download_link(file_path)
+#     except yadisk.exceptions.NotFoundError:
+#         print(f"File {file_path} not found on Yandex.Disk, skipping")
+#         return None
+#
+#
+# async def get_urls_async(dir_path, files_path: list):
+#     # Get the URLs of the images
+#     file_urls = []
+#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+#     tasks = [get_url(y, os.path.join(dir_path, file_name).replace("\\", "/")) for file_name in files_path]
+#     urls = await asyncio.gather(*tasks)
+#     file_urls = [url for url in urls if url is not None]
+#     return file_urls
+#
+#
+# def zip_buffer_files(file_urls, file_name_list) -> BytesIO:
+#     # Download the images and save them to an in-memory buffer
+#     zip_buffer = BytesIO()
+#     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+#         for file_url, file_name in zip(file_urls, file_name_list):
+#             response = requests.get(file_url)
+#             zip_file.writestr(file_name, response.content)
+#     return zip_buffer
+#
+#
+# def get_subfolders_names(dir_path):
+#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+#     subfolder_names = []
+#     for item in y.listdir(dir_path):
+#         if item.type == 'dir':
+#             subfolder_names.append(item.name)
+#     print(f"subfolder_names {subfolder_names}")
+#     return subfolder_names
+#
+#
+# def get_all_file_urls(subfolder_names, file_name_list, dir_path):
+#     all_file_urls = []
+#     found_files = set()  # to keep track of found files
+#     for sub in reversed(subfolder_names):
+#         path = os.path.join(dir_path, sub).replace("\\", "/")
+#         # only search for files that haven't been found yet
+#         file_urls = asyncio.run(get_urls_async(path, list(set(file_name_list) - found_files)))
+#         all_file_urls += file_urls
+#         for url, file_name in zip(file_urls, file_name_list):
+#             if file_name not in found_files and url is not None:  # file not already found and exists
+#                 found_files.add(file_name)
+#                 if len(found_files) == len(file_name_list):  # all files have been found, break out of the loop
+#                     break
+#         if len(found_files) == len(file_name_list):  # all files have been found, break out of the loop
+#             break
+#     return all_file_urls
+#
+# # def get_files_from_dir_ydisk(dir_path, file_name_list, zip_name):
+# #     subfolder_names = get_subfolders_names(dir_path)
+# #     all_file_urls = get_all_file_urls(subfolder_names, file_name_list, dir_path)
+# #     zip_buffer = zip_buffer_files(all_file_urls, file_name_list)
+# #     zip_buffer.seek(0)
+# #     return zip_buffer

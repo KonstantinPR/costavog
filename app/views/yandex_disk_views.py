@@ -1,4 +1,6 @@
 import io
+import re
+
 from app import app, Company
 from flask import render_template, request, redirect
 from urllib.parse import urlencode
@@ -31,28 +33,15 @@ def get_files_from_dir_ydisk():
     :return:
     """
     if request.method == "POST":
-        y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
         text_input = request.form["text_input"]
         file_name_list = text_input.split()
-        print(file_name_list)
-        # dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
         dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
-        zip_name = "zip.zip"
+        zip_name = f"ziped_files_from_{dir_path}.zip"
+        zip_name = re.sub('[\W]+\.', '_', zip_name)
 
-        subfolder_names = []
-        all_file_urls = []
-        for item in y.listdir(dir_path):
-            if item.type == 'dir':
-                subfolder_names.append(item.name)
-        print(f"subfolder_names {subfolder_names}")
-
-        for sub in reversed(subfolder_names):
-            path = os.path.join(dir_path, sub).replace("\\", "/")
-            file_urls = yandex_disk_handler.get_urls(path, file_name_list)
-            all_file_urls += file_urls
-
-        zip_buffer = yandex_disk_handler.zip_buffer_files(all_file_urls, file_name_list)
-
+        subfolder_names_list = yandex_disk_handler.get_subfolders_names(dir_path)
+        all_file_urls_list = yandex_disk_handler.get_all_file_urls(subfolder_names_list, file_name_list, dir_path)
+        zip_buffer = yandex_disk_handler.zip_buffer_files(all_file_urls_list, file_name_list)
         zip_buffer.seek(0)
         return send_file(zip_buffer, download_name=zip_name, as_attachment=True)
 
