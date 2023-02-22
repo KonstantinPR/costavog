@@ -112,86 +112,6 @@ def download_images_from_yandex_to_folder(df, art_col_name="Артикул то�
     return img_name_list_files
 
 
-#
-# def img_foldering(df):
-#     # print(f"file_txt {df}")
-#
-#     images_folder = app.config['YANDEX_FOLDER_IMAGE']
-#     folder_folders = "folder_img"
-#
-#     select = request.form.get('multiply_number')
-#     marketplace = select
-#     marketplace = 0 if marketplace == 'WB' else 1
-#
-#     shutil.rmtree(folder_folders, ignore_errors=True)
-#
-#     if not os.path.exists(folder_folders):
-#         os.makedirs(folder_folders)
-#
-#     img_name_list_files = {}
-#
-#     for entry in os.scandir(images_folder):
-#         for subentry in os.scandir(entry.path):
-#             if subentry.is_dir():
-#                 for file in os.scandir(subentry.path):
-#                     if file.is_file():
-#                         img_name_list_files[file.name] = subentry.path
-#
-#     # print(f"files {img_name_list_files}")
-#
-#     for i in df['Article']:
-#         os.makedirs(f"{folder_folders}/{i}/photo")
-#
-#     val = df['Article'].values[0]
-#     # print(f"Article_by_index {val}")
-#
-#     for name, path in img_name_list_files.items():
-#         # name_clear = re.sub(r'(-9)?-\d.JPG', '', name)
-#         name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
-#         for j in os.listdir(folder_folders):
-#             j_clear = j
-#             if j.startswith(tuple(PREF_LIST)) or j.endswith("new"):
-#                 j_clear = j[:(len(j) - 3)]
-#                 j_clear_end = j[(len(j) - 3):]
-#                 # print(f"j_clear_end {j_clear_end}")
-#             if name_clear == j_clear:
-#                 if marketplace == 0:
-#                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
-#                     if j.startswith(tuple(PREF_LIST)):
-#                         img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
-#                 if marketplace == 1:
-#                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
-#
-#     for j in os.listdir(folder_folders):
-#         for d in range(len(df.index)):
-#             if df['Article'][d] == j:
-#                 # os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article_WB'][d]}")
-#                 # for updating wb on 20.09.2022
-#                 os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article'][d]}")
-#
-#     if marketplace == 1:
-#         for j in os.listdir(folder_folders):
-#             if j.endswith('-1.JPG'):
-#                 os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{j.replace('-1.JPG', '.JPG')}")
-#             else:
-#                 os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{'_'.join(j.rsplit('-', 1))}")
-#
-#     shutil.make_archive(folder_folders, 'zip', f"{folder_folders}")
-#     shutil.move(f"{folder_folders}.zip", folder_folders)
-#
-#     zip_file = os.path.abspath(f"{folder_folders}\{folder_folders}.zip")
-#
-#     return_data = io.BytesIO()
-#     with open(zip_file, 'rb') as file:
-#         return_data.write(file.read())
-#     # (after writing, cursor will be at last byte, so move it to start)
-#     return_data.seek(0)
-#
-#     shutil.rmtree(folder_folders, ignore_errors=True)
-#
-#     return return_data
-
-
 def create_folder_structure(df):
     """
     Creates a folder structure for images based on the unique Article values in the given dataframe.
@@ -208,21 +128,6 @@ def create_folder_structure(df):
             os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
 
     return folder_path
-
-
-# def get_image_files(images_folder):
-#     """
-#     Scans a given folder and returns a dictionary of image filenames and their corresponding paths.
-#     """
-#     image_files = {}
-#
-#     for entry in os.scandir(images_folder):
-#         for subentry in os.scandir(entry.path):
-#             if subentry.is_dir():
-#                 for file in os.scandir(subentry.path):
-#                     if file.is_file():
-#                         image_files[file.name] = subentry.path
-#     return image_files
 
 
 def _get_include_duplicates(file, subentry, set_img_dicts):
@@ -249,29 +154,6 @@ def _get_exclude_duplicates(file, subentry, image_files):
     image_files[file.name] = subentry.path
     return image_files
 
-
-# def get_image_files(images_folder, is_replace):
-#     """
-#     Scans a given folder and returns a dictionary of image filenames and their corresponding paths.
-#     """
-#     image_files = {}
-#     renamed_duplicates = {}
-#     number_images_of_art = {}
-#     set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
-#
-#     for entry in os.scandir(images_folder):
-#         for subentry in os.scandir(entry.path):
-#             if subentry.is_dir():
-#                 for file in os.scandir(subentry.path):
-#                     if file.is_file():
-#                         if is_replace == "ALL":
-#                             set_img_dicts = _get_include_duplicates(file, subentry, set_img_dicts)
-#                         elif is_replace == "ONLY_NEW":
-#                             image_files = _get_exclude_duplicates(file, subentry, image_files)
-#                         else:
-#                             image_files = _get_exclude_duplicates(file, subentry, image_files)
-#
-#     return image_files, renamed_duplicates
 
 def order_by(entity, order='descending'):
     if order == 'descending':
