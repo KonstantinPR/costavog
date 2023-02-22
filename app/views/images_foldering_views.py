@@ -9,7 +9,7 @@ import fileinput
 from werkzeug.datastructures import FileStorage
 import os
 from flask import send_file
-from app.modules import yandex_disk_handler
+from app.modules import yandex_disk_handler, request_handler
 
 
 # Make folders for wb photo that way:
@@ -31,7 +31,7 @@ def watermark():
 @app.route('/images_foldering_yandisk', methods=['POST', 'GET'])
 @login_required
 def images_foldering_yandisk():
-    yandex_disk_handler.download_images_from_yandex_disk()
+    yandex_disk_handler.download_images_from_YandexDisk()
     return render_template('upload_images_foldering.html')
 
 
@@ -44,7 +44,7 @@ def images_foldering():
     if via txt then it with one columns no name
     for wb is our article
     for ozon is article without -size (-38)
-    Get images from local yandex disk, preparing and foldering it on wb and ozon demand, and send it in zip
+    Get images from local YandexDisk, preparing and foldering it on wb and ozon demand, and send it in zip
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
     if good is wool then watermark will be placed like 150 x 300 см.
@@ -52,46 +52,7 @@ def images_foldering():
 
     """
     if request.method == 'POST':
-        if request.form['text_input']:
-            input_text = request.form['text_input']
-            input_text = input_text.split()
-            print(input_text)
-            df = pd.DataFrame(input_text, columns=['Article'])
-            print(df)
-        elif request.files['file']:
-            file_txt: FileStorage = request.files['file']
-            df = pd.read_csv(file_txt, sep='	', names=['Article', 'Article_WB'])
-        else:
-            flash(f"No one file of text is passed")
-            return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)
-
+        df = request_handler.to_df(request, col_art_name="Article")
         return_data = img_processor.img_foldering(df)
-
         return send_file(return_data, as_attachment=True, download_name='image_zip.zip')
-
-        exit()
-        # HERE I STAY ON 08.08.2022
-
-        if typeWB_OZON == 1:
-            # txt include only one column article without header name
-
-            list_art = []
-            for line in fileinput.input(files=[file_txt]):
-                list_art.append(line.strip())
-            print(list_art)
-
-            for root, dirs, files in os.walk(images_folder):
-                for j in files:
-                    j_name = re.sub(r'(-9)?-\d.JPG', '', j)
-                    if j_name in list_art:
-                        if "-1.JPG" in j:
-                            j_re = re.sub(r'(-9)?-\d.JPG', '.JPG', j)
-                        else:
-                            j_re_start = re.sub(r'(-9)?-\d.JPG', '', j)
-                            j_re_end = j[len(j) - 6: len(j)].replace("-", "_")
-                            j_re = j_re_start + j_re_end
-
-                        shutil.copyfile(f"{images_folder}/{j}", f"{folder_folders}/{j_re}")
-                exit()
-
     return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)

@@ -22,7 +22,7 @@ def demand_calculation_to_df(df_input, search_string):
     else:
         search_string_first = None
     df_all_cards = API_WB.get_all_cards_api_wb(textSearch=search_string_first)
-    df_report, file_name = yandex_disk_handler.download_from_yandex_disk()
+    df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
     # print(file_name)
     df_wb_stock = API_WB.df_wb_stock_api()
 

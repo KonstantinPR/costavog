@@ -41,7 +41,7 @@ def transaction_adding_in_db(request, company_id):
     return transaction.id
 
 
-def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
+def transaction_adding_YandexDisk(uploaded_files, added_transaction_id):
     print("uploaded_file" + str(uploaded_files))
 
     transaction = Transaction.query.filter_by(id=added_transaction_id).one()
@@ -84,12 +84,12 @@ def transaction_adding_yandex_disk(uploaded_files, added_transaction_id):
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
-        is_transaction_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_folder_path}'
+        is_transaction_added_to_YandexDisk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_transaction_folder_path}'
 
     else:
-        is_transaction_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
+        is_transaction_added_to_YandexDisk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
 
-    return is_transaction_added_to_yandex_disk, yandex_link
+    return is_transaction_added_to_YandexDisk, yandex_link
 
 
 def get_transactions(company_id, cur_user=current_user, is_private=0, search=''):
@@ -180,7 +180,7 @@ def get_transactions_files(transaction_id):
     transaction = Transaction.query.filter_by(id=transaction_id).first()
     files = y.listdir(transaction.yandex_link)
     if not files:
-        print(f"files from yandex disk {files}")
+        print(f"files from YandexDisk {files}")
         flash("Указанной папки больше не существует - ссылка не действительна")
     images = []
     id_folder = randrange(1000000000000)

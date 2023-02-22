@@ -86,9 +86,9 @@ def picking_prefixes(df, df_art_prefixes):
         for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
             for i in pattern.split():
                 art_prefix = df_art_prefixes['Префикс'][idy]
-                print(art_prefix)
+                # print(art_prefix)
                 dash_prefix = wrap_prefix_by_dash(art_prefix, i)
-                print(dash_prefix)
+                # print(dash_prefix)
                 if dash_prefix in art and art.startswith(art_prefix):
                     df.at[idx, 'Лекало'] = pattern
                     df.at[idx, 'Префикс'] = df_art_prefixes.at[idy, 'Префикс']

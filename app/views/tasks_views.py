@@ -24,13 +24,13 @@ def tasks():
         # adding task in db
         task_id = task_worker.task_adding_in_db(request, company_id)
 
-        # create tasks folder in yandex disk
-        # is_create_task_yandex_disk = request.form.getlist('is_create_task_yandex_disk')
+        # create tasks folder in YandexDisk
+        # is_create_task_YandexDisk = request.form.getlist('is_create_task_YandexDisk')
         uploaded_files = flask.request.files.getlist("files")
 
         if any(uploaded_files):
             print(uploaded_files)
-            is_adding_correct_msg, yandex_link = task_worker.task_adding_yandex_disk(uploaded_files, task_id)
+            is_adding_correct_msg, yandex_link = task_worker.task_adding_YandexDisk(uploaded_files, task_id)
 
             flash(is_adding_correct_msg)
 
@@ -63,7 +63,7 @@ def task_edit(id):
 
         if any(uploaded_files):
             print(uploaded_files)
-            is_adding_correct_msg, yandex_link = task_worker.task_adding_yandex_disk(uploaded_files, task.id)
+            is_adding_correct_msg, yandex_link = task_worker.task_adding_YandexDisk(uploaded_files, task.id)
 
             flash(is_adding_correct_msg)
 

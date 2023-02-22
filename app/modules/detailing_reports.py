@@ -309,7 +309,7 @@ def revenue_processing_module(request):
     file_name = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
     file_content = io_output.io_output(df)
     # добавляем полученный файл на яндекс.диск
-    yandex_disk_handler.upload_to_yandex_disk(file_content, file_name)
+    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name)
 
     return df, file_name
 

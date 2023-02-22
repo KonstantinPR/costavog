@@ -49,7 +49,7 @@ def task_adding_in_db(request, company_id):
     return task.id
 
 
-def task_adding_yandex_disk(uploaded_files, added_task_id):
+def task_adding_YandexDisk(uploaded_files, added_task_id):
     print("uploaded_file" + str(uploaded_files))
 
     task = Task.query.filter_by(id=added_task_id).one()
@@ -92,12 +92,12 @@ def task_adding_yandex_disk(uploaded_files, added_task_id):
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
-        is_task_added_to_yandex_disk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_task_folder_path}'
+        is_task_added_to_YandexDisk = f'Файлы были сохранены на Яндекс.Диск в каталог  {yandex_task_folder_path}'
 
     else:
-        is_task_added_to_yandex_disk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
+        is_task_added_to_YandexDisk = f'Не сохранено на Яндекс.Диске. Вы не выбрали файлы, или они имеют недопустимый формат'
 
-    return is_task_added_to_yandex_disk, yandex_link
+    return is_task_added_to_YandexDisk, yandex_link
 
 
 def get_all_tasks_user(company_id):

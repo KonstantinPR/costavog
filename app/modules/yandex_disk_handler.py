@@ -22,7 +22,7 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     return file_content
 
 
-def upload_to_yandex_disk(file: BytesIO, file_name: str, app_config_path=app.config['YANDEX_KEY_FILES_PATH']):
+def upload_to_YandexDisk(file: BytesIO, file_name: str, app_config_path=app.config['YANDEX_KEY_FILES_PATH']):
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
     path_full_to = f"{app_config_path}/{file_name}"
     print(path_full_to)
@@ -31,7 +31,7 @@ def upload_to_yandex_disk(file: BytesIO, file_name: str, app_config_path=app.con
     return None
 
 
-def download_from_yandex_disk():
+def download_from_YandexDisk():
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
     path_yandex_file = f"{list(y.listdir(app.config['YANDEX_KEY_FILES_PATH']))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
@@ -74,7 +74,7 @@ def run_fast_scandir(y, dir, ext):  # dir: str, ext: list
     return subfolders, files
 
 
-def download_images_from_yandex_disk():
+def download_images_from_YandexDisk():
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
 
     subfolders, files = run_fast_scandir(y, app.config['YANDEX_FOLDER_IMAGE_YANDISK'], '.jpg')
@@ -99,7 +99,7 @@ def get_urls(dir_path, files_path: list):
             img_url = y.get_download_link(file_path)
             file_urls.append(img_url)
         except yadisk.exceptions.NotFoundError:
-            print(f"File {file_path} not found on Yandex.Disk, skipping")
+            print(f"File {file_path} not found on YandexDisk, skipping")
     return file_urls
 
 
@@ -128,13 +128,12 @@ def get_all_file_urls(subfolder_names, file_name_list, dir_path):
     found_files = set()  # to keep track of found files
     file_name_copy = file_name_list.copy()  # make a copy of the list
     for sub in reversed(subfolder_names):
-        print(f"file_name_copy {file_name_copy}")
         if not file_name_copy:  # all files have been found, break out of the loop
             break
         path = os.path.join(dir_path, sub).replace("\\", "/")
-        file_urls = get_urls(path, file_name_list)
+        file_urls = get_urls(path, file_name_copy)
         all_file_urls += file_urls
-        for url, file_name in zip(file_urls, file_name_list):
+        for url, file_name in zip(file_urls, file_name_copy):
             if file_name not in found_files and url is not None:  # file not already found and exists
                 found_files.add(file_name)
                 file_name_copy.remove(file_name)  # remove the found file from the copy
@@ -147,7 +146,7 @@ def get_all_file_urls(subfolder_names, file_name_list, dir_path):
 #     try:
 #         return await y.get_download_link(file_path)
 #     except yadisk.exceptions.NotFoundError:
-#         print(f"File {file_path} not found on Yandex.Disk, skipping")
+#         print(f"File {file_path} not found on YandexDisk, skipping")
 #         return None
 #
 #

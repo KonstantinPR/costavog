@@ -50,13 +50,13 @@ def transactions():
         # adding transaction in db
         transaction_id = transaction_worker.transaction_adding_in_db(request, company_id)
 
-        # create transactions folder in yandex disk
-        is_create_transaction_yandex_disk = request.form.getlist('is_create_transaction_yandex_disk')
+        # create transactions folder in YandexDisk
+        is_create_transaction_YandexDisk = request.form.getlist('is_create_transaction_YandexDisk')
         uploaded_files = flask.request.files.getlist("files")
         print(f"upload files {uploaded_files}")
 
         if any(uploaded_files):
-            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
+            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_YandexDisk(uploaded_files,
                                                                                                    transaction_id)
 
             flash(is_adding_correct_msg)
@@ -187,7 +187,7 @@ def transaction_edit(id):
         print(flask.request.files.getlist("files"))
         if any(uploaded_files):
             print(f"uploaded files {uploaded_files}")
-            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_yandex_disk(uploaded_files,
+            is_adding_correct_msg, yandex_link = transaction_worker.transaction_adding_YandexDisk(uploaded_files,
                                                                                                    transaction.id)
             flash(is_adding_correct_msg)
 

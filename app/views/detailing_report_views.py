@@ -12,7 +12,7 @@ import time
 @login_required
 def key_indicators():
     """
-    to show key indicators from revenue_tables via yandex_disk file (or revenue_processing route - planning in future)
+    to show key indicators from revenue_tables via YandexDisk file (or revenue_processing route - planning in future)
     1 . market cost of all products on wb
     2 . revenue potential cost of all product on wb (to take medium of revenue if no sells)
     (potential cost by revenue of all products)
@@ -21,12 +21,12 @@ def key_indicators():
     if not current_user.is_authenticated:
         return redirect('/company_register')
 
-    file_content, file_name = yandex_disk_handler.download_from_yandex_disk()
+    file_content, file_name = yandex_disk_handler.download_from_YandexDisk()
     df = detailing_reports.key_indicators_module(file_content)
 
     file_name_key_indicator = f'key_indicator_of_{file_name}'
     file_content = io_output.io_output(df, is_index=True)
-    yandex_disk_handler.upload_to_yandex_disk(file_content, file_name_key_indicator)
+    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_key_indicator)
 
     file = io_output.io_output(df, is_index=True)
 

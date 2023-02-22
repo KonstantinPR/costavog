@@ -1,6 +1,4 @@
-import io
 import re
-
 from app import app, Company
 from flask import render_template, request, redirect
 from urllib.parse import urlencode
@@ -16,11 +14,10 @@ import datetime
 import yadisk
 import os
 import requests
-import zipfile
 from flask import send_file
 
 
-# /// YANDEX DISK ////////////
+# /// YandexDisk ////////////
 
 
 # Return the zip file as a response
@@ -107,10 +104,10 @@ def yandex_disk_crop_images():
         return redirect('/company_register')
 
     if request.method == 'POST':
-        img_path_yandex_disk = request.form['yandex_path']
+        img_path_YandexDisk = request.form['yandex_path']
         company_id = current_user.company_id
 
-        # create object that work with yandex disk using TOKEN
+        # create object that work with YandexDisk using TOKEN
         yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
                    'Authorization': f'OAuth {yandex_disk_token}'}
@@ -124,13 +121,13 @@ def yandex_disk_crop_images():
         if not os.path.exists(img_path):
             os.makedirs(img_path)
 
-        # take names of all files on our directory in yandex disk
-        list_img_name = (list(y.listdir("" + str(img_path_yandex_disk))))
+        # take names of all files on our directory in YandexDisk
+        list_img_name = (list(y.listdir("" + str(img_path_YandexDisk))))
 
         # download all our images in temp folder
         for name_img in list_img_name:
             name = name_img['name']
-            y.download("/" + str(img_path_yandex_disk) + "/" + name, img_path + "/" + name)
+            y.download("/" + str(img_path_YandexDisk) + "/" + name, img_path + "/" + name)
 
         # take all img objects in list images
         for filename in glob.glob(img_path + '/*.JPG'):
