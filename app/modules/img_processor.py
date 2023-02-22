@@ -120,8 +120,8 @@ def download_images_from_yandex_to_folder(df, art_col_name="Артикул то�
 #     folder_folders = "folder_img"
 #
 #     select = request.form.get('multiply_number')
-#     typeWB_OZON = select
-#     typeWB_OZON = 0 if typeWB_OZON == 'WB' else 1
+#     marketplace = select
+#     marketplace = 0 if marketplace == 'WB' else 1
 #
 #     shutil.rmtree(folder_folders, ignore_errors=True)
 #
@@ -155,11 +155,11 @@ def download_images_from_yandex_to_folder(df, art_col_name="Артикул то�
 #                 j_clear_end = j[(len(j) - 3):]
 #                 # print(f"j_clear_end {j_clear_end}")
 #             if name_clear == j_clear:
-#                 if typeWB_OZON == 0:
+#                 if marketplace == 0:
 #                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{j}/photo/{name}")
 #                     if j.startswith(tuple(PREF_LIST)):
 #                         img_watermark(f"{folder_folders}/{j}/photo/{name}", j)
-#                 if typeWB_OZON == 1:
+#                 if marketplace == 1:
 #                     shutil.copyfile(f"{img_name_list_files[name]}/{name}", f"{folder_folders}/{name}")
 #
 #     for j in os.listdir(folder_folders):
@@ -169,7 +169,7 @@ def download_images_from_yandex_to_folder(df, art_col_name="Артикул то�
 #                 # for updating wb on 20.09.2022
 #                 os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{df['Article'][d]}")
 #
-#     if typeWB_OZON == 1:
+#     if marketplace == 1:
 #         for j in os.listdir(folder_folders):
 #             if j.endswith('-1.JPG'):
 #                 os.rename(f"{folder_folders}/{j}", f"{folder_folders}/{j.replace('-1.JPG', '.JPG')}")
@@ -197,10 +197,15 @@ def create_folder_structure(df):
     Creates a folder structure for images based on the unique Article values in the given dataframe.
     """
     folder_path = app.config['TMP_IMG_FOLDER']
-    os.makedirs(folder_path, exist_ok=True)
-
-    for article in df["Article"]:
-        os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+    try:
+        shutil.rmtree(app.config['TMP_IMG_FOLDER'])
+        os.makedirs(folder_path, exist_ok=True)
+        for article in df["Article"]:
+            os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+    except:
+        os.makedirs(folder_path, exist_ok=True)
+        for article in df["Article"]:
+            os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
 
     return folder_path
 
@@ -220,69 +225,90 @@ def create_folder_structure(df):
 #     return image_files
 
 
-def get_image_files(images_folder):
+def _get_include_duplicates(file, subentry, set_img_dicts):
+    image_files, renamed_duplicates, number_images_of_art = set_img_dicts
+
+    art = re.sub(r'-(\d)?\d.JPG', '', file.name)
+    if art in number_images_of_art.keys():
+        number_images_of_art[art] += 1
+    else:
+        number_images_of_art[art] = 1
+
+    if file.name not in image_files.keys():
+        image_files[file.name] = subentry.path
+        renamed_duplicates[file.name] = file.name
+    else:
+        new_name_img_file = art + f"-{number_images_of_art[art] + 1}.JPG"
+        renamed_duplicates[new_name_img_file] = file.name
+        image_files[new_name_img_file] = subentry.path
+
+    return image_files, renamed_duplicates, number_images_of_art
+
+
+def _get_exclude_duplicates(file, subentry, image_files):
+    image_files[file.name] = subentry.path
+    return image_files
+
+
+# def get_image_files(images_folder, is_replace):
+#     """
+#     Scans a given folder and returns a dictionary of image filenames and their corresponding paths.
+#     """
+#     image_files = {}
+#     renamed_duplicates = {}
+#     number_images_of_art = {}
+#     set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
+#
+#     for entry in os.scandir(images_folder):
+#         for subentry in os.scandir(entry.path):
+#             if subentry.is_dir():
+#                 for file in os.scandir(subentry.path):
+#                     if file.is_file():
+#                         if is_replace == "ALL":
+#                             set_img_dicts = _get_include_duplicates(file, subentry, set_img_dicts)
+#                         elif is_replace == "ONLY_NEW":
+#                             image_files = _get_exclude_duplicates(file, subentry, image_files)
+#                         else:
+#                             image_files = _get_exclude_duplicates(file, subentry, image_files)
+#
+#     return image_files, renamed_duplicates
+
+def order_by(entity, order='descending'):
+    if order == 'descending':
+        return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
+    else:
+        return entity
+
+
+def get_image_files(images_folder: dict, is_replace: str) -> tuple:
     """
     Scans a given folder and returns a dictionary of image filenames and their corresponding paths.
     """
     image_files = {}
-    image_files_duplicates = {}
+    renamed_duplicates = {}
     number_images_of_art = {}
+    set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
 
-    for entry in os.scandir(images_folder):
-        for subentry in os.scandir(entry.path):
+    for entry in order_by(images_folder):
+        for subentry in order_by(entry.path):
             if subentry.is_dir():
-                for file in os.scandir(subentry.path):
+                for file in order_by(subentry.path):
                     if file.is_file():
-                        art = re.sub(r'-(\d)?\d.JPG', '', file.name)
-                        if art in number_images_of_art.keys():
-                            number_images_of_art[art] = number_images_of_art[art] + 1
+                        if is_replace == "ALL":
+                            set_img_dicts = _get_include_duplicates(file, subentry, set_img_dicts)
+                        elif is_replace == "ONLY_NEW":
+                            image_files = _get_exclude_duplicates(file, subentry, image_files)
                         else:
-                            number_images_of_art[art] = 1
+                            image_files = _get_exclude_duplicates(file, subentry, image_files)
 
-                        if file.name not in image_files.keys():
-                            image_files[file.name] = subentry.path
-                            image_files_duplicates[file.name] = file.name
-                        else:
-                            new_name_img_file = art + f"-{number_images_of_art[art] + 1}.JPG"
-                            image_files_duplicates[new_name_img_file] = file.name
-                            image_files[new_name_img_file] = subentry.path
-
-    print(image_files_duplicates)
-    print(f"image_files.items() {image_files.keys()}")
-    # exit()
-    return image_files, image_files_duplicates
+    return image_files, renamed_duplicates
 
 
-#
-# def copy_images_to_folders(image_files, folder_path, typeWB_OZON):
-#     """
-#     Copies image files to folders in the specified folder path based on their corresponding Article value.
-#     """
-#     for name, path in image_files.items():
-#         name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
-#
-#         for folder_name in os.listdir(folder_path):
-#             folder_name_clear = folder_name
-#
-#             if folder_name.startswith(tuple(PREF_LIST)) or folder_name.endswith("new"):
-#                 folder_name_clear = folder_name[:(len(folder_name) - 3)]
-#                 folder_name_clear_end = folder_name[(len(folder_name) - 3):]
-#
-#             if name_clear == folder_name_clear:
-#                 if typeWB_OZON == 0:
-#                     shutil.copyfile(f"{image_files[name]}/{name}", f"{folder_path}/{folder_name}/photo/{name}")
-#                     if folder_name.startswith(tuple(PREF_LIST)):
-#                         img_watermark(f"{folder_path}/{folder_name}/photo/{name}", folder_name)
-#
-#                 if typeWB_OZON == 1:
-#                     shutil.copyfile(f"{image_files[name]}/{name}", f"{folder_path}/{name}")
-
-
-def copy_images_to_folders(image_files, folder_path, typeWB_OZON):
+def copy_images_to_folders(image_files, renamed_duplicates, folder_path, marketplace):
     """
     Copies image files to folders in the specified folder path based on their corresponding Article value.
     """
-    image_files, duplicate_images = image_files
+
     for name, pat in image_files.items():
         name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
 
@@ -295,17 +321,18 @@ def copy_images_to_folders(image_files, folder_path, typeWB_OZON):
                 folder_name_clear_end = folder_name[(len(folder_name) - 3):]
 
             if name_clear == folder_name_clear:
-                if typeWB_OZON == 0:
-                    name = duplicate_images[name]
-                    shutil.copyfile(f"{image_files[name]}/{name}", f"{folder_path}/{folder_name}/photo/{name}")
+                if marketplace == "WB":
+                    real_name = name
+                    if renamed_duplicates: real_name = renamed_duplicates[name]
+                    shutil.copyfile(f"{image_files[name]}/{real_name}", f"{folder_path}/{folder_name}/photo/{name}")
                     if folder_name.startswith(tuple(PREF_LIST)):
                         img_watermark(f"{folder_path}/{folder_name}/photo/{name}", folder_name)
 
-                if typeWB_OZON == 1:
+                if marketplace == "OZON":
                     shutil.copyfile(f"{image_files[name]}/{name}", f"{folder_path}/{name}")
 
 
-def rename_folders(df, folder_path, typeWB_OZON):
+def rename_folders(df, folder_path, marketplace):
     """
     Renames folders based on the Article values in the given dataframe.
     """
@@ -314,7 +341,7 @@ def rename_folders(df, folder_path, typeWB_OZON):
             if df["Article"][d] == folder_name:
                 os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{df['Article'][d]}")
 
-    if typeWB_OZON == 1:
+    if marketplace == "OZON":
         for folder_name in os.listdir(folder_path):
             if folder_name.endswith('-1.JPG'):
                 os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{folder_name.replace('-1.JPG', '.JPG')}")
@@ -340,25 +367,24 @@ def create_zip_file(folder_path):
     return return_data
 
 
-def img_foldering(df):
+def img_foldering(df, marketplace, is_replace):
     images_folder = app.config["YANDEX_FOLDER_IMAGE"]
-
-    typeWB_OZON = 0
 
     # Create folder structure
     folder_path = create_folder_structure(df)
 
     # Get image files
-    image_files = get_image_files(images_folder)
+    image_files, renamed_duplicates = get_image_files(images_folder, is_replace)
 
     # Copy images to folders
-    copy_images_to_folders(image_files, folder_path, typeWB_OZON)
+    copy_images_to_folders(image_files, renamed_duplicates, folder_path, marketplace)
 
     # Rename folders
-    rename_folders(df, folder_path, typeWB_OZON)
+    rename_folders(df, folder_path, marketplace)
 
     # Create zip file
     zip_file_data = create_zip_file(folder_path)
+
     shutil.rmtree(app.config['TMP_IMG_FOLDER'])
 
     return zip_file_data
