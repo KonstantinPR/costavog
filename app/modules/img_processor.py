@@ -150,8 +150,12 @@ def _get_include_duplicates(file, subentry, set_img_dicts):
     return image_files, renamed_duplicates, number_images_of_art
 
 
-def _get_exclude_duplicates(file, subentry, image_files):
-    image_files[file.name] = subentry.path
+def _get_exclude_duplicates(file, subentry, image_files, art_paths_dict):
+    art = re.sub(r'-(\d)?\d.JPG', '', file.name)
+    if file.name not in image_files.keys():
+        if art not in art_paths_dict.keys(): art_paths_dict[art] = subentry.path
+        if art_paths_dict[art] == subentry.path:
+            image_files[file.name] = subentry.path
     return image_files
 
 
@@ -169,6 +173,8 @@ def get_image_files(images_folder: dict, is_replace: str) -> tuple:
     image_files = {}
     renamed_duplicates = {}
     number_images_of_art = {}
+
+    name_paths_dict = {}
     set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
 
     for entry in order_by(images_folder):
@@ -179,10 +185,11 @@ def get_image_files(images_folder: dict, is_replace: str) -> tuple:
                         if is_replace == "ALL":
                             set_img_dicts = _get_include_duplicates(file, subentry, set_img_dicts)
                         elif is_replace == "ONLY_NEW":
-                            image_files = _get_exclude_duplicates(file, subentry, image_files)
+                            image_files = _get_exclude_duplicates(file, subentry, image_files, name_paths_dict)
                         else:
-                            image_files = _get_exclude_duplicates(file, subentry, image_files)
-
+                            image_files = _get_exclude_duplicates(file, subentry, image_files, name_paths_dict)
+    # print(f"renamed_duplicates  {renamed_duplicates}")
+    # exit()
     return image_files, renamed_duplicates
 
 
@@ -190,7 +197,7 @@ def copy_images_to_folders(image_files, renamed_duplicates, folder_path, marketp
     """
     Copies image files to folders in the specified folder path based on their corresponding Article value.
     """
-
+    folder_paths = {}
     for name, pat in image_files.items():
         name_clear = re.sub(r'-(\d)?\d.JPG', '', name)
 
