@@ -48,7 +48,9 @@ def images_foldering():
     on 08.08.2022 work only on local comp with pointing dict where img placed
     header in txt no need
     if good is wool then watermark will be placed like 150 x 300 см.
-    if Article_WB is in columns (in second column) then - folder will be named by it, if not - then our art
+    if Article_WB is in columns (in second column) then - folder will be named by it, if not - then our art.
+    ALL - take all photo of articles in all folders
+    ONLY_NEW - take photo only in folders with last photo with that art
 
     """
     if request.method == 'POST':
