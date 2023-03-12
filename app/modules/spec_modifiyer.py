@@ -14,6 +14,7 @@ SPEC_TYPE = {
     'MHOJ': 'ECO_FURS_WOMEN',
     'MHOC': 'ECO_FURS_WOMEN',
     'MHOF': 'ECO_FURS_WOMEN',
+    'TIE': 'TIE',
     'MIT': 'MIT',
     'MHSU': 'SHOES',
     'MHBB': 'SHOES',
@@ -102,12 +103,20 @@ def picking_colors(df, df_colors,
                    df_colors_col_rus_name='Цвет русский'):
     """colors picking from english"""
     print("picking_colors ...")
+    print(df[df_col_name])
+    print(df_colors[df_colors_col_eng_name])
     for idx, art in enumerate(df[df_col_name]):
         for jdx, color in enumerate(df_colors[df_colors_col_eng_name]):
             # print(f'art {art}')
-            if f'{color.upper()}' in art:
-                # df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
-                df.loc[idx, 'Цвет'] = df_colors.loc[jdx, df_colors_col_rus_name]
+            print(color)
+            try:
+                # if f'{color.upper()}' in art:
+                if art.endswith(f'-{color.upper()}'):
+                    # df['Цвет'][idx] = df_colors['Цвет русский'][jdx]
+                    df.loc[idx, 'Цвет'] = df_colors.loc[jdx, df_colors_col_rus_name]
+                    continue
+            except:
+                ValueError(f"color {color} can't be translated")
     return df
 
 

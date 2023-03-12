@@ -238,7 +238,11 @@ def revenue_processing_module(request):
     # df.to_excel("sharlotka.xlsx")
 
     df_complete = df.merge(df_stock, how='outer', on='nm_id')
+    # df.to_excel("df_complete_test.xlsx")
+    # exit()
     df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
+    # df.to_excel("df_with_net_test.xlsx")
+    # exit()
 
     df = get_revenue_by_part(df, period_dates_list)
 
