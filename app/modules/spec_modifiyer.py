@@ -103,12 +103,12 @@ def picking_colors(df, df_colors,
                    df_colors_col_rus_name='Цвет русский'):
     """colors picking from english"""
     print("picking_colors ...")
-    print(df[df_col_name])
-    print(df_colors[df_colors_col_eng_name])
+    # print(df[df_col_name])
+    # print(df_colors[df_colors_col_eng_name])
     for idx, art in enumerate(df[df_col_name]):
         for jdx, color in enumerate(df_colors[df_colors_col_eng_name]):
             # print(f'art {art}')
-            print(color)
+            # print(color)
             try:
                 # if f'{color.upper()}' in art:
                 if art.endswith(f'-{color.upper()}'):

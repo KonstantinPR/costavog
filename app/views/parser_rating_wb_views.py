@@ -2,7 +2,7 @@ from app import app
 from flask import render_template, request, send_file
 from flask_login import login_required
 import pandas as pd
-from app.modules import io_output
+from app.modules import io_output, request_handler
 
 import requests
 import json
@@ -54,8 +54,10 @@ def parser_rating_wb():
         col_name = 'Артикул'
         rating = 'Рейтинг'
         feedbacks = 'Кол-во отзывов'
-        df_column = io_output.io_txt_request(request, name_html="upload_parser_rating_wb.html",
-                                             inp_name='file', col_name=col_name)
+        # df_column = io_output.io_txt_request(request, name_html="upload_parser_rating_wb.html",
+        #                                      inp_name='file', col_name=col_name)
+        df_column = request_handler.to_df(request, col_art_name="Артикул")
+        print(df_column)
         art_list = [x for x in df_column[col_name]]
         rating_list = get_rating(art_list)
         df_column[rating] = [x[0] if x else '' for x in rating_list]
