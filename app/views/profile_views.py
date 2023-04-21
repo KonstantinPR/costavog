@@ -85,6 +85,13 @@ def user_register():
         user_email = request.form['user_email']
 
         company = Company.query.filter_by(company_name=company_name).first()
+
+        if not company.checked:
+            print("checked is 0, but need to be not 0, chenged it if you want to allowed this company register user")
+            flash("Компания еще не прошла проверку. Владелец не чекнул Компанию")
+            return redirect('/user_register')
+
+
         if check_password_hash(company.password_hash, current_company_password):
             company_id = company.id
         else:
