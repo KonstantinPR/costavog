@@ -87,7 +87,7 @@ def user_register():
         company = Company.query.filter_by(company_name=company_name).first()
 
         if not company.checked:
-            print("checked is 0, but need to be not 0, chenged it if you want to allowed this company register user")
+            print("checked is 0, but need to be not 0, change it if you want to allowed this company register user")
             flash("Компания еще не прошла проверку. Владелец не чекнул Компанию")
             return redirect('/user_register')
 
