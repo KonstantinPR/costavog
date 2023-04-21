@@ -38,6 +38,7 @@ class Company(db.Model):
     yandex_disk_token = db.Column(db.String(1000), default=0)
     wb_api_token = db.Column(db.String(1000), default=0)
     wb_api_token2 = db.Column(db.String(1000), default=0)
+    checked = db.Column(db.Integer, default=0)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

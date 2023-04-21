@@ -29,11 +29,11 @@ def get_rating(goods_id_list):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) YaBrowser/22.9.4.866 Yowser/2.5 Safari/537.36'
         }
 
-        print(good_id)
+        # print(good_id)
         url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
         r = requests.get(url=url, headers=headers)
         if r.json()['data']['products']:
-            print(r.json()['data']['products'])
+            # print(r.json()['data']['products'])
             # good_id = r.json()['data']['products'][0]['id']
             rating = r.json()['data']['products'][0]['rating']
             feedbacks = r.json()['data']['products'][0]['feedbacks']
@@ -49,7 +49,8 @@ def get_rating(goods_id_list):
 @app.route('/parser-rating-wb', methods=['GET', 'POST'])
 @login_required
 def parser_rating_wb():
-    """Обработка файла txt  - шапка нужна - Артикул"""
+    """Парсинг рейтинга и количества отзывов через Артикулы WB, шапка в txt файле = Артикул"""
+
     if request.method == 'POST':
         col_name = 'Артикул'
         rating = 'Рейтинг'
@@ -57,7 +58,6 @@ def parser_rating_wb():
         # df_column = io_output.io_txt_request(request, name_html="upload_parser_rating_wb.html",
         #                                      inp_name='file', col_name=col_name)
         df_column = request_handler.to_df(request, col_art_name="Артикул")
-        print(df_column)
         art_list = [x for x in df_column[col_name]]
         rating_list = get_rating(art_list)
         df_column[rating] = [x[0] if x else '' for x in rating_list]
