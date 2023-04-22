@@ -88,7 +88,7 @@ def user_register():
 
         if not company.checked:
             print("checked is 0, but need to be not 0, change it if you want to allowed this company register user")
-            flash("Компания еще не прошла проверку. Владелец не чекнул Компанию")
+            flash("Компания еще не прошла проверку.")
             return redirect('/user_register')
 
 

@@ -163,94 +163,7 @@ def key_indicators_module(file_content):
     return df
 
 
-def revenue_processing_module(request):
-    """forming via wb api table dynamic revenue and correcting discount"""
-    # --- REQUEST PROCESSING ---
-    if request.form.get('date_from'):
-        date_from = request.form.get('date_from')
-    else:
-        date_from = datetime.datetime.today() - datetime.timedelta(
-            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
-        date_from = date_from.strftime(DATE_FORMAT)
-
-    # print(f"type is {type(date_from)}")
-
-    if request.form.get('date_end'):
-        date_end = request.form.get('date_end')
-    else:
-        date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
-        date_end = date_end.strftime(DATE_FORMAT)
-        # date_end = time.strftime(date_format)- datetime.timedelta(3)
-
-    if request.form.get('days_step'):
-        days_step = request.form.get('days_step')
-    else:
-        days_step = app.config['DAYS_STEP_DEFAULT']
-
-    if request.form.get('part_by'):
-        date_parts = request.form.get('part_by')
-    else:
-        date_parts = DATE_PARTS
-
-    if request.form.get('k_smooth'):
-        k_smooth = int(request.form.get('k_smooth'))
-    else:
-        k_smooth = K_SMOOTH
-
-    # --- GET DATA VIA WB API /// ---
-    df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-    df_sales.to_excel('df_sales_excel.xlsx')
-    # df_sales = pd.read_excel("df_sales_excel.xlsx")
-    df_stock = API_WB.get_wb_stock_api()
-    df_sales.to_excel('wb_stock.xlsx')
-    # df_stock = pd.read_excel("wb_stock.xlsx")
-
-    # --- GET NET_COST FROM DB /// ---
-    # df_net_cost = pd.read_sql(
-    #     db.session.query(Product).filter_by(company_id=current_user.company_id).statement, db.session.bind)
-
-    # --- GET NET_COST FROM YADISK /// ---
-    df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-
-    df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
-    df_sales_pivot.to_excel('sales_pivot.xlsx')
-    # таблица с итоговыми значениями с префиксом _sum
-    df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
-    days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
-    period_dates_list = get_period_dates_list(date_from, date_end, days_bunch, date_parts)
-    df_sales_list = dataframe_divide(df_sales, period_dates_list, date_from)
-
-    # df_pivot_list = []
-    df_pivot_list = [get_wb_sales_realization_pivot(d) for d in df_sales_list]
-
-    df = df_pivot_list[0]
-    date = iter(period_dates_list[1:])
-    df_p = df_pivot_list[1:]
-    for d in df_p:
-        df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
-        df = df_pivot
-
-    # df.to_excel("predsharlotka.xlsx")
-
-    df_price = get_wb_price_api()
-    # df_price.to_excel("df_price.xlsx")
-    df = df.merge(df_price, how='outer', on='nm_id')
-    # df.to_excel("sharlotka.xlsx")
-
-    df_complete = df.merge(df_stock, how='outer', on='nm_id')
-    # df.to_excel("df_complete_test.xlsx")
-    # exit()
-    df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
-    # df.to_excel("df_with_net_test.xlsx")
-    # exit()
-
-    df = get_revenue_by_part(df, period_dates_list)
-
-    df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
-    df_revenue_col_name_list = df_revenue_column_name_list(df)
-
-    df.fillna(0, inplace=True, downcast='infer')
-
+def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     # Формируем обобщающие показатели с префиксом _sum перед присоединением общей таблицы продаж
     df['Прибыль_max'] = df[df_revenue_col_name_list].max(axis=1)
     df['Прибыль_min'] = df[df_revenue_col_name_list].min(axis=1)
@@ -263,13 +176,11 @@ def revenue_processing_module(request):
     df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
     df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
 
-    # чтобы были видны итоговые значения из первоначальной таблицы с продажами
-    df = df.merge(df_sales_pivot, how='outer', on='nm_id')
     df['Продажи_уч_возврат_sum'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
 
     df['Перечисление руб'] = df[[col for col in df.columns if "ppvz_for_pay_Продажа_sum" in col]].sum(axis=1) - \
                              df[[col for col in df.columns if "ppvz_for_pay_Возврат_sum" in col]].sum(axis=1) - \
-                             df[[col for col in df.columns if "delivery_rub_Логистика" in col]].sum(axis=1)
+                             df[[col for col in df.columns if "delivery_rub_Логистика_sum" in col]].sum(axis=1)
     # Принятие решения о скидке на основе сформированных данных ---
     # коэффициент влияния на скидку
     df['k_discount'] = 1
@@ -285,6 +196,106 @@ def revenue_processing_module(request):
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
+    return df
+
+
+def request_date_from(request):
+    if request.form.get('date_from'):
+        date_from = request.form.get('date_from')
+    else:
+        date_from = datetime.datetime.today() - datetime.timedelta(
+            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
+        date_from = date_from.strftime(DATE_FORMAT)
+    return date_from
+
+
+def request_date_end(request):
+    if request.form.get('date_end'):
+        date_end = request.form.get('date_end')
+    else:
+        date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
+        date_end = date_end.strftime(DATE_FORMAT)
+        # date_end = time.strftime(date_format)- datetime.timedelta(3)
+    return date_end
+
+
+def request_days_step(request):
+    if request.form.get('days_step'):
+        days_step = request.form.get('days_step')
+    else:
+        days_step = app.config['DAYS_STEP_DEFAULT']
+    return days_step
+
+
+def request_date_parts(request):
+    if request.form.get('part_by'):
+        date_parts = request.form.get('part_by')
+    else:
+        date_parts = DATE_PARTS
+    return date_parts
+
+
+def request_k_smooth(request):
+    if request.form.get('k_smooth'):
+        k_smooth = int(request.form.get('k_smooth'))
+    else:
+        k_smooth = K_SMOOTH
+    return k_smooth
+
+
+def revenue_processing_module(request):
+    """forming via wb api table dynamic revenue and correcting discount"""
+    # --- REQUEST PROCESSING ---
+
+    date_from = request_date_from(request)
+    date_end = request_date_end(request)
+    days_step = request_days_step(request)
+    date_parts = request_date_parts(request)
+    k_smooth = request_k_smooth(request)
+
+    # --- GET DATA VIA WB API /// ---
+    df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
+    df_sales.to_excel('df_sales_excel.xlsx')
+    # df_sales = pd.read_excel("df_sales_excel.xlsx")
+    df_stock = API_WB.get_wb_stock_api()
+    df_sales.to_excel('wb_stock.xlsx')
+    # df_stock = pd.read_excel("wb_stock.xlsx")
+
+    # --- GET NET_COST FROM YADISK /// ---
+    df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+
+    df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
+    df_sales_pivot.to_excel('sales_pivot.xlsx')
+    # таблица с итоговыми значениями с префиксом _sum
+    df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
+    days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
+    period_dates_list = get_period_dates_list(date_from, date_end, days_bunch, date_parts)
+    df_sales_list = dataframe_divide(df_sales, period_dates_list, date_from)
+
+    df_pivot_list = [get_wb_sales_realization_pivot(d) for d in df_sales_list]
+
+    df = df_pivot_list[0]
+    date = iter(period_dates_list[1:])
+    df_p = df_pivot_list[1:]
+    for d in df_p:
+        df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
+        df = df_pivot
+
+
+    df_price = get_wb_price_api()
+    df = df.merge(df_price, how='outer', on='nm_id')
+
+    df_complete = df.merge(df_stock, how='outer', on='nm_id')
+    df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
+    df = get_revenue_by_part(df, period_dates_list)
+
+    df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
+    df_revenue_col_name_list = df_revenue_column_name_list(df)
+
+    df.fillna(0, inplace=True, downcast='infer')
+    # чтобы были видны итоговые значения из первоначальной таблицы с продажами
+    df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+    df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 
@@ -300,14 +311,7 @@ def revenue_processing_module(request):
     df['Артикул WB'] = df['nm_id']
     df = df_stay_column_not_null(df)
 
-    # реорганизуем порядок следования столбцов для лучшей читаемости
-    # df = df_reorder_important_col_desc_first(df)
-    # df = df_reorder_important_col_report_first(df)
-    # df = df_reorder_revenue_col_first(df)
-    # print(df.columns)
-
     df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
-    # df = df[VISIBLE_COL]
     df = df.sort_values(by='Прибыль_sum')
 
     file_name = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
