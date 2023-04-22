@@ -151,18 +151,17 @@ def barcode():
                 draw.text((5, 0), "ЧЕСТНЫЙ ЗНАК", font=ImageFont.truetype("arial.ttf", 18),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
                 draw = ImageDraw.Draw(padded_image)
-                draw.text((5, datamatrix.height + 30), line[0:18], font=ImageFont.truetype("arial.ttf", 12),
+                draw.text((5, datamatrix.height + 40), line[0:18], font=ImageFont.truetype("arial.ttf", 14),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
                 draw = ImageDraw.Draw(padded_image)
-                draw.text((5, datamatrix.height + 40), line[18:32], font=ImageFont.truetype("arial.ttf", 12),
+                draw.text((5, datamatrix.height + 55), line[18:31], font=ImageFont.truetype("arial.ttf", 14),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
                 draw = ImageDraw.Draw(padded_image)
-                draw.text((5, datamatrix.height + 50), line[32:38], font=ImageFont.truetype("arial.ttf", 12),
+                draw.text((5, datamatrix.height + 70), line[32:38], font=ImageFont.truetype("arial.ttf", 14),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
                 img = io_output.io_img_output(padded_image)
                 images_set.append((line_name, img))
             images_zipped = zip_handler.put_in_zip(images_set)
-
 
         return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 
