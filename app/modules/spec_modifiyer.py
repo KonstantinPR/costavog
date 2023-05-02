@@ -20,8 +20,33 @@ SPEC_TYPE = {
     'MHBB': 'SHOES',
     'MHSD': 'SHOES',
     'MHSB': 'SHOES',
+    'J': 'JEANS',
 
 }
+
+
+JEANS_SIZES = {
+    '23': '36',
+    '24': '38',
+    '25': '38-40',
+    '26': '40',
+    '27': '42',
+    '28': '42-44',
+    '29': '44',
+    '30': '44-46',
+    '31': '46',
+    '32': '46-48',
+    '33': '48',
+    '34': '48-50',
+    '35': '50',
+    '36': '50-52',
+    '37': '52',
+    '38': '52-54',
+    '39': '54',
+    '40': '54-56',
+    '41': '56'
+}
+
 
 
 def wrap_prefix_by_dash(prefix, i):
@@ -44,6 +69,8 @@ def spec_definition(df):
     # print(df['Артикул товара'][0].split('-')[0])
     if str(df['Артикул товара'][0]).startswith("SH"):
         prefix = "SH"
+    elif str(df['Артикул товара'][0]).startswith("J"):
+        prefix = "J"
     elif str(df['Артикул товара'][0]).startswith("SK"):
         prefix = "SK"
     else:
@@ -196,3 +223,11 @@ def col_str(df, lst: list):
         if col in df.columns:
             df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
     return df
+
+def sizes_translate(df, spec_type):
+    if spec_type.startswith("J"):
+        df['Рос. размер'] = df['Размер'].map(JEANS_SIZES)
+    return df
+
+
+
