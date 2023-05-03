@@ -310,6 +310,7 @@ def revenue_processing_module(request):
     df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
     df['Артикул WB'] = df['nm_id']
     df = df_stay_column_not_null(df)
+    df = combine_duplicate_column(df, "Предмет", ["subject_name"])
 
     df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
     df = df.sort_values(by='Прибыль_sum')
