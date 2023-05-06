@@ -137,6 +137,7 @@ def drop_products():
 @app.route('/upload_turnover', methods=['POST', 'GET'])
 @login_required
 def upload_turnover():
+    """on 06/05/2023 need to be checked, not used for a long time"""
     if not current_user.is_authenticated:
         return redirect('/company_register')
 

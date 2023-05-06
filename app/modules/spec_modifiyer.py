@@ -24,7 +24,6 @@ SPEC_TYPE = {
 
 }
 
-
 JEANS_SIZES = {
     '23': '36',
     '24': '38',
@@ -46,7 +45,6 @@ JEANS_SIZES = {
     '40': '54-56',
     '41': '56'
 }
-
 
 
 def wrap_prefix_by_dash(prefix, i):
@@ -179,6 +177,10 @@ def col_adding(df_income):
     ]
     wedding_desc = random_wedding_desc[randrange(len(random_wedding_desc))]
 
+    if 'Цвет' not in df_income.columns:
+        # add 'Цвет' column to df
+        df_income['Цвет'] = ''
+
     for idx, color in enumerate(df_income['Цвет']):
         if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый'] and df_income['Префикс'][idx] == 'SK':
             df_income['Описание'][idx] += wedding_desc
@@ -224,10 +226,8 @@ def col_str(df, lst: list):
             df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
     return df
 
+
 def sizes_translate(df, spec_type):
     if spec_type.startswith("J"):
         df['Рос. размер'] = df['Размер'].map(JEANS_SIZES)
     return df
-
-
-

@@ -118,7 +118,7 @@ def discount(file_turnover: pd.DataFrame, file_net_cost: pd.DataFrame) -> pd.Dat
         and work with it
         :return: name of saving file
     """
-    df = file_turnover.merge(file_net_cost, left_on='Артикул поставщика', right_on='article', how='outer')
+    df = file_turnover.merge(file_net_cost, left_on='Артикул продавца', right_on='article', how='outer')
     df.replace("Товар на сайте менее 30 дн.", int(round(999 / 2)), inplace=True)
     df.replace(np.NaN, 0, inplace=True)
     df = df[(df['Остаток товара (шт.)'] > 0) & (df['Оборачиваемость'] is not None)]
