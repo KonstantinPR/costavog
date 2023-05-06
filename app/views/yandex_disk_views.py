@@ -25,14 +25,15 @@ from flask import send_file
 def get_files_from_dir_ydisk():
     """
     Взаимодействует с хранилищем яндекс.диска через API,
-    Вытаскивает из указанной папки все найденные файлы в листе.
+    Вытаскивает из указанной папки все найденные файлы в листе (название файла полное - включая расширение).
     На 15.02.2023 - рабочий вариант
-    :return:
     """
     if request.method == "POST":
         text_input = request.form["text_input"]
+        dir_path = request.form["dir_path"]
+        if not dir_path:
+            dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
         file_name_list = text_input.split()
-        dir_path = "ФОТОГРАФИИ/НОВЫЕ/2"
         zip_name = f"ziped_files_from_{dir_path}.zip"
         zip_name = re.sub('[\W]+\.', '_', zip_name)
 
