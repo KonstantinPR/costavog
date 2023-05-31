@@ -41,6 +41,14 @@ def concatenate_detailing_modul(zip_downloaded, df_net_cost):
     return result
 
 
+def days_between(d1, d2):
+    if d1:
+        d1 = datetime.strptime(d1, "%Y-%m-%d")
+        # d2 = datetime.strptime(d2, "%Y-%m-%d")
+        return abs((d2 - d1).days)
+    return None
+
+
 def zip_detail(zip_downloaded, df_net_cost):
     df_list = zips_to_list(zip_downloaded)
     result = pd.concat(df_list)
@@ -77,12 +85,20 @@ def zip_detail(zip_downloaded, df_net_cost):
                                            'Предмет',
                                            'Бренд',
                                            'Услуги по доставке товара покупателю',
-                                           'Цена розничная с учетом согласованной скидки'],
+                                           'Цена розничная с учетом согласованной скидки',
+                                           'Дата заказа покупателем',
+                                           'Дата продажи',
+
+                                           ],
                                    aggfunc={'Код номенклатуры': max,
                                             'Предмет': max,
                                             'Бренд': max,
                                             'Услуги по доставке товара покупателю': sum,
-                                            'Цена розничная с учетом согласованной скидки': max, },
+                                            'Цена розничная с учетом согласованной скидки': max,
+                                            'Дата заказа покупателем': min,
+                                            'Дата продажи': min,
+
+                                            },
                                    margins=False)
 
     df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
@@ -144,6 +160,9 @@ def zip_detail(zip_downloaded, df_net_cost):
 
         df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
         df_result['Предмет_x'].fillna(df_result['Предмет_y'])
+        today = datetime.today()
+        print(f'today {today}')
+        df_result['Дней в продаже'] = [days_between(d1, today) for d1 in df_result['Дата заказа покупателем']]
         df_result.to_excel('df_result.xlsx')
 
         df_result = df_result[[
@@ -171,6 +190,9 @@ def zip_detail(zip_downloaded, df_net_cost):
             'Доставки/Возвраты, руб.',
             'Себестоимость продаж',
             'Поставщик',
+            'Дата заказа покупателем',
+            'Дата продажи',
+            'Дней в продаже',
 
         ]]
 

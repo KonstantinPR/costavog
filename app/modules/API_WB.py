@@ -10,6 +10,7 @@ def get_wb_stock_api():
     """to modify wb stock"""
 
     df = df_wb_stock_api()
+    # df.to_excel('stock.xlsx')
 
     df = df.pivot_table(index=['nmId'],
                         values=['quantity',

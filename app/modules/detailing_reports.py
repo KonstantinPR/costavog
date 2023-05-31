@@ -79,6 +79,7 @@ DATE_FORMAT = "%Y-%m-%d"
 DAYS_DELAY_REPORT = 5
 DATE_PARTS = 3
 K_SMOOTH = 1
+MIN_DAYS_ON_SITE_TO_ANALIZE = 28
 
 
 def _revenue_per_one(rev, sel, net, log):
@@ -185,12 +186,14 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     # коэффициент влияния на скидку
     df['k_discount'] = 1
     # если не было продаж и текущая цена выше себестоимости, то увеличиваем скидку (коэффициент)
+
     df = get_k_discount(df, df_revenue_col_name_list)
+
     df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
     df['Согласованная скидка, %'] = [3 if x < 3 else x for x in df['Согласованная скидка, %']]
-    df['Согласованная скидка, %'] = [0 if x <= 0 else x for x in df['Согласованная скидка, %']]
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
+
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
     df['Остаток в розничных ценах'] = df['price_disc'] * df['quantity']
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
@@ -254,9 +257,11 @@ def revenue_processing_module(request):
     k_smooth = request_k_smooth(request)
 
     # --- GET DATA VIA WB API /// ---
+
     df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
     df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
+
     df_stock = API_WB.get_wb_stock_api()
     df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
@@ -295,6 +300,7 @@ def revenue_processing_module(request):
     df.fillna(0, inplace=True, downcast='infer')
     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+
     df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
@@ -347,15 +353,15 @@ def k_is_sell(sell_sum, net_cost):
     # нет продаж и товара много
 
     if sell_sum == 0:
-        return 1.01
+        return 1.03
     if sell_sum > 10 * k_net_cost:
-        return 0.96
-    if sell_sum > 5 * k_net_cost:
         return 0.97
-    if sell_sum > 3 * k_net_cost:
+    if sell_sum > 5 * k_net_cost:
         return 0.98
+    if sell_sum > 3 * k_net_cost:
+        return 0.99
 
-    return 1.01
+    return 1
 
 
 def k_qt_full(qt):
@@ -411,20 +417,21 @@ def k_net_cost(net_cost, price_disc):
         net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost) * 2
     if k_net_cost < 1:  k_net_cost = 1
-
     if price_disc <= net_cost:
-        return 0.93
-    if price_disc <= net_cost * k_net_cost:
         return 0.95
-    if price_disc <= net_cost * 1.3 * k_net_cost:
-        return 0.98
-    if price_disc <= net_cost * 1.1 * k_net_cost:
+    if price_disc <= net_cost * k_net_cost:
         return 0.97
+    if price_disc <= net_cost * 1.3 * k_net_cost:
+        return 0.99
+    if price_disc <= net_cost * 1.1 * k_net_cost:
+        return 0.98
     if price_disc >= net_cost * 4 * k_net_cost:
-        return 1.05
+        return 1.04
     if price_disc >= net_cost * 3 * k_net_cost:
         return 1.03
     if price_disc >= net_cost * 2 * k_net_cost:
+        return 1.02
+    if price_disc > net_cost * k_net_cost:
         return 1.01
     if price_disc == 0:
         return 1
@@ -445,8 +452,11 @@ def get_k_discount(df, df_revenue_col_name_list):
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_qt_full'] = [k_qt_full(x) for x in df['quantity']]
-    df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
-        'k_qt_full']) / 5
+    # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
+    #     'k_qt_full']) / 5
+    df['k_discount'] = 1
+    df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
+        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full']) / 5
 
     return df
 
