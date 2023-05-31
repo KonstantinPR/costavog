@@ -127,7 +127,7 @@ def get_all_cards_api_wb(textSearch: str = None):
         # print(df_json['data']['cursor']['nmID'])
 
         total = df_json['data']['cursor']['total']
-        updatedAt = df_json['data']['cursor']['updatedAt']
+        # updatedAt = df_json['data']['cursor']['updatedAt']
         nmId = df_json['data']['cursor']['nmID']
         # df = pd.DataFrame(df_json['data']['cards'])
         dfs = dfs + df_json['data']['cards']

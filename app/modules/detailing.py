@@ -175,7 +175,6 @@ def zip_detail(zip_downloaded, df_net_cost):
         ]]
 
         df_result = df_result.reindex(df_result.columns, axis=1)
-
         df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
 
         return df_result
