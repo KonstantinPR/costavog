@@ -86,6 +86,7 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
 
 
 def get_all_cards_api_wb(textSearch: str = None):
+    print("get_all_cards_api_wb ...")
     limit = 1000
     total = 1000
     updatedAt = None

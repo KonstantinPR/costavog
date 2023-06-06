@@ -21,6 +21,7 @@ SPEC_TYPE = {
     'MHSD': 'SHOES',
     'MHSB': 'SHOES',
     'J': 'JEANS',
+    'DEFAULT': 'DEFAULT',
 
 }
 
@@ -74,11 +75,11 @@ def spec_definition(df):
     else:
         prefix = df['Артикул товара'][0].split('-')[0]
 
-    if SPEC_TYPE[prefix]:
+    try:
         spec_type = SPEC_TYPE[prefix]
-    else:
+    except KeyError:
         spec_type = SPEC_TYPE['DEFAULT']
-    # print(spec_type)
+
     return spec_type
 
 
@@ -109,16 +110,20 @@ def picking_prefixes(df, df_art_prefixes):
     df['Префикс'] = ''
     df['Лекало'] = ''
     for idx, art in enumerate(df['Артикул товара']):
-        for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
-            for i in pattern.split():
-                art_prefix = df_art_prefixes['Префикс'][idy]
-                # print(art_prefix)
-                dash_prefix = wrap_prefix_by_dash(art_prefix, i)
-                # print(dash_prefix)
-                if dash_prefix in art and art.startswith(art_prefix):
-                    df.at[idx, 'Лекало'] = pattern
-                    df.at[idx, 'Префикс'] = df_art_prefixes.at[idy, 'Префикс']
-                    break
+        try:
+            for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
+                for i in pattern.split():
+                    art_prefix = df_art_prefixes['Префикс'][idy]
+                    # print(art_prefix)
+                    dash_prefix = wrap_prefix_by_dash(art_prefix, i)
+                    # print(dash_prefix)
+                    if dash_prefix in art and art.startswith(art_prefix):
+                        df.at[idx, 'Лекало'] = pattern
+                        df.at[idx, 'Префикс'] = df_art_prefixes.at[idy, 'Префикс']
+                        break
+        except KeyError:
+            break
+
     return df
 
 
@@ -158,17 +163,21 @@ def col_adding(df_income):
 
     # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
+    print("sizes_pick ...")
     for idx, art in enumerate(df_income['Артикул товара']):
         # print(idx)
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
 
+
     # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат красиво например 1990 или 790
+    print("price_pick ...")
     if 'Цена' in df_income.columns:
         df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in
                              df_income['Цена']]
 
     # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
+    print("desc_white ...")
     random_wedding_desc = [
         f' Дополнительный аксессуар к свадебному образу.',
         f' Теплый аксессуар к свадебному платью в прохладный сезон.',
@@ -177,6 +186,7 @@ def col_adding(df_income):
     ]
     wedding_desc = random_wedding_desc[randrange(len(random_wedding_desc))]
 
+    print("color ...")
     if 'Цвет' not in df_income.columns:
         # add 'Цвет' column to df
         df_income['Цвет'] = ''
@@ -185,6 +195,7 @@ def col_adding(df_income):
         if color in ['белый', 'молочный', 'светло-бежевый', 'бежевый'] and df_income['Префикс'][idx] == 'SK':
             df_income['Описание'][idx] += wedding_desc
 
+    print("number_card_pattern ...")
     # нумеруем карточки на основе лекал, если нет лекал - на основе одинаковых артикулей
     set_patterns = set(df_income['Лекало'])
     set_art = set(df_income['Артикул товара'])
@@ -195,6 +206,7 @@ def col_adding(df_income):
     dict_arts = {k: v for v, k in enumerate(set_art, len(set_art) + len(set_patterns) + 1)}
     # print(f'dict_arts {dict_arts}')
 
+
     number_card_col_name = 'Номер карточки'
     if not number_card_col_name in df_income.columns:
         df_income[number_card_col_name] = ''
@@ -204,14 +216,17 @@ def col_adding(df_income):
         if dict_patterns[pattern] and not df_income[number_card_col_name][idx]:
             df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
+    print("number_card_art ...")
     for idx, art in enumerate(df_income['Артикул товара']):
         if not df_income[number_card_col_name][idx]:
             df_income[number_card_col_name][idx] = dict_arts[art]
 
     # создаем дополнительный столбец равный артикулу поствщика
+    print("art_duplicate ...")
     df_income['Артику поставщика'] = df_income['Артикул товара']
 
     # создаем дополнительный столбец равный категории
+    print("equil_category ...")
     if not 'Категория' in df_income.columns and 'Предмет' in df_income.columns:
         df_income['Категория'] = df_income['Предмет']
 
@@ -221,6 +236,7 @@ def col_adding(df_income):
 
 def col_str(df, lst: list):
     # print(df)
+    print("col_str ...")
     for col in lst:
         if col in df.columns:
             df[col] = [str(x) if not pd.isna(x) else x for x in df[col]]
@@ -228,6 +244,7 @@ def col_str(df, lst: list):
 
 
 def sizes_translate(df, spec_type):
+    print("sizes_translate ...")
     if spec_type.startswith("J"):
         df['Рос. размер'] = df['Размер'].map(JEANS_SIZES)
     return df
