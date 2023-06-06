@@ -79,9 +79,10 @@ def data_to_spec_merging():
     """Смержить 2 excel файла, порядок в алфавитном - в первом оставляем, если уже были"""
     if request.method == 'POST':
         uploaded_files = flask.request.files.getlist("file")
+        col_merge = int(request.form['multiply_number'])
         df_from = pd.read_excel(uploaded_files[0])
         df_to = pd.read_excel(uploaded_files[1])
-        df = spec_modifiyer.merge_spec(df_to, df_from, left_on='Артикул продавца', right_on='Артикул продавца')
+        df = spec_modifiyer.merge_spec(df_to, df_from, left_on=col_merge, right_on=col_merge)
         df = io_output.io_output(df)
 
         return send_file(df, as_attachment=True, download_name='spec.xlsx')
