@@ -1,6 +1,5 @@
 from app import app
 from flask import flash
-
 from flask_login import current_user
 from app.models import UserModel, Transaction, db, Company
 import datetime

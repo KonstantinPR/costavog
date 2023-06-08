@@ -36,7 +36,9 @@ VISIBLE_COL = [
     'k_logistic',
     'k_net_cost',
     'k_qt_full',
-    'Номенклатура (код 1С)'
+    'Номенклатура (код 1С)',
+    'Рейтинг',
+    'Кол-во отзывов',
 ]
 
 IMPORTANT_COL_DESC = [
@@ -268,7 +270,8 @@ def revenue_processing_module(request):
 
     # --- GET NET_COST FROM YADISK /// ---
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-
+    df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
+    df_rating.to_excel('df_rating.xlsx')
     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
     df_sales_pivot.to_excel('sales_pivot.xlsx')
     # таблица с итоговыми значениями с префиксом _sum
@@ -286,9 +289,9 @@ def revenue_processing_module(request):
         df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
         df = df_pivot
 
-
     df_price = get_wb_price_api()
     df = df.merge(df_price, how='outer', on='nm_id')
+    df = df.merge(df_rating, how='outer', left_on='nm_id', right_on="Артикул")
 
     df_complete = df.merge(df_stock, how='outer', on='nm_id')
     df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
@@ -439,6 +442,20 @@ def k_net_cost(net_cost, price_disc):
     return 1
 
 
+def k_rating(rating, qt_rating):
+    if rating == 5:
+        return 0.98
+    if rating == 4:
+        return 0.99
+    if rating == 3:
+        return 1
+    if rating == 2:
+        return 1.01
+    if rating == 1:
+        return 1.02
+    return 1
+
+
 def get_k_discount(df, df_revenue_col_name_list):
     # если не было продаж увеличиваем скидку
     df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['net_cost'])]
@@ -452,11 +469,12 @@ def get_k_discount(df, df_revenue_col_name_list):
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
     df['k_qt_full'] = [k_qt_full(x) for x in df['quantity']]
+    df['k_rating'] = [k_rating(x, y) for x, y in zip(df['Рейтинг'], df['Кол-во отзывов'])]
     # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
     #     'k_qt_full']) / 5
     df['k_discount'] = 1
     df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
-        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full']) / 5
+        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
     return df
 
