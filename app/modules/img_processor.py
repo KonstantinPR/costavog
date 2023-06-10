@@ -121,11 +121,13 @@ def create_folder_structure(df):
         shutil.rmtree(app.config['TMP_IMG_FOLDER'])
         os.makedirs(folder_path, exist_ok=True)
         for article in df["Article"]:
-            os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+            # os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+            os.makedirs(f"{folder_path}/{article}", exist_ok=True)
     except:
         os.makedirs(folder_path, exist_ok=True)
         for article in df["Article"]:
-            os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+            # os.makedirs(f"{folder_path}/{article}/photo", exist_ok=True)
+            os.makedirs(f"{folder_path}/{article}", exist_ok=True)
 
     return folder_path
 
@@ -213,9 +215,11 @@ def copy_images_to_folders(image_files, renamed_duplicates, folder_path, marketp
                 if marketplace == "WB":
                     real_name = name
                     if renamed_duplicates: real_name = renamed_duplicates[name]
-                    shutil.copyfile(f"{image_files[name]}/{real_name}", f"{folder_path}/{folder_name}/photo/{name}")
+                    # shutil.copyfile(f"{image_files[name]}/{real_name}", f"{folder_path}/{folder_name}/photo/{name}")
+                    shutil.copyfile(f"{image_files[name]}/{real_name}", f"{folder_path}/{folder_name}/{name}")
                     if folder_name.startswith(tuple(PREF_LIST)):
-                        img_watermark(f"{folder_path}/{folder_name}/photo/{name}", folder_name)
+                        # img_watermark(f"{folder_path}/{folder_name}/photo/{name}", folder_name)
+                        img_watermark(f"{folder_path}/{folder_name}/{name}", folder_name)
 
                 if marketplace == "OZON":
                     shutil.copyfile(f"{image_files[name]}/{name}", f"{folder_path}/{name}")

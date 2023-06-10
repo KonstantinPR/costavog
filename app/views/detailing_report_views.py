@@ -40,7 +40,7 @@ def revenue_processing():
     report on any periods of date
     """
 
-    if not current_user.is_authenticated:
+    if not current_user.is_authenticated:   
         return redirect('/company_register')
 
     if request.method == 'POST':
