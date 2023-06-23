@@ -16,7 +16,7 @@ VISIBLE_COL = [
     'nm_id',
     'Артикул WB',
     'supplierArticle',
-    'Согласованная скидка, %',
+    'Новая скидка',
     'discount',
     'Согл. скидк - disc',
     'price_disc',
@@ -36,6 +36,7 @@ VISIBLE_COL = [
     'k_logistic',
     'k_net_cost',
     'k_qt_full',
+    'k_rating',
     'Номенклатура (код 1С)',
     'Рейтинг',
     'Кол-во отзывов',
@@ -51,7 +52,7 @@ IMPORTANT_COL_DESC = [
 ]
 
 IMPORTANT_COL_REPORT = [
-    'Согласованная скидка, %',
+    'Новая скидка',
     'discount',
     'Согл. скидк - disc',
     'price_disc'
@@ -191,14 +192,14 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
 
     df = get_k_discount(df, df_revenue_col_name_list)
 
-    df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
-    df['Согласованная скидка, %'] = [3 if x < 3 else x for x in df['Согласованная скидка, %']]
-    df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
-                                          (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
+    df['Новая скидка'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
+    df['Новая скидка'] = [3 if x < 3 else x for x in df['Новая скидка']]
+    df['Новая скидка'] = round(df['Новая скидка'] + \
+                                          (df['Новая скидка'] - df['discount']) / k_smooth, 0)
 
-    df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
+    df['Согл. скидк - disc'] = df['Новая скидка'] - df['discount']
     df['Остаток в розничных ценах'] = df['price_disc'] * df['quantity']
-    # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
+    # df['Новая скидка'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
     df['Номенклатура (код 1С)'] = df['nm_id']
     df['supplierArticle'] = np.where(df['supplierArticle'] is None, df['article'], df['supplierArticle'])
     return df
