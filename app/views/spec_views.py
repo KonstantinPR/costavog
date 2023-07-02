@@ -6,6 +6,7 @@ import pandas as pd
 from app.modules import io_output, spec_modifiyer, yandex_disk_handler, df_worker, base_module, API_WB, \
     data_transforming_module, request_handler
 from flask_login import login_required
+import time
 
 
 @app.route('/data_to_spec_wb_transcript', methods=['GET', 'POST'])
@@ -27,9 +28,10 @@ def data_to_spec_wb_transcript():
         df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
         df_income_date = df_income_date.reset_index(drop=True)
         # print(df_income_date)
-
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
         spec_type = spec_modifiyer.spec_definition(df_income_date)
+
+        time.sleep(1)
         print(spec_type)
         df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],
                                                                         to_str=['Лекало', 'Префикс'])

@@ -34,6 +34,7 @@ app.config['USER_ROLE'] = 'user'
 app.config['NOBODY'] = 'nobody'
 app.config['YANDEX_FOLDER'] = "C:\YandexDisk"
 app.config['TMP_IMG_FOLDER'] = "folder_img"
+app.config['YANDEX_PATH'] = ''
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\YandexDisk\ФОТОГРАФИИ\НОВЫЕ"

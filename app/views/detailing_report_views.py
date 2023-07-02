@@ -59,26 +59,10 @@ def get_wb_sales_realization_api():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':
-        if request.form.get('date_from'):
-            date_from = request.form.get('date_from')
-        else:
-            date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
-            date_from = date_from.strftime("%Y-%m-%d")
 
-        print(date_from)
-
-        if request.form.get('date_end'):
-            date_end = request.form.get('date_end')
-        else:
-            date_end = time.strftime("%Y-%m-%d")
-
-        print(date_end)
-
-        if request.form.get('days_step'):
-            days_step = request.form.get('days_step')
-        else:
-            days_step = app.config['DAYS_STEP_DEFAULT']
-
+        date_from = detailing_reports.request_date_from(request)
+        date_end = detailing_reports.request_date_end(request)
+        days_step = detailing_reports.request_days_step(request)
         t = time.process_time()
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
@@ -106,27 +90,9 @@ def get_wb_pivot_sells_api() -> object:
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':
-
-        if request.form.get('date_from'):
-            date_from = request.form.get('date_from')
-        else:
-            date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
-            date_from = date_from.strftime("%Y-%m-%d")
-
-        print(date_from)
-
-        if request.form.get('date_end'):
-            date_end = request.form.get('date_end')
-        else:
-            date_end = time.strftime("%Y-%m-%d")
-
-        print(date_end)
-
-        if request.form.get('days_step'):
-            days_step = request.form.get('days_step')
-        else:
-            days_step = app.config['DAYS_STEP_DEFAULT']
-
+        date_from = detailing_reports.request_date_from(request)
+        date_end = detailing_reports.request_date_end(request)
+        days_step = detailing_reports.request_days_step(request)
         df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
         df_stock = API_WB.get_wb_stock_api()

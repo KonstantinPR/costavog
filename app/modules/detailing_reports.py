@@ -26,6 +26,7 @@ VISIBLE_COL = [
     'Остаток в розничных ценах',
     'Логистика руб',
     'Логистика шт',
+    'Логистика ед. средн',
     'net_cost',
     'quantity_Возврат_sum',
     'quantity_Продажа_sum',
@@ -166,6 +167,16 @@ def key_indicators_module(file_content):
 
     return df
 
+def divide_handle(rub, sht):
+    try:
+        result = rub / sht
+    except ZeroDivisionError:
+        result = 0
+        print("Error: Division by zero occurred")
+    except Exception as e:
+        result = 0
+        print("Error: An exception occurred during the division:", e)
+    return result
 
 def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     # Формируем обобщающие показатели с префиксом _sum перед присоединением общей таблицы продаж
@@ -178,6 +189,7 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     df['Прибыль_growth'] = df['Прибыль_last'] - df['Прибыль_first']
     df['Логистика руб'] = df[[col for col in df.columns if "_rub_Логистика" in col]].sum(axis=1)
     df['Логистика шт'] = df[[col for col in df.columns if "_amount_Логистика" in col]].sum(axis=1)
+    df['Логистика ед. средн'] = [divide_handle(rub, sht) for rub, sht in zip(df['Логистика руб'], df['Логистика шт'])]
     df['price_disc'] = df['price'] * (1 - df['discount'] / 100)
 
     df['Продажи_уч_возврат_sum'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
@@ -269,7 +281,7 @@ def revenue_processing_module(request):
     df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
-    # --- GET NET_COST FROM YADISK /// ---
+    # --- GET DATA FROM YADISK /// ---
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
     df_rating.to_excel('df_rating.xlsx')
@@ -325,12 +337,14 @@ def revenue_processing_module(request):
     df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
     df = df.sort_values(by='Прибыль_sum')
 
-    file_name = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
+    file_name_specific = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
+    file_name_common = f"wb_dynamic_revenue_report.xlsx"
     file_content = io_output.io_output(df)
     # добавляем полученный файл на яндекс.диск
-    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name)
+    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_specific)
+    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_common, app_config_path=app.config['YANDEX_PATH'])
 
-    return df, file_name
+    return df, file_name_specific
 
 
 def combine_duplicate_column(df, col_name_in: str, list_re_col_names: list):
