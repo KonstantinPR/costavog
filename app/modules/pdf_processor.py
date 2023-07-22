@@ -27,8 +27,8 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
 
         more = ""
 
-        if df[df[art_col_name] == art_set][rev].values[0] >= 1000: more = "   * 1"
-        if df[df[art_col_name] == art_set][rev].values[0] >= 10000: more = "   * *  2"
+        # if df[df[art_col_name] == art_set][rev].values[0] >= 1000: more = "   * 1"
+        # if df[df[art_col_name] == art_set][rev].values[0] >= 10000: more = "   * *  2"
 
         txt = f"{art_set}{more}"
         new_y = step

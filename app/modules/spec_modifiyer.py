@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from random import randrange
 
+COL_ART_NAME = "Артикул товара"
+
 PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 10000**0.3 = 2.52"""
 """40 / 1000**0.3 = 5.03"""
@@ -30,9 +32,9 @@ JEANS_SIZES = {
     '24': '38',
     '25': '38-40',
     '26': '40',
-    '27': '42',
-    '28': '42-44',
-    '29': '44',
+    '27': '40-42',
+    '28': '42',
+    '29': '42-44',
     '30': '44-46',
     '31': '46',
     '32': '46-48',
@@ -83,7 +85,7 @@ def spec_definition(df):
     return spec_type
 
 
-def merge_spec(df1, df2, left_on='Артикул товара', right_on='Артикул товара', how='outer') -> pd.DataFrame:
+def merge_spec(df1, df2, left_on=COL_ART_NAME, right_on=COL_ART_NAME, how='outer') -> pd.DataFrame:
     print("merge_spec ...")
     # print(df1)
     # print(df2)

@@ -317,7 +317,9 @@ def revenue_processing_module(request):
     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
 
+
     df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
+
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 
@@ -488,9 +490,13 @@ def get_k_discount(df, df_revenue_col_name_list):
     # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
     #     'k_qt_full']) / 5
     df['k_discount'] = 1
-    df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
-        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
+    # IMPORTANT !!! days on site was delete some 12/07/2023
+    # df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
+    #     (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
+
+    df.loc[(df['quantity'] > 0), 'k_discount'] = \
+        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
     return df
 
 

@@ -4,6 +4,8 @@ import numpy as np
 import os
 
 
+
+
 def demand_calculation_df_to_pdf(df):
     df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
     qt_sum = int(df['Кол-во'].sum())

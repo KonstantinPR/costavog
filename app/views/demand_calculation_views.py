@@ -39,7 +39,9 @@ def demand_calculation_with_image_catalog():
     Каталог PDF с потребностями:
     Делает PDF каталог с потребностями. С фото артикула и другой информацией.
     Работает на локальном яндекс.диске.
-    Напечатает те артикулы, которые передали в txt с шапкой vendorCode или через копипасту.
+    Напечатает те артикулы, которые передали в txt с шапкой vendorCode, [techSize], [Кол-во]  или через копипасту.
+    Если не указаны размеры - тогда по 1й, если не указаны размеры - то скачается через API анализ какие размеры нужны
+    (долго).
     В строке пишем через пробел подстроки, которые ищем в артикуле, которые хотим вывести в каталог.
     Если передали файл - то приоритет у файла, строка работать не будет. Если файла нет - работает строка.
     """
@@ -55,7 +57,9 @@ def demand_calculation_with_image_catalog():
             return render_template('upload_demand_calculation_with_image_catalog.html',
                                    doc_string=demand_calculation_with_image_catalog.__doc__)
 
-        df = demand_calculation_module.demand_calculation_to_df(df, search_string)
+        if not all(col in df for col in ['vendorCode', 'techSize', 'Кол-во']):
+            df = demand_calculation_module.demand_calculation_to_df(df, search_string)
+
         pdf = demand_calculation_module.demand_calculation_df_to_pdf(df)
 
         return send_file(pdf, as_attachment=True)

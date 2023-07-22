@@ -119,8 +119,8 @@ def get_all_cards_api_wb(textSearch: str = None):
 
         response = requests.post(url, data=data, headers=headers)
 
-        # print(type(response))
-        # print(response)
+        print(type(response))
+        print(response)
         df_json = response.json()
         # print(type(df_json))
         # print(df_json)
