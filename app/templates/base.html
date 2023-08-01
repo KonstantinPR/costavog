@@ -75,6 +75,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -165,7 +166,8 @@
                         Yandex Disk
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkYADISK">
-                        <a class="dropdown-item" href="{{url_for('get_files_from_dir_ydisk')}}">Получить файлы из папки</a>
+                        <a class="dropdown-item" href="{{url_for('get_files_from_dir_ydisk')}}">Получить файлы из
+                            папки</a>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -179,6 +181,15 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('upload_products')}}">Загрузки </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkYouTube" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        YouTube
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkSoundYouTube">
+                        <a class="dropdown-item" href="{{url_for('get_youtube_sound')}}">Звук с YouTube</a>
+                    </ul>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkUser" role="button"
@@ -242,6 +253,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

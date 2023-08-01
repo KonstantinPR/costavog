@@ -49,7 +49,13 @@ def io_img_output(img: Image.Image) -> BytesIO:
     img_io.seek(0)
     return img_io
 
-# def io_output_all(file_io):
-#     file_io = BytesIO()
-#     file_io.seek(0)
-#     return file_io
+def io_output_all(file_io):
+    file_io = BytesIO()
+    file_io.seek(0)
+    return file_io
+
+def io_audio_stream(audio_stream):
+    audio_buffer = BytesIO()
+    audio_stream.stream_to_buffer(audio_buffer)
+    audio_buffer.seek(0)
+    return audio_buffer

@@ -161,11 +161,11 @@ def _get_exclude_duplicates(file, subentry, image_files, art_paths_dict):
     return image_files
 
 
-def order_by(entity, order='descending'):
-    if order == 'descending':
-        return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
+def order_by(entity, order='ascending'):
+    if order == 'ascending':
+        return sorted(os.scandir(entity), key=lambda x: x.name, reverse=False)
     else:
-        return entity
+        return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
 
 
 def get_image_files(images_folder: dict, is_replace: str) -> tuple:

@@ -205,7 +205,7 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     df = get_k_discount(df, df_revenue_col_name_list)
 
     df['Новая скидка'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
-    df['Новая скидка'] = [3 if x < 3 else x for x in df['Новая скидка']]
+    df['Новая скидка'] = [3 if 1 <= x < 3 else x for x in df['Новая скидка']]
     df['Новая скидка'] = round(df['Новая скидка'] + \
                                           (df['Новая скидка'] - df['discount']) / k_smooth, 0)
 
@@ -368,6 +368,7 @@ def _insert_missing_values(val_col_in, val_col_from):
 
 # /// --- K REVENUE FORMING ---
 def k_is_sell(sell_sum, net_cost):
+    '''v 1.0'''
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
@@ -382,6 +383,7 @@ def k_is_sell(sell_sum, net_cost):
         return 0.99
 
     return 1
+
 
 
 def k_qt_full(qt):
@@ -475,7 +477,7 @@ def k_rating(rating, qt_rating):
 
 def get_k_discount(df, df_revenue_col_name_list):
     # если не было продаж увеличиваем скидку
-    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['quantity_Продажа_sum'], df['net_cost'])]
+    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['Продажи_уч_возврат_sum'], df['net_cost'])]
     # постоянно растет или падает прибыль, отрицательная или положительная
     df['k_revenue'] = [k_revenue(w, x, y, z) for w, x, y, z in
                        zip(df['quantity_Продажа_sum'], df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
@@ -523,7 +525,7 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
     df['rr_dt'] = pd.to_datetime(df['rr_dt'])
     # df = df.set_index(df['rr_dt'])
     # df = df.sort_index()
-    print(df)
+    # print(df)
 
     if isinstance(date_from, str):
         date_from = datetime.datetime.strptime(date_from, date_format)
@@ -537,7 +539,7 @@ def dataframe_divide(df, period_dates_list, date_from, date_format="%Y-%m-%d"):
         # df = df[date_from:date_end]
 
         d = df[(df['rr_dt'] > date_from) & (df['rr_dt'] <= date_end)]
-        print(f"d {d}")
+        # print(f"d {d}")
         date_from = date_end
         df_list.append(d)
 

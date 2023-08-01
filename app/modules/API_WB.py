@@ -10,15 +10,14 @@ def get_wb_stock_api():
     """to modify wb stock"""
 
     df = df_wb_stock_api()
-    # df.to_excel('stock.xlsx')
 
     df = df.pivot_table(index=['nmId'],
                         values=['quantity',
-                                'daysOnSite',
+                                # 'daysOnSite',
                                 'supplierArticle',
                                 ],
                         aggfunc={'quantity': sum,
-                                 'daysOnSite': max,
+                                 # 'daysOnSite': max,
                                  'supplierArticle': max,
                                  },
                         margins=False)
@@ -41,9 +40,10 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
     headers = {'Authorization': api_key}
 
     response = requests.get(url, headers=headers)
-    print(response)
+    # print(response)
     df = response.json()
     df = pd.json_normalize(df)
+    # df.to_excel("wb_stock.xlsx")
 
     return df
 
@@ -120,7 +120,6 @@ def get_all_cards_api_wb(textSearch: str = None):
         response = requests.post(url, data=data, headers=headers)
 
         print(type(response))
-        print(response)
         df_json = response.json()
         # print(type(df_json))
         # print(df_json)
@@ -183,13 +182,13 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     # print(time.process_time() - t)
     response = requests.get(url_all, headers=headers)
 
-    print(response)
+    # print(response)
     # print(response)
 
     df = response.json()
     df = pd.json_normalize(df)
 
-    print(df)
+    # print(df)
     # print(time.process_time() - t)
 
     return df
