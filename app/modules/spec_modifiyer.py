@@ -16,6 +16,7 @@ SPEC_TYPE = {
     'MHOJ': 'ECO_FURS_WOMEN',
     'MHOC': 'ECO_FURS_WOMEN',
     'MHOF': 'ECO_FURS_WOMEN',
+    'IAOC': 'ECO_FURS_WOMEN',
     'TIE': 'TIE',
     'MIT': 'MIT',
     'MHSU': 'SHOES',
@@ -24,7 +25,6 @@ SPEC_TYPE = {
     'MHSB': 'SHOES',
     'J': 'JEANS',
     'DEFAULT': 'DEFAULT',
-
 }
 
 JEANS_SIZES = {
