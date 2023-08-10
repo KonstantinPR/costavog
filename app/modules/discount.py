@@ -184,10 +184,10 @@ def discount(file_turnover: pd.DataFrame, file_net_cost: pd.DataFrame) -> pd.Dat
                                               df["Текущая конечная цена"],
                                               )]
 
-    df["Новая скидка"] = df["Текущая скидка на сайте, %"] + df["Рек. поправка к скидке"]
+    df["Согласованная скидка, %"] = df["Текущая скидка на сайте, %"] + df["Рек. поправка к скидке"]
 
-    df["Новая скидка"] = [is_discount_possible(x, y) for x, y in
-                                     zip(df["Новая скидка"],
+    df["Согласованная скидка, %"] = [is_discount_possible(x, y) for x, y in
+                                     zip(df["Согласованная скидка, %"],
                                          df["Текущая скидка на сайте, %"],
                                          )]
 

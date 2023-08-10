@@ -13,6 +13,8 @@ import requests
 # file_names = [f for f in listdir('detailing')]
 # print(file_names)
 
+STRFORMAT_DEFAULT = '%Y-%m-%d'
+
 
 def to_round_df(df_result):
     df_result = df_result.round(decimals=0)
@@ -43,7 +45,7 @@ def concatenate_detailing_modul(zip_downloaded, df_net_cost):
 
 def days_between(d1, d2):
     if d1:
-        d1 = datetime.strptime(d1, "%Y-%m-%d")
+        d1 = datetime.strptime(d1, STRFORMAT_DEFAULT)
         # d2 = datetime.strptime(d2, "%Y-%m-%d")
         return abs((d2 - d1).days)
     return None
@@ -52,6 +54,7 @@ def days_between(d1, d2):
 def zip_detail(zip_downloaded, df_net_cost):
     df_list = zips_to_list(zip_downloaded)
     result = pd.concat(df_list)
+    result.dropna(subset=["Артикул поставщика"], inplace=True)
     result.to_excel('result.xlsx')
 
     if 'К перечислению за товар' not in result:
@@ -66,19 +69,39 @@ def zip_detail(zip_downloaded, df_net_cost):
     df_pivot = result.pivot_table(index=['Артикул поставщика'],
                                   columns='Обоснование для оплаты',
                                   values=['К перечислению Продавцу за реализованный Товар',
-                                          'К перечислению за товар',
+                                          # 'К перечислению за товар',
                                           'Вознаграждение Вайлдберриз (ВВ), без НДС',
                                           'Количество доставок',
                                           'Количество возврата',
                                           'Услуги по доставке товара покупателю',
                                           ],
                                   aggfunc={'К перечислению Продавцу за реализованный Товар': sum,
-                                           'К перечислению за товар': sum,
+                                           # 'К перечислению за товар': sum,
                                            'Вознаграждение Вайлдберриз (ВВ), без НДС': sum,
                                            'Количество доставок': 'count',
                                            'Количество возврата': 'count',
                                            'Услуги по доставке товара покупателю': 'count', },
                                   margins=False)
+
+    # Calculate the mean date for 'Дата заказа покупателем' and 'Дата продажи'
+    mean_date_order = pd.to_datetime(result['Дата заказа покупателем']).mean()
+    mean_date_sale = pd.to_datetime(result['Дата продажи']).mean()
+
+    # Fill empty cells in specific columns with default values
+    default_values = {
+        'Код номенклатуры': 0,
+        'Предмет': 'None',
+        'Бренд': 'None',
+        'Услуги по доставке товара покупателю': 0,
+        'Цена розничная с учетом согласованной скидки': 0,
+        'Дата заказа покупателем': mean_date_order.strftime(STRFORMAT_DEFAULT),
+        'Дата продажи': mean_date_sale.strftime(STRFORMAT_DEFAULT),
+    }
+
+    for col, default_value in default_values.items():
+        result[col].fillna(default_value, inplace=True)
+
+    df_pivot.to_excel("df_pivot_revenue.xlsx")
 
     df_pivot2 = result.pivot_table(index=['Артикул поставщика'],
                                    values=['Код номенклатуры',
@@ -109,7 +132,7 @@ def zip_detail(zip_downloaded, df_net_cost):
         df_result = df_result.merge(df_net_cost.rename(columns={'article': 'Артикул поставщика'}), how='outer',
                                     on='Артикул поставщика')
 
-        print(df_result)
+        # print(df_result)
 
         df_result.replace(np.NaN, 0, inplace=True)
 
@@ -119,7 +142,7 @@ def zip_detail(zip_downloaded, df_net_cost):
         if ('К перечислению за товар', 'Возврат') not in df_result:
             df_result[('К перечислению за товар', 'Возврат')] = 0
 
-        print(df_result)
+        # print(df_result)
 
         df_result['Продажи'] = df_result[('К перечислению Продавцу за реализованный Товар', 'Продажа')] + \
                                df_result[('К перечислению за товар', 'Продажа')]

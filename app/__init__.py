@@ -60,7 +60,7 @@ app.config["FULL_PATH_ARRIVALS"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
 app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
-app.config['DAYS_STEP_DEFAULT'] = 28
+app.config['DAYS_STEP_DEFAULT'] = 14
 
 db.init_app(app)
 login.init_app(app)
