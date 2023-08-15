@@ -161,14 +161,14 @@ def _get_exclude_duplicates(file, subentry, image_files, art_paths_dict):
     return image_files
 
 
-def order_by(entity, order='ascending'):
-    if order == 'ascending':
+def order_by(entity, order_is='ascending'):
+    if order_is == 'ascending':
         return sorted(os.scandir(entity), key=lambda x: x.name, reverse=False)
     else:
         return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
 
 
-def get_image_files(images_folder: dict, is_replace: str) -> tuple:
+def get_image_files(images_folder: dict, is_replace: str, order_is: str) -> tuple:
     """
     Scans a given folder and returns a dictionary of image filenames and their corresponding paths.
     """
@@ -179,7 +179,7 @@ def get_image_files(images_folder: dict, is_replace: str) -> tuple:
     name_paths_dict = {}
     set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
 
-    for entry in order_by(images_folder):
+    for entry in order_by(images_folder, order_is):
         for subentry in order_by(entry.path):
             if subentry.is_dir():
                 for file in order_by(subentry.path):
@@ -260,14 +260,14 @@ def create_zip_file(folder_path):
     return return_data
 
 
-def img_foldering(df, marketplace, is_replace):
+def img_foldering(df, marketplace, is_replace, order_is):
     images_folder = app.config["YANDEX_FOLDER_IMAGE"]
 
     # Create folder structure
     folder_path = create_folder_structure(df)
 
     # Get image files
-    image_files, renamed_duplicates = get_image_files(images_folder, is_replace)
+    image_files, renamed_duplicates = get_image_files(images_folder, is_replace, order_is)
 
     # Copy images to folders
     copy_images_to_folders(image_files, renamed_duplicates, folder_path, marketplace)

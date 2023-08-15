@@ -50,14 +50,17 @@ def images_foldering():
     if good is wool then watermark will be placed like 150 x 300 см.
     if Article_WB is in columns (in second column) then - folder will be named by it, if not - then our art.
     ALL - take all photo of articles in all folders
-    ONLY_NEW - take photo only in folders with last photo with that art
+    ONLY_NEW - take photo only in one folder that will be seen
+    ASCENDING - take photo from oldest (first) folders with that articles
+    DESCENDING - take photo from last folders with that articles
 
     """
     if request.method == 'POST':
         df = request_handler.to_df(request, col_art_name="Article")
         markeplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
+        order_is = request.form["order_is"]
         print(f"markeplace {markeplace}")
-        return_data = img_processor.img_foldering(df, markeplace, is_replace)
+        return_data = img_processor.img_foldering(df, markeplace, is_replace, order_is)
         return send_file(return_data, as_attachment=True, download_name='image_zip.zip')
     return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)
