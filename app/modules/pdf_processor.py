@@ -16,7 +16,10 @@ def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_n
     no_photo_list = []
     new_y = 0
 
-    for idx, art_set in enumerate(set(df[art_col_name])):
+    unique_values_dict = {}.fromkeys(df[art_col_name])
+    unique_values = list(unique_values_dict.keys())
+
+    for idx, art_set in enumerate(unique_values):
         if os.path.isfile(f"folder_img/{art_set}-1.JPG"):
             pdf.add_page()
             pdf.image(f"folder_img/{art_set}-1.JPG", x=0, y=0, w=sheet_width, h=sheet_height)
