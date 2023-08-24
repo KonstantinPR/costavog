@@ -183,6 +183,15 @@ def concatenate_detailing():
 
         df = detailing.concatenate_detailing_modul(uploaded_files, df_net_cost)
 
+        def convert_to_date(date_str, default_date_unix=1577836800):  # Default: January 1, 2020
+            try:
+                return pd.to_datetime(date_str)
+            except (TypeError, ValueError):
+                return pd.to_datetime(default_date_unix, unit='s')
+
+        # Assuming df is your DataFrame
+        df['Дата заказа покупателем'] = df['Дата заказа покупателем'].apply(convert_to_date)
+
         date_end = df['Дата заказа покупателем'].max()
         df['Дата заказа покупателем'] = df['Дата заказа покупателем'].replace("1900-01-01", date_end)
         date_start = df['Дата заказа покупателем'].min()
@@ -227,9 +236,10 @@ def upload_detailing():
         else:
             df_net_cost = False
 
-        print(df_net_cost)
+        # print(df_net_cost)
 
         df = detailing.zip_detail(uploaded_files, df_net_cost)
+
 
         is_get_stock = request.form.get('is_get_stock')
 
