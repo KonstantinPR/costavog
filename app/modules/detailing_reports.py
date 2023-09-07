@@ -396,7 +396,7 @@ def k_qt_full(qt):
         k = 1.01
     if 50 < qt <= 100:
         k = 1.03
-    if 100 < qt <= 1000:
+    if qt > 100 :
         k = 1.04
     return k
 
@@ -442,11 +442,13 @@ def k_net_cost(net_cost, price_disc):
     if price_disc <= net_cost:
         return 0.95
     if price_disc <= net_cost * k_net_cost:
+        return 0.96
+    if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.97
     if price_disc <= net_cost * 1.3 * k_net_cost:
-        return 0.99
-    if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.98
+    if price_disc <= net_cost * 1.4 * k_net_cost:
+        return 0.99
     if price_disc >= net_cost * 4 * k_net_cost:
         return 1.04
     if price_disc >= net_cost * 3 * k_net_cost:
