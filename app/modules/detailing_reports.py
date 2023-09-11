@@ -375,6 +375,12 @@ def k_is_sell(sell_sum, net_cost):
 
     if sell_sum == 0:
         return 1.03
+    if sell_sum > 100 * k_net_cost:
+        return 0.94
+    if sell_sum > 50 * k_net_cost:
+        return 0.95
+    if sell_sum > 20 * k_net_cost:
+        return 0.96
     if sell_sum > 10 * k_net_cost:
         return 0.97
     if sell_sum > 5 * k_net_cost:
