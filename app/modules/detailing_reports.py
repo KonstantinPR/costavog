@@ -373,8 +373,8 @@ def k_is_sell(sell_sum, net_cost):
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
 
-    if sell_sum == 0:
-        return 1.03
+    if sell_sum == 0 or sell_sum == "":
+        return 1.01
     if sell_sum > 100 * k_net_cost:
         return 0.94
     if sell_sum > 50 * k_net_cost:
