@@ -13,6 +13,7 @@ import time
 @login_required
 def data_to_spec_wb_transcript():
     """
+    Не подтягивать по API артикулы c WB
     В спецификации должны быть товары одного вида - например только шубки или только обувь или только джинсы и т.д.
     Заполняется спецификация на основе справочников с яндекс.диска в TASKER.
     На входе excel с шапкой: Артикул товара, Размеры (размерный ряд товара в строку), Цена - не обязательная (оптовая).
@@ -56,16 +57,18 @@ def data_to_spec_wb_transcript():
         df = spec_modifiyer.sizes_translate(df, spec_type)
 
         # to check if art is already in wb:
-        # all_cards_wb_df = API_WB.get_all_cards_api_wb()
-        # name_excel_all_cards_wb = "all_cards_wb.xlsx"
-        # all_cards_wb_df.to_excel(name_excel_all_cards_wb)
-        # df = df.merge(all_cards_wb_df,
-        #               left_on=['Артикул товара', 'Размер'],
-        #               right_on=['vendorCode', 'techSize'],
-        #               how='outer',
-        #               suffixes=['', '_'],
-        #               indicator=True)
-        # df = df[df['_merge'] == 'left_only']
+        to_check_art_wb = request.form.get('to_check_art_wb')
+        if to_check_art_wb:
+            all_cards_wb_df = API_WB.get_all_cards_api_wb()
+            name_excel_all_cards_wb = "all_cards_wb.xlsx"
+            all_cards_wb_df.to_excel(name_excel_all_cards_wb)
+            df = df.merge(all_cards_wb_df,
+                          left_on=['Артикул товара', 'Размер'],
+                          right_on=['vendorCode', 'techSize'],
+                          how='outer',
+                          suffixes=['', '_'],
+                          indicator=True)
+            df = df[df['_merge'] == 'left_only']
 
         df_output = df.drop_duplicates(subset=['Артикул товара', 'Размер'], keep=False)
 

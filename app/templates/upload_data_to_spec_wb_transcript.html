@@ -13,8 +13,6 @@
     {% endfor %}
 
 
-
-
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
@@ -33,9 +31,18 @@
                                    class="form-control form-control-lg" type="text"
                                    name="size_forming">
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="to_check_art_wb"
+                                   name="to_check_art_wb"
+                                   id="to_check_art_wb">
+                            <label class="form-check-label" for="to_check_art_wb">
+                                Проверить есть ли уже загружаемые артикулы на WB
+                            </label>
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="w-100 btn btn-primary btn-lg" type="submit" value="Отправить">
                         </div>
+
                     </div>
                 </form>
             </div>

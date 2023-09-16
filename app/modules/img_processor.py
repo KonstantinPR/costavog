@@ -162,11 +162,11 @@ def _get_exclude_duplicates(file, subentry, image_files, art_paths_dict):
     return image_files
 
 
-def order_by(entity, order_is='ascending'):
-    if order_is == 'ascending':
+def order_by(entity, order_is='ASCENDING'):
+    print(order_is)
+    if order_is == 'ASCENDING':
         return sorted(os.scandir(entity), key=lambda x: x.name, reverse=False)
-    else:
-        return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
+    return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
 
 
 def get_image_files(images_folder: dict, is_replace: str, order_is: str) -> tuple:
@@ -181,7 +181,7 @@ def get_image_files(images_folder: dict, is_replace: str, order_is: str) -> tupl
     set_img_dicts = (image_files, renamed_duplicates, number_images_of_art)
 
     for entry in order_by(images_folder, order_is):
-        for subentry in order_by(entry.path):
+        for subentry in order_by(entry.path, order_is):
             if subentry.is_dir():
                 for file in order_by(subentry.path):
                     if file.is_file():
