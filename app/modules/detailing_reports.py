@@ -208,7 +208,7 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
 
     df = get_k_discount(df, df_revenue_col_name_list)
 
-    df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
+    df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 2)
 
     df['Согласованная скидка, %'] = [3 if 1 <= x < 3 else x for x in df['Согласованная скидка, %']]
 
