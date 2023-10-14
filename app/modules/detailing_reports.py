@@ -169,6 +169,7 @@ def key_indicators_module(file_content):
 
     return df
 
+
 def divide_handle(rub, sht):
     try:
         result = rub / sht
@@ -179,6 +180,7 @@ def divide_handle(rub, sht):
         result = 0
         print("Error: An exception occurred during the division:", e)
     return result
+
 
 def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     # Формируем обобщающие показатели с префиксом _sum перед присоединением общей таблицы продаж
@@ -319,9 +321,7 @@ def revenue_processing_module(request):
     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
 
-
     df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
-
 
     # df = detailing_reports.df_revenue_speed(df, period_dates_list)
 
@@ -355,9 +355,9 @@ def combine_duplicate_column(df, col_name_in: str, list_re_col_names: list):
     """insert in values of col_name_in dataframe column values from list_re_col_name if 0"""
     for col_name_from in list_re_col_names:
         df[col_name_in] = [_insert_missing_values(val_col_in, val_col_from) for
-            val_col_in, val_col_from in
-            zip(df[col_name_in], df[col_name_from])
-        ]
+                           val_col_in, val_col_from in
+                           zip(df[col_name_in], df[col_name_from])
+                           ]
     return df
 
 
@@ -392,7 +392,6 @@ def k_is_sell(sell_sum, net_cost):
     return 1.02
 
 
-
 def k_qt_full(qt):
     k = 1
     if qt <= 3:
@@ -403,7 +402,7 @@ def k_qt_full(qt):
         k = 1.01
     if 50 < qt <= 100:
         k = 1.03
-    if qt > 100 :
+    if qt > 100:
         k = 1.04
     return k
 
@@ -506,8 +505,40 @@ def get_k_discount(df, df_revenue_col_name_list):
     # df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
     #     (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
-    df.loc[(df['quantity'] > 0) | (df['Прибыль_sum'] != 0), 'k_discount'] = \
-        (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
+    weight_dict = {}
+    weight_dict['k_is_sell'] = 1.3
+    weight_dict['k_revenue'] = 1
+    weight_dict['k_logistic'] = 1
+    weight_dict['k_net_cost'] = 1.2
+    weight_dict['k_qt_full'] = 1
+    weight_dict['k_rating'] = 1
+
+    weighted_sum = (
+            df['k_is_sell'] * weight_dict['k_is_sell'] +
+            df['k_revenue'] * weight_dict['k_revenue'] +
+            df['k_logistic'] * weight_dict['k_logistic'] +
+            df['k_net_cost'] * weight_dict['k_net_cost'] +
+            df['k_qt_full'] * weight_dict['k_qt_full'] +
+            df['k_rating'] * weight_dict['k_rating']
+        # Add other coefficients here with their respective weights
+    )
+
+    # Calculate the total weight as the sum of individual weights
+    total_weight = sum(weight_dict.values())
+
+    # Update the 'k_discount' column based on the weighted sum and total weight
+    df.loc[(df['quantity'] > 0) | (df['Прибыль_sum'] != 0), 'k_discount'] = weighted_sum / total_weight
+
+    # df.loc[(df['quantity'] > 0) | (df['Прибыль_sum'] != 0), 'k_discount'] = \
+    #    (
+    #             df['k_is_sell'] * weight_dict['k_is_sell'] +
+    #             df['k_revenue'] * weight_dict['k_revenue'] +
+    #             df['k_logistic'] * weight_dict['k_logistic'] +
+    #             df['k_net_cost'] * weight_dict['k_net_cost'] +
+    #             df['k_qt_full'] * weight_dict['k_qt_full'] +
+    #             df['k_rating'] * weight_dict['k_rating']
+    #         # Add other coefficients here with their respective weights
+    #     ) / total_weight
 
     return df
 
