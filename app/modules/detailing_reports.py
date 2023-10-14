@@ -80,7 +80,9 @@ NEW_COL_ON_REVENUE = [
 DEFAULT_NET_COST = 1000
 
 DATE_FORMAT = "%Y-%m-%d"
-DAYS_DELAY_REPORT = 5
+# Задержка чтобы не брать количество дней в конце периода
+# на которые возможно еще не существует данных (зависит от API)
+DAYS_DELAY_REPORT = 1
 DATE_PARTS = 3
 K_SMOOTH = 1
 MIN_DAYS_ON_SITE_TO_ANALIZE = 28
@@ -352,8 +354,7 @@ def revenue_processing_module(request):
 def combine_duplicate_column(df, col_name_in: str, list_re_col_names: list):
     """insert in values of col_name_in dataframe column values from list_re_col_name if 0"""
     for col_name_from in list_re_col_names:
-        df[col_name_in] = [
-            _insert_missing_values(val_col_in, val_col_from) for
+        df[col_name_in] = [_insert_missing_values(val_col_in, val_col_from) for
             val_col_in, val_col_from in
             zip(df[col_name_in], df[col_name_from])
         ]
@@ -373,8 +374,6 @@ def k_is_sell(sell_sum, net_cost):
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
     # нет продаж и товара много
 
-    if sell_sum == 0 or sell_sum == "":
-        return 1.02
     if sell_sum > 100 * k_net_cost:
         return 0.94
     if sell_sum > 50 * k_net_cost:
@@ -387,8 +386,10 @@ def k_is_sell(sell_sum, net_cost):
         return 0.98
     if sell_sum > 3 * k_net_cost:
         return 0.99
+    if sell_sum > 1 * k_net_cost:
+        return 1
 
-    return 1
+    return 1.02
 
 
 
@@ -505,8 +506,9 @@ def get_k_discount(df, df_revenue_col_name_list):
     # df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
     #     (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
-    df.loc[(df['quantity'] > 0), 'k_discount'] = \
+    df.loc[(df['quantity'] > 0) | (df['Прибыль_sum'] != 0), 'k_discount'] = \
         (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
+
     return df
 
 
@@ -744,6 +746,7 @@ def _merge_old_column_name(df):
 
 def get_wb_sales_realization_pivot(df):
     print(f"THIS IS DF IN SALES REALIZATION PIVOT {df}")
+    df.to_excel("wb_sales_realization_pivot_begin.xlsx")
     df1 = df.pivot_table(index=['nm_id'],
                          columns='supplier_oper_name',
                          values=['ppvz_for_pay',
