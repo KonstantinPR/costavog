@@ -209,9 +209,13 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     df = get_k_discount(df, df_revenue_col_name_list)
 
     df['Согласованная скидка, %'] = round((df['discount'] - (1 - df['k_discount']) * 100) * df['k_discount'], 0)
+
     df['Согласованная скидка, %'] = [3 if 1 <= x < 3 else x for x in df['Согласованная скидка, %']]
+
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
+
+
 
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
     df['Остаток в розничных ценах'] = df['price_disc'] * df['quantity']
@@ -372,7 +376,6 @@ def k_is_sell(sell_sum, net_cost):
     '''v 1.0'''
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
-    # нет продаж и товара много
 
     if sell_sum > 100 * k_net_cost:
         return 0.94
@@ -389,7 +392,7 @@ def k_is_sell(sell_sum, net_cost):
     if sell_sum > 1 * k_net_cost:
         return 1
 
-    return 1.02
+    return 1.01
 
 
 def k_qt_full(qt):
