@@ -230,10 +230,15 @@ def rename_folders(df, folder_path, marketplace):
     """
     Renames folders based on the Article values in the given dataframe.
     """
+    article_wb_col_name = "Article"
+    article_col_name = "Article"
+    if not df["Article_WB"].empty:
+        article_wb_col_name = "Article_WB"
+        article_col_name = "Article"
     for folder_name in os.listdir(folder_path):
         for d in range(len(df.index)):
-            if df["Article"][d] == folder_name:
-                os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{df['Article'][d]}")
+            if df[article_col_name][d] == folder_name:
+                os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{df[article_wb_col_name][d]}")
 
     if marketplace == "OZON":
         for folder_name in os.listdir(folder_path):
