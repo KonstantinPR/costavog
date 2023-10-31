@@ -2,9 +2,12 @@ from fpdf import FPDF
 import os.path
 
 
-def images_into_pdf_2(df, art_col_name="Артикул товара", size_col_name="Размер", qt_col_name="Кол-во",
+def images_into_pdf_2(df, file_name="output_filename", art_col_name="Артикул товара", size_col_name="Размер",
+                      qt_col_name="Кол-во",
                       rev='Прибыль_sum', qt_sum=0):
-    path_pdf = "folder_img/output.pdf"
+    file_name = file_name.split('.')
+    file_name = file_name[0]
+    path_pdf = f"folder_img/{file_name}.pdf"
 
     pdf = FPDF(orientation='P', unit='mm', format='A4')
 

@@ -74,7 +74,6 @@ IMPORTANT_COL_REPORT = [
 ]
 
 NEW_COL_ON_REVENUE = [
-
 ]
 
 DEFAULT_NET_COST = 1000
@@ -82,7 +81,7 @@ DEFAULT_NET_COST = 1000
 DATE_FORMAT = "%Y-%m-%d"
 # Задержка чтобы не брать количество дней в конце периода
 # на которые возможно еще не существует данных (зависит от API)
-DAYS_DELAY_REPORT = 1
+DAYS_DELAY_REPORT = 2
 DATE_PARTS = 3
 K_SMOOTH = 1
 MIN_DAYS_ON_SITE_TO_ANALIZE = 28

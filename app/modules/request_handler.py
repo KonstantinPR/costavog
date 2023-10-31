@@ -17,6 +17,7 @@ def to_df(request, html_text_input_name='text_input', html_file_input_name='file
         return df
     elif request.files[html_file_input_name]:
         input_txt = request.files[html_file_input_name]
+        filename = input_txt.filename
         try:
             df = pd.read_csv(input_txt, sep='	', names=[col_art_name])
             if df[col_art_name][0] == col_art_name: df = df.drop([0, 0]).reset_index(drop=True)
@@ -25,3 +26,11 @@ def to_df(request, html_text_input_name='text_input', html_file_input_name='file
         return df
     flash("Необходимые данные не переданы")
     return df
+
+def file_name_from_request(request, html_file_input_name='file'):
+    if request.files[html_file_input_name]:
+        input_txt = request.files[html_file_input_name]
+        filename = input_txt.filename
+        return filename
+    return "output_file"
+

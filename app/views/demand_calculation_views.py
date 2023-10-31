@@ -49,6 +49,7 @@ def demand_calculation_with_image_catalog():
     if request.method == 'POST':
 
         df = request_handler.to_df(request)
+        file_name = request_handler.file_name_from_request(request)
         search_string = str(request.form['search_string'])
         search_string_list = search_string.split()
 
@@ -60,7 +61,7 @@ def demand_calculation_with_image_catalog():
         if not all(col in df for col in ['vendorCode', 'techSize', 'Кол-во']):
             df = demand_calculation_module.demand_calculation_to_df(df, search_string)
 
-        pdf = demand_calculation_module.demand_calculation_df_to_pdf(df)
+        pdf = demand_calculation_module.demand_calculation_df_to_pdf(df, file_name=file_name)
 
         return send_file(pdf, as_attachment=True)
 

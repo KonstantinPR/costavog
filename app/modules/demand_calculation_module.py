@@ -4,14 +4,13 @@ import numpy as np
 import os
 
 
-
-
-def demand_calculation_df_to_pdf(df):
+def demand_calculation_df_to_pdf(df, file_name="output_file"):
     df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
     qt_sum = int(df['Кол-во'].sum())
     img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
     path_pdf, no_photo_list = pdf_processor.images_into_pdf_2(df, art_col_name='vendorCode',
-                                                              size_col_name='techSize', qt_sum=qt_sum)
+                                                              size_col_name='techSize', qt_sum=qt_sum,
+                                                              file_name=file_name)
     pdf = os.path.abspath(path_pdf)
     return pdf
 
