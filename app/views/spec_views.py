@@ -85,16 +85,50 @@ def data_to_spec_wb_transcript():
 def data_to_spec_merging():
     """Смержить 2 excel файла, порядок в алфавитном - в первом оставляем, если уже были"""
     if request.method == 'POST':
-        uploaded_files = flask.request.files.getlist("file")
+        uploaded_files = request.files.getlist("file")
         col_merge = request.form['col_merge']
-        df_from = pd.read_excel(uploaded_files[0])
-        df_to = pd.read_excel(uploaded_files[1])
-        df = spec_modifiyer.merge_spec(df_to, df_from, left_on=col_merge, right_on=col_merge)
-        df = io_output.io_output(df)
+        merge_option = request.form['merge_option']
+        sheet_name = request.form['sheet_name']
 
-        return send_file(df, as_attachment=True, download_name='spec.xlsx')
+        if merge_option == "merge":
+            # Initialize an empty DataFrame to store the merged data
+            merged_data = pd.read_excel(uploaded_files[0], sheet_name=sheet_name, header=2)
+            for uploaded_file in uploaded_files[1:]:
+                df_to_merge = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=2)
+                # Merge the data based on the specified column
+                merged_data = spec_modifiyer.merge_spec(merged_data, df_to_merge, on=col_merge)
+        elif merge_option == "concatenate":
+            # Initialize an empty DataFrame to store the concatenated data
+            concatenated_data = pd.DataFrame()
+            for uploaded_file in uploaded_files:
+                if not sheet_name:  # If sheet_name is empty, default to the first sheet
+                    df = pd.read_excel(uploaded_file, header=2)
+                else:
+                    df = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=2)
+                # Select only the relevant columns in the concatenate case
+                relevant_columns = ["Штрихкод", "Артикул", "Размер", "Кол-во"]
+                df = df[relevant_columns]
+                # Convert Штрихкод column to string format to preserve its original value
+                df["Штрихкод"] = df["Штрихкод"].astype(str)
+                df["Размер"] = df["Размер"].astype(str)
+                concatenated_data = pd.concat([concatenated_data, df])
+
+            merged_data = concatenated_data
+
+        # You can optionally save the resulting DataFrame to an Excel file or return it for download.
+        # For saving to an Excel file:
+        output_file = 'merged_data.xlsx'
+        df = io_output.io_output(merged_data)
+
+        return send_file(df, as_attachment=True, download_name=output_file)
 
     return render_template('upload_specs.html')
+
+
+
+
+
+
 
 
 @app.route('/take_off_boxes', methods=['GET', 'POST'])

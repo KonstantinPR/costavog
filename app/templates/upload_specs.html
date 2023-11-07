@@ -14,8 +14,7 @@
 
     <div class="text-left">
         <div class="row p-2 bg-light">
-            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным
-                через запятую. Спецификация - первая, заполненный произвольный лист эксель - второй
+            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным через запятую. Спецификация - первая, заполненный произвольный лист эксель - второй
             </div>
         </div>
     </div>
@@ -23,16 +22,22 @@
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" target="blank" enctype=multipart/form-data
-                      action="{{url_for('data_to_spec_merging')}}">
+                <form method="post" target="blank" enctype=multipart/form-data action="{{url_for('data_to_spec_merging')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
-                            <input placeholder="По какому значению объединяем" value="Артикул товара"
-                                   class="form-control form-control-lg" type="text"
-                                   name="col_merge">
+                            <select class="form-control form-control-lg" name="merge_option">
+                                <option value="concatenate">Concatenate</option>
+                                <option value="merge">Merge</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
+                            <input placeholder="Имя листа" class="form-control form-control-lg" type="text" name="sheet_name">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
+                            <input placeholder="По какому значению объединяем" value="Артикул товара" class="form-control form-control-lg" type="text" name="col_merge">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="w-100 btn btn-primary btn-lg" type="submit" value="Отправить">
@@ -43,6 +48,5 @@
         </div>
     </div>
 </main>
-
 
 {% endblock %}
