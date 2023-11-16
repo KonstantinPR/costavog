@@ -85,7 +85,7 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
 #     return None
 
 
-def get_all_cards_api_wb(textSearch: str = None):
+def get_all_cards_api_wb_2(textSearch: str = None):
     print("get_all_cards_api_wb ...")
     limit = 1000
     total = 1000
@@ -143,6 +143,53 @@ def get_all_cards_api_wb(textSearch: str = None):
     # df['sizes'] = [list_dict_to_str(x) for x in df['sizes']]
 
     # df = df.rename(columns={'nmId': 'nm_id'})
+
+    return df
+
+
+def get_all_cards_api_wb(textSearch: str = None):
+    print("get_all_cards_api_wb ...")
+    limit = 1000
+    total = 1000
+    updatedAt = None
+    nmId = None
+    dfs = []
+
+    while total >= limit:
+        headers = {
+            'accept': 'application/json',
+            'Authorization': app.config['WB_API_TOKEN2'],
+        }
+
+        data = {
+            "sort": {
+                "cursor": {
+                    "limit": limit,
+                    "updatedAt": updatedAt,
+                    "nmID": nmId,
+                },
+                "filter": {
+                    "textSearch": textSearch,
+                    "withPhoto": -1
+                }
+            }
+        }
+
+        response = requests.post('https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list',
+                                 data=json.dumps(data), headers=headers)
+
+        if response.status_code != 200:
+            print(f"Error in API request: {response.status_code}")
+            break
+
+        df_json = response.json()
+        total = df_json['data']['cursor']['total']
+        updatedAt = df_json['data']['cursor']['updatedAt']
+        nmId = df_json['data']['cursor']['nmID']
+        dfs += df_json['data']['cards']
+
+    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'])
+
     return df
 
 

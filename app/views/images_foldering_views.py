@@ -2,7 +2,7 @@ from app import app
 from flask import render_template, request, flash
 from flask_login import login_required
 import pandas as pd
-from app.modules import img_processor
+from app.modules import img_processor, API_WB
 import shutil
 import re
 import fileinput
@@ -35,6 +35,39 @@ def images_foldering_yandisk():
     return render_template('upload_images_foldering.html')
 
 
+@app.route('/images_foldering_old', methods=['POST', 'GET'])
+@login_required
+def images_foldering_old():
+    """
+    on 21.01.2022:
+    Text is expected in first place!
+    if via txt then it with one columns no name
+    for wb is our article
+    for ozon is article without -size (-38)
+    Get images from local YandexDisk, preparing and foldering it on wb and ozon demand, and send it in zip
+    on 08.08.2022 work only on local comp with pointing dict where img placed
+    header in txt no need
+    if good is wool then watermark will be placed like 150 x 300 см.
+    For excel table there are first column is Article, second is Article_WB (in second column)
+    then - folder will be named by it, if not - then our art.
+    ALL - take all photo of articles in all folders
+    ONLY_NEW - take photo only in one folder that will be seen
+    ASCENDING - take photo from oldest (first) folders with that articles
+    DESCENDING - take photo from last folders with that articles
+
+    """
+    if request.method == 'POST':
+        df = request_handler.to_df(request, col_art_name="Article")
+        markeplace = request.form["multiply_number"]
+        is_replace = request.form["is_replace"]
+        order_is = request.form["order_is"]
+        df_nm_wb = API_WB.get_all_cards_api_wb
+        print(f"markeplace {markeplace}")
+        return_data = img_processor.img_foldering(df, markeplace, is_replace, order_is)
+        return send_file(return_data, as_attachment=True, download_name='image_zip.zip')
+    return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)
+
+
 @app.route('/images_foldering', methods=['POST', 'GET'])
 @login_required
 def images_foldering():
@@ -61,7 +94,23 @@ def images_foldering():
         markeplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]
-        print(f"markeplace {markeplace}")
-        return_data = img_processor.img_foldering(df, markeplace, is_replace, order_is)
+
+        # Use get_all_cards_api_wb to retrieve nmID values based on vendorCode
+        df_nm_wb = API_WB.get_all_cards_api_wb()
+
+        # Merge df and df_nm_wb on Article and vendorCode columns
+        merged_df = pd.merge(df, df_nm_wb, left_on="Article", right_on="vendorCode", how="left")
+
+        # Duplicate and rename nmID column to 'Article_WB'
+        merged_df['Article_WB'] = merged_df['nmID'].copy()
+
+        # Remove duplicate rows based on the 'Article' column
+        merged_df.drop_duplicates(subset='Article', keep='first', inplace=True)
+        merged_df.reset_index(drop=True, inplace=True)
+        print(f'HERE merged_df {merged_df}')
+
+        # Now merged_df contains nmID values along with other columns from df and df_nm_wb
+
+        return_data = img_processor.img_foldering(merged_df, markeplace, is_replace, order_is)
         return send_file(return_data, as_attachment=True, download_name='image_zip.zip')
     return render_template('upload_images_foldering.html', doc_string=images_foldering.__doc__)

@@ -163,7 +163,7 @@ def _get_exclude_duplicates(file, subentry, image_files, art_paths_dict):
 
 
 def order_by(entity, order_is='ASCENDING'):
-    print(order_is)
+    # print(order_is)
     if order_is == 'ASCENDING':
         return sorted(os.scandir(entity), key=lambda x: x.name, reverse=False)
     return sorted(os.scandir(entity), key=lambda x: x.name, reverse=True)
