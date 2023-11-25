@@ -54,7 +54,7 @@ def get_stock_wb():
     """
 
     if request.method == 'POST':
-        df_all_cards = API_WB.get_wb_stock_api()
+        df_all_cards = API_WB.get_wb_stock_api_extanded()
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)

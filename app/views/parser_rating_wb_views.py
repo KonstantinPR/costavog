@@ -1,11 +1,9 @@
 from app import app
 from flask import render_template, request, send_file
 from flask_login import login_required
-import pandas as pd
 from app.modules import io_output, request_handler
-
 import requests
-import json
+
 
 """
 Парсер wildberries по ссылке на каталог (указывать без фильтров)
@@ -46,7 +44,9 @@ def get_rating(goods_id_list):
     return rating_list
 
 
-@app.route('/parser-rating-wb', methods=['GET', 'POST'])
+
+
+@app.route('/parser_rating_wb', methods=['GET', 'POST'])
 @login_required
 def parser_rating_wb():
     """Парсинг рейтинга и количества отзывов через Артикулы WB, шапка в txt файле = Артикул"""
@@ -64,5 +64,5 @@ def parser_rating_wb():
         df_column[feedbacks] = [x[1] if x else '' for x in rating_list]
         file = io_output.io_output(df_column)
 
-        return send_file(file, download_name="parser-rating-wb.xlsx", as_attachment=True)
+        return send_file(file, download_name="parser_rating_wb.xlsx", as_attachment=True)
     return render_template("upload_parser_rating_wb.html", doc_string=parser_rating_wb.__doc__)

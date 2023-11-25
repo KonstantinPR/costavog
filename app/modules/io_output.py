@@ -4,17 +4,17 @@ from PIL import Image
 from flask import flash, render_template
 
 
-def io_txt_request(request, name_html, inp_name, col_name):
-    file_txt = request.files[inp_name]
-
-    if not request.files[inp_name]:
-        flash("Не приложен файл")
-        return render_template(name_html)
-
-    df = pd.read_fwf(file_txt)
-    df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
-
-    return df_column
+# def io_txt_request(request, name_html, inp_name, col_name):
+#     file_txt = request.files[inp_name]
+#
+#     if not request.files[inp_name]:
+#         flash("Не приложен файл")
+#         return render_template(name_html)
+#
+#     df = pd.read_fwf(file_txt)
+#     df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
+#
+#     return df_column
 
 
 def io_output_txt_csv(df: pd.DataFrame, sep: str = ",", header: bool = False, index: bool = False) -> BytesIO:
@@ -34,13 +34,13 @@ def io_output(df: pd.DataFrame, is_index=False) -> BytesIO:
     return output
 
 
-def io_output_styleframe(sf) -> BytesIO:
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='openpyxl')
-    sf.to_excel(writer)
-    writer.close()
-    output.seek(0)
-    return output
+# def io_output_styleframe(sf) -> BytesIO:
+#     output = BytesIO()
+#     writer = pd.ExcelWriter(output, engine='openpyxl')
+#     sf.to_excel(writer)
+#     writer.close()
+#     output.seek(0)
+#     return output
 
 
 def io_img_output(img: Image.Image) -> BytesIO:
@@ -49,10 +49,10 @@ def io_img_output(img: Image.Image) -> BytesIO:
     img_io.seek(0)
     return img_io
 
-def io_output_all(file_io):
-    file_io = BytesIO()
-    file_io.seek(0)
-    return file_io
+# def io_output_all(file_io):
+#     file_io = BytesIO()
+#     file_io.seek(0)
+#     return file_io
 
 def io_audio_stream(audio_stream):
     audio_buffer = BytesIO()

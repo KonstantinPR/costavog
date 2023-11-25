@@ -1,6 +1,8 @@
 import app.modules.API_WB
 from app import app
 import flask
+import io
+import zipfile
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 from app.models import Company, Product, db
@@ -65,10 +67,10 @@ def upload_products():
     return render_template('upload_products.html')
 
 
-@app.route('/test/<id>', methods=['POST', 'GET'])
-@login_required
-def test(id):
-    return render_template('test.html', id=id)
+# @app.route('/test/<id>', methods=['POST', 'GET'])
+# @login_required
+# def test(id):
+#     return render_template('test.html', id=id)
 
 
 @app.route('/read_products', methods=['POST', 'GET'])
@@ -200,7 +202,7 @@ def concatenate_detailing():
         is_get_stock = request.form.get('is_get_stock')
 
         if is_get_stock:
-            df_stock = API_WB.get_wb_stock_api()
+            df_stock = API_WB.get_wb_stock_api_extanded()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
         file = io_output.io_output(df)
@@ -212,9 +214,9 @@ def concatenate_detailing():
     return render_template('upload_detailing.html')
 
 
-@app.route('/upload_detailing', methods=['POST', 'GET'])
+@app.route('/upload_detailing_old', methods=['POST', 'GET'])
 @login_required
-def upload_detailing():
+def upload_detailing_old():
     """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
 
     if not current_user.is_authenticated:
@@ -240,17 +242,78 @@ def upload_detailing():
 
         df = detailing.zip_detail(uploaded_files, df_net_cost)
 
-
         is_get_stock = request.form.get('is_get_stock')
 
         if is_get_stock:
-            df_stock = API_WB.get_wb_stock_api()
+            df_stock = API_WB.get_wb_stock_api_extanded()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
         file = io_output.io_output(df)
 
         flash("Отчет успешно выгружен в excel файл")
         return send_file(file, download_name='report_detailing' + str(datetime.date.today()) + ".xlsx",
+                         as_attachment=True)
+
+    return render_template('upload_detailing.html')
+
+
+@app.route('/upload_detailing', methods=['POST', 'GET'])
+@login_required
+def upload_detailing():
+    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
+
+    if not current_user.is_authenticated:
+        return redirect('/company_register')
+
+    if request.method == 'POST':
+        uploaded_files = request.files.getlist("file")
+        print(uploaded_files)
+
+        is_net_cost = request.form.get('is_net_cost')
+        print(is_net_cost == 'is_net_cost')
+
+        if not uploaded_files:
+            flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
+            return render_template('upload_detailing.html')
+
+        if len(uploaded_files) == 1 and uploaded_files[0].filename.endswith('.zip'):
+            # If there is only one file and it's a zip file, proceed as usual
+            uploaded_file = uploaded_files[0]
+        else:
+            # If there are multiple files or a single non-zip file, create a zip archive in memory
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+                for file in uploaded_files:
+                    zip_file.writestr(file.filename, file.read())
+
+            # Reset the in-memory buffer's position to the beginning
+            zip_buffer.seek(0)
+
+            # Set the uploaded_file to the in-memory zip buffer
+            uploaded_file = zip_buffer
+
+        if is_net_cost:
+            df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+        else:
+            df_net_cost = False
+
+        # print(df_net_cost)
+
+        df = detailing.zip_detail(uploaded_file, df_net_cost)
+
+        date_min = df["Дата заказа покупателем"].min()
+        date_max = df["Дата заказа покупателем"].max()
+
+        is_get_stock = request.form.get('is_get_stock')
+
+        if is_get_stock:
+            df_stock = API_WB.get_wb_stock_api_extanded()
+            df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
+
+        file = io_output.io_output(df)
+
+        flash("Отчет успешно выгружен в excel файл")
+        return send_file(file, download_name=f'report_detailing_{str(date_max)}_to_{str(date_min)}.xlsx',
                          as_attachment=True)
 
     return render_template('upload_detailing.html')

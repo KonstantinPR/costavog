@@ -55,15 +55,6 @@ def vertical_size(df, col: str = 'Размеры', col_re='Размер'):
         return df
     flash(f"В ДатаФрейме нет колонки с именем {col}")
     return df
-    # OLD RIGHT
-    # lst_art = []
-    # lst_sizes = [x.split() for x in df['Размеры']]
-    # for i in range(len(lst_sizes)):
-    #     for j in range(len(lst_sizes[i])):
-    #         lst_art.append(df['Артикул полный'][i])
-    #
-    # lst_sizes = sum(lst_sizes, [])
-    # df = pd.DataFrame({'Артикул полный': lst_art, 'Размеры': lst_sizes})
 
 
 def to_keep_for_photo(df, size_col_name='Размер', art_col_name='Артикул товара', is_photo_col_name='На фото'):

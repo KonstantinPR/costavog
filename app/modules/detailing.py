@@ -56,8 +56,6 @@ def zip_detail(zip_downloaded, df_net_cost):
     result.dropna(subset=["Артикул поставщика"], inplace=True)
     result.to_excel('result.xlsx')
 
-
-
     if 'К перечислению за товар' not in result:
         result['К перечислению за товар'] = 0
 
@@ -133,13 +131,11 @@ def zip_detail(zip_downloaded, df_net_cost):
 
     df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
 
-
     if not isinstance(df_net_cost, bool):
         if 'Артикул поставщика' in df_result:
             df_result['Артикул поставщика'].fillna(df_result['supplierArticle'])
         df_result = df_result.merge(df_net_cost.rename(columns={'article': 'Артикул поставщика'}), how='outer',
                                     on='Артикул поставщика')
-
 
     df_result.replace(np.NaN, 0, inplace=True)
 
@@ -148,7 +144,6 @@ def zip_detail(zip_downloaded, df_net_cost):
 
     if ('К перечислению за товар ИТОГО', 'Возврат') not in df_result:
         df_result[('К перечислению за товар ИТОГО', 'Возврат')] = 0
-
 
     df_result['Продажи'] = df_result[('К перечислению за товар ИТОГО', 'Продажа')]
 
@@ -225,19 +220,23 @@ def zip_detail(zip_downloaded, df_net_cost):
     df_result = df_result.reindex(df_result.columns, axis=1)
     df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
 
+    # Clean the "Дата заказа покупателем" column
+    df_result["Дата заказа покупателем"] = df_result["Дата заказа покупателем"].replace({0: np.nan}).dropna()
+
+    # Convert the cleaned "Дата заказа покупателем" column to datetime
+    df_result["Дата заказа покупателем"] = pd.to_datetime(df_result["Дата заказа покупателем"])
 
     return df_result
 
-
-def get_wb_sales_api(date_from: datetime, days_step: int):
-    """get sales as api wb sales describe"""
-    path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom="
-    date_from = date_from
-    flag = "Z&flag=0&"
-    api_key = app.config['WB_API_TOKEN']
-    path_all = f"{path_start}{date_from}{flag}key={api_key}"
-    response = requests.get(path_all)
-    data = response.json()
-    df = pd.DataFrame(data)
-
-    return df
+# def get_wb_sales_api(date_from: datetime, days_step: int):
+#     """get sales as api wb sales describe"""
+#     path_start = "https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom="
+#     date_from = date_from
+#     flag = "Z&flag=0&"
+#     api_key = app.config['WB_API_TOKEN']
+#     path_all = f"{path_start}{date_from}{flag}key={api_key}"
+#     response = requests.get(path_all)
+#     data = response.json()
+#     df = pd.DataFrame(data)
+#
+#     return df

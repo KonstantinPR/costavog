@@ -284,7 +284,7 @@ def revenue_processing_module(request):
     df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
 
-    df_stock = API_WB.get_wb_stock_api()
+    df_stock = API_WB.get_wb_stock_api_extanded()
     df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
@@ -549,11 +549,11 @@ def get_k_discount(df, df_revenue_col_name_list):
 
 # /// --- NEW COLUMN ON REVENUE ANILIZE ---
 
-def df_revenue_growth(df, df_revenue_col_name_list):
-    growth1 = df[df_revenue_col_name_list[0]] - df[df_revenue_col_name_list[1]]
-    growth2 = df[df_revenue_col_name_list[1]] - df[df_revenue_col_name_list[2]]
-    growth = (growth2 - growth1) / growth2
-    return growth
+# def df_revenue_growth(df, df_revenue_col_name_list):
+#     growth1 = df[df_revenue_col_name_list[0]] - df[df_revenue_col_name_list[1]]
+#     growth2 = df[df_revenue_col_name_list[1]] - df[df_revenue_col_name_list[2]]
+#     growth = (growth2 - growth1) / growth2
+#     return growth
 
 
 def df_revenue_column_name_list(df):
@@ -627,16 +627,16 @@ def get_days_bunch_from_delta_date(date_from, date_end, date_parts, date_format=
     return days_bunch
 
 
-def combine_date_to_revenue(date_from, date_end, days_step=7):
-    df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-    df_sales = get_wb_sales_realization_pivot(df)
-    df_stock = API_WB.get_wb_stock_api(date_from)
-    df_net_cost = pd.read_sql(
-        db.session.query(Product).filter_by(company_id=current_user.company_id).statement, db.session.bind)
-    df = df_sales.merge(df_stock, how='outer', on='nm_id')
-    df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
-    df = get_revenue(df)
-    return df
+# def combine_date_to_revenue(date_from, date_end, days_step=7):
+#     df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
+#     df_sales = get_wb_sales_realization_pivot(df)
+#     df_stock = API_WB.get_wb_stock_api_extanded(date_from)
+#     df_net_cost = pd.read_sql(
+#         db.session.query(Product).filter_by(company_id=current_user.company_id).statement, db.session.bind)
+#     df = df_sales.merge(df_stock, how='outer', on='nm_id')
+#     df = df.merge(df_net_cost, how='outer', left_on='supplierArticle', right_on='article')
+#     df = get_revenue(df)
+#     return df
 
 
 # def df_merge(df_list, ):
@@ -644,11 +644,11 @@ def combine_date_to_revenue(date_from, date_end, days_step=7):
 #                                                     how='outer'), df_list).fillna('void')
 #     return df_merged
 
-def revenue_correcting(x, y, z, w):
-    if z > 0:
-        return x - y
-    else:
-        return x
+# def revenue_correcting(x, y, z, w):
+#     if z > 0:
+#         return x - y
+#     else:
+#         return x
 
 
 def get_important_columns(df):
@@ -686,42 +686,42 @@ def get_important_columns(df):
     return df
 
 
-def df_reorder_important_col_desc_first(df):
-    important_col_list = IMPORTANT_COL_DESC
-    n = 0
-    col_list = df.columns.tolist()
-    for col in important_col_list:
-        if col in col_list:
-            idx = col_list.index(col)
-            col_list[idx], col_list[n] = col_list[n], col_list[idx]
-            n += 1
-    df = df.reindex(columns=col_list)
-    return df
+# def df_reorder_important_col_desc_first(df):
+#     important_col_list = IMPORTANT_COL_DESC
+#     n = 0
+#     col_list = df.columns.tolist()
+#     for col in important_col_list:
+#         if col in col_list:
+#             idx = col_list.index(col)
+#             col_list[idx], col_list[n] = col_list[n], col_list[idx]
+#             n += 1
+#     df = df.reindex(columns=col_list)
+#     return df
 
 
-def df_reorder_important_col_report_first(df):
-    important_col_list = IMPORTANT_COL_REPORT
-    n = len(IMPORTANT_COL_DESC)
-    col_list = df.columns.tolist()
-    for col in important_col_list:
-        if col in col_list:
-            idx = col_list.index(col)
-            col_list[idx], col_list[n] = col_list[n], col_list[idx]
-            n += 1
-    df = df.reindex(columns=col_list)
-    return df
+# def df_reorder_important_col_report_first(df):
+#     important_col_list = IMPORTANT_COL_REPORT
+#     n = len(IMPORTANT_COL_DESC)
+#     col_list = df.columns.tolist()
+#     for col in important_col_list:
+#         if col in col_list:
+#             idx = col_list.index(col)
+#             col_list[idx], col_list[n] = col_list[n], col_list[idx]
+#             n += 1
+#     df = df.reindex(columns=col_list)
+#     return df
 
 
-def df_reorder_revenue_col_first(df):
-    n = len(IMPORTANT_COL_DESC) + len(IMPORTANT_COL_REPORT)
-    col_list = df.columns.tolist()
-    for col in col_list:
-        if "Прибыль" in col:
-            idx = col_list.index(col)
-            col_list[idx], col_list[n] = col_list[n], col_list[idx]
-            n += 1
-    df = df.reindex(columns=col_list)
-    return df
+# def df_reorder_revenue_col_first(df):
+#     n = len(IMPORTANT_COL_DESC) + len(IMPORTANT_COL_REPORT)
+#     col_list = df.columns.tolist()
+#     for col in col_list:
+#         if "Прибыль" in col:
+#             idx = col_list.index(col)
+#             col_list[idx], col_list[n] = col_list[n], col_list[idx]
+#             n += 1
+#     df = df.reindex(columns=col_list)
+#     return df
 
 
 def df_stay_column_not_null(df):
@@ -847,54 +847,54 @@ def get_wb_price_api(g=None):
 #     return key_value
 
 
-def get_wb_sales_realization_pivot2(df):
-    df_pivot_sells_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
-                                                                               values=['ppvz_for_pay'],
-                                                                               aggfunc={'ppvz_for_pay': sum},
-                                                                               margins=False)
-
-    df_pivot_correct_sells_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
-                                                                                       values=['ppvz_for_pay'],
-                                                                                       aggfunc={'ppvz_for_pay': sum},
-                                                                                       margins=False)
-
-    df_pivot_returns_sells_sum = df[df['supplier_oper_name'] == 'Возврат'].pivot_table(
-        index=['nm_id'],
-        values=['ppvz_for_pay'],
-        aggfunc={'ppvz_for_pay': sum},
-        margins=False)
-
-    df_pivot_correct_return_returns_sum = df[df['supplier_oper_name'] == 'Корректный возврат'].pivot_table(
-        index=['nm_id'],
-        values=['ppvz_for_pay'],
-        aggfunc={'ppvz_for_pay': sum},
-        margins=False)
-
-    df_pivot_penalty_sum = df[df['supplier_oper_name'] == 'Штрафы'].pivot_table(
-        index=['nm_id'],
-        values=['penalty'],
-        aggfunc={'penalty': sum},
-        margins=False)
-
-    df_pivot_logistic_sum = df[df['supplier_oper_name'] == 'Логистика'].pivot_table(index=['nm_id'],
-                                                                                    values=['delivery_rub'],
-                                                                                    aggfunc={'delivery_rub': sum},
-                                                                                    margins=False)
-
-    df_pivot_reversal_sales_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
-                                                                                        values=['ppvz_for_pay'],
-                                                                                        aggfunc={'ppvz_for_pay': sum},
-                                                                                        margins=False)
-
-    dfs = [df_pivot_sells_sum,
-           df_pivot_correct_sells_sum,
-           df_pivot_returns_sells_sum,
-           df_pivot_correct_return_returns_sum,
-           df_pivot_penalty_sum,
-           df_pivot_logistic_sum,
-           df_pivot_reversal_sales_sum, ]
-
-    df = reduce(lambda left, right: pd.merge(left, right, on=['nm_id'],
-                                             how='outer'), dfs)
-
-    return df
+# def get_wb_sales_realization_pivot2(df):
+#     df_pivot_sells_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
+#                                                                                values=['ppvz_for_pay'],
+#                                                                                aggfunc={'ppvz_for_pay': sum},
+#                                                                                margins=False)
+#
+#     df_pivot_correct_sells_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
+#                                                                                        values=['ppvz_for_pay'],
+#                                                                                        aggfunc={'ppvz_for_pay': sum},
+#                                                                                        margins=False)
+#
+#     df_pivot_returns_sells_sum = df[df['supplier_oper_name'] == 'Возврат'].pivot_table(
+#         index=['nm_id'],
+#         values=['ppvz_for_pay'],
+#         aggfunc={'ppvz_for_pay': sum},
+#         margins=False)
+#
+#     df_pivot_correct_return_returns_sum = df[df['supplier_oper_name'] == 'Корректный возврат'].pivot_table(
+#         index=['nm_id'],
+#         values=['ppvz_for_pay'],
+#         aggfunc={'ppvz_for_pay': sum},
+#         margins=False)
+#
+#     df_pivot_penalty_sum = df[df['supplier_oper_name'] == 'Штрафы'].pivot_table(
+#         index=['nm_id'],
+#         values=['penalty'],
+#         aggfunc={'penalty': sum},
+#         margins=False)
+#
+#     df_pivot_logistic_sum = df[df['supplier_oper_name'] == 'Логистика'].pivot_table(index=['nm_id'],
+#                                                                                     values=['delivery_rub'],
+#                                                                                     aggfunc={'delivery_rub': sum},
+#                                                                                     margins=False)
+#
+#     df_pivot_reversal_sales_sum = df[df['supplier_oper_name'] == 'Продажа'].pivot_table(index=['nm_id'],
+#                                                                                         values=['ppvz_for_pay'],
+#                                                                                         aggfunc={'ppvz_for_pay': sum},
+#                                                                                         margins=False)
+#
+#     dfs = [df_pivot_sells_sum,
+#            df_pivot_correct_sells_sum,
+#            df_pivot_returns_sells_sum,
+#            df_pivot_correct_return_returns_sum,
+#            df_pivot_penalty_sum,
+#            df_pivot_logistic_sum,
+#            df_pivot_reversal_sales_sum, ]
+#
+#     df = reduce(lambda left, right: pd.merge(left, right, on=['nm_id'],
+#                                              how='outer'), dfs)
+#
+#     return df

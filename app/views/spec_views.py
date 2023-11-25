@@ -125,12 +125,6 @@ def data_to_spec_merging():
     return render_template('upload_specs.html')
 
 
-
-
-
-
-
-
 @app.route('/take_off_boxes', methods=['GET', 'POST'])
 @login_required
 def take_off_boxes():
