@@ -260,7 +260,8 @@ def upload_detailing_old():
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
 def upload_detailing():
-    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
+    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it,
+    or can be chosen some and added to input as well"""
 
     if not current_user.is_authenticated:
         return redirect('/company_register')
@@ -316,4 +317,4 @@ def upload_detailing():
         return send_file(file, download_name=f'report_detailing_{str(date_max)}_to_{str(date_min)}.xlsx',
                          as_attachment=True)
 
-    return render_template('upload_detailing.html')
+    return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)

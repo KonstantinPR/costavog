@@ -26,7 +26,7 @@ def demand_calculation_to_df(df_input, search_string):
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
     # print(file_name)
     df_wb_stock = API_WB.df_wb_stock_api()
-    df_wb_stock.to_excel("df_wb_stock.xlsx")
+    # df_wb_stock.to_excel("df_wb_stock.xlsx")
 
     df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
                             suffixes=("", "_drop"))

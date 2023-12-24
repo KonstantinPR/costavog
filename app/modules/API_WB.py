@@ -11,6 +11,8 @@ def get_wb_stock_api_extanded():
 
     df = df_wb_stock_api()
 
+    # df.to_excel("df_wb_stock_api.xlsx")
+
     df = df.pivot_table(index=['nmId'],
                         values=['quantity',
                                 # 'daysOnSite',
@@ -101,6 +103,7 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
+    print(response)
     df = response.json()
     df = pd.json_normalize(df)
 

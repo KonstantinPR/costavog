@@ -281,17 +281,17 @@ def revenue_processing_module(request):
     # --- GET DATA VIA WB API /// ---
 
     df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-    df_sales.to_excel('df_sales_excel.xlsx')
+    # df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
 
     df_stock = API_WB.get_wb_stock_api_extanded()
-    df_sales.to_excel('wb_stock.xlsx')
+    # df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 
     # --- GET DATA FROM YADISK /// ---
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
-    df_rating.to_excel('df_rating.xlsx')
+    # df_rating.to_excel('df_rating.xlsx')
     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
     df_sales_pivot.to_excel('sales_pivot.xlsx')
     # таблица с итоговыми значениями с префиксом _sum
@@ -309,12 +309,14 @@ def revenue_processing_module(request):
         df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
         df = df_pivot
 
+
     df_price = get_wb_price_api()
     df = df.merge(df_price, how='outer', on='nm_id')
     df = df.merge(df_rating, how='outer', left_on='nm_id', right_on="Артикул")
 
     df_complete = df.merge(df_stock, how='outer', on='nm_id')
     df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
+    df.to_excel('df_complete.xlsx')
     df = get_revenue_by_part(df, period_dates_list)
 
     df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
@@ -823,7 +825,8 @@ def get_wb_sales_realization_pivot(df):
 def get_wb_price_api(g=None):
     headers = {
         'accept': 'application/json',
-        'Authorization': app.config['WB_API_TOKEN2'],
+        # 'Authorization': app.config['WB_API_TOKEN2'],
+        'Authorization': app.config['WB_API_TOKEN'],
     }
 
     response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)

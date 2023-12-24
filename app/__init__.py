@@ -95,6 +95,7 @@ def load_user_from_request(request):
 def before_request():
     if current_user.is_authenticated:
         set_config()
+    return None
 
 
 @app.before_first_request

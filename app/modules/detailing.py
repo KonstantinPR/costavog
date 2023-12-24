@@ -65,6 +65,15 @@ def zip_detail(zip_downloaded, df_net_cost):
     if 'Услуги по доставке товара покупателю' not in result:
         result['Услуги по доставке товара покупателю'] = 0
 
+    if 'Хранение' not in result:
+        result['Хранение'] = 0
+
+    if 'Удержания' not in result:
+        result['Удержания'] = 0
+
+    if 'Платная приемка' not in result:
+        result['Платная приемка'] = 0
+
     result['К перечислению Продавцу за реализованный Товар'].replace(np.NaN, 0, inplace=True)
     result['К перечислению за товар'].replace(np.NaN, 0, inplace=True)
 
@@ -77,12 +86,18 @@ def zip_detail(zip_downloaded, df_net_cost):
                                   columns='Обоснование для оплаты',
                                   values=['К перечислению за товар ИТОГО',
                                           'Вознаграждение Вайлдберриз (ВВ), без НДС',
+                                          'Хранение',
+                                          'Удержания',
+                                          'Платная приемка',
                                           'Количество доставок',
                                           'Количество возврата',
                                           'Услуги по доставке товара покупателю',
                                           ],
                                   aggfunc={'К перечислению за товар ИТОГО': sum,
                                            'Вознаграждение Вайлдберриз (ВВ), без НДС': sum,
+                                           'Хранение': sum,
+                                           'Удержания': sum,
+                                           'Платная приемка': sum,
                                            'Количество доставок': 'count',
                                            'Количество возврата': 'count',
                                            'Услуги по доставке товара покупателю': 'count', },
@@ -151,7 +166,10 @@ def zip_detail(zip_downloaded, df_net_cost):
 
     df_result['Маржа'] = df_result['Продажи'] - \
                          df_result["Услуги по доставке товара покупателю"] - \
-                         df_result['Возвраты, руб.']
+                         df_result['Возвраты, руб.'] - \
+                         df_result['Хранение'] - \
+                         df_result['Удержания'] - \
+                         df_result['Платная приемка']
 
     if 'net_cost' in df_result:
         df_result['net_cost'].replace(np.NaN, 0, inplace=True)
