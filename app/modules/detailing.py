@@ -38,7 +38,14 @@ def zips_to_list(zip_downloaded):
 
 def concatenate_detailing_modul(zip_downloaded, df_net_cost):
     df_list = zips_to_list(zip_downloaded)
+
     result = pd.concat(df_list)
+
+    # List of columns to treat as strings
+    columns_to_convert = ['№', 'Баркод', 'ШК', 'Rid', 'Srid']
+
+    # Ensure that specific columns are treated as strings
+    result[columns_to_convert] = result[columns_to_convert].astype(str)
     return result
 
 
