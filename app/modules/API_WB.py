@@ -6,6 +6,19 @@ import time
 import json
 
 
+def get_wb_price_api(g=None):
+    headers = {
+        'accept': 'application/json',
+        # 'Authorization': app.config['WB_API_TOKEN2'],
+        'Authorization': app.config['WB_API_TOKEN'],
+    }
+
+    response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)
+    data = response.json()
+    df = pd.DataFrame(data)
+    df = df.rename(columns={'nmId': 'nm_id'})
+    return df
+
 def get_wb_stock_api_extanded():
     """to modify wb stock"""
 

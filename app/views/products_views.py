@@ -214,47 +214,55 @@ def concatenate_detailing():
     return render_template('upload_detailing.html')
 
 
-@app.route('/upload_detailing_old', methods=['POST', 'GET'])
-@login_required
-def upload_detailing_old():
-    """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
-
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
-
-    if request.method == 'POST':
-        uploaded_files = flask.request.files.get("file")
-        print(uploaded_files)
-
-        is_net_cost = request.form.get('is_net_cost')
-        print(is_net_cost == 'is_net_cost')
-
-        if not uploaded_files:
-            flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
-            return render_template('upload_detailing.html')
-
-        if is_net_cost:
-            df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-        else:
-            df_net_cost = False
-
-        # print(df_net_cost)
-
-        df = detailing.zip_detail(uploaded_files, df_net_cost)
-
-        is_get_stock = request.form.get('is_get_stock')
-
-        if is_get_stock:
-            df_stock = API_WB.get_wb_stock_api_extanded()
-            df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
-
-        file = io_output.io_output(df)
-
-        flash("Отчет успешно выгружен в excel файл")
-        return send_file(file, download_name='report_detailing' + str(datetime.date.today()) + ".xlsx",
-                         as_attachment=True)
-
-    return render_template('upload_detailing.html')
+#
+# @app.route('/upload_detailing_old', methods=['POST', 'GET'])
+# @login_required
+# def upload_detailing_old():
+#     """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it"""
+#
+#     if not current_user.is_authenticated:
+#         return redirect('/company_register')
+#
+#     if request.method == 'POST':
+#         uploaded_files = flask.request.files.get("file")
+#         print(uploaded_files)
+#
+#         is_net_cost = request.form.get('is_net_cost')
+#         print(is_net_cost == 'is_net_cost')
+#
+#
+#
+#         if not uploaded_files:
+#             flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
+#             return render_template('upload_detailing.html')
+#
+#         if is_net_cost:
+#             df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+#         else:
+#             df_net_cost = False
+#
+#         # print(df_net_cost)
+#
+#         df = detailing.zip_detail(uploaded_files, df_net_cost)
+#
+#         is_get_stock = request.form.get('is_get_stock')
+#
+#
+#         if is_get_stock:
+#             df_stock = API_WB.get_wb_stock_api_extanded()
+#             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
+#
+#
+#
+#
+#
+#         file = io_output.io_output(df)
+#
+#         flash("Отчет успешно выгружен в excel файл")
+#         return send_file(file, download_name='report_detailing' + str(datetime.date.today()) + ".xlsx",
+#                          as_attachment=True)
+#
+#     return render_template('upload_detailing.html')
 
 
 @app.route('/upload_detailing', methods=['POST', 'GET'])
@@ -310,6 +318,51 @@ def upload_detailing():
         if is_get_stock:
             df_stock = API_WB.get_wb_stock_api_extanded()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
+
+        is_get_price = request.form.get('is_get_price')
+
+        df['nm_id'] = df['nm_id'].fillna(df['Код номенклатуры'])
+
+        if is_get_price:
+            df_price = API_WB.get_wb_price_api()
+            df_price.to_excel("wb_price.xlsx")
+            df = df.merge(df_price, how='outer', left_on='nm_id', right_on='nm_id')
+            df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
+            df.to_excel("detail_with_price.xlsx")
+
+        df = df[[
+            'Бренд',
+            'Предмет_x',
+            'Артикул поставщика',
+            'Код номенклатуры',
+            'quantity',
+            'price_disc',
+            'net_cost',
+            'Дней в продаже',
+            'Маржа-себест.',
+            'Маржа',
+            'Чист. покупок шт.',
+            'Продажи',
+            'Возвраты, руб.',
+            'Продаж',
+            'Возврат шт.',
+            'Услуги по доставке товара покупателю',
+            'Покатушка средне, руб.',
+            'Маржа-себест. за шт. руб',
+            'Покатали раз',
+            'company_id',
+            'Маржа / логистика',
+            'Продажи к возвратам',
+            'Маржа / доставковозвратам',
+            'Логистика',
+            'Доставки/Возвраты, руб.',
+            'Себестоимость продаж',
+            'Поставщик',
+            'Дата заказа покупателем',
+            'Дата продажи',
+        ]]
+
+
 
         file = io_output.io_output(df)
 
