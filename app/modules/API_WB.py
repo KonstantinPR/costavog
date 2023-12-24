@@ -113,7 +113,9 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     t = time.process_time()
     api_key = app.config['WB_API_TOKEN']
     headers = {'Authorization': api_key}
-    url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+    # url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+    url = "https://statistics-api.wildberries.ru/api/v2/supplier/reportDetailByPeriod?"
+
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
     print(response)

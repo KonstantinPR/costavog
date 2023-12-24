@@ -8,7 +8,7 @@ def demand_calculation_df_to_pdf(df, file_name="output_file"):
     df_unique = pd.DataFrame(df['vendorCode'].unique(), columns=['vendorCode'])
     qt_sum = int(df['Кол-во'].sum())
     img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
-    path_pdf, no_photo_list = pdf_processor.images_into_pdf_2(df, art_col_name='vendorCode',
+    path_pdf, no_photo_list = pdf_processor.images_into_pdf(df, art_col_name='vendorCode',
                                                               size_col_name='techSize', qt_sum=qt_sum,
                                                               file_name=file_name)
     pdf = os.path.abspath(path_pdf)
@@ -34,7 +34,7 @@ def demand_calculation_to_df(df_input, search_string):
                   left_on=['vendorCode', 'techSize'],
                   right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
 
-    df.to_excel("df_all_actual_stock_and_art.xlsx")
+    # df.to_excel("df_all_actual_stock_and_art.xlsx")
 
     if not df_input.empty:
         df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')
