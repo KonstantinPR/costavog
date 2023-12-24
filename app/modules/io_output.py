@@ -49,6 +49,7 @@ def io_img_output(img: Image.Image) -> BytesIO:
     img_io.seek(0)
     return img_io
 
+
 # def io_output_all(file_io):
 #     file_io = BytesIO()
 #     file_io.seek(0)
