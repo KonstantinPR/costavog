@@ -25,7 +25,7 @@ def data_to_spec_wb_transcript():
         size_col_name = "Размеры"
         art_col_name = "Артикул товара"
 
-        df_income_date = request_handler.to_df(request, col_art_name=art_col_name)
+        df_income_date = request_handler.to_df(request, input_column=art_col_name)
         df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
         df_income_date = df_income_date.reset_index(drop=True)
         # print(df_income_date)

@@ -90,7 +90,7 @@ def images_foldering():
 
     """
     if request.method == 'POST':
-        df = request_handler.to_df(request, col_art_name="Article")
+        df = request_handler.to_df(request, input_column="Article")
         markeplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]

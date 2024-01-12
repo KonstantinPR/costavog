@@ -21,7 +21,7 @@ def color_translate():
 
     if request.method == 'POST':
         col_name = 'Артикул'
-        df = request_handler.to_df(request, col_art_name=col_name)
+        df = request_handler.to_df(request, input_column=col_name)
 
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df = spec_modifiyer.picking_colors(df, df_colors, df_col_name=col_name)
