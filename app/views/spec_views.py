@@ -71,7 +71,8 @@ def data_to_spec_wb_transcript():
             df = df[df['_merge'] == 'left_only']
 
         df_output = df.drop_duplicates(subset=[art_col_name, 'Размер'], keep=False)
-        df_output['Артикул товара'] = df.loc[:, art_col_name]
+        df_output['Артикул продавца'] = df.loc[:, art_col_name]
+        df_output['Наименоавние'] = df.loc[:, 'Название']
 
         print('df_output.xlsx')
 
