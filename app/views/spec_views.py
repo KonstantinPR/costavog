@@ -16,21 +16,21 @@ def data_to_spec_wb_transcript():
     Не подтягивать по API артикулы c WB
     В спецификации должны быть товары одного вида - например только шубки или только обувь или только джинсы и т.д.
     Заполняется спецификация на основе справочников с яндекс.диска в TASKER.
-    На входе excel с шапкой: Артикул товара, Размеры (размерный ряд товара в строку), Цена - не обязательная (оптовая).
+    На входе excel с шапкой: ARTICLE, Размеры (размерный ряд товара в строку), Цена - не обязательная (оптовая).
     В строку вбиваем размеры в формате 40 56 2 (где 40 первый размер, 56 последний, 2 шаг - т.е. на выходе получим
     40 42 44 46 ... 56 (строка может быть пустой - если в прикрепляемом файле будет заполненный столбец с размерами).
     """
 
     if request.method == 'POST':
         size_col_name = "Размеры"
-        art_col_name = "Артикул товара"
+        art_col_name = "ARTICLE"
 
         df_income_date = request_handler.to_df(request, input_column=art_col_name)
         df_income_date = df_income_date.drop_duplicates(subset=art_col_name)
         df_income_date = df_income_date.reset_index(drop=True)
         # print(df_income_date)
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
-        spec_type = spec_modifiyer.spec_definition(df_income_date)
+        spec_type = spec_modifiyer.spec_definition(df_income_date, col_name = art_col_name)
 
         time.sleep(1)
         print(spec_type)
@@ -45,14 +45,14 @@ def data_to_spec_wb_transcript():
         df_verticaling_sizes = data_transforming_module.vertical_size(df_income_date)
         # df_check_exist_art = spec_modifier.check_art_existing(df_verticaling_sizes)
         # df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
-        df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example)
-        df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors)
+        df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example, col_name=art_col_name)
+        df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors, df_col_name=art_col_name)
         # df_pattern_merge = spec_modifiyer.merge_spec(df_colors_adding, df_spec_example, 'Лекало', 'Лекало')
         df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало', 'Лекало')
         # df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding)
-        df_clear = spec_modifiyer.df_clear(df_pattern_merge)
+        df_clear = spec_modifiyer.df_clear(df_pattern_merge, col_name=art_col_name)
         df_clear.to_excel("df_clear.xlsx")
-        df_added_some_col = spec_modifiyer.col_adding(df_clear)
+        df_added_some_col = spec_modifiyer.col_adding(df_clear, col_name=art_col_name)
         df = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
         df = spec_modifiyer.sizes_translate(df, spec_type)
 
@@ -63,14 +63,15 @@ def data_to_spec_wb_transcript():
             name_excel_all_cards_wb = "all_cards_wb.xlsx"
             all_cards_wb_df.to_excel(name_excel_all_cards_wb)
             df = df.merge(all_cards_wb_df,
-                          left_on=['Артикул товара', 'Размер'],
+                          left_on=[art_col_name, 'Размер'],
                           right_on=['vendorCode', 'techSize'],
                           how='outer',
                           suffixes=['', '_'],
                           indicator=True)
             df = df[df['_merge'] == 'left_only']
 
-        df_output = df.drop_duplicates(subset=['Артикул товара', 'Размер'], keep=False)
+        df_output = df.drop_duplicates(subset=[art_col_name, 'Размер'], keep=False)
+        df_output['Артикул товара'] = df.loc[:, art_col_name]
 
         print('df_output.xlsx')
 

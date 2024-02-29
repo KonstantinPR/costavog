@@ -118,7 +118,7 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
-    print(response)
+    print(f"response {response}")
     df = response.json()
     df = pd.json_normalize(df)
 

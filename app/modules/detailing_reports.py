@@ -281,7 +281,7 @@ def revenue_processing_module(request):
     # --- GET DATA VIA WB API /// ---
 
     df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-    # df_sales.to_excel('df_sales_excel.xlsx')
+    df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
 
     df_stock = API_WB.get_wb_stock_api_extanded()
@@ -398,15 +398,15 @@ def k_is_sell(sell_sum, net_cost):
 def k_qt_full(qt):
     k = 1
     if qt <= 3:
-        k = 0.98
+        return 0.98
     if qt <= 5:
-        k = 0.99
+        return 0.99
     if 10 < qt <= 50:
-        k = 1.01
+        return 1.01
     if 50 < qt <= 100:
-        k = 1.03
+        return 1.03
     if qt > 100:
-        k = 1.04
+        return 1.04
     return k
 
 
@@ -459,12 +459,12 @@ def k_net_cost(net_cost, price_disc):
     if price_disc <= net_cost * 1.4 * k_net_cost:
         return 0.99
     if price_disc >= net_cost * 4 * k_net_cost:
-        return 1.04
+        return 1.05
     if price_disc >= net_cost * 3 * k_net_cost:
-        return 1.03
+        return 1.04
     if price_disc >= net_cost * 2 * k_net_cost:
         return 1.02
-    if price_disc > net_cost * k_net_cost:
+    if price_disc >= net_cost * 1 * k_net_cost:
         return 1.01
     if price_disc == 0:
         return 1

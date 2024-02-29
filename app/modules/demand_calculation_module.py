@@ -34,7 +34,7 @@ def demand_calculation_to_df(df_input, search_string):
                   left_on=['vendorCode', 'techSize'],
                   right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
 
-    # df.to_excel("df_all_actual_stock_and_art.xlsx")
+    df.to_excel("df_all_actual_stock_and_art.xlsx")
 
     if not df_input.empty:
         df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')

@@ -63,19 +63,19 @@ def wrap_prefix_by_dash(prefix, i):
 BEST_SIZES = [44, 42, 46, 40, 48, 50, 52, 54, 56, 58]
 
 
-def spec_definition(df):
+def spec_definition(df, col_name="Артикул товара"):
     print("spec_definition ...")
     # print(df)
     # print(df['Артикул товара'])
     # print(df['Артикул товара'][0].split('-')[0])
-    if str(df['Артикул товара'][0]).startswith("SH"):
+    if str(df[col_name][0]).startswith("SH"):
         prefix = "SH"
-    elif str(df['Артикул товара'][0]).startswith("J"):
+    elif str(df[col_name][0]).startswith("J"):
         prefix = "J"
-    elif str(df['Артикул товара'][0]).startswith("SK"):
+    elif str(df[col_name][0]).startswith("SK"):
         prefix = "SK"
     else:
-        prefix = df['Артикул товара'][0].split('-')[0]
+        prefix = df[col_name][0].split('-')[0]
 
     try:
         spec_type = SPEC_TYPE[prefix]
@@ -104,14 +104,14 @@ def merge_spec(df1, df2, left_on=COL_ART_NAME, right_on=COL_ART_NAME, how='outer
     return df
 
 
-def picking_prefixes(df, df_art_prefixes):
+def picking_prefixes(df, df_art_prefixes, col_name="Артикул товара"):
     print("picking_prefixes ...")
     """to fill df on coincidence startwith and in"""
     # print(df_art_prefixes)
     # print(df)
     df['Префикс'] = ''
     df['Лекало'] = ''
-    for idx, art in enumerate(df['Артикул товара']):
+    for idx, art in enumerate(df[col_name]):
         try:
             for idy, pattern in enumerate(df_art_prefixes["Лекало"]):
                 for i in pattern.split():
@@ -152,25 +152,24 @@ def picking_colors(df, df_colors,
     return df
 
 
-def df_clear(df_income) -> pd.DataFrame:
+def df_clear(df_income, col_name="Артикул товара") -> pd.DataFrame:
     print("df_clear ...")
-    df_income['Артикул товара'].replace('', np.nan, inplace=True)
-    df_income.dropna(subset=['Артикул товара'], inplace=True)
+    df_income[col_name].replace('', np.nan, inplace=True)
+    df_income.dropna(subset=[col_name], inplace=True)
     df_income = df_income.reset_index(drop=True)
     return df_income
 
 
-def col_adding(df_income):
+def col_adding(df_income, col_name="Артикул товара"):
     print("col_adding ...")
 
     # Подбираем российские размеры, в большинстве случаев просто копируем родные размеры
     df_income['Рос. размер'] = ''
     print("sizes_pick ...")
-    for idx, art in enumerate(df_income['Артикул товара']):
+    for idx, art in enumerate(df_income[col_name]):
         # print(idx)
         if not art.startswith('J'):
             df_income['Рос. размер'][idx] = df_income['Размер'][idx]
-
 
     # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат красиво например 1990 или 790
     print("price_pick ...")
@@ -200,14 +199,13 @@ def col_adding(df_income):
     print("number_card_pattern ...")
     # нумеруем карточки на основе лекал, если нет лекал - на основе одинаковых артикулей
     set_patterns = set(df_income['Лекало'])
-    set_art = set(df_income['Артикул товара'])
+    set_art = set(df_income[col_name])
     # print(f'set_art {set_art}')
     # print(f'len_patterns {len(set_patterns)}')
     dict_patterns = {k: v for v, k in enumerate(set_patterns, 1)}
     # print(f'dict_arts {dict_patterns}')
     dict_arts = {k: v for v, k in enumerate(set_art, len(set_art) + len(set_patterns) + 1)}
     # print(f'dict_arts {dict_arts}')
-
 
     number_card_col_name = 'Номер карточки'
     if not number_card_col_name in df_income.columns:
@@ -219,13 +217,13 @@ def col_adding(df_income):
             df_income[number_card_col_name][idx] = dict_patterns[pattern]
 
     print("number_card_art ...")
-    for idx, art in enumerate(df_income['Артикул товара']):
+    for idx, art in enumerate(df_income[col_name]):
         if not df_income[number_card_col_name][idx]:
             df_income[number_card_col_name][idx] = dict_arts[art]
 
     # создаем дополнительный столбец равный артикулу поствщика
     print("art_duplicate ...")
-    df_income['Артику поставщика'] = df_income['Артикул товара']
+    df_income[col_name] = df_income[col_name]
 
     # создаем дополнительный столбец равный категории
     print("equil_category ...")
