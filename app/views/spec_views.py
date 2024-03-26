@@ -21,6 +21,8 @@ def data_to_spec_wb_transcript():
     40 42 44 46 ... 56 (строка может быть пустой - если в прикрепляемом файле будет заполненный столбец с размерами).
     """
 
+    DEFAULT_SPEC_FOLDER = "/TASKER/CHARACTERS/"
+
     if request.method == 'POST':
         size_col_name = "Размеры"
         art_col_name = "ARTICLE"
@@ -30,12 +32,17 @@ def data_to_spec_wb_transcript():
         df_income_date = df_income_date.reset_index(drop=True)
         # print(df_income_date)
         # df_characters = yandex_disk_handler.get_excel_file_from_ydisk(app.config['CHARACTERS_PRODUCTS'])
-        spec_type = spec_modifiyer.spec_definition(df_income_date, col_name = art_col_name)
+        spec_type = spec_modifiyer.spec_definition(df_income_date, col_name=art_col_name)
 
         time.sleep(1)
         print(spec_type)
-        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],
-                                                                        to_str=['Лекало', 'Префикс'])
+
+        path_spec = str(DEFAULT_SPEC_FOLDER) + str(spec_type)
+        df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(path_spec, to_str=['Лекало', 'Префикс'])
+        if df_spec_example.empty:
+            df_spec_example = yandex_disk_handler.get_excel_file_from_ydisk(app.config[spec_type],
+                                                                            to_str=['Лекало', 'Префикс'])
+
         # df_art_prefixes = yandex_disk_handler.get_excel_file_from_ydisk(app.config['ECO_FURS_WOMEN'])
         df_colors = yandex_disk_handler.get_excel_file_from_ydisk(app.config['COLORS'])
         df_income_date = data_transforming_module.str_input_to_full_str(df_income_date, request,
@@ -45,7 +52,8 @@ def data_to_spec_wb_transcript():
         df_verticaling_sizes = data_transforming_module.vertical_size(df_income_date)
         # df_check_exist_art = spec_modifier.check_art_existing(df_verticaling_sizes)
         # df_merge_spec = spec_modifiyer.merge_spec(df_verticaling_sizes, df_spec_example, 'Артикул товара')
-        df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example, col_name=art_col_name)
+        df_art_prefixes_adding = spec_modifiyer.picking_prefixes(df_verticaling_sizes, df_spec_example,
+                                                                 col_name=art_col_name)
         df_colors_adding = spec_modifiyer.picking_colors(df_art_prefixes_adding, df_colors, df_col_name=art_col_name)
         # df_pattern_merge = spec_modifiyer.merge_spec(df_colors_adding, df_spec_example, 'Лекало', 'Лекало')
         df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало', 'Лекало')
@@ -72,7 +80,10 @@ def data_to_spec_wb_transcript():
 
         df_output = df.drop_duplicates(subset=[art_col_name, 'Размер'], keep=False)
         df_output['Артикул продавца'] = df.loc[:, art_col_name]
-        df_output['Наименоавние'] = df.loc[:, 'Название']
+        if "Название" in df:
+            df_output['Наименование'] = df.loc[:, 'Название']
+        if "Цена розничная" in df:
+            df_output['Цена'] = df.loc[:, 'Цена розничная']
 
         print('df_output.xlsx')
 

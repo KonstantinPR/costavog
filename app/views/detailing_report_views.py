@@ -10,6 +10,7 @@ import datetime
 import pandas as pd
 from app.modules import detailing_reports, detailing, API_WB
 from app.modules import io_output, yandex_disk_handler
+import numpy as np
 
 
 @app.route('/key_indicators', methods=['POST', 'GET'])
@@ -44,7 +45,7 @@ def revenue_processing():
     report on any periods of date
     """
 
-    if not current_user.is_authenticated:   
+    if not current_user.is_authenticated:
         return redirect('/company_register')
 
     if request.method == 'POST':
@@ -63,7 +64,6 @@ def get_wb_sales_realization_api():
     if not current_user.is_authenticated:
         return redirect('/company_register')
     if request.method == 'POST':
-
         date_from = detailing_reports.request_date_from(request)
         date_end = detailing_reports.request_date_end(request)
         days_step = detailing_reports.request_days_step(request)
@@ -173,7 +173,6 @@ def get_wb_stock_api():
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
-
 
 
 @app.route('/concatenate_detailing', methods=['POST', 'GET'])
@@ -291,8 +290,15 @@ def upload_detailing():
             df_net_cost = False
 
         # print(df_net_cost)
+        df_list = detailing.zips_to_list(uploaded_file)
+        concatenated_dfs = pd.concat(df_list)
+        storage_cost = concatenated_dfs['Хранение'].sum()
 
-        df = detailing.zip_detail(uploaded_file, df_net_cost)
+        if 'Артикул поставщика' in concatenated_dfs:
+            concatenated_dfs['Артикул поставщика'] = [str(s).upper() if isinstance(s, str) else s for s in
+                                                concatenated_dfs['Артикул поставщика']]
+
+        df = detailing.zip_detail(concatenated_dfs, df_net_cost)
 
         date_min = df["Дата заказа покупателем"].min()
         date_max = df["Дата заказа покупателем"].max()
@@ -302,6 +308,13 @@ def upload_detailing():
         if is_get_stock:
             df_stock = API_WB.get_wb_stock_api_extanded()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
+
+        goods_sum = df['quantity'].sum()
+        df['quantity'].replace(np.NaN, 0, inplace=True)
+        df['quantity + чист.покупк.'] = df['quantity'] + df['Чист. покупок шт.']
+        df['Хранение'] = df['quantity + чист.покупк.'] * storage_cost / goods_sum
+        df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение']
+        df['Маржа-себест. за шт. руб'] = df['Маржа-себест.-хран.'] / df['Чист. покупок шт.']
 
         is_get_price = request.form.get('is_get_price')
 
@@ -320,9 +333,11 @@ def upload_detailing():
             'Артикул поставщика',
             'Код номенклатуры',
             'quantity',
+            'quantity + чист.покупк.',
             'price_disc',
             'net_cost',
             'Дней в продаже',
+            'Маржа-себест.-хран.',
             'Маржа-себест.',
             'Маржа',
             'Чист. покупок шт.',
@@ -330,6 +345,7 @@ def upload_detailing():
             'Возвраты, руб.',
             'Продаж',
             'Возврат шт.',
+            'Хранение',
             'Услуги по доставке товара покупателю',
             'Покатушка средне, руб.',
             'Маржа-себест. за шт. руб',
@@ -346,6 +362,7 @@ def upload_detailing():
             'Дата продажи',
         ]]
 
+        df.dropna(subset=["Артикул поставщика"], inplace=True)
         file = io_output.io_output(df)
 
         flash("Отчет успешно выгружен в excel файл")

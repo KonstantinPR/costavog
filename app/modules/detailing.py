@@ -57,11 +57,14 @@ def days_between(d1, d2):
     return None
 
 
-def zip_detail(zip_downloaded, df_net_cost):
-    df_list = zips_to_list(zip_downloaded)
-    result = pd.concat(df_list)
+def concatenate_zipped_excel():
+    pass
+
+
+def zip_detail(concatenated_dfs, df_net_cost):
+    result = concatenated_dfs
     result.dropna(subset=["Артикул поставщика"], inplace=True)
-    result.to_excel('result.xlsx')
+    # result.to_excel('result.xlsx')
 
     if 'Обоснование для оплаты' in result:
         result['Обоснование для оплаты'] = [str(s)[0].upper() + str(s)[1:] if isinstance(s, str) else s for s in
@@ -78,9 +81,6 @@ def zip_detail(zip_downloaded, df_net_cost):
     if 'Услуги по доставке товара покупателю' not in result:
         result['Услуги по доставке товара покупателю'] = 0
 
-    if 'Хранение' not in result:
-        result['Хранение'] = 0
-
     if 'Удержания' not in result:
         result['Удержания'] = 0
 
@@ -92,8 +92,6 @@ def zip_detail(zip_downloaded, df_net_cost):
 
     result['К перечислению за товар ИТОГО'] = result['К перечислению за товар'] + result[
         'К перечислению Продавцу за реализованный Товар']
-
-    result.to_excel("dlkjfg.xlsx")
 
     df_pivot = result.pivot_table(index=['Артикул поставщика'],
                                   columns='Обоснование для оплаты',
@@ -120,8 +118,6 @@ def zip_detail(zip_downloaded, df_net_cost):
         'Предмет': 'None',
         'Бренд': 'None',
         'Услуги по доставке товара покупателю': 0,
-        'Хранение': 0,
-        'Удержания': 0,
         'Платная приемка': 0,
         'Цена розничная с учетом согласованной скидки': 0,
         'Дата заказа покупателем': mean_date_order.strftime(STRFORMAT_DEFAULT),
@@ -138,7 +134,6 @@ def zip_detail(zip_downloaded, df_net_cost):
                                            'Предмет',
                                            'Бренд',
                                            'Услуги по доставке товара покупателю',
-                                           'Хранение',
                                            'Удержания',
                                            'Платная приемка',
                                            'Цена розничная с учетом согласованной скидки',
@@ -150,7 +145,6 @@ def zip_detail(zip_downloaded, df_net_cost):
                                             'Предмет': max,
                                             'Бренд': max,
                                             'Услуги по доставке товара покупателю': sum,
-                                            'Хранение': sum,
                                             'Удержания': sum,
                                             'Платная приемка': sum,
                                             'Цена розничная с учетом согласованной скидки': max,
@@ -161,7 +155,7 @@ def zip_detail(zip_downloaded, df_net_cost):
                                    margins=False)
 
     df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
-
+    df_result.to_excel("df_result.xlsx")
     if not isinstance(df_net_cost, bool):
         if 'Артикул поставщика' in df_result:
             df_result['Артикул поставщика'].fillna(df_result['supplierArticle'])
@@ -183,7 +177,6 @@ def zip_detail(zip_downloaded, df_net_cost):
     df_result['Маржа'] = df_result['Продажи'] - \
                          df_result["Услуги по доставке товара покупателю"] - \
                          df_result['Возвраты, руб.'] - \
-                         df_result['Хранение'] - \
                          df_result['Удержания'] - \
                          df_result['Платная приемка']
 
@@ -208,7 +201,6 @@ def zip_detail(zip_downloaded, df_net_cost):
         ('Количество доставок', 'Возврат')]
 
     df_result['Маржа-себест.'] = df_result['Маржа'] - df_result['net_cost'] * df_result['Чист. покупок шт.']
-    df_result['Маржа-себест. за шт. руб'] = df_result['Маржа-себест.'] / df_result['Чист. покупок шт.']
     df_result['Себестоимость продаж'] = df_result['net_cost'] * df_result['Чист. покупок шт.']
     df_result['Покатали раз'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
     df_result['Покатушка средне, руб.'] = df_result['Услуги по доставке товара покупателю'] / df_result[
@@ -219,6 +211,8 @@ def zip_detail(zip_downloaded, df_net_cost):
     today = datetime.today()
     print(f'today {today}')
     df_result['Дней в продаже'] = [days_between(d1, today) for d1 in df_result['Дата заказа покупателем']]
+
+    result.to_excel('result.xlsx')
 
     df_result = df_result[[
         'Бренд',
@@ -234,7 +228,6 @@ def zip_detail(zip_downloaded, df_net_cost):
         'Возврат шт.',
         'Услуги по доставке товара покупателю',
         'Покатушка средне, руб.',
-        'Маржа-себест. за шт. руб',
         'Покатали раз',
         'net_cost',
         'company_id',

@@ -23,6 +23,7 @@ SPEC_TYPE = {
     'MHBB': 'SHOES',
     'MHSD': 'SHOES',
     'MHSB': 'SHOES',
+    'MHSORT': 'ORTOSHOES',
     'J': 'JEANS',
     'DEFAULT': 'DEFAULT',
 }

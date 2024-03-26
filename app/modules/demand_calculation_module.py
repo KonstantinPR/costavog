@@ -9,8 +9,8 @@ def demand_calculation_df_to_pdf(df, file_name="output_file"):
     qt_sum = int(df['Кол-во'].sum())
     img_name_list_files = img_processor.download_images_from_yandex_to_folder(df_unique, art_col_name="vendorCode")
     path_pdf, no_photo_list = pdf_processor.images_into_pdf(df, art_col_name='vendorCode',
-                                                              size_col_name='techSize', qt_sum=qt_sum,
-                                                              file_name=file_name)
+                                                            size_col_name='techSize', qt_sum=qt_sum,
+                                                            file_name=file_name)
     pdf = os.path.abspath(path_pdf)
     return pdf
 
@@ -24,9 +24,21 @@ def demand_calculation_to_df(df_input, search_string):
         search_string_first = None
     df_all_cards = API_WB.get_all_cards_api_wb(textSearch=search_string_first)
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
+    df_report.to_excel("df_report.xlsx")
     # print(file_name)
     df_wb_stock = API_WB.df_wb_stock_api()
-    # df_wb_stock.to_excel("df_wb_stock.xlsx")
+
+
+    # Assuming df is your original DataFrame
+    grouping_columns = ['supplierArticle', 'techSize']
+    aggregation_dict = {col: 'first' if col not in grouping_columns else 'sum' for col in df_wb_stock.columns}
+
+
+    # Group by 'supplierArticle' and 'techSize', summing 'quantityFull' and selecting first for other columns
+    df_wb_stock = df_wb_stock.groupby(grouping_columns, as_index=False).agg(aggregation_dict)
+
+    # Save the resulting DataFrame to a new Excel file
+    df_wb_stock.to_excel("df_wb_stock.xlsx")
 
     df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
                             suffixes=("", "_drop"))

@@ -40,6 +40,7 @@ app.config['YANDEX_FOLDER_IMAGE'] = "C:\YandexDisk\ФОТОГРАФИИ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ"
 app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
 app.config['RATING'] = "/TASKER/RATING"
+
 app.config['CHARACTERS_PRODUCTS'] = "/TASKER/CHARACTERS"
 app.config['COLORS'] = "/TASKER/CHARACTERS/COLORS"
 app.config['ECO_FURS_WOMEN'] = "/TASKER/CHARACTERS/ECO_FURS_WOMEN"
@@ -50,6 +51,7 @@ app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['SHOES'] = "/TASKER/CHARACTERS/SHOES"
 app.config['JEANS'] = "/TASKER/CHARACTERS/JEANS"
 app.config['DEFAULT'] = "/TASKER/CHARACTERS/DEFAULT"
+
 app.config['SPEC_EXAMPLE'] = "/TASKER/SPEC_EXAMPLE"
 app.config['PARTNERS_FOLDER'] = "ПОСТАВЩИКИ/TEST"
 app.config['ARRIVALS_FOLDER'] = "Приходы"
@@ -130,3 +132,4 @@ from app.views import data_transforming
 from app.views import warehouse_views
 from app.views import models_views
 from app.views import youtube_views
+from app.views import api_views

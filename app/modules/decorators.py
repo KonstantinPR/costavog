@@ -3,6 +3,49 @@ from functools import wraps
 import pandas as pd
 from flask import redirect, flash
 from flask_login import current_user
+from functools import wraps
+from threading import Thread
+import time
+import psycopg2  # Assuming you're using psycopg2 for PostgreSQL connection
+from os import environ
+
+
+def keep_alive_decorator():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Function to keep PostgreSQL connection alive
+            def keep_connection_alive():
+                while True:
+                    try:
+                        # Establishing a connection to the PostgreSQL server
+                        conn = psycopg2.connect(environ.get('DATABASE_URL'))
+                        # Send a keep-alive query every minute
+                        with conn.cursor() as cursor:
+                            cursor.execute("SELECT 1")
+                            conn.commit()
+                        # Sleep for 1 minute
+                        time.sleep(10)
+                        # Close the connection
+                        conn.close()
+                    except Exception as e:
+                        print(f"Error: {e}")
+
+            # Start a thread to keep the connection alive
+            keep_alive_thread = Thread(target=keep_connection_alive)
+            keep_alive_thread.start()
+
+            # Execute the decorated function
+            result = func(*args, **kwargs)
+
+            # Wait for the thread to finish
+            keep_alive_thread.join()
+
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 def flask_request_to_df(function):

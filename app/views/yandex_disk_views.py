@@ -46,36 +46,6 @@ def get_files_from_dir_ydisk():
     return render_template("upload_yandex_disk_file.html", doc_string=get_files_from_dir_ydisk.__doc__)
 
 
-@app.route('/get_stock_wb', methods=['POST', 'GET'])
-@login_required
-def get_stock_wb():
-    """
-    Достает все остатки с WB через API
-    """
-
-    if request.method == 'POST':
-        df_all_cards = API_WB.get_wb_stock_api_extanded()
-        df = io_output.io_output(df_all_cards)
-        file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
-        return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
-
-
-@app.route('/get_info_wb', methods=['POST', 'GET'])
-@login_required
-def get_info_wb():
-    """
-    Достает все актуальные карточки с WB через API
-    """
-
-    if request.method == 'POST':
-        df_all_cards = API_WB.get_all_cards_api_wb()
-        df = io_output.io_output(df_all_cards)
-        file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
-        return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
-
-
 @app.route('/image_from_yadisk', methods=['POST', 'GET'])
 @login_required
 def image_from_yadisk():
