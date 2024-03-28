@@ -50,6 +50,14 @@
                                 Подгрузить текущие цены со скидкой
                             </label>
                         </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_get_storage" name="is_get_storage"
+                                   id="is_get_storage" checked>
+                            <label class="form-check-label" for="is_get_price">
+                                Подгрузить стоимость хранения
+                            </label>
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('upload_detailing')}}"
                                    class="w-100 btn btn-primary btn-lg" type="submit"

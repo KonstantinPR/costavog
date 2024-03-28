@@ -1,19 +1,8 @@
-import re
-from app import app, Company
-from flask import render_template, request, redirect
-from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, base_module, API_WB, pdf_processor, yandex_disk_handler
-import pandas as pd
-import flask
-from random import randrange
-import shutil
-from PIL import Image
-import glob
-from flask_login import login_required, current_user
+from app import app
+from flask import render_template, request
+from app.modules import  io_output, API_WB
+from flask_login import login_required
 import datetime
-import yadisk
-import os
-import requests
 from flask import send_file
 
 
@@ -36,7 +25,7 @@ def get_stock_wb():
 @login_required
 def get_info_wb():
     """
-    Достает все актуальные карточки с WB через API
+    To get data via API WB
     """
 
     if request.method == 'POST':
@@ -51,7 +40,7 @@ def get_info_wb():
 @login_required
 def get_storage_cost_route():
     """
-    Достает все актуальные карточки с WB через API
+    Get all storage cost for goods between two data, default last week
     """
 
     if request.method == 'POST':

@@ -1,5 +1,4 @@
 import zipfile
-import asyncio
 import pandas as pd
 import requests
 import yadisk
@@ -22,18 +21,18 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     return file_content
 
 
-def upload_to_YandexDisk(file: BytesIO, file_name: str, app_config_path=app.config['YANDEX_KEY_FILES_PATH']):
+def upload_to_YandexDisk(file: BytesIO, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH']):
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
-    path_full_to = f"{app_config_path}/{file_name}"
+    path_full_to = f"{path}/{file_name}"
     print(path_full_to)
     y.upload(file, path_full_to, overwrite=True)
 
     return None
 
 
-def download_from_YandexDisk():
+def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH'):
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
-    path_yandex_file = f"{list(y.listdir(app.config['YANDEX_KEY_FILES_PATH']))[-1]['path']}".replace('disk:', '')
+    path_yandex_file = f"{list(y.listdir(app.config[path]))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)

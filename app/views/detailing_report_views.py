@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 import datetime
 import pandas as pd
 from app.modules import detailing_reports, detailing, API_WB
-from app.modules import io_output, yandex_disk_handler
+from app.modules import io_output, yandex_disk_handler, pandas_handler
 import numpy as np
 
 
@@ -264,6 +264,9 @@ def upload_detailing():
         is_net_cost = request.form.get('is_net_cost')
         print(is_net_cost == 'is_net_cost')
 
+        is_get_storage = request.form.get('is_get_storage')
+        print(f"is_get_storage {is_get_storage}")
+
         if not uploaded_files:
             flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
             return render_template('upload_detailing.html')
@@ -292,11 +295,15 @@ def upload_detailing():
         # print(df_net_cost)
         df_list = detailing.zips_to_list(uploaded_file)
         concatenated_dfs = pd.concat(df_list)
-        storage_cost = concatenated_dfs['Хранение'].sum()
+        if 'Хранение' in concatenated_dfs.columns:
+            storage_cost = concatenated_dfs['Хранение'].sum()
+        else:
+            concatenated_dfs['Хранение'] = 0
+            storage_cost = 0
 
         if 'Артикул поставщика' in concatenated_dfs:
             concatenated_dfs['Артикул поставщика'] = [str(s).upper() if isinstance(s, str) else s for s in
-                                                concatenated_dfs['Артикул поставщика']]
+                                                      concatenated_dfs['Артикул поставщика']]
 
         df = detailing.zip_detail(concatenated_dfs, df_net_cost)
 
@@ -312,20 +319,31 @@ def upload_detailing():
         goods_sum = df['quantity'].sum()
         df['quantity'].replace(np.NaN, 0, inplace=True)
         df['quantity + чист.покупк.'] = df['quantity'] + df['Чист. покупок шт.']
-        df['Хранение'] = df['quantity + чист.покупк.'] * storage_cost / goods_sum
-        df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение']
-        df['Маржа-себест. за шт. руб'] = df['Маржа-себест.-хран.'] / df['Чист. покупок шт.']
+        # df['Хранение'] = df['quantity + чист.покупк.'] * storage_cost / goods_sum
+        # df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение']
+        # df['Маржа-себест. за шт. руб'] = df['Маржа-себест.-хран.'] / df['Чист. покупок шт.']
 
         is_get_price = request.form.get('is_get_price')
 
-        df['Код номенклатуры'] = df['Код номенклатуры'].fillna(df['nm_id'])
+        if is_get_storage:
+            df_price = API_WB.get_average_storage_cost()
+            df = df.merge(df_price, how='outer', left_on='Артикул поставщика', right_on='vendorCode')
+            # df['Хранение'] = df['storagePricePerBarcode'] * df['quantity + чист.покупк.']
+            df['Хранение'] = storage_cost * df['shareCost']
+            df['Хранение'] = df['Хранение'].fillna(0)
+            df['Хранение.ед'] = df['Хранение'] / df['quantity + чист.покупк.']
+            df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение']
+            df['Маржа-себест. за шт. руб'] = df['Маржа-себест.-хран.'] / df['Чист. покупок шт.']
+            # df.to_excel("detail_with_storage.xlsx")
 
         if is_get_price:
             df_price = API_WB.get_wb_price_api()
-            df_price.to_excel("wb_price.xlsx")
             df = df.merge(df_price, how='outer', left_on='Код номенклатуры', right_on='nm_id')
             df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
-            df.to_excel("detail_with_price.xlsx")
+            # df.to_excel("detail_with_price.xlsx")
+
+        nm_columns = ['nmId', 'nm_id']
+        df = pandas_handler.fill_empty_val_by(nm_columns, df, "Код номенклатуры")
 
         df = df[[
             'Бренд',
@@ -346,6 +364,7 @@ def upload_detailing():
             'Продаж',
             'Возврат шт.',
             'Хранение',
+            'Хранение.ед',
             'Услуги по доставке товара покупателю',
             'Покатушка средне, руб.',
             'Маржа-себест. за шт. руб',
@@ -360,6 +379,7 @@ def upload_detailing():
             'Поставщик',
             'Дата заказа покупателем',
             'Дата продажи',
+            'volume',
         ]]
 
         df.dropna(subset=["Артикул поставщика"], inplace=True)

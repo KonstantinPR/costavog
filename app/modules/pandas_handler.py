@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from random import randrange
+from typing import Union
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
 
@@ -32,3 +33,34 @@ def df_col_merging(df, random_suffix=f'_col_on_drop_{randrange(10)}', false_list
 
     return df
 
+
+from typing import Union
+import pandas as pd
+
+
+def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_col_name: str) -> pd.DataFrame:
+    """
+    Fill missing values in a DataFrame column with values from potential columns provided in nm_columns.
+
+    Parameters:
+        nm_columns (Union[list, str]): List of potential column names or a single column
+        name to use for filling missing values.
+        df (pd.DataFrame): DataFrame containing the data.
+        missing_col_name (str): Name of the column with missing values to be filled.
+
+    Returns:
+        pd.DataFrame: DataFrame with missing values filled.
+    """
+    # Ensure nm_columns is a list
+    if not isinstance(nm_columns, list):
+        nm_columns = [nm_columns]
+
+    # Iterate over each potential column name
+    for nm_column in nm_columns:
+        if nm_column in df.columns:
+            # Fill missing values in 'missing_col_name' with values from the current column
+            df[missing_col_name] = df[missing_col_name].fillna(df[nm_column])
+            # Replace zeros in 'missing_col_name' with values from the current column
+            df.loc[df[missing_col_name] == 0, missing_col_name] = df.loc[df[missing_col_name] == 0, nm_column]
+
+    return df
