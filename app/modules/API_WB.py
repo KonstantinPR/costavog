@@ -45,7 +45,7 @@ def get_average_storage_cost():
 #     return df
 
 
-def get_storage_data(date_from=None, date_to=None, upload_to_yadisk=True):
+def get_storage_data(number_last_days=app.config['LAST_DAYS_DEFAULT'], days_delay=0, upload_to_yadisk=True):
     storage_file_name = "storage_data"
     headers = {
         'accept': 'application/json',
@@ -53,12 +53,8 @@ def get_storage_data(date_from=None, date_to=None, upload_to_yadisk=True):
     }
 
     # Set default date_from to a week ago if not provided
-    if date_from is None:
-        date_from = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-
-    # Set default date_to to today if not provided
-    if date_to is None:
-        date_to = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    date_from = (datetime.now() - timedelta(days=number_last_days)).strftime('%Y-%m-%d')
+    date_to = (datetime.now() - timedelta(days=days_delay)).strftime('%Y-%m-%d')
 
     # Step 1: Create a report
     create_report_url = 'https://seller-analytics-api.wildberries.ru/api/v1/paid_storage'
@@ -245,13 +241,30 @@ def get_all_cards_api_wb(textSearch: str = None):
     return df
 
 
+# def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
+#     """get sales as api wb sales realization describe"""
+#     t = time.process_time()
+#     api_key = app.config['WB_API_TOKEN']
+#     headers = {'Authorization': api_key}
+#     # url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+#     url = "https://statistics-api.wildberries.ru/api/v2/supplier/reportDetailByPeriod?"
+#
+#     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
+#     response = requests.get(url_all, headers=headers)
+#     print(f"response {response}")
+#     df = response.json()
+#     df = pd.json_normalize(df)
+#
+#     return df
+
+
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     """get sales as api wb sales realization describe"""
     t = time.process_time()
     api_key = app.config['WB_API_TOKEN']
     headers = {'Authorization': api_key}
     # url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-    url = "https://statistics-api.wildberries.ru/api/v2/supplier/reportDetailByPeriod?"
+    url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod?"
 
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)

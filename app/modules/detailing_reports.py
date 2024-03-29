@@ -214,8 +214,6 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     df['Согласованная скидка, %'] = round(df['Согласованная скидка, %'] + \
                                           (df['Согласованная скидка, %'] - df['discount']) / k_smooth, 0)
 
-
-
     df['Согл. скидк - disc'] = df['Согласованная скидка, %'] - df['discount']
     df['Остаток в розничных ценах'] = df['price_disc'] * df['quantity']
     # df['Согласованная скидка, %'] = round(df['discount'] + (df['k_discount'] / (1 - df['discount'] / 100)), 0)
@@ -535,8 +533,6 @@ def get_k_discount(df, df_revenue_col_name_list):
     return df
 
 
-
-
 def df_revenue_column_name_list(df):
     df_revenue_col_name_list = [col for col in df.columns if f'Прибыль_' in col]
     return df_revenue_col_name_list
@@ -641,7 +637,6 @@ def get_important_columns(df):
     ]]
     print(df)
     return df
-
 
 
 def df_stay_column_not_null(df):

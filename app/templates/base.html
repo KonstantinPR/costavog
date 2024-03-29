@@ -76,6 +76,9 @@
 
 
 
+
+
+
     </style>
 </head>
 
@@ -124,8 +127,9 @@
                         Аналитика
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
-<!--                        <a class="dropdown-item" href="{{url_for('upload_turnover')}}">Корректировка цен</a>-->
-                        <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
+                        <!--                        <a class="dropdown-item" href="{{url_for('upload_turnover')}}">Корректировка цен</a>-->
+                        <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика
+                            детализаций</a>
                         <a class="dropdown-item" href="{{url_for('get_wb_pivot_sells_api')}}">Анализ прибыльности</a>
                         <a class="dropdown-item" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
                         <a class="dropdown-item" href="{{url_for('demand_calculation_with_image_catalog')}}">Рассчитать
@@ -183,10 +187,10 @@
                     <a class="nav-item nav-link" href="{{url_for('upload_products')}}">Загрузки </a>
                 </li>
                 <li class="nav-item dropdown">
-<!--                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkYouTube" role="button"-->
-<!--                       data-bs-toggle="dropdown" aria-expanded="false">-->
-<!--                        YouTube-->
-<!--                    </a>-->
+                    <!--                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkYouTube" role="button"-->
+                    <!--                       data-bs-toggle="dropdown" aria-expanded="false">-->
+                    <!--                        YouTube-->
+                    <!--                    </a>-->
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkSoundYouTube">
                         <a class="dropdown-item" href="{{url_for('get_youtube_sound')}}">Звук с YouTube</a>
                     </ul>
@@ -253,6 +257,9 @@
                 isTextShown = true;
             }
         }
+
+
+
 
 
 

@@ -34,10 +34,6 @@ def df_col_merging(df, random_suffix=f'_col_on_drop_{randrange(10)}', false_list
     return df
 
 
-from typing import Union
-import pandas as pd
-
-
 def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_col_name: str) -> pd.DataFrame:
     """
     Fill missing values in a DataFrame column with values from potential columns provided in nm_columns.
@@ -63,4 +59,24 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_co
             # Replace zeros in 'missing_col_name' with values from the current column
             df.loc[df[missing_col_name] == 0, missing_col_name] = df.loc[df[missing_col_name] == 0, nm_column]
 
+    return df
+
+
+def upper_case(df, name_columns):
+    if not isinstance(name_columns, list): name_columns = [name_columns]
+    for name_column in name_columns:
+        if name_column in df:
+            df[name_column] = [str(s).upper() if isinstance(s, str) else s for s in df[name_column]]
+        else:
+            print(f"Column {name_column} not found in the {df} dictionary.")
+    return df
+
+
+def first_letter_up(df, name_columns):
+    if not isinstance(name_columns, list): name_columns = [name_columns]
+    for name_column in name_columns:
+        if name_column in df:
+            df[name_column] = [str(s)[0].upper() + str(s)[1:] if isinstance(s, str) else s for s in df[name_column]]
+        else:
+            print(f"Column {name_column} not found in the {df} dictionary.")
     return df

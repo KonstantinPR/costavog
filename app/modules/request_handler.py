@@ -1,5 +1,5 @@
 import os
-
+from app import app
 import pandas as pd
 from flask import flash
 from werkzeug.datastructures import FileStorage
@@ -27,6 +27,7 @@ def to_df(request, html_text_input_name='text_input', html_file_input_name='file
     flash("Необходимые данные не переданы")
     return df
 
+
 def file_name_from_request(request, html_file_input_name='file'):
     if request.files[html_file_input_name]:
         input_txt = request.files[html_file_input_name]
@@ -34,3 +35,10 @@ def file_name_from_request(request, html_file_input_name='file'):
         return filename
     return "output_file"
 
+
+def request_last_days(request, input_name, config_name_default='DAYS_STEP_DEFAULT'):
+    if request.form.get(input_name):
+        days = request.form.get(input_name)
+    else:
+        days = app.config['LAST_DAYS_DEFAULT']
+    return days

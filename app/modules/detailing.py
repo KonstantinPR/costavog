@@ -1,10 +1,9 @@
-from app import app
 import zipfile
 import pandas as pd
 import numpy as np
 import io
 from datetime import datetime
-import requests
+from app.modules import pandas_handler
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -66,11 +65,7 @@ def zip_detail(concatenated_dfs, df_net_cost):
     result.dropna(subset=["Артикул поставщика"], inplace=True)
     # result.to_excel('result.xlsx')
 
-    if 'Обоснование для оплаты' in result:
-        result['Обоснование для оплаты'] = [str(s)[0].upper() + str(s)[1:] if isinstance(s, str) else s for s in
-                                            result['Обоснование для оплаты']]
-    else:
-        print("Column 'Обоснование для оплаты' not found in the result dictionary.")
+    result = pandas_handler.first_letter_up(result, 'Обоснование для оплаты')
 
     if 'К перечислению за товар' not in result:
         result['К перечислению за товар'] = 0
@@ -185,6 +180,8 @@ def zip_detail(concatenated_dfs, df_net_cost):
     else:
         df_result['net_cost'] = 0
 
+    df_result.to_excel('testtest.xlsx')
+
     df_result['Чист. покупок шт.'] = df_result[('Количество доставок', 'Продажа')] - df_result[
         ('Количество доставок', 'Возврат')]
 
@@ -212,7 +209,7 @@ def zip_detail(concatenated_dfs, df_net_cost):
     print(f'today {today}')
     df_result['Дней в продаже'] = [days_between(d1, today) for d1 in df_result['Дата заказа покупателем']]
 
-    result.to_excel('result.xlsx')
+    # result.to_excel('result.xlsx')
 
     df_result = df_result[[
         'Бренд',
