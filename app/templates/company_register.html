@@ -6,9 +6,7 @@
 
 {% block content %}
 {{ super() }}
-{% for cat, msg in get_flashed_messages(True) %}
-<div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-{% endfor %}
+
 
 
 <div class="centered">
@@ -21,10 +19,10 @@
                        name="company_name">
                 <label for="floatingCompanyName">Company Name</label>
             </div>
-<!--            <div class="form-floating">-->
-<!--                <input type="text" class="form-control" id="floatingName" placeholder="floatingName" name="user_name">-->
-<!--                <label for="floatingName">Name</label>-->
-<!--            </div>-->
+            <!--            <div class="form-floating">-->
+            <!--                <input type="text" class="form-control" id="floatingName" placeholder="floatingName" name="user_name">-->
+            <!--                <label for="floatingName">Name</label>-->
+            <!--            </div>-->
             <!--        <div class="form-floating">-->
             <!--            <input type="email" class="form-control" id="floatingEmail" placeholder="Email" name="email">-->
             <!--            <label for="floatingEmail">Email</label>-->
@@ -38,6 +36,11 @@
                 <input type="password" class="form-control" id="floatingPassword2" placeholder="Password"
                        name="password2">
                 <label for="floatingPassword2">Password repeat</label>
+            </div>
+            <div class="form-floating">
+                <input type="password" class="form-control" id="app_password" placeholder="Password"
+                       name="app_password">
+                <label for="floatingPassword2">APP_PASSWORD</label>
             </div>
 
             <br>

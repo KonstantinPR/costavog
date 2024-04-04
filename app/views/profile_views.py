@@ -54,9 +54,14 @@ def company_register():
         company_name = request.form['company_name']
         # user_name = request.form['user_name']
         password = request.form['password']
+        app_password = request.form['app_password']
 
         company = Company(company_name=company_name)
         company.set_password(password)
+        if not app_password == app.config['APP_PASSWORD']:
+            flash(f"Неверный app_password: {app_password}")
+            return render_template('company_register.html')
+
         db.session.add(company)
         db.session.commit()
 
@@ -90,7 +95,6 @@ def user_register():
             print("checked is 0, but need to be not 1, change it if you want to allowed this company register user")
             flash("Компания еще не прошла проверку.")
             return redirect('/user_register')
-
 
         if check_password_hash(company.password_hash, current_company_password):
             company_id = company.id
