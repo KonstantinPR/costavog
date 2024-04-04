@@ -9,8 +9,8 @@ from app.modules import io_output
 from app.modules import yandex_disk_handler
 
 
-def get_average_storage_cost():
-    df = get_storage_data()
+def get_average_storage_cost(is_delete_shushary=None):
+    df = get_storage_cost(is_delete_shushary)
     # Step 1: Get the DataFrame
     if df is None:
         return None
@@ -45,7 +45,8 @@ def get_average_storage_cost():
 #     return df
 
 
-def get_storage_data(number_last_days=app.config['LAST_DAYS_DEFAULT'], days_delay=0, upload_to_yadisk=True):
+def get_storage_cost(is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'], days_delay=0,
+                     upload_to_yadisk=True):
     storage_file_name = "storage_data"
     headers = {
         'accept': 'application/json',
@@ -102,14 +103,18 @@ def get_storage_data(number_last_days=app.config['LAST_DAYS_DEFAULT'], days_dela
 
     # Step 4: Convert data to DataFrame
     df = pd.DataFrame(report_data)
-    print(f"df {df}")
+    # print(f"df {df}")
 
     if upload_to_yadisk and not df is None:
         io_df = io_output.io_output(df)
         file_name = f'{storage_file_name}.xlsx'
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STORAGE_COST'])
 
-    print(f"df {df}")
+    if is_delete_shushary == 'is_delete_shushary':
+        print("Удаление сгоревших товаров Шушар...")
+        df = df[df['warehouse'] != 'Санкт-Петербург Шушары']
+
+    # print(f"df {df}")
     return df
 
 
@@ -152,10 +157,37 @@ def get_wb_price_api():
         return df
 
 
-def get_wb_stock_api_extanded():
+def get_wb_stock_api_no_city(is_delete_shushary=None):
     """to modify wb stock"""
 
-    df = df_wb_stock_api()
+    df = df_wb_stock_api(is_delete_shushary=is_delete_shushary)
+
+    # df.to_excel("df_wb_stock_api.xlsx")
+
+    df = df.pivot_table(index=['nmId', 'techSize'],
+                        values=['quantity',
+                                # 'daysOnSite',
+                                'supplierArticle',
+                                'barcode',
+                                ],
+                        aggfunc={'quantity': sum,
+                                 # 'daysOnSite': max,
+                                 'supplierArticle': max,
+                                 'barcode': 'first',
+                                 },
+                        margins=False)
+
+    df = df.reset_index().rename_axis(None, axis=1)
+    df = df.rename(columns={'nmId': 'nm_id'})
+    df.replace(np.NaN, 0, inplace=True)
+
+    return df
+
+
+def get_wb_stock_api_no_sizes(is_delete_shushary=None):
+    """to modify wb stock"""
+
+    df = df_wb_stock_api(is_delete_shushary=is_delete_shushary)
 
     # df.to_excel("df_wb_stock_api.xlsx")
 
@@ -177,7 +209,7 @@ def get_wb_stock_api_extanded():
     return df
 
 
-def df_wb_stock_api(date_from: str = '2019-01-01'):
+def df_wb_stock_api(is_delete_shushary=None, date_from: str = '2019-01-01'):
     """
     get wb stock via api put in df
     :return: df
@@ -193,7 +225,63 @@ def df_wb_stock_api(date_from: str = '2019-01-01'):
     df = pd.json_normalize(df)
     # df.to_excel("wb_stock.xlsx")
 
+    if is_delete_shushary == 'is_delete_shushary':
+        print("Удаление сгоревших товаров Шушар из остатков ...")
+        df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
+
     return df
+
+
+#
+# def get_all_cards_api_wb(textSearch: str = None):
+#     print("get_all_cards_api_wb ...")
+#     limit = 1000
+#     total = 1000
+#     updatedAt = None
+#     nmId = None
+#     dfs = []
+#
+#     while total >= limit:
+#         headers = {
+#             'accept': 'application/json',
+#             'Authorization': app.config['WB_API_TOKEN2'],
+#         }
+#
+#         data = {
+#             "sort": {
+#                 "cursor": {
+#                     "limit": limit,
+#                     "updatedAt": updatedAt,
+#                     "nmID": nmId,
+#                 },
+#                 "filter": {
+#                     "textSearch": textSearch,
+#                     "withPhoto": -1
+#                 }
+#             }
+#         }
+#
+#         # response = requests.post('https://suppliers-api.wildberries.ru/content/v3/cards/cursor/list',
+#         #                          data=json.dumps(data), headers=headers)
+#
+#         response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',
+#                                  data=json.dumps(data), headers=headers)
+#
+#         # print(f"{response}")
+#
+#         if response.status_code != 200:
+#             print(f"Error in API request: {response.status_code}")
+#             break
+#         df_json = response.json()
+#         print(df_json)
+#         total = df_json['data']['cursor']['total']
+#         updatedAt = df_json['data']['cursor']['updatedAt']
+#         nmId = df_json['data']['cursor']['nmID']
+#         dfs += df_json['data']['cards']
+#
+#     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'])
+#
+#     return df
 
 
 def get_all_cards_api_wb(textSearch: str = None):
@@ -204,15 +292,15 @@ def get_all_cards_api_wb(textSearch: str = None):
     nmId = None
     dfs = []
 
-    while total >= limit:
+    while total > 0:  # Change loop condition
         headers = {
             'accept': 'application/json',
             'Authorization': app.config['WB_API_TOKEN2'],
         }
 
         data = {
-            "sort": {
-                "cursor": {
+            "settings": {
+                "cursor": {  # Move cursor inside settings
                     "limit": limit,
                     "updatedAt": updatedAt,
                     "nmID": nmId,
@@ -224,19 +312,27 @@ def get_all_cards_api_wb(textSearch: str = None):
             }
         }
 
-        response = requests.post('https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list',
+        response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',
                                  data=json.dumps(data), headers=headers)
 
         if response.status_code != 200:
             print(f"Error in API request: {response.status_code}")
+            # Depending on the API documentation, handle errors here
             break
-        df_json = response.json()
-        total = df_json['data']['cursor']['total']
-        updatedAt = df_json['data']['cursor']['updatedAt']
-        nmId = df_json['data']['cursor']['nmID']
-        dfs += df_json['data']['cards']
 
-    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'])
+        df_json = response.json()
+        if 'error' in df_json:
+            print(f"API Error: {df_json['errorText']}")
+            # Depending on the API documentation, handle errors here
+            break
+
+        total = df_json['cursor']['total']
+        # updatedAt = df_json['cursor']['updatedAt']
+        nmId = df_json['cursor']['nmID']
+        dfs += df_json['cards']
+
+    # Use errors='ignore' to handle missing keys gracefully
+    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'], errors='ignore')
 
     return df
 
@@ -260,16 +356,41 @@ def get_all_cards_api_wb(textSearch: str = None):
 
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     """get sales as api wb sales realization describe"""
-    t = time.process_time()
+
     api_key = app.config['WB_API_TOKEN']
     headers = {'Authorization': api_key}
-    # url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-    url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod?"
+    url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
+    # url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod?"
 
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
     print(f"response {response}")
     df = response.json()
+    print(df)
     df = pd.json_normalize(df)
 
     return df
+
+
+def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int = 7):
+    """Get sales data from the Wildberries API v2"""
+
+    api_key = app.config['WB_API_TOKEN']  # Assuming you have the API token configured in your app
+    headers = {'Authorization': api_key}
+    url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod"
+
+    url_params = {
+        'dateFrom': date_from,
+        'dateTo': date_to
+    }
+
+    response = requests.get(url, headers=headers, params=url_params)
+    print(f'response {response}')
+    if response.status_code == 200:
+        data = response.json()
+        print(f"data {data}")
+        df = pd.json_normalize(data)
+        return df
+    else:
+        print(f"Failed to fetch data for {date_from} to {date_to}")
+        return None

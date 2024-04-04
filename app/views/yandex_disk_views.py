@@ -62,7 +62,7 @@ def image_from_yadisk():
         # print(df)
         img_name_list_files = img_processor.download_images_from_yandex_to_folder(df)
         # print(img_name_list_files)
-        path_pdf = pdf_processor.images_into_pdf_2(df)[0]
+        path_pdf = pdf_processor.images_into_pdf(df)[0]
         pdf = os.path.abspath(path_pdf)
         return send_file(pdf, as_attachment=True)
     return render_template('upload_image_from_yadisk.html', doc_string=image_from_yadisk.__doc__)

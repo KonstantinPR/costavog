@@ -1,34 +1,35 @@
 import app.modules.API_WB
 import time
-import app.modules.API_WB
 from app import app
-
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
 
-from app.modules import detailing_reports, API_WB
+from app.modules import detailing_reports, API_WB, detailing_reports
 from app.modules import io_output, yandex_disk_handler, request_handler
 
 
-@app.route('/get_stock_wb', methods=['POST', 'GET'])
+@app.route('/get_sales_wb', methods=['POST', 'GET'])
 @login_required
-def get_stock_wb():
+def get_sales_wb():
     """
-    Достает все остатки с WB через API
+    To get sales via API WB
     """
 
     if request.method == 'POST':
-        df_all_cards = API_WB.get_wb_stock_api_extanded()
-        df = io_output.io_output(df_all_cards)
-        file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
+        date_from = detailing_reports.request_date_from(request)
+        date_end = detailing_reports.request_date_end(request)
+        days_step = detailing_reports.request_days_step(request)
+        df_sales = API_WB.get_wb_sales_realization_api_v2(date_from, date_end, days_step)
+        df = io_output.io_output(df_sales)
+        file_name = f'wb_sales_{str(date_from)}_{str(date_end)}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
+    return render_template('upload_sales_wb.html', doc_string=get_cards_wb.__doc__)
 
 
-@app.route('/get_info_wb', methods=['POST', 'GET'])
+@app.route('/get_cards_wb', methods=['POST', 'GET'])
 @login_required
-def get_info_wb():
+def get_cards_wb():
     """
     To get data via API WB
     """
@@ -38,12 +39,31 @@ def get_info_wb():
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
+    return render_template('upload_cards_wb.html', doc_string=get_cards_wb.__doc__)
 
 
-@app.route('/get_storage_data_route', methods=['POST', 'GET'])
+@app.route('/get_stock_wb', methods=['POST', 'GET'])
 @login_required
-def get_storage_cost_route():
+def get_stock_wb():
+    """
+    Достает все остатки с WB через API
+    """
+    is_delete_shushary = request.form.get('is_delete_shushary')
+    print(f"is_delete_shushary {is_delete_shushary}")
+    if request.method == 'POST':
+        if request.form.get('no_city'):
+            df_all_cards = API_WB.get_wb_stock_api_no_city(is_delete_shushary=is_delete_shushary)
+        else:
+            df_all_cards = API_WB.df_wb_stock_api(is_delete_shushary=is_delete_shushary)
+        df = io_output.io_output(df_all_cards)
+        file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
+        return send_file(df, download_name=file_name, as_attachment=True)
+    return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)
+
+
+@app.route('/get_storage_wb', methods=['POST', 'GET'])
+@login_required
+def get_storage_wb():
     """
     Get all storage cost for goods between two data, default last week
     """
@@ -55,14 +75,16 @@ def get_storage_cost_route():
         print(f"{request.form.get('is_mean')}")
         if request.form.get('is_mean'):
             df_all_cards = API_WB.get_average_storage_cost()
+            print(f"storage cost is received by API WB")
         else:
-            df_all_cards = API_WB.get_storage_data(number_last_days, days_delay=0)
+            df_all_cards = API_WB.get_storage_cost(number_last_days, days_delay=0)
+            print(f"storage cost is received from Yandex Disk")
 
-        print(f"df {df_all_cards}")
+        # print(f"df {df_all_cards}")
         df = io_output.io_output(df_all_cards)
         file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_get_info_wb.html', doc_string=get_info_wb.__doc__)
+    return render_template('upload_storage_wb.html', doc_string=get_storage_wb.__doc__)
 
 
 @app.route('/get_wb_sales_realization_api', methods=['POST', 'GET'])
@@ -107,7 +129,7 @@ def get_wb_pivot_sells_api() -> object:
         days_step = detailing_reports.request_days_step(request)
         df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_reports.get_wb_sales_realization_pivot(df)
-        df_stock = API_WB.get_wb_stock_api_extanded()
+        df_stock = API_WB.get_wb_stock_api_no_sizes()
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
         df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
@@ -172,7 +194,7 @@ def get_wb_stock_api():
         print(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = API_WB.get_wb_stock_api_extanded()
+        df_sales_wb_api = API_WB.get_wb_stock_api_no_sizes()
         print(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
         print(time.process_time() - t)

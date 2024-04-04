@@ -23,6 +23,7 @@ if uri.startswith("postgres://"):
 
 # app config
 app.config['APP_NAME'] = 'TASKER'
+app.config['DEFAULT_ID'] = 1
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -96,16 +97,40 @@ def load_user_from_request(request):
     return None
 
 
+# @app.before_request
+# def before_request():
+#     if current_user.is_authenticated:
+#         set_config()
+#     return None
+
 @app.before_request
 def before_request():
-    if current_user.is_authenticated:
-        set_config()
-    return None
+    max_attempts = 5  # Maximum number of retry attempts
+    retry_delay = 0.1  # Adjust the delay time (in seconds) between retries
+    attempt = 0  # Initialize the attempt counter
+    print("before_request start trying to check authentication in postgres.")
+    while attempt < max_attempts:
+        try:
+            if current_user.is_authenticated:
+                set_config()
+                print("set_config is completed.")
+            break  # If authentication succeeds, break out of the loop
+        except Exception as e:
+            # Handle any errors that might occur during authentication check
+            print("Error checking authentication in before_request def:", e)
+            attempt += 1  # Increment the attempt counter
+            if attempt < max_attempts:
+                time.sleep(retry_delay)  # Wait for the specified delay before retrying
+            else:
+                print(
+                    f"Maximum retry of {attempt} attempts of checking authentication reached. Stopping further retries.")
+                break
 
 
 @app.before_first_request
 def create_all():
     db.create_all()
+
 
 
 @login_manager.user_loader

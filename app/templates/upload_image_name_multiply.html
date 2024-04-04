@@ -7,10 +7,10 @@
 {{ super() }}
 
 <main>
-        <br>
-        {% for cat, msg in get_flashed_messages(True) %}
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
-        {% endfor %}
+    {% endfor %}
 
 
     <div class="row text-left">

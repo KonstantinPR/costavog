@@ -26,13 +26,11 @@ def demand_calculation_to_df(df_input, search_string):
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
     df_report.to_excel("df_report.xlsx")
     # print(file_name)
-    df_wb_stock = API_WB.df_wb_stock_api()
-
+    df_wb_stock = API_WB.get_wb_stock_api_no_city()
 
     # Assuming df is your original DataFrame
     grouping_columns = ['supplierArticle', 'techSize']
     aggregation_dict = {col: 'first' if col not in grouping_columns else 'sum' for col in df_wb_stock.columns}
-
 
     # Group by 'supplierArticle' and 'techSize', summing 'quantityFull' and selecting first for other columns
     df_wb_stock = df_wb_stock.groupby(grouping_columns, as_index=False).agg(aggregation_dict)
@@ -46,7 +44,7 @@ def demand_calculation_to_df(df_input, search_string):
                   left_on=['vendorCode', 'techSize'],
                   right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
 
-    df.to_excel("df_all_actual_stock_and_art.xlsx")
+    # df.to_excel("df_all_actual_stock_and_art.xlsx")
 
     if not df_input.empty:
         df = df_input.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')

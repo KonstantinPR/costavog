@@ -18,21 +18,16 @@
             <div>
                 <form method="post" enctype=multipart/form-data action="{{url_for('get_wb_pivot_sells_api')}}">
                     <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input formaction="{{url_for('get_info_wb')}}"
-                                   class="w-100 btn btn-primary btn-lg" type="submit"
-                                   value="Все карточки на WB">
-                        </div>
-                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input formaction="{{url_for('get_stock_wb')}}"
-                                   class="w-100 btn btn-primary btn-lg" type="submit"
-                                   value="Все остатки на WB">
-                        </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input placeholder="За сколько последних дней, по-умолчанию = 7"
                                    class="form-control form-control-lg"
                                    type="number"
                                    name="number_last_days">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('get_storage_cost_route')}}"
+                                   class="w-100 btn btn-primary btn-lg" type="submit"
+                                   value="Стоимость хранения">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_mean"
@@ -41,11 +36,6 @@
                             <label class="form-check-label" for="is_mean">
                                 Вычислить средние значения стоимостей хранения каждого артикула
                             </label>
-                        </div>
-                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input formaction="{{url_for('get_storage_cost_route')}}"
-                                   class="w-100 btn btn-primary btn-lg" type="submit"
-                                   value="Стоимость хранения">
                         </div>
                         <!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
                         <!--                            <input formaction="{{url_for('revenue_processing')}}"-->

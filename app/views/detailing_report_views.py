@@ -25,13 +25,16 @@ def upload_detailing():
         print(uploaded_files)
 
         is_net_cost = request.form.get('is_net_cost')
-        print(is_net_cost == 'is_net_cost')
+        print(f"is_net_cost {is_net_cost}")
 
         is_get_storage = request.form.get('is_get_storage')
         print(f"is_get_storage {is_get_storage}")
 
         is_just_concatenate = request.form.get('is_just_concatenate')
         print(f"is_just_concatenate {is_just_concatenate}")
+
+        is_delete_shushary = request.form.get('is_delete_shushary')
+        print(f"is_delete_shushary {is_delete_shushary}")
 
         if not uploaded_files:
             flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
@@ -55,6 +58,7 @@ def upload_detailing():
 
         if is_net_cost:
             df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+            df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')
         else:
             df_net_cost = False
 
@@ -82,7 +86,7 @@ def upload_detailing():
         is_get_stock = request.form.get('is_get_stock')
 
         if is_get_stock:
-            df_stock = API_WB.get_wb_stock_api_extanded()
+            df_stock = API_WB.get_wb_stock_api_no_sizes(is_delete_shushary=is_delete_shushary)
             df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
@@ -96,7 +100,7 @@ def upload_detailing():
         is_get_price = request.form.get('is_get_price')
 
         if is_get_storage:
-            df_storage = API_WB.get_average_storage_cost()
+            df_storage = API_WB.get_average_storage_cost(is_delete_shushary)
             df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
             df = df.merge(df_storage, how='outer', left_on='Артикул поставщика', right_on='vendorCode')
             # df['Хранение'] = df['storagePricePerBarcode'] * df['quantity + чист.покупк.']
@@ -279,7 +283,7 @@ def concatenate_detailing():
         is_get_stock = request.form.get('is_get_stock')
 
         if is_get_stock:
-            df_stock = API_WB.get_wb_stock_api_extanded()
+            df_stock = API_WB.get_wb_stock_api_no_sizes()
             df = df.merge(df_stock, how='outer', left_on='Артикул поставщика', right_on='supplierArticle')
 
         file = io_output.io_output(df)

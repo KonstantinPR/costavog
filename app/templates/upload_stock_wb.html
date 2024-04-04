@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    {% for cat, msg in get_flashed_messages(True) %}
+    <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
+    {% endfor %}
+
+
+    <div class="row text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data action="{{url_for('get_wb_pivot_sells_api')}}">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('get_stock_wb')}}"
+                                   class="w-100 btn btn-primary btn-lg" type="submit"
+                                   value="Все остатки на WB">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="without_sizes"
+                                   name="is_mean"
+                                   id="without_sizes">
+                            <label class="form-check-label" for="without_sizes">
+                                Без размеров
+                            </label>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="no_city"
+                                   name="no_city"
+                                   id="no_city" checked>
+                            <label class="form-check-label" for="no_city">
+                                Без городов
+                            </label>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_delete_shushary"
+                                   name="is_delete_shushary"
+                                   id="is_delete_shushary" checked>
+                            <label class="form-check-label" for="is_delete_shushary">
+                                Удалить сгоревшие остатки в Шушарах
+                            </label>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}

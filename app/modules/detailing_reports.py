@@ -282,7 +282,7 @@ def revenue_processing_module(request):
     df_sales.to_excel('df_sales_excel.xlsx')
     # df_sales = pd.read_excel("df_sales_excel.xlsx")
 
-    df_stock = API_WB.get_wb_stock_api_extanded()
+    df_stock = API_WB.get_wb_stock_api_no_sizes()
     # df_sales.to_excel('wb_stock.xlsx')
     # df_stock = pd.read_excel("wb_stock.xlsx")
 

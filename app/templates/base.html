@@ -69,16 +69,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
     </style>
 </head>
 
@@ -102,15 +92,15 @@
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('tasks')}}">Задачи</a>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkAI" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        AI модели
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAI">
-                        <a class="dropdown-item" href="{{url_for('train_model')}}">Табличные данные</a>
-                    </ul>
-                </li>
+                <!--                <li class="nav-item dropdown">-->
+                <!--                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkAI" role="button"-->
+                <!--                       data-bs-toggle="dropdown" aria-expanded="false">-->
+                <!--                        AI модели-->
+                <!--                    </a>-->
+                <!--                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAI">-->
+                <!--                        <a class="dropdown-item" href="{{url_for('train_model')}}">Табличные данные</a>-->
+                <!--                    </ul>-->
+                <!--                </li>-->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkWarehouse" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
@@ -180,7 +170,10 @@
                         WB API
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkWBAPI">
-                        <a class="dropdown-item" href="{{url_for('get_info_wb')}}">Все карточки WB</a>
+                        <a class="dropdown-item" href="{{url_for('get_sales_wb')}}">Продажи WB</a>
+                        <a class="dropdown-item" href="{{url_for('get_cards_wb')}}">Карточки WB</a>
+                        <a class="dropdown-item" href="{{url_for('get_stock_wb')}}">Остатки WB</a>
+                        <a class="dropdown-item" href="{{url_for('get_storage_wb')}}">Хранение WB</a>
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -257,6 +250,13 @@
                 isTextShown = true;
             }
         }
+
+
+
+
+
+
+
 
 
 
