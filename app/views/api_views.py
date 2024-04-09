@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
 
-from app.modules import detailing_reports, API_WB, detailing_reports
+from app.modules import detailing_api_module, API_WB, detailing_api_module
 from app.modules import io_output, yandex_disk_handler, request_handler
 
 
@@ -50,13 +50,12 @@ def get_stock_wb():
     """
     is_delete_shushary = request.form.get('is_delete_shushary')
     print(f"is_delete_shushary {is_delete_shushary}")
+    file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
-        if request.form.get('no_city'):
-            df_all_cards = API_WB.get_wb_stock_api_no_city(is_delete_shushary=is_delete_shushary)
-        else:
-            df_all_cards = API_WB.df_wb_stock_api(is_delete_shushary=is_delete_shushary)
-        df = io_output.io_output(df_all_cards)
-        file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
+        request_dict = request.form.to_dict()
+        print(f"request_dict {request_dict}")
+        df = API_WB.get_wb_stock_api(request=request_dict, is_delete_shushary=is_delete_shushary)
+        df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
     return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)
 

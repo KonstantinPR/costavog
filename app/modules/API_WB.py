@@ -9,8 +9,8 @@ from app.modules import io_output
 from app.modules import yandex_disk_handler
 
 
-def get_average_storage_cost(is_delete_shushary=None):
-    df = get_storage_cost(is_delete_shushary)
+def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
+    df = get_storage_cost(testing_mode, is_delete_shushary)
     # Step 1: Get the DataFrame
     if df is None:
         return None
@@ -45,8 +45,13 @@ def get_average_storage_cost(is_delete_shushary=None):
 #     return df
 
 
-def get_storage_cost(is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'], days_delay=0,
+def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
+                     days_delay=0,
                      upload_to_yadisk=True):
+    if testing_mode:
+        df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
+        return df
+
     storage_file_name = "storage_data"
     headers = {
         'accept': 'application/json',
@@ -129,17 +134,17 @@ def get_storage_cost(is_delete_shushary=None, number_last_days=app.config['LAST_
 #     df = df.rename(columns={'nmId': 'nm_id'})
 #     return df
 
-def get_wb_price_api():
+def get_wb_price_api(testing_mode=None):
     headers = {
         'accept': 'application/json',
         'Authorization': app.config['WB_API_TOKEN'],
     }
     response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)
-    if response.status_code in {200, 201}:
+    if response.status_code in {200, 201} and not testing_mode:
         data = response.json()
         if data:  # Check if the response contains data
             df = pd.DataFrame(data)
-            df = df.rename(columns={'nmId': 'nm_id'})
+            # df = df.rename(columns={'nmId': 'nm_id'})
             # Upload data to Yandex Disk
             file_name = "wb_price_data.xlsx"
             io_df = io_output.io_output(df)
@@ -157,63 +162,17 @@ def get_wb_price_api():
         return df
 
 
-def get_wb_stock_api_no_city(is_delete_shushary=None):
-    """to modify wb stock"""
-
-    df = df_wb_stock_api(is_delete_shushary=is_delete_shushary)
-
-    # df.to_excel("df_wb_stock_api.xlsx")
-
-    df = df.pivot_table(index=['nmId', 'techSize'],
-                        values=['quantity',
-                                # 'daysOnSite',
-                                'supplierArticle',
-                                'barcode',
-                                ],
-                        aggfunc={'quantity': sum,
-                                 # 'daysOnSite': max,
-                                 'supplierArticle': max,
-                                 'barcode': 'first',
-                                 },
-                        margins=False)
-
-    df = df.reset_index().rename_axis(None, axis=1)
-    df = df.rename(columns={'nmId': 'nm_id'})
-    df.replace(np.NaN, 0, inplace=True)
-
-    return df
-
-
-def get_wb_stock_api_no_sizes(is_delete_shushary=None):
-    """to modify wb stock"""
-
-    df = df_wb_stock_api(is_delete_shushary=is_delete_shushary)
-
-    # df.to_excel("df_wb_stock_api.xlsx")
-
-    df = df.pivot_table(index=['nmId'],
-                        values=['quantity',
-                                # 'daysOnSite',
-                                'supplierArticle',
-                                ],
-                        aggfunc={'quantity': sum,
-                                 # 'daysOnSite': max,
-                                 'supplierArticle': max,
-                                 },
-                        margins=False)
-
-    df = df.reset_index().rename_axis(None, axis=1)
-    df = df.rename(columns={'nmId': 'nm_id'})
-    df.replace(np.NaN, 0, inplace=True)
-
-    return df
-
-
-def df_wb_stock_api(is_delete_shushary=None, date_from: str = '2019-01-01'):
+def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
+                     is_upload_yandex=True,
+                     date_from: str = '2019-01-01'):
     """
     get wb stock via api put in df
     :return: df
     """
+
+    if testing_mode:
+        df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
+        return df
 
     api_key = app.config['WB_API_TOKEN']
     url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
@@ -228,6 +187,57 @@ def df_wb_stock_api(is_delete_shushary=None, date_from: str = '2019-01-01'):
     if is_delete_shushary == 'is_delete_shushary':
         print("Удаление сгоревших товаров Шушар из остатков ...")
         df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
+
+    df = df.reset_index().rename_axis(None, axis=1)
+    df.replace(np.NaN, 0, inplace=True)
+
+    if not request:
+        return df
+
+    if request['no_city'] == 'no_city' and request['no_sizes'] == 'no_sizes':
+        df = df.pivot_table(index=['nmId'],
+                            values=['quantity',
+                                    'supplierArticle',
+                                    ],
+                            aggfunc={'quantity': sum,
+                                     'supplierArticle': 'first',
+                                     },
+                            margins=False)
+
+        df = df.reset_index().rename_axis(None, axis=1)
+
+        if is_upload_yandex and not df is None:
+            io_df = io_output.io_output(df)
+            file_name = f'stock_wb.xlsx'
+            yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STOCK_WB'])
+
+        return df
+
+    if request['no_city'] == 'no_city':
+        df = df.pivot_table(index=['nmId', 'techSize'],
+                            values=['quantity',
+                                    'supplierArticle',
+                                    ],
+                            aggfunc={'quantity': sum,
+                                     'supplierArticle': 'first',
+                                     },
+                            margins=False)
+
+        df = df.reset_index().rename_axis(None, axis=1)
+        return df
+
+    if request['no_sizes'] == 'no_sizes':
+        df = df.pivot_table(index=['nmId', 'warehouseName'],
+                            values=['quantity',
+                                    'supplierArticle',
+                                    ],
+                            aggfunc={'quantity': sum,
+                                     'supplierArticle': 'first',
+                                     },
+                            margins=False)
+
+        df = df.reset_index().rename_axis(None, axis=1)
+        return df
 
     return df
 

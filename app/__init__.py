@@ -22,7 +22,7 @@ if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 
 # app config
-app.config['DEFAULT_ID'] = 1
+
 app.config['APP_PASSWORD'] = '19862814GVok'
 app.config['APP_NAME'] = 'TASKER'
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
@@ -38,6 +38,7 @@ app.config['TMP_IMG_FOLDER'] = "folder_img"
 app.config['YANDEX_PATH'] = ''
 app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_KEY_STORAGE_COST'] = '/TASKER/KEY_FILES/STORAGE_COST'
+app.config['YANDEX_KEY_STOCK_WB'] = '/TASKER/KEY_FILES/STOCK_WB'
 app.config['YANDEX_KEY_PRICES'] = '/TASKER/KEY_FILES/PRICES'
 app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\YandexDisk\ФОТОГРАФИИ"
@@ -100,6 +101,7 @@ def load_user_from_request(request):
 
 @app.before_request
 def before_request():
+    print(f'current_user.id {current_user.id}')
     if current_user.is_authenticated:
         set_config()
     return None
@@ -128,7 +130,8 @@ from app.views import demand_calculation_views
 from app.views import parser_rating_wb_views
 from app.views import products_views
 from app.views import yandex_disk_views
-from app.views import detailing_report_views
+from app.views import detailing_upload_views
+from app.views import detailing_api_views
 from app.views import spec_views
 from app.views import routes_getter_views
 from app.views import images_foldering_views
