@@ -74,9 +74,9 @@ def zip_detail_V2(concatenated_dfs):
     penalty_col_name = 'Штраф'
 
     df['Ч. Продажа шт.'] = df['Продажа, шт.'] - df['Возврат, шт.']
-    df['Логистика. ед'] = df['Логистика'] / df['Продажа, шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
-    df['Маржа'] = df[sales_name] - df[logistic_name] - df[backs_name] - df[compensation_substituted_col_name]
+    df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
+    df['Маржа'] = df[sales_name] - df[backs_name] - df[logistic_name] - df[compensation_substituted_col_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
     # df.to_excel('V2.xlsx')

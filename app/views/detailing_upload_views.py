@@ -12,7 +12,7 @@ from decimal import Decimal
 def upload_detailing():
     """Processing detailing in excel that can be downloaded in wb portal in zip, put all zip in one zip and upload it,
     or can be chosen some and added to input as well"""
-    testing_mode = True
+    testing_mode = False
     if not current_user.is_authenticated:
         return redirect('/company_register')
 
@@ -76,8 +76,11 @@ def upload_detailing():
             df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
             df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
             df = df.fillna(0)
-            # df['Хранение'] = (Decimal(storage_cost) * df['shareCost'])
-            df['Хранение'] = storage_cost * df['shareCost']
+
+            df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
+            df['shareCost'] = df['Хранение'] / df['Хранение'].sum()
+            df['Хранение'] = df['shareCost'] * storage_cost
+
             df['Хранение'] = df['Хранение'].fillna(0)
             print(f"df['Хранение'] {df['Хранение'].sum()}")
             print(f"df['shareCost'] {df['shareCost']}")
@@ -94,7 +97,7 @@ def upload_detailing():
             df['net_cost'] = 0
 
         df = df.fillna(0)
-        df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Продажа, шт.']
+        df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Ч. Продажа шт.']
         df = df.fillna(0)
         df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение'].astype(float)
         df['Маржа-себест.-хран./ шт.'] = np.where(

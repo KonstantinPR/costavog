@@ -24,8 +24,8 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
     total_warehouse_price = df['storagePricePerBarcode'].sum()
 
     # Calculate shareCost using Decimal arithmetic
-    df['shareCost'] = (df['storagePricePerBarcode'] / total_warehouse_price)
-    print(f"df['shareCost'] {df['shareCost'].sum()}")
+    # df['shareCost'] = (df['storagePricePerBarcode'] / total_warehouse_price)
+    # print(f"df['shareCost'] {df['shareCost'].sum()}")
 
     return df
 
