@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, API_WB
 import numpy as np
+from decimal import Decimal
 
 
 @app.route('/upload_detailing', methods=['POST', 'GET'])
@@ -59,12 +60,13 @@ def upload_detailing():
                                                is_delete_shushary=is_delete_shushary)
             df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')
             df = df_stock.merge(df, how='outer', left_on='nmId', right_on='Код номенклатуры')
+            df = df.fillna(0)
             df = pandas_handler.fill_empty_val_by('Код номенклатуры', df, 'nmId')
 
-        if not 'quantity' in df.columns:
-            df['quantity'] = 0
-        df['quantity'].replace(np.NaN, 0, inplace=True)
-        df['quantity + Продажа, шт.'] = df['quantity'] + df['Продажа, шт.']
+        if not 'quantityFull' in df.columns:
+            df['quantityFull'] = 0
+        df['quantityFull'].replace(np.NaN, 0, inplace=True)
+        df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
 
         is_get_price = request.form.get('is_get_price')
 
@@ -74,26 +76,33 @@ def upload_detailing():
             df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
             df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
             df = df.fillna(0)
+            # df['Хранение'] = (Decimal(storage_cost) * df['shareCost'])
             df['Хранение'] = storage_cost * df['shareCost']
             df['Хранение'] = df['Хранение'].fillna(0)
-            df['Хранение.ед'] = df['Хранение'] / df['quantity + Продажа, шт.']
+            print(f"df['Хранение'] {df['Хранение'].sum()}")
+            print(f"df['shareCost'] {df['shareCost']}")
+            df.to_excel("df.xlsx")
+            df['Хранение'].to_excel("storage.xlsx")
+            df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
 
         if is_net_cost:
             df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
             df_net_cost['net_cost'].replace(np.NaN, 0, inplace=True)
             df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')
             df = df.merge(df_net_cost, how='outer', left_on='nmId', right_on='nm_id')
-            df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Продажа, шт.']
         else:
-            df_net_cost = False
+            df['net_cost'] = 0
+
         df = df.fillna(0)
-        df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение']
+        df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Продажа, шт.']
+        df = df.fillna(0)
+        df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение'].astype(float)
         df['Маржа-себест.-хран./ шт.'] = np.where(
             df['Продажа, шт.'] != 0,
             df['Маржа-себест.-хран.'] / df['Продажа, шт.'],
             np.where(
-                df['quantity'] != 0,
-                df['Маржа-себест.-хран.'] / df['quantity'],
+                df['quantityFull'] != 0,
+                df['Маржа-себест.-хран.'] / df['quantityFull'],
                 0
             )
         )
@@ -108,14 +117,24 @@ def upload_detailing():
             df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
             # df.to_excel("detail_with_price.xlsx")
 
+        nm_columns = ['article', 'vendorCode', 'supplierArticle']
+        df = pandas_handler.fill_empty_val_by(nm_columns, df, 'Артикул поставщика')
+
+        nm_columns = ['brand']
+        df = pandas_handler.fill_empty_val_by(nm_columns, df, 'Бренд')
+
+        df = df.rename(columns={'Предмет_x': 'Предмет'})
+        nm_columns = ['category']
+        df = pandas_handler.fill_empty_val_by(nm_columns, df, 'Предмет')
+
         columns_to_check_existence = [
             'Бренд',
-            'Предмет_x',
+            'Предмет',
             'Артикул поставщика',
             'nmId',
             'volume',
-            'quantity',
-            'quantity + Продажа, шт.',
+            'quantityFull',
+            'quantityFull + Продажа, шт.',
             'price_disc',
             'net_cost',
             'Дней в продаже',
@@ -129,8 +148,10 @@ def upload_detailing():
             'Возврат',
             'Возврат, шт.',
             'Хранение',
-            'shareCost',
+            'ХранениеТочное',
             'Хранение.ед',
+            'storagePricePerBarcode',
+            'shareCost',
             'Логистика',
             'Логистика. ед',
             'Маржа-себест.-хран./ шт.',
@@ -140,14 +161,12 @@ def upload_detailing():
             'Дата продажи',
         ]
 
-        nm_columns = ['article', 'vendorCode', 'supplierArticle']
-        df = pandas_handler.fill_empty_val_by(nm_columns, df, 'Артикул поставщика')
-
         # Reorder the columns
         df = df[[col for col in columns_to_check_existence if col in df.columns]]
+        df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
 
-        if 'Артикул поставщика' in df.columns:
-            df.dropna(subset=["Артикул поставщика"], inplace=True)
+        # if 'Артикул поставщика' in df.columns:
+        #     df.dropna(subset=["Артикул поставщика"], inplace=True)
 
         file = io_output.io_output(df)
         flash("Отчет успешно выгружен в excel файл")

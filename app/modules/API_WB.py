@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timedelta
 from app.modules import io_output
 from app.modules import yandex_disk_handler
+from decimal import Decimal
 
 
 def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
@@ -15,17 +16,33 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
     if df is None:
         return None
 
-    # Step 2: Group by vendorCode and sum the warehousePrice and barcodesCount
-    df_grouped = df.groupby('vendorCode').agg(
-        {'warehousePrice': 'sum', 'barcodesCount': 'sum', 'volume': 'mean', 'nmId': 'first'}).reset_index()
+    df = df.groupby('vendorCode').agg(
+        {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
+    df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
 
-    # Step 3: Calculate the mean storage price per barcode count
-    df_grouped['storagePricePerBarcode'] = df_grouped['warehousePrice'] / df_grouped['barcodesCount']
+    # Calculate total_warehouse_price as Decimal
+    total_warehouse_price = df['storagePricePerBarcode'].sum()
 
-    total_warehouse_price = df_grouped['warehousePrice'].sum()
-    df_grouped['shareCost'] = (df_grouped['warehousePrice'] / total_warehouse_price)
+    # Calculate shareCost using Decimal arithmetic
+    df['shareCost'] = (df['storagePricePerBarcode'] / total_warehouse_price)
+    print(f"df['shareCost'] {df['shareCost'].sum()}")
 
-    return df_grouped
+    return df
+
+
+# def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
+#     df = get_storage_cost(testing_mode, is_delete_shushary)
+#     # Step 1: Get the DataFrame
+#     if df is None:
+#         return None
+#
+#     df = df.groupby('vendorCode').agg(
+#         {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
+#     df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
+#     total_warehouse_price = Decimal(str(df['storagePricePerBarcode'].sum()))
+#     df['shareCost'] = df['storagePricePerBarcode'].apply(lambda x: Decimal(x) / total_warehouse_price)
+#
+#     return df
 
 
 # def get_average_storage_data_mean():
@@ -196,11 +213,17 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 
     if request['no_city'] == 'no_city' and request['no_sizes'] == 'no_sizes':
         df = df.pivot_table(index=['nmId'],
-                            values=['quantity',
+                            values=['quantityFull',
                                     'supplierArticle',
+                                    'category',
+                                    'subject',
+                                    'brand',
                                     ],
-                            aggfunc={'quantity': sum,
+                            aggfunc={'quantityFull': sum,
                                      'supplierArticle': 'first',
+                                     'category': 'first',
+                                     'subject': 'first',
+                                     'brand': 'first',
                                      },
                             margins=False)
 
@@ -215,11 +238,17 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 
     if request['no_city'] == 'no_city':
         df = df.pivot_table(index=['nmId', 'techSize'],
-                            values=['quantity',
+                            values=['quantityFull',
                                     'supplierArticle',
+                                    'category',
+                                    'subject',
+                                    'brand',
                                     ],
-                            aggfunc={'quantity': sum,
+                            aggfunc={'quantityFull': sum,
                                      'supplierArticle': 'first',
+                                     'category': 'first',
+                                     'subject': 'first',
+                                     'brand': 'first',
                                      },
                             margins=False)
 
@@ -228,11 +257,17 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 
     if request['no_sizes'] == 'no_sizes':
         df = df.pivot_table(index=['nmId', 'warehouseName'],
-                            values=['quantity',
+                            values=['quantityFull',
                                     'supplierArticle',
+                                    'category',
+                                    'subject',
+                                    'brand',
                                     ],
-                            aggfunc={'quantity': sum,
+                            aggfunc={'quantityFull': sum,
                                      'supplierArticle': 'first',
+                                     'category': 'first',
+                                     'subject': 'first',
+                                     'brand': 'first',
                                      },
                             margins=False)
 
