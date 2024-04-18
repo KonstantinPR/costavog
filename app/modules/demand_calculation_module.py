@@ -26,7 +26,7 @@ def demand_calculation_to_df(df_input, search_string):
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
     df_report.to_excel("df_report.xlsx")
     # print(file_name)
-    df_wb_stock = API_WB.get_wb_stock_api_no_city()
+    df_wb_stock = API_WB.get_wb_stock_api()
 
     # Assuming df is your original DataFrame
     grouping_columns = ['supplierArticle', 'techSize']

@@ -1,9 +1,11 @@
+from app import app
 import zipfile
 import pandas as pd
 import numpy as np
 import io
 from datetime import datetime
-from app.modules import pandas_handler
+from app.modules import pandas_handler, API_WB, yandex_disk_handler
+from datetime import timedelta
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -12,6 +14,71 @@ from app.modules import pandas_handler
 # print(file_names)
 
 STRFORMAT_DEFAULT = '%Y-%m-%d'
+
+INITIAL_COLUMNS_DICT = {
+    'brand': 'Бренд',
+    'subject': 'Предмет',
+    'article_supplier': 'Артикул поставщика',
+    'nmId': 'nmId',
+    'k_is_sell': 'k_is_sell',
+    'k_revenue': 'k_revenue',
+    'k_logistic': 'k_logistic',
+    'k_net_cost': 'k_net_cost',
+    'k_qt_full': 'k_qt_full',
+    'k_rating': 'k_rating',
+    'k_discount': 'k_discount',
+    'n_discount': 'n_discount',
+    'discount': 'discount',
+    'delta_discount': 'delta_discount',
+    'volume': 'volume',
+    'stock': 'quantityFull',
+    'quantity_full_sells_qt': 'quantityFull + Продажа, шт.',
+    'price_disc': 'price_disc',
+    'price': 'price',
+    'net_cost': 'net_cost',
+    'sells_days': 'Дней в продаже',
+    'outcome-net-storage': 'Маржа-себест.-хран.',
+    'outcome-net': 'Маржа-себест.',
+    'outcome': 'Маржа',
+    'pure_sells_qt': 'Ч. Продажа шт.',
+    'sell': 'Продажа',
+    'back': 'Возврат',
+    'back_qt': 'Возврат, шт.',
+    'storage': 'Хранение',
+    'storage_single': 'Хранение.ед',
+    'storagePricePerBarcode': 'storagePricePerBarcode',
+    'shareCost': 'shareCost',
+    'logistics': 'Логистика',
+    'logistics_single': 'Логистика. ед',
+    'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
+    'logistics_qt': 'Логистика шт.',
+    'supplier': 'Поставщик',
+    'order_date': 'Дата заказа покупателем',
+    'sell_date': 'Дата продажи',
+    'raiting': 'Рейтинг',
+}
+
+
+def rename_mapping(df, col_map, to='key'):
+    # Rename columns to keys from INITIAL_COLUMNS_DICT
+    rename_mapping = {}
+
+    for k, v in col_map.items():
+        if k != v:
+            if to == 'key':
+                if k in df.columns:
+                    print(f"Column '{v}' is already present in the DataFrame.")
+                else:
+                    rename_mapping[v] = k
+            elif to == 'value':
+                # Rename columns back to values from INITIAL_COLUMNS_DICT
+                if v in df.columns:
+                    print(f"Column '{k}' is already present in the DataFrame.")
+                else:
+                    rename_mapping[k] = v
+
+    df = df.rename(columns=rename_mapping)
+    return df
 
 
 def zip_detail_V2(concatenated_dfs):
@@ -50,14 +117,14 @@ def zip_detail_V2(concatenated_dfs):
     qt_logistic_to_col_name = 'Количество доставок'
     qt_logistic_back_col_name = 'Количество возврата'
 
-    df_sales = pivot_expance(df, sales_name, type_sales_col_name_all)
-    df_backs = pivot_expance(df, backs_name, type_sales_col_name_all)
-    df_logistic = pivot_expance(df, logistic_name, type_delivery_service_col_name)
-    df_compensation_substituted = pivot_expance(df, compensation_substituted_col_name, type_sales_col_name)
-    df_qt_sales = pivot_expance(df, sales_name, qt_col_name, col_name='Продажа, шт.')
-    df_qt_backs = pivot_expance(df, backs_name, qt_col_name, col_name='Возврат, шт.')
-    df_qt_logistic_to = pivot_expance(df, logistic_name, qt_logistic_to_col_name, col_name='Логистика до, шт.')
-    df_qt_logistic_back = pivot_expance(df, logistic_name, qt_logistic_back_col_name, col_name='Логистика от, шт.')
+    df_sales = pivot_expanse(df, sales_name, type_sales_col_name_all)
+    df_backs = pivot_expanse(df, backs_name, type_sales_col_name_all)
+    df_logistic = pivot_expanse(df, logistic_name, type_delivery_service_col_name)
+    df_compensation_substituted = pivot_expanse(df, compensation_substituted_col_name, type_sales_col_name)
+    df_qt_sales = pivot_expanse(df, sales_name, qt_col_name, col_name='Продажа, шт.')
+    df_qt_backs = pivot_expanse(df, backs_name, qt_col_name, col_name='Возврат, шт.')
+    df_qt_logistic_to = pivot_expanse(df, logistic_name, qt_logistic_to_col_name, col_name='Логистика до, шт.')
+    df_qt_logistic_back = pivot_expanse(df, logistic_name, qt_logistic_back_col_name, col_name='Логистика от, шт.')
 
     df = df.drop_duplicates(subset=[article_column_name])
     dfs = [df_sales, df_backs, df_logistic, df_compensation_substituted, df_qt_sales, df_qt_backs, df_qt_logistic_to,
@@ -67,11 +134,11 @@ def zip_detail_V2(concatenated_dfs):
     # dfs_names = [sales_name, logistic_name, backs_name, compensation_substituted_col_name]
     df = df.fillna(0)
 
-    warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
-    type_warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
-
-    storage_col_name = 'Хранение'
-    penalty_col_name = 'Штраф'
+    # warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
+    # type_warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
+    #
+    # storage_col_name = 'Хранение'
+    # penalty_col_name = 'Штраф'
 
     df['Ч. Продажа шт.'] = df['Продажа, шт.'] - df['Возврат, шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
@@ -84,7 +151,86 @@ def zip_detail_V2(concatenated_dfs):
     return df
 
 
-def pivot_expance(df, type_name, sum_name, agg_col_name='Артикул поставщика', type_col_name='Обоснование для оплаты',
+def merge_stock(df, testing_mode, is_get_stock, is_delete_shushary=False):
+    if is_get_stock:
+        request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}
+        df_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request_dict,
+                                           is_delete_shushary=is_delete_shushary)
+        df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')
+        df = df_stock.merge(df, how='outer', left_on='nmId', right_on='Код номенклатуры')
+        df = df.fillna(0)
+        df = pandas_handler.fill_empty_val_by('Код номенклатуры', df, 'nmId')
+        return df
+
+
+def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shushary=False):
+    if is_get_storage:
+        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
+                                                     is_delete_shushary=is_delete_shushary)
+        df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
+        df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
+        df = df.fillna(0)
+
+        df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
+        df['shareCost'] = df['Хранение'] / df['Хранение'].sum()
+        df['Хранение'] = df['shareCost'] * storage_cost
+
+        df['Хранение'] = df['Хранение'].fillna(0)
+        print(f"df['Хранение'] {df['Хранение'].sum()}")
+        print(f"df['shareCost'] {df['shareCost']}")
+        df.to_excel("df.xlsx")
+        df['Хранение'].to_excel("storage.xlsx")
+        df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
+        return df
+
+
+def merge_net_cost(df, is_net_cost):
+    if is_net_cost:
+        df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+        df_net_cost['net_cost'].replace(np.NaN, 0, inplace=True)
+        df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')
+        df = df.merge(df_net_cost, how='outer', left_on='nmId', right_on='nm_id')
+    else:
+        df['net_cost'] = 0
+
+    return df
+
+
+def profit_count(df):
+    df = df.fillna(0)
+    df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Ч. Продажа шт.']
+    df = df.fillna(0)
+    df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение'].astype(float)
+    df['Маржа-себест.-хран./ шт.'] = np.where(
+        df['Продажа, шт.'] != 0,
+        df['Маржа-себест.-хран.'] / df['Продажа, шт.'],
+        np.where(
+            df['quantityFull'] != 0,
+            df['Маржа-себест.-хран.'] / df['quantityFull'],
+            0
+        )
+    )
+    return df
+
+
+def merge_price(df, testing_mode, is_get_price):
+    if is_get_price:
+        df_price = API_WB.get_wb_price_api(testing_mode=testing_mode)
+        df = df.merge(df_price, how='outer', left_on='nmId', right_on='nm_id')
+        df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
+    return df
+
+
+def get_storage_cost(df):
+    if 'Хранение' in df.columns:
+        storage_cost = df['Хранение'].sum()
+    else:
+        df['Хранение'] = 0
+        storage_cost = 0
+    return storage_cost
+
+
+def pivot_expanse(df, type_name, sum_name, agg_col_name='Артикул поставщика', type_col_name='Обоснование для оплаты',
                   col_name=None):
     df_type = df[df[type_col_name] == type_name]
     df = df_type.groupby(agg_col_name)[sum_name].sum().reset_index()
@@ -96,23 +242,25 @@ def pivot_expance(df, type_name, sum_name, agg_col_name='Артикул пост
 
 
 def process_uploaded_files(uploaded_files):
+    zip_buffer = io.BytesIO()
+
     if len(uploaded_files) == 1 and uploaded_files[0].filename.endswith('.zip'):
         # If there is only one file and it's a zip file, proceed as usual
-        uploaded_file = uploaded_files[0]
+        file = uploaded_files[0]
+        with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+            zip_file.writestr(file.filename, file.read())
     else:
         # If there are multiple files or a single non-zip file, create a zip archive in memory
-        zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
             for file in uploaded_files:
                 zip_file.writestr(file.filename, file.read())
 
-        # Reset the in-memory buffer's position to the beginning
-        zip_buffer.seek(0)
+    # Reset the in-memory buffer's position to the beginning
+    zip_buffer.seek(0)
+    # Set the uploaded_file to the in-memory zip buffer
+    file = zip_buffer
 
-        # Set the uploaded_file to the in-memory zip buffer
-        uploaded_file = zip_buffer
-
-    return uploaded_file
+    return file
 
 
 def to_round_df(df_result):
@@ -136,17 +284,87 @@ def zips_to_list(zip_downloaded):
     return df_list
 
 
+def replace_incorrect_date(df, date_column='Дата продажи'):
+    # Convert the 'Дата продажи' column to datetime format
+    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+
+    # Define the specific dates to remove
+    specific_dates = ['2022-09-25', '2022-10-02']
+
+    # Filter out rows with the specific dates and modify the original DataFrame in-place
+    df = df[~df[date_column].isin(specific_dates)]
+
+    # Print the minimum valid date after replacing dates
+    print(f"date_min {df[date_column].min()}")
+
+    # Save the DataFrame to an Excel file
+    df.to_excel("df_date.xlsx", index=False)
+
+    return df
+
+
+# def get_dynamic_sales_old(df,
+#                       type_column='Тип документа',
+#                       type_name='Продажа',
+#                       article_column='Артикул поставщика',
+#                       sales_column='К перечислению Продавцу за реализованный Товар',
+#                       date_column='Дата продажи'):
+#     """
+#     Calculate dynamic sales based on the midpoint of the date range.
+#
+#     Parameters:
+#         df (DataFrame): Input DataFrame containing sales data.
+#         article_column (str): Name of the column containing article identifiers.
+#         sales_column (str): Name of the column containing sales data.
+#         date_column (str): Name of the column containing date data.
+#
+#     Returns:
+#         DataFrame: DataFrame with dynamic sales information appended as new columns.
+#     """
+#     # Convert date_column to datetime format only for rows where Продажи != 0
+#     df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+#     df.loc[df[sales_column] == 0, date_column] = pd.NaT  # Set dates to NaT for zero sales
+#
+#     # Find the minimum and maximum dates after replacements
+#     min_date = df[date_column].min()
+#     max_date = df[date_column].max()
+#
+#     # Calculate the midpoint
+#     mid_date = min_date + (max_date - min_date) / 2
+#
+#     # Split DataFrame into two halves based on the midpoint date
+#     first_half = df[df[date_column] <= mid_date]
+#     second_half = df[df[date_column] > mid_date]
+#
+#     # Filter DataFrame to include only sales where 'Тип документа' is equal to 'Продажа'
+#     first_half_sales = first_half[first_half[type_column] == type_name]
+#     second_half_sales = second_half[second_half[type_column] == type_name]
+#
+#     # Calculate sum of sales_column for each article_column in each half
+#     sales1 = first_half_sales.groupby(article_column)[sales_column].sum().reset_index()
+#     sales2 = second_half_sales.groupby(article_column)[sales_column].sum().reset_index()
+#
+#     # Merge sums back into original DataFrame
+#     df = pd.merge(df, sales1, on=article_column, how='left', suffixes=('', '_1'))
+#     df = pd.merge(df, sales2, on=article_column, how='left', suffixes=('', '_2'))
+#
+#     return df
+
+
 def get_dynamic_sales(df,
+                      days_by,
+                      INCLUDE_COLUMNS,
                       type_column='Тип документа',
                       type_name='Продажа',
-                      article_column='Артикул поставщика',
+                      nmId='Код номенклатуры',
                       sales_column='К перечислению Продавцу за реализованный Товар',
                       date_column='Дата продажи'):
     """
-    Calculate dynamic sales based on the midpoint of the date range.
+    Calculate dynamic sales based on the specified number of periods.
 
     Parameters:
         df (DataFrame): Input DataFrame containing sales data.
+        periods (int): Number of periods to divide the date range into.
         article_column (str): Name of the column containing article identifiers.
         sales_column (str): Name of the column containing sales data.
         date_column (str): Name of the column containing date data.
@@ -154,45 +372,56 @@ def get_dynamic_sales(df,
     Returns:
         DataFrame: DataFrame with dynamic sales information appended as new columns.
     """
+    print(f"get_dynamic_sales by {days_by} days_by...")
+    if days_by <= 1:
+        return None, INCLUDE_COLUMNS
+
     # Convert date_column to datetime format only for rows where Продажи != 0
     df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
     df.loc[df[sales_column] == 0, date_column] = pd.NaT  # Set dates to NaT for zero sales
 
-    # Replace incorrect dates with min_date
-    sorted_df = df.sort_values(by=date_column)
-    sorted_df[date_column] = pd.to_datetime(sorted_df[date_column])
-    min_date = sorted_df[date_column].min()
-    for i in range(len(sorted_df) - 1):
-        curr_date = sorted_df.iloc[i][date_column]
-        next_date = sorted_df.iloc[i + 1][date_column]
-
-        if pd.isnull(curr_date) or (next_date - curr_date).days > 7:
-            sorted_df.at[i, date_column] = min_date
-
     # Find the minimum and maximum dates after replacements
     min_date = df[date_column].min()
+    print(min_date)
     max_date = df[date_column].max()
+    print(max_date)
 
-    # Calculate the midpoint
-    mid_date = min_date + (max_date - min_date) / 2
+    # Calculate the duration of each period
+    days = (max_date - min_date) / days_by
 
-    # Split DataFrame into two halves based on the midpoint date
-    first_half = df[df[date_column] <= mid_date]
-    second_half = df[df[date_column] > mid_date]
+    print(f"days {days} ...")
+    print(f"max_date - min_date {max_date - min_date} ...")
 
-    # Filter DataFrame to include only sales where 'Тип документа' is equal to 'Продажа'
-    first_half_sales = first_half[first_half[type_column] == type_name]
-    second_half_sales = second_half[second_half[type_column] == type_name]
+    sales_columns = []
+    dfs_sales = []
+    start_date = min_date
+    for period in range(days_by):
+        # Calculate the start and end dates of the current period
+        end_date = start_date + days
+        print(f"end_date {end_date}")
 
-    # Calculate sum of sales_column for each article_column in each half
-    sales1 = first_half_sales.groupby(article_column)[sales_column].sum().reset_index()
-    sales2 = second_half_sales.groupby(article_column)[sales_column].sum().reset_index()
+        # Filter DataFrame for the current period
+        period_df = df[(df[date_column] >= start_date) & (df[date_column] < end_date)]
 
-    # Merge sums back into original DataFrame
-    df = pd.merge(df, sales1, on=article_column, how='left', suffixes=('', '_1'))
-    df = pd.merge(df, sales2, on=article_column, how='left', suffixes=('', '_2'))
+        # Filter DataFrame to include only sales where 'Тип документа' is equal to 'Продажа'
+        period_sales = period_df[period_df[type_column] == type_name]
 
-    return df
+        # Calculate sum of sales_column for each article_column in the current period
+        sales = period_sales.groupby(nmId)[sales_column].sum().reset_index()
+        sales_column_name = f'{sales_column}_{period + 1}'  # Create a unique name for the sales column
+        sales.rename(columns={sales_column: sales_column_name}, inplace=True)
+
+        print(sales)
+        sales = sales[[nmId, sales_column_name]]
+        dfs_sales.append(sales)
+        sales_columns.append(sales_column_name)
+
+        start_date = end_date
+
+    INCLUDE_COLUMNS = INCLUDE_COLUMNS + sales_columns
+    print(INCLUDE_COLUMNS)
+
+    return dfs_sales, INCLUDE_COLUMNS
 
 
 def concatenate_detailing_module(zip_downloaded, df_net_cost):

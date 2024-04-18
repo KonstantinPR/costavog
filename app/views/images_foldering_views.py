@@ -94,6 +94,7 @@ def images_foldering():
         marketplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]
+        print(df)
 
         # Use get_all_cards_api_wb to retrieve nmID values based on vendorCode
         if marketplace == "WB":

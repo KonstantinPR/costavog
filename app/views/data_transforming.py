@@ -62,7 +62,7 @@ def vertical_sizes():
             df = data_transforming_module.vertical_size(df)
             df = data_transforming_module.to_keep_for_photo(df)
         else:
-            # df_all_cards_api_wb = detailing_reports.get_all_cards_api_wb()
+            # df_all_cards_api_wb = detailing_api_module.get_all_cards_api_wb()
 
             df_all_cards_api_wb = pd.read_excel(all_cards_wb)
             df_all_cards_api_wb = df_all_cards_api_wb.drop_duplicates(subset=['vendorCode'])

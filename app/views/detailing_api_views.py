@@ -25,7 +25,7 @@ def key_indicators():
         return redirect('/company_register')
 
     file_content, file_name = yandex_disk_handler.download_from_YandexDisk()
-    df = detailing_reports.key_indicators_module(file_content)
+    df = detailing_api_module.key_indicators_module(file_content)
 
     file_name_key_indicator = f'key_indicator_of_{file_name}'
     file_content = io_output.io_output(df, is_index=True)
@@ -47,7 +47,7 @@ def revenue_processing():
         return redirect('/company_register')
 
     if request.method == 'POST':
-        df, file_name = detailing_reports.revenue_processing_module(request)
+        df, file_name = detailing_api_module.revenue_processing_module(request)
         print(file_name)
         file_excel = io_output.io_output(df)
         return send_file(file_excel, download_name=file_name, as_attachment=True)

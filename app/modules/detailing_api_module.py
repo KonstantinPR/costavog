@@ -325,7 +325,7 @@ def revenue_processing_module(request):
 
     df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
 
-    # df = detailing_reports.df_revenue_speed(df, period_dates_list)
+    # df = detailing_api_module.df_revenue_speed(df, period_dates_list)
 
     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
     df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)

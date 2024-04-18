@@ -71,6 +71,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -172,10 +173,12 @@
                         WB API
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkWBAPI">
+                        <a class="dropdown-item" href="{{url_for('get_sales_funnel_wb')}}">Воронка продаж WB</a>
                         <a class="dropdown-item" href="{{url_for('get_sales_wb')}}">Продажи WB</a>
                         <a class="dropdown-item" href="{{url_for('get_cards_wb')}}">Карточки WB</a>
                         <a class="dropdown-item" href="{{url_for('get_stock_wb')}}">Остатки WB</a>
                         <a class="dropdown-item" href="{{url_for('get_storage_wb')}}">Хранение WB</a>
+
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -253,6 +256,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

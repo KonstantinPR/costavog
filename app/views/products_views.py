@@ -25,7 +25,7 @@ def upload_products():
         uploaded_files = flask.request.files.getlist("file")
         df = pd.read_excel(uploaded_files[0])
         df.replace(np.NaN, "", inplace=True)
-        print(df)
+        # print(df)
         col_list = ['company_id', 'Артикул поставщика БАЗА', 'Себестоимость БАЗА']
         for col_name in col_list:
             if col_name in df.columns:

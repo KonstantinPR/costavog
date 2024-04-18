@@ -26,6 +26,12 @@
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input placeholder="На сколько частей делим период" id="days_by"
+                                   class="form-control form-control-lg"
+                                   type="number"
+                                   name="days_by">
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_get_stock" name="is_get_stock"
                                    id="is_get_stock" checked>
@@ -58,10 +64,20 @@
                         </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input class="form-check-input" type="checkbox" value="is_delete_shushary" name="is_delete_shushary"
+                            <input class="form-check-input" type="checkbox" value="is_delete_shushary"
+                                   name="is_delete_shushary"
                                    id="is_delete_shushary" checked>
                             <label class="form-check-label" for="is_delete_shushary">
                                 Не учитывать товары в Шушарах
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="change_discount"
+                                   name="change_discount"
+                                   id="change_discount" checked>
+                            <label class="form-check-label" for="change_discount">
+                                Рассчитать выгодное изменение скидки
                             </label>
                         </div>
 
@@ -71,6 +87,15 @@
                                    id="is_just_concatenate">
                             <label class="form-check-label" for="is_just_concatenate">
                                 Просто соединить о один эксель все отчеты
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="on"
+                                   name="is_testing_mode"
+                                   id="is_testing_mode" checked>
+                            <label class="form-check-label" for="is_testing_mode">
+                                Включить тестовый режим (данные будут с яндекс.диска)
                             </label>
                         </div>
 
