@@ -41,7 +41,7 @@
                         </div>
 
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input placeholder="Целое число. Чем выше тем сильнее меняем скидку"
+                            <input placeholder="Целое число. Чем выше тем сильнее меняем скидку. 1"
                                    class="form-control form-control-lg"
                                    type="number"
                                    name="k_smooth">
@@ -63,9 +63,27 @@
                         </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_erase_points"
+                                   name="is_erase_points"
+                                   id="is_erase_points" checked>
+                            <label class="is_erase_points" for="is_erase_points">
+                                Убрать в названиях полей префиксы перед последней точкой
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_exclude_nmIDs"
+                                   name="is_exclude_nmIDs"
+                                   id="is_exclude_nmIDs" checked>
+                            <label class="is_exclude_nmIDs" for="is_exclude_nmIDs">
+                                Удалить из выборки все карточки указанные как неактивные
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="testing_mode"
                                    name="testing_mode"
-                                   id="testing_mode" checked>
+                                   id="testing_mode">
                             <label class="testing_mode" for="testing_mode">
                                 Тестовый режим, отчет подгрузится с Яндекс.Диска
                             </label>

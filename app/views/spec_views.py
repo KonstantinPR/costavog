@@ -1,5 +1,6 @@
 import flask
 
+import logging
 from app import app
 from flask import render_template, request, send_file
 import pandas as pd

@@ -1,4 +1,5 @@
 from app.models import UserModel
+import logging
 from app import app
 from flask_login import current_user
 

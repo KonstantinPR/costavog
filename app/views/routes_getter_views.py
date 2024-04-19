@@ -1,3 +1,4 @@
+import logging
 from app import app
 from flask import jsonify, url_for
 from flask_login import login_required

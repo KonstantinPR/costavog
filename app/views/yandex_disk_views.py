@@ -1,4 +1,5 @@
 import re
+import logging
 from app import app, Company
 from flask import render_template, request, redirect
 from urllib.parse import urlencode

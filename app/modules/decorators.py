@@ -1,3 +1,4 @@
+import logging
 from app import app
 from functools import wraps
 import pandas as pd

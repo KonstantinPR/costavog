@@ -1,5 +1,6 @@
 from flask_login import login_required
 
+import logging
 from app import app
 from flask import render_template, request, send_file
 from app.modules import img_cropper

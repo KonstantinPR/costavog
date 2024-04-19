@@ -1,4 +1,5 @@
 import app.modules.API_WB
+import logging
 from app import app
 import flask
 from flask import flash, render_template, request, redirect, send_file

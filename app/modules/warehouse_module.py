@@ -1,3 +1,4 @@
+import logging
 from app import app
 import inspect
 import glob

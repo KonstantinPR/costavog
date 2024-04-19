@@ -1,14 +1,11 @@
-import time
+import logging
 from app import app
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
+import time
 from app.modules import API_WB, detailing_api_module
-from app.modules import io_output, yandex_disk_handler, request_handler
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)  # Set the logging level to INFO
+from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 
 
 @app.route('/get_sales_funnel_wb', methods=['POST', 'GET'])
@@ -23,16 +20,28 @@ def get_sales_funnel_wb():
         date_end = detailing_api_module.request_date_end(request)
         is_from_yadisk = request.form.get('is_from_yadisk')
         testing_mode = request.form.get('testing_mode')
-        nmIDs = (API_WB.get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk))['nmID'].unique()
-        nmIDs = list(nmIDs)
-        nmIDs = [int(id) for id in nmIDs]
-        logging.info(f"nmIDs was converted to type {type(nmIDs)}")
-        logging.info(f"nmIDs is got. The number of cards is {len(nmIDs)}")
-        df = API_WB.get_wb_sales_funnel_api(nmIDs, date_from, date_end)
-        logging.info(f"sales_funnel is got")
+        is_erase_points = request.form.get('is_erase_points')
+        is_exclude_nmIDs = request.form.get('is_exclude_nmIDs')
+
+        # Retrieve nmIDs from API and exclude cards from Yandex Disk
+        df_nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk)
+        nmIDs = df_nmIDs['nmID'].unique()
+        if is_exclude_nmIDs:
+            nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
+            nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
+
+        # Retrieve sales funnel data frame
+        df = API_WB.get_wb_sales_funnel_api(nmIDs, date_from, date_end, is_erase_points=is_erase_points)
+
+        # Log a message indicating successful retrieval of sales funnel data
+        logging.info("Sales funnel data retrieved successfully")
+
+        # Process and output the data frame
         df = io_output.io_output(df)
         file_name = f'wb_sales_funnel_{str(date_from)}_{str(date_end)}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
+
+    # If the request method is not POST, render the upload_get_sales_funnel.html template
     return render_template('upload_get_sales_funnel.html', doc_string=get_cards_wb.__doc__)
 
 
@@ -77,10 +86,10 @@ def get_stock_wb():
     Достает все остатки с WB через API
     """
     is_delete_shushary = request.form.get('is_delete_shushary')
-    print(f"is_delete_shushary {is_delete_shushary}")
+    logging.info(f"is_delete_shushary {is_delete_shushary}")
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
-        print(f"request {request}")
+        logging.info(f"request {request}")
         df = API_WB.get_wb_stock_api(request=request, is_delete_shushary=is_delete_shushary)
         df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -97,15 +106,15 @@ def get_storage_wb():
     if request.method == 'POST':
         number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
         if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
-        print(f'number_last_days {number_last_days}')
-        print(f"{request.form.get('is_mean')}")
+        logging.info(f'number_last_days {number_last_days}')
+        logging.info(f"{request.form.get('is_mean')}")
         if request.form.get('is_mean'):
             df_all_cards = API_WB.get_average_storage_cost()
-            print(f"storage cost is received by API WB")
+            logging.info(f"storage cost is received by API WB")
         else:
             df_all_cards = API_WB.get_storage_cost(number_last_days, days_delay=0)
 
-        # print(f"df {df_all_cards}")
+        # logging.info(f"df {df_all_cards}")
         df = io_output.io_output(df_all_cards)
         file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -123,13 +132,13 @@ def get_wb_sales_realization_api():
         date_end = detailing_api_module.request_date_end(request)
         days_step = detailing_api_module.request_days_step(request)
         t = time.process_time()
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales_wb_api = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         return send_file(file, download_name=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
                          as_attachment=True)
 
@@ -201,14 +210,14 @@ def get_wb_stock_api():
             date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
             date_from = date_from.strftime("%Y-%m-%d")
 
-        print(date_from)
+        logging.info(date_from)
 
         if request.form.get('date_end'):
             date_end = request.form.get('date_end')
         else:
             date_end = time.strftime("%Y-%m-%d")
 
-        print(date_end)
+        logging.info(date_end)
 
         # if request.form.get('days_step'):
         #     days_step = request.form.get('days_step')
@@ -216,13 +225,13 @@ def get_wb_stock_api():
         #     days_step = app.config['DAYS_STEP_DEFAULT']
 
         t = time.process_time()
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales_wb_api = API_WB.get_wb_stock_api()
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
-        print(time.process_time() - t)
+        logging.info(time.process_time() - t)
         return send_file(file,
                          download_name='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
                          as_attachment=True)

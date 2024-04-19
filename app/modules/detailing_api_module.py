@@ -1,3 +1,4 @@
+import logging
 from app import app
 from flask_login import current_user
 from functools import reduce
@@ -227,7 +228,7 @@ def request_date_from(request):
         date_from = request.form.get('date_from')
     else:
         date_from = datetime.datetime.today() - datetime.timedelta(
-            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(DAYS_DELAY_REPORT)
+            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
         date_from = date_from.strftime(DATE_FORMAT)
     return date_from
 
@@ -236,7 +237,7 @@ def request_date_end(request):
     if request.form.get('date_end'):
         date_end = request.form.get('date_end')
     else:
-        date_end = datetime.datetime.today() - datetime.timedelta(DAYS_DELAY_REPORT)
+        date_end = datetime.datetime.today() - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
         date_end = date_end.strftime(DATE_FORMAT)
         # date_end = time.strftime(date_format)- datetime.timedelta(3)
     return date_end

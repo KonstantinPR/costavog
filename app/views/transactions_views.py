@@ -1,3 +1,4 @@
+import logging
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 import flask

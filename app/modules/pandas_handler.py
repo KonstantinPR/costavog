@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from random import randrange
 from typing import Union
+import logging
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
 
@@ -22,14 +23,15 @@ def dc_adding_empty(dc, max_length_dc, sep=''):
     return dc
 
 
-def df_col_merging(df, random_suffix=f'_col_on_drop_{randrange(10)}', false_list=FALSE_LIST):
+def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrange(10)}', false_list=FALSE_LIST):
+    df = df.merge(df_from, on=col_name, how='left', suffixes=("", random_suffix))
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
             for idj, val in enumerate(df[f'{col}{random_suffix}']):
                 if not pd.isna(val) or not val in false_list:
                     df[col][idj] = val
 
-    df = df_col_merging(df).df.drop(columns=[x for x in df.columns if random_suffix in x]).fillna('')
+    df = df.drop(columns=[x for x in df.columns if random_suffix in x]).fillna('')
 
     return df
 
@@ -80,3 +82,14 @@ def first_letter_up(df, name_columns):
         else:
             print(f"Column {name_column} not found in the {df} dictionary.")
     return df
+
+
+def nmIDs_exclude(nmIDs, nmIDs_exclude):
+    """exclude nmIDs_exclude from nmIDs"""
+
+    nmIDs = list([int(nmID) for nmID in nmIDs])
+    nmIDs_exclude = list([int(nmID) for nmID in nmIDs_exclude])
+    # Exclude nmIDs present in nmIDs_exclude list
+    nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
+    logging.info(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
+    return nmIDs

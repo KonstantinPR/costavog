@@ -1,3 +1,4 @@
+import logging
 from app import app, Company
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user

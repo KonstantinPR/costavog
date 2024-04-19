@@ -1,3 +1,4 @@
+import logging
 from app import app
 import requests
 import pandas as pd
@@ -7,10 +8,6 @@ import json
 from datetime import datetime, timedelta
 from app.modules import io_output
 from app.modules import yandex_disk_handler
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)  # Set the logging level to INFO
 
 
 def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
@@ -28,7 +25,7 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
 
     # Calculate shareCost using Decimal arithmetic
     # df['shareCost'] = (df['storagePricePerBarcode'] / total_warehouse_price)
-    # print(f"df['shareCost'] {df['shareCost'].sum()}")
+    # logging.info(f"df['shareCost'] {df['shareCost'].sum()}")
 
     return df
 
@@ -69,7 +66,7 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
                      days_delay=0,
                      upload_to_yadisk=True):
     if testing_mode:
-        print(f"storage cost is receiving from Yandex Disk")
+        logging.info(f"storage cost is receiving from Yandex Disk")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
 
@@ -90,9 +87,9 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
         'dateTo': date_to
     }
     response = requests.get(create_report_url, headers=headers, params=params)
-    print(f"status_code {response.status_code}")
+    logging.info(f"status_code {response.status_code}")
     if response.status_code not in {200, 201}:  # Check for successful response (200 or 201)
-        print("Failed to create report so file will be got from yadisk::", response.text)
+        logging.info("Failed to create report so file will be got from yadisk::", response.text)
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
 
@@ -103,7 +100,7 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
     while True:
         response = requests.get(status_url, headers=headers)
         if response.status_code not in {200, 201}:
-            print("Failed to check report status so file will be got from yadisk:", response.text)
+            logging.info("Failed to check report status so file will be got from yadisk:", response.text)
             df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
             return df
 
@@ -111,7 +108,7 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
         if status == 'done':
             break  # Exit loop once report is ready
         elif status == 'error':
-            print("Report generation failed.")
+            logging.info("Report generation failed.")
             return None
 
         # Wait and try again after some time
@@ -121,15 +118,15 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
     download_url = f'https://seller-analytics-api.wildberries.ru/api/v1/paid_storage/tasks/{task_id}/download'
     response = requests.get(download_url, headers=headers)
     if response.status_code not in {200, 201}:
-        print("Failed to download report so file will be got from yadisk::", response.text)
+        logging.info("Failed to download report so file will be got from yadisk::", response.text)
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
 
     report_data = response.json()
-    print(f"storage cost is receiving from API WB {response.text}")
+    logging.info(f"storage cost is receiving from API WB {response.text}")
     # Step 4: Convert data to DataFrame
     df = pd.DataFrame(report_data)
-    # print(f"df {df}")
+    # logging.info(f"df {df}")
 
     if upload_to_yadisk and not df is None:
         io_df = io_output.io_output(df)
@@ -137,10 +134,10 @@ def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STORAGE_COST'])
 
     if is_delete_shushary == 'is_delete_shushary':
-        print("Удаление сгоревших товаров Шушар...")
+        logging.info("Удаление сгоревших товаров Шушар...")
         df = df[df['warehouse'] != 'Санкт-Петербург Шушары']
 
-    # print(f"df {df}")
+    # logging.info(f"df {df}")
     return df
 
 
@@ -173,12 +170,12 @@ def get_wb_price_api(testing_mode=None):
             yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
             return df
         else:
-            print("No data received from Wildberries API. Retrieving from Yandex Disk...")
+            logging.info("No data received from Wildberries API. Retrieving from Yandex Disk...")
             df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
             return df
     else:
-        print(f"Failed to fetch data from Wildberries API: {response.text}")
-        print("Retrieving from Yandex Disk...")
+        logging.info(f"Failed to fetch data from Wildberries API: {response.text}")
+        logging.info("Retrieving from Yandex Disk...")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
         return df
 
@@ -193,22 +190,22 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 
     if testing_mode:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
-        print("testing mode, stock from yandex disk ...")
+        logging.info("testing mode, stock from yandex disk ...")
         return df
 
-    print("stock from API WB ...")
+    logging.info("stock from API WB ...")
     api_key = app.config['WB_API_TOKEN']
     url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
     headers = {'Authorization': api_key}
 
     response = requests.get(url, headers=headers)
-    # print(response)
+    # logging.info(response)
     df = response.json()
     df = pd.json_normalize(df)
     # df.to_excel("wb_stock.xlsx")
 
     if is_delete_shushary == 'is_delete_shushary':
-        print("Удаление сгоревших товаров Шушар из остатков ...")
+        logging.info("Удаление сгоревших товаров Шушар из остатков ...")
         df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
 
     df = df.reset_index().rename_axis(None, axis=1)
@@ -296,7 +293,7 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 
 #
 # def get_all_cards_api_wb(textSearch: str = None):
-#     print("get_all_cards_api_wb ...")
+#     logging.info("get_all_cards_api_wb ...")
 #     limit = 1000
 #     total = 1000
 #     updatedAt = None
@@ -329,13 +326,13 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
 #         response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',
 #                                  data=json.dumps(data), headers=headers)
 #
-#         # print(f"{response}")
+#         # logging.info(f"{response}")
 #
 #         if response.status_code != 200:
-#             print(f"Error in API request: {response.status_code}")
+#             logging.info(f"Error in API request: {response.status_code}")
 #             break
 #         df_json = response.json()
-#         print(df_json)
+#         logging.info(df_json)
 #         total = df_json['data']['cursor']['total']
 #         updatedAt = df_json['data']['cursor']['updatedAt']
 #         nmId = df_json['data']['cursor']['nmID']
@@ -351,10 +348,10 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 
     if testing_mode or is_from_yadisk:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_ALL_CARDS_WB')
-        print("all cards is from yandex disk ...")
+        logging.info("all cards is from yandex disk ...")
         return df
 
-    print("get_all_cards_api_wb ...")
+    logging.info("get_all_cards_api_wb ...")
     limit = 1000
     total = 1000
     updatedAt = None
@@ -362,7 +359,7 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
     dfs = []
     count = 0
     while total >= limit:
-        print(f"{get_all_cards_api_wb.__name__} ... total {count}")
+        logging.info(f"{get_all_cards_api_wb.__name__} ... total {count}")
         headers = {
             'accept': 'application/json',
             'Authorization': app.config['WB_API_TOKEN2'],
@@ -386,12 +383,12 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
                                  data=json.dumps(data), headers=headers)
 
         if response.status_code != 200:
-            print(f"Error in API request: {response.status_code}")
+            logging.info(f"Error in API request: {response.status_code}")
             break
 
         df_json = response.json()
         if 'error' in df_json:
-            print(f"API Error: {df_json['errorText']}")
+            logging.info(f"API Error: {df_json['errorText']}")
             break
 
         total = df_json['cursor']['total']
@@ -400,7 +397,7 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
         dfs += df_json['cards']
         count = count + total
 
-    print(f"{get_all_cards_api_wb.__name__} forming df ...")
+    logging.info(f"{get_all_cards_api_wb.__name__} forming df ...")
     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'], errors='ignore')
 
     if is_to_yadisk:
@@ -421,7 +418,7 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 #
 #     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
 #     response = requests.get(url_all, headers=headers)
-#     print(f"response {response}")
+#     logging.info(f"response {response}")
 #     df = response.json()
 #     df = pd.json_normalize(df)
 #
@@ -438,10 +435,10 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
-    print(f"response {response}")
-    print(f"response.json() {response.json()}")
+    logging.info(f"response {response}")
+    logging.info(f"response.json() {response.json()}")
     df = response.json()
-    print(df)
+    logging.info(df)
     df = pd.json_normalize(df)
 
     return df
@@ -471,7 +468,7 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
         return None
 
 
-def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_to_yadisk=True):
+def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_erase_points=True, is_to_yadisk=True):
     """get_wb_sales_funnel_api"""
 
     if testing_mode:
@@ -494,13 +491,17 @@ def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_t
     date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
     date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    logging.info(f" {date_from, date_end}")
+    logging.info(f" date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
 
+    # Rename columns (stay only last part before points, for example statistic.order.date to only date)
+    if is_erase_points:
+        df = df.rename(columns=lambda x: x.split('.')[-1])
+
     if is_to_yadisk and df is not None and not df.empty:
         io_df = io_output.io_output(df)
-        file_name = f'all_cards_wb.xlsx'
+        file_name = f'wb_sales_funnel.xlsx'
         logging.info(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_SALES_FUNNEL_WB'])
 
@@ -512,6 +513,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
     cards_count = chunk_size
     for chunk in chunks:
+        logging.info(f"getting via get_wb_sales_funnel_api {cards_count} ...")
 
         payload = {
             "brandNames": [],
@@ -531,7 +533,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
         }
 
         response = requests.post(url, json=payload, headers=headers)
-        logging.info(f'response {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
+        logging.info(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
         if response.status_code != 200:
             logging.info(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
             return None
@@ -551,7 +553,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
                 logging.info(f'Error parsing response: {e}')
                 return None
 
-        logging.info(f"got via get_wb_sales_funnel_api {cards_count}")
         df = pd.concat([df, df_chunk], ignore_index=True)
-        cards_count += chunk_size
+        cards_count += len(chunk)
+
     return df

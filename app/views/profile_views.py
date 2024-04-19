@@ -1,3 +1,4 @@
+import logging
 from app import app
 from flask import flash, render_template, request, redirect
 from flask_login import login_required, current_user, login_user, logout_user

@@ -1,4 +1,5 @@
 from app.modules import task_worker, sql_query_main
+import logging
 from app import app
 from flask import flash, render_template, request, redirect, g
 import flask

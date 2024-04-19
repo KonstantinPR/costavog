@@ -1,4 +1,5 @@
 import app.modules.API_WB
+import logging
 from app import app
 import io
 import zipfile

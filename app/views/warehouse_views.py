@@ -1,3 +1,4 @@
+import logging
 from app import app
 from flask import render_template, request, send_file, flash
 from app.modules import warehouse_module, io_output, data_transforming_module

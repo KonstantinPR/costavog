@@ -8,10 +8,16 @@ import time
 
 app = Flask(__name__)
 app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login.init_app(app)
+
 migrate = Migrate(app, db)
+
+# Import and execute logging configuration
+from app import logging_config
+logging_config.setup_logging()
 
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri = environ.get('DATABASE_URL')
@@ -40,6 +46,7 @@ app.config['YANDEX_KEY_STORAGE_COST'] = '/TASKER/KEY_FILES/STORAGE_COST'
 app.config['YANDEX_KEY_STOCK_WB'] = '/TASKER/KEY_FILES/STOCK_WB'
 app.config['YANDEX_KEY_PRICES'] = '/TASKER/KEY_FILES/PRICES'
 app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
+app.config['YANDEX_EXCLUDE_CARDS'] = "/TASKER/ALL_CARDS_WB/EXCLUDE_CARDS"
 app.config['YANDEX_SALES_FUNNEL_WB'] = "/TASKER/SALES_FUNNEL"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\YandexDisk\ФОТОГРАФИИ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ"
@@ -67,6 +74,7 @@ app.config["FULL_PATH_ARRIVALS"] = \
 app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
 app.config['DAYS_STEP_DEFAULT'] = 14
+app.config['DAYS_DELAY_REPORT'] = 1
 app.config['DAYS_PERIOD_DEFAULT'] = 1
 app.config['LAST_DAYS_DEFAULT'] = 7
 
