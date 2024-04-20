@@ -30,7 +30,7 @@ def keep_alive_decorator():
                         # Close the connection
                         conn.close()
                     except Exception as e:
-                        print(f"Error: {e}")
+                        logging.info(f"Error: {e}")
 
             # Start a thread to keep the connection alive
             keep_alive_thread = Thread(target=keep_connection_alive)

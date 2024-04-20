@@ -11,10 +11,10 @@ import flask
 @login_required
 def upload_img_crop():
     if request.method == "POST":
-        print(flask.request.files.getlist("images"))
+        logging.info(flask.request.files.getlist("images"))
         upload_images = flask.request.files.getlist("images")
         type_clothes_to_crop = request.form['type_clothes_to_crop']
-        print('type_clothes_to_crop: ' + type_clothes_to_crop)
+        logging.info('type_clothes_to_crop: ' + type_clothes_to_crop)
         images_zipped = img_cropper.crop_images(upload_images, type_clothes_to_crop)
         return send_file(images_zipped, download_name='zip.zip', as_attachment=True)
 

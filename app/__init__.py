@@ -1,10 +1,12 @@
 from flask import Flask, session, redirect
+from flask import current_app
 from flask_migrate import Migrate
 import os
 from os import environ
 from app.models import db, login, Company, UserModel
 from flask_login import LoginManager, current_user
 import time
+import logging
 
 app = Flask(__name__)
 app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
@@ -15,10 +17,6 @@ login.init_app(app)
 
 migrate = Migrate(app, db)
 
-# Import and execute logging configuration
-from app import logging_config
-logging_config.setup_logging()
-
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri = environ.get('DATABASE_URL')
 
@@ -26,7 +24,37 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
-# app config
+db.init_app(app)
+login.init_app(app)
+login.login_view = 'login'
+
+logging.info("Setting before set_config configuration...")
+
+
+def set_config():
+    logging.info(f"Setting config for current_user in set_config {current_user}")
+    start_time = time.time()
+    company = Company.query.filter_by(id=current_user.company_id).first()
+    logging.info(company)
+    app.config['CURRENT_COMPANY_ID'] = company.id
+    app.config['YANDEX_TOKEN'] = company.yandex_disk_token
+    app.config['WB_API_TOKEN'] = company.wb_api_token
+    app.config['WB_API_TOKEN2'] = company.wb_api_token2
+    end_time = time.time()
+    # Calculate the elapsed time in seconds
+    elapsed_time = end_time - start_time
+    logging.info(f"For current_user {current_user} config is updated")
+    logging.info(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
+
+
+def set_config_schedule():
+    app.config['CURRENT_COMPANY_ID'] = environ.get('CURRENT_COMPANY_ID')
+    app.config['YANDEX_TOKEN'] = environ.get('YANDEX_TOKEN')
+    app.config['WB_API_TOKEN'] = environ.get('WB_API_TOKEN2')
+
+
+# Log when the function is called
+logging.info("Setting in configuration...")
 
 app.config['APP_PASSWORD'] = '19862814GVok'
 app.config['APP_NAME'] = 'TASKER'
@@ -78,39 +106,20 @@ app.config['DAYS_DELAY_REPORT'] = 1
 app.config['DAYS_PERIOD_DEFAULT'] = 1
 app.config['LAST_DAYS_DEFAULT'] = 7
 
-db.init_app(app)
-login.init_app(app)
-login.login_view = 'login'
-
-
-def set_config():
-    print(f"Setting config for current_user {current_user}")
-    start_time = time.time()
-    company = Company.query.filter_by(id=current_user.company_id).first()
-    print(company)
-    app.config['CURRENT_COMPANY_ID'] = company.id
-    app.config['YANDEX_TOKEN'] = company.yandex_disk_token
-    app.config['WB_API_TOKEN'] = company.wb_api_token
-    app.config['WB_API_TOKEN2'] = company.wb_api_token2
-    end_time = time.time()
-    # Calculate the elapsed time in seconds
-    elapsed_time = end_time - start_time
-    print(f"For current_user {current_user} config is updated")
-    print(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
-
 
 @login_manager.request_loader
 def load_user_from_request(request):
     user_id = request.headers.get('User-ID')
-    print(f"request.headers.get('User-ID') {request.headers.get('User-ID')}")
+    logging.info(f"request.headers.get('User-ID') {request.headers.get('User-ID')}")
     if user_id:
         return UserModel.query.get(user_id)
     return None
 
 
+# Add a simple logging statement to the before_request function
 @app.before_request
 def before_request():
-    print(f'current_user.id {current_user.id}')
+    logging.info('Before request hook triggered.')  # Add this logging statement
     if current_user.is_authenticated:
         set_config()
     return None

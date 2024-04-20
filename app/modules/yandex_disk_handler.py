@@ -12,7 +12,7 @@ import os
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     if to_str is None:
         to_str = []
-    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     print(f'ya_path {path_yandex_file}')
     # file_name = os.path.basename(os.path.normpath(path_yandex_file))
@@ -23,7 +23,7 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 
 
 def upload_to_YandexDisk(file: BytesIO, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH']):
-    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_full_to = f"{path}/{file_name}"
     print(path_full_to)
     y.upload(file, path_full_to, overwrite=True)
@@ -32,7 +32,7 @@ def upload_to_YandexDisk(file: BytesIO, file_name: str, path=app.config['YANDEX_
 
 
 def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH'):
-    y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
+    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(app.config[path]))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
