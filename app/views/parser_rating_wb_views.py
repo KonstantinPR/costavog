@@ -3,9 +3,7 @@ import pandas as pd
 from app import app
 from flask import render_template, request, send_file
 from flask_login import login_required
-from app.modules import io_output, request_handler, yandex_disk_handler, API_WB, pandas_handler, parser_rating_module
-import requests
-from random import randrange
+from app.modules import io_output, request_handler, parser_rating_module
 
 
 @app.route('/parser_rating_wb', methods=['GET', 'POST'])
@@ -23,7 +21,7 @@ def parser_rating_wb():
             df = pd.DataFrame()
 
         if df.empty:
-            df = parser_rating_module.scheduled_get_rating()
+            df = parser_rating_module.batched_get_rating()
         else:
             df[col_name] = ''
             df[con_rating_name] = ''

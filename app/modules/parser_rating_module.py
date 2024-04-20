@@ -1,17 +1,17 @@
 import logging
 import pandas as pd
 from app import app
-from flask import render_template, request, send_file
-from flask_login import login_required
 from app.modules import io_output, request_handler, yandex_disk_handler, API_WB, pandas_handler
 import requests
-from random import randrange
+from random import randint
 
 
-def scheduled_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=500):
+def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=100):
     try:
         # Retrieve unique nmIDs from the API
         nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
+        nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
+        logging.info(f"nmIDs is {nmIDs} cards ...")
 
         # Split nmIDs into batches
         nmID_batches = [nmIDs[i:i + batch_size] for i in range(0, len(nmIDs), batch_size)]

@@ -1,9 +1,20 @@
-from app import set_config_schedule, app
-from app.modules import parser_rating_module
-from app.logging_config import setup_logging
+import schedule
+import logging
+import time
+from worker import run_batched_get_rating
+
+
+def print_message():
+    logging.info("Scheduler is working")
+
 
 if __name__ == '__main__':
-    with app.app_context():
-        setup_logging()
-        set_config_schedule()
-        parser_rating_module.scheduled_get_rating()
+    # Schedule a job to print message every 1 hour
+    schedule.every().hour.do(print_message)
+    # Schedule a job to run batched_get_rating every 1 hour
+    schedule.every().hour.do(run_batched_get_rating)
+
+    # Run the scheduler continuously
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

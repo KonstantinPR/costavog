@@ -4,17 +4,6 @@ from PIL import Image
 from flask import flash, render_template
 
 
-# def io_txt_request(request, name_html, inp_name, col_name):
-#     file_txt = request.files[inp_name]
-#
-#     if not request.files[inp_name]:
-#         flash("Не приложен файл")
-#         return render_template(name_html)
-#
-#     df = pd.read_fwf(file_txt)
-#     df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
-#
-#     return df_column
 
 
 def io_output_txt_csv(df: pd.DataFrame, sep: str = ",", header: bool = False, index: bool = False) -> BytesIO:

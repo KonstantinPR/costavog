@@ -1,7 +1,5 @@
 from app import app, db
 from app.models import UserModel, Company, Task, Transaction, Product, login
-import time
-from sqlalchemy.exc import PendingRollbackError
 
 
 @app.shell_context_processor

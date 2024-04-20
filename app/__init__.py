@@ -35,7 +35,7 @@ def set_config():
     logging.info(f"Setting config for current_user in set_config {current_user}")
     start_time = time.time()
     company = Company.query.filter_by(id=current_user.company_id).first()
-    logging.info(company)
+    logging.info(f"company {company}")
     app.config['CURRENT_COMPANY_ID'] = company.id
     app.config['YANDEX_TOKEN'] = company.yandex_disk_token
     app.config['WB_API_TOKEN'] = company.wb_api_token
@@ -43,11 +43,11 @@ def set_config():
     end_time = time.time()
     # Calculate the elapsed time in seconds
     elapsed_time = end_time - start_time
-    logging.info(f"For current_user {current_user} config is updated")
+    logging.info(f"For current_user {current_user} config is set")
     logging.info(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
 
 
-def set_config_schedule():
+def set_config_scheduler():
     app.config['CURRENT_COMPANY_ID'] = environ.get('CURRENT_COMPANY_ID')
     app.config['YANDEX_TOKEN'] = environ.get('YANDEX_TOKEN')
     app.config['WB_API_TOKEN'] = environ.get('WB_API_TOKEN2')
