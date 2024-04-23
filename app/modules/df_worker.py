@@ -14,7 +14,7 @@ def qt_to_order(df):
 
 
 def df_take_off_boxes(df, sep_boxes: str = 'end'):
-    print(df)
+    # print(df)
     art_size_col = 'Артикул товара'
     art_col = 'Артикул'
     if not art_col in df.columns: art_col = art_size_col
@@ -55,8 +55,8 @@ def df_take_off_boxes(df, sep_boxes: str = 'end'):
     dc = dict(zip(df[box_number], df[answer_col]))
     df[answer_col] = df[box_number].map(dc)
 
-    print(dc)
+    # print(dc)
 
-    print(df)
+    # print(df)
 
     return df

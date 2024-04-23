@@ -74,11 +74,11 @@ def barcode():
             input_text = request.form['text_input']
             input_text = input_text.split(" ")
             df = pd.DataFrame(input_text)
-            print(df)
+            # print(df)
         elif request.files['file']:
             file: FileStorage = request.files['file']
             df = pd.read_table(file, delim_whitespace=False, header=None)
-            print(df)
+            # print(df)
         else:
             flash("Не приложен файл")
             return render_template('upload_barcode.html')
@@ -92,7 +92,7 @@ def barcode():
 
         # col_name = "Датаматрикс"
         # df_column = df.T.reset_index().set_axis([col_name]).T.reset_index(drop=True)
-        print(df)
+        # print(df)
         lines = df[0].to_list()
         lines = [str(x) for x in lines]
         print(lines)

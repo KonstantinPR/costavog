@@ -7,6 +7,7 @@ import logging
 from app import app, Company
 from io import BytesIO
 import os
+from app.modules import io_output
 
 
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
@@ -22,10 +23,14 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     return file_content
 
 
-def upload_to_YandexDisk(file: BytesIO, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH']):
+def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH'],
+                         is_upload_yadisk=True, ):
+    if not isinstance(file, BytesIO):
+        file = io_output.io_output(file)
+
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_full_to = f"{path}/{file_name}"
-    print(path_full_to)
+    print(f"path_full_to upload yndex disk {path_full_to}")
     y.upload(file, path_full_to, overwrite=True)
 
     return None

@@ -60,13 +60,13 @@ def get_cards_wb():
 @login_required
 def get_stock_wb():
     """
-    Достает все остатки с WB через API
+    Достает все остатки с WB через API, на яндекс диск сохранится без городов и размеров
     """
     is_delete_shushary = request.form.get('is_delete_shushary')
-    logging.info(f"is_delete_shushary {is_delete_shushary}")
+    logging.warning(f"is_delete_shushary {is_delete_shushary}")
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
-        logging.info(f"request {request}")
+        logging.warning(f"request {request}")
         df = API_WB.get_wb_stock_api(request=request, is_delete_shushary=is_delete_shushary)
         df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -83,15 +83,15 @@ def get_storage_wb():
     if request.method == 'POST':
         number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
         if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
-        logging.info(f'number_last_days {number_last_days}')
-        logging.info(f"{request.form.get('is_mean')}")
+        logging.warning(f'number_last_days {number_last_days}')
+        logging.warning(f"{request.form.get('is_mean')}")
         if request.form.get('is_mean'):
             df_all_cards = API_WB.get_average_storage_cost()
-            logging.info(f"storage cost is received by API WB")
+            logging.warning(f"storage cost is received by API WB")
         else:
             df_all_cards = API_WB.get_storage_cost(number_last_days, days_delay=0)
 
-        # logging.info(f"df {df_all_cards}")
+        # logging.warning(f"df {df_all_cards}")
         df = io_output.io_output(df_all_cards)
         file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -109,13 +109,13 @@ def get_wb_sales_realization_api():
         date_end = detailing_api_module.request_date_end(request)
         days_step = detailing_api_module.request_days_step(request)
         t = time.process_time()
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales_wb_api = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         return send_file(file, download_name=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
                          as_attachment=True)
 
@@ -156,11 +156,16 @@ def get_wb_pivot_sells_api() -> object:
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])
 @login_required
 def get_wb_price_api():
+    """getting prices amd discounts form api wildberries"""
     if not current_user.is_authenticated:
         return redirect('/company_register')
-    df = detailing_api_module.get_wb_price_api()
-    file_content = io_output.io_output(df)
-    return send_file(file_content, download_name='price.xlsx', as_attachment=True)
+    if request.method == 'POST':
+        df, file_name = API_WB.get_wb_price_api(request)
+        print(file_name)
+        df = io_output.io_output(df)
+        # print(df)
+        return send_file(df, download_name=file_name, as_attachment=True)
+    return render_template('upload_prices_wb.html', doc_string=get_wb_price_api.__doc__)
 
 
 # @app.route('/get_wb_stock', methods=['POST', 'GET'])
@@ -187,14 +192,14 @@ def get_wb_stock_api():
             date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
             date_from = date_from.strftime("%Y-%m-%d")
 
-        logging.info(date_from)
+        logging.warning(date_from)
 
         if request.form.get('date_end'):
             date_end = request.form.get('date_end')
         else:
             date_end = time.strftime("%Y-%m-%d")
 
-        logging.info(date_end)
+        logging.warning(date_end)
 
         # if request.form.get('days_step'):
         #     days_step = request.form.get('days_step')
@@ -202,13 +207,13 @@ def get_wb_stock_api():
         #     days_step = app.config['DAYS_STEP_DEFAULT']
 
         t = time.process_time()
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales_wb_api = API_WB.get_wb_stock_api()
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         file = io_output.io_output(df_sales_wb_api)
-        logging.info(time.process_time() - t)
+        logging.warning(time.process_time() - t)
         return send_file(file,
                          download_name='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
                          as_attachment=True)

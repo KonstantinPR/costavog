@@ -10,6 +10,7 @@ import time
 import logging
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 
 login_manager = LoginManager()
@@ -31,12 +32,13 @@ login.login_view = 'login'
 
 logging.warning("Setting before set_config configuration...")
 
+
 def set_config():
     logging_config.setup_logging()
-    logging.info(f"Setting config for current_user in set_config {current_user}")
+    logging.warning(f"Setting config for current_user in set_config {current_user}")
     start_time = time.time()
     company = Company.query.filter_by(id=current_user.company_id).first()
-    logging.info(f"company {company}")
+    logging.warning(f"company {company}")
     app.config['CURRENT_COMPANY_ID'] = company.id
     app.config['YANDEX_TOKEN'] = company.yandex_disk_token
     app.config['WB_API_TOKEN'] = company.wb_api_token
@@ -44,12 +46,12 @@ def set_config():
     end_time = time.time()
     # Calculate the elapsed time in seconds
     elapsed_time = end_time - start_time
-    logging.info(f"For current_user {current_user} config is set")
-    logging.info(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
+    logging.warning(f"For current_user {current_user} config is set")
+    logging.warning(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
 
 
 # Log when the function is called
-logging.info("Setting in configuration...")
+logging.warning("Setting in configuration...")
 
 app.config['APP_PASSWORD'] = '19862814GVok'
 app.config['APP_NAME'] = 'TASKER'
@@ -68,13 +70,13 @@ app.config['YANDEX_KEY_FILES_PATH'] = '/TASKER/KEY_FILES'
 app.config['YANDEX_KEY_STORAGE_COST'] = '/TASKER/KEY_FILES/STORAGE_COST'
 app.config['YANDEX_KEY_STOCK_WB'] = '/TASKER/KEY_FILES/STOCK_WB'
 app.config['YANDEX_KEY_PRICES'] = '/TASKER/KEY_FILES/PRICES'
-app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/ALL_CARDS_WB"
-app.config['YANDEX_EXCLUDE_CARDS'] = "/TASKER/ALL_CARDS_WB/EXCLUDE_CARDS"
-app.config['YANDEX_SALES_FUNNEL_WB'] = "/TASKER/SALES_FUNNEL"
+app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/KEY_FILES/ALL_CARDS_WB"
+app.config['YANDEX_EXCLUDE_CARDS'] = "/TASKER/KEY_FILES/ALL_CARDS_WB/EXCLUDE_CARDS"
+app.config['YANDEX_SALES_FUNNEL_WB'] = "/TASKER/KEY_FILES/SALES_FUNNEL"
 app.config['YANDEX_FOLDER_IMAGE'] = "C:\YandexDisk\ФОТОГРАФИИ"
 app.config['YANDEX_FOLDER_IMAGE_YANDISK'] = "/ФОТОГРАФИИ"
-app.config['NET_COST_PRODUCTS'] = "/TASKER/NET_COST"
-app.config['RATING'] = "/TASKER/RATING"
+app.config['NET_COST_PRODUCTS'] = "/TASKER/KEY_FILES/NET_COST"
+app.config['RATING'] = "/TASKER/KEY_FILES/RATING"
 
 app.config['CHARACTERS_PRODUCTS'] = "/TASKER/CHARACTERS"
 app.config['COLORS'] = "/TASKER/CHARACTERS/COLORS"
@@ -105,7 +107,7 @@ app.config['LAST_DAYS_DEFAULT'] = 7
 @login_manager.request_loader
 def load_user_from_request(request):
     user_id = request.headers.get('User-ID')
-    logging.info(f"request.headers.get('User-ID') {request.headers.get('User-ID')}")
+    logging.warning(f"request.headers.get('User-ID') {request.headers.get('User-ID')}")
     if user_id:
         return UserModel.query.get(user_id)
     return None
@@ -114,7 +116,7 @@ def load_user_from_request(request):
 # Add a simple logging statement to the before_request function
 @app.before_request
 def before_request():
-    logging.info('Before request hook triggered.')  # Add this logging statement
+    logging.warning('Before request hook triggered.')  # Add this logging statement
     if current_user.is_authenticated:
         set_config()
     return None

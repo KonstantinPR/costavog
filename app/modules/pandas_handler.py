@@ -114,5 +114,5 @@ def nmIDs_exclude(nmIDs, nmIDs_exclude):
     nmIDs_exclude = list([int(nmID) for nmID in nmIDs_exclude])
     # Exclude nmIDs present in nmIDs_exclude list
     nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
-    logging.info(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
+    logging.warning(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
     return nmIDs

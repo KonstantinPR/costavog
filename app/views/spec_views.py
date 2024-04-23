@@ -150,7 +150,7 @@ def take_off_boxes():
     if request.method == 'POST':
         dfs = base_module.request_excel_to_df(flask.request)
         df = spec_modifiyer.merge_spec(dfs[0], dfs[1], how='left')
-        print(df)
+        # print(df)
         df = df_worker.df_take_off_boxes(df)
         df = io_output.io_output(df)
         return send_file(df, as_attachment=True, download_name='table_take_off_boxes.xlsx')

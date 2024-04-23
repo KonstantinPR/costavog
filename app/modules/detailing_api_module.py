@@ -636,7 +636,7 @@ def get_important_columns(df):
         'company_id',
         'sa_name',
     ]]
-    print(df)
+    # print(df)
     return df
 
 

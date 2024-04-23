@@ -11,7 +11,7 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
         # Retrieve unique nmIDs from the API
         nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
         # nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
-        logging.info(f"nmIDs is {len(nmIDs)} cards ...")
+        logging.warning(f"nmIDs is {len(nmIDs)} cards ...")
         print(f"nmIDs is {len(nmIDs)} cards ...")
 
         # Split nmIDs into batches
@@ -20,7 +20,7 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
         # Iterate through batches
         gotten_cards = batch_size
         for nmID_batch in nmID_batches:
-            logging.info(f"got ratings on {gotten_cards} cards ...")
+            logging.warning(f"got ratings on {gotten_cards} cards ...")
 
             # Create a new DataFrame to store ratings
             rating_df = pd.DataFrame(columns=[col_name, 'Rating', 'Feedbacks'])
@@ -52,7 +52,7 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
             # Save the updated DataFrame to Yandex Disk
             io_df = io_output.io_output(current_df)
             file_name = f'rating.xlsx'
-            logging.info(f'Updated DataFrame uploaded to YandexDisk with name {file_name}')
+            logging.warning(f'Updated DataFrame uploaded to YandexDisk with name {file_name}')
             yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
             gotten_cards += len(nmID_batch)
 
@@ -67,7 +67,7 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
     """Extract rating and number of feedbacks for each product ID."""
     for index, row in df.iterrows():
         good_id = row[col_name]
-        logging.info(f"Getting: {good_id} ...")
+        logging.warning(f"Getting: {good_id} ...")
         try:
             headers = {
                 'Accept': '*/*',
@@ -78,13 +78,13 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
             url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
             r = requests.get(url=url, headers=headers)
             if r.status_code == 200:
-                logging.info(f"Got it: {good_id}")
+                logging.warning(f"Got it: {good_id}")
                 data = r.json().get('data')
                 if data and data.get('products'):
                     product = data['products'][0]
                     df.at[index, 'Rating'] = product.get('rating', '')
                     df.at[index, 'Feedbacks'] = product.get('feedbacks', '')
-                    logging.info(f"Rating: {df.at[index, 'Rating']}, Feedbacks {df.at[index, 'Feedbacks']}")
+                    logging.warning(f"Rating: {df.at[index, 'Rating']}, Feedbacks {df.at[index, 'Feedbacks']}")
                 else:
                     logging.warning(f"No product data found for ID: {good_id}")
             else:
@@ -95,7 +95,7 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
     # if is_to_yadisk:
     #     io_df = io_output.io_output(df)
     #     file_name = f'rating.xlsx'
-    #     logging.info(f'df as excel uploading to YandexDisk with name {file_name}')
+    #     logging.warning(f'df as excel uploading to YandexDisk with name {file_name}')
     #     yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
 
     return df
