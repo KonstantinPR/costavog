@@ -16,33 +16,10 @@ def get_sales_funnel_wb():
     """
 
     if request.method == 'POST':
-        date_from = detailing_api_module.request_date_from(request)
-        date_end = detailing_api_module.request_date_end(request)
-        is_from_yadisk = request.form.get('is_from_yadisk')
-        testing_mode = request.form.get('testing_mode')
-        is_erase_points = request.form.get('is_erase_points')
-        is_exclude_nmIDs = request.form.get('is_exclude_nmIDs')
+        df, file_name = API_WB.get_wb_sales_funnel_api(request)
 
-        # Retrieve nmIDs from API and exclude cards from Yandex Disk
-        df_nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk)
-        nmIDs = df_nmIDs['nmID'].unique()
-        if is_exclude_nmIDs:
-            nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
-            nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
-
-        # Retrieve sales funnel data frame
-        df = API_WB.get_wb_sales_funnel_api(nmIDs, date_from, date_end, is_erase_points=is_erase_points)
-
-        # Log a message indicating successful retrieval of sales funnel data
-        logging.info("Sales funnel data retrieved successfully")
-
-        # Process and output the data frame
-        df = io_output.io_output(df)
-        file_name = f'wb_sales_funnel_{str(date_from)}_{str(date_end)}.xlsx'
-        return send_file(df, download_name=file_name, as_attachment=True)
-
-    # If the request method is not POST, render the upload_get_sales_funnel.html template
-    return render_template('upload_get_sales_funnel.html', doc_string=get_cards_wb.__doc__)
+        return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
+    return render_template('upload_api_sales_funnel.html', doc_string=get_sales_funnel_wb.__doc__)
 
 
 @app.route('/get_sales_wb', methods=['POST', 'GET'])
@@ -163,7 +140,7 @@ def get_wb_pivot_sells_api() -> object:
         days_step = detailing_api_module.request_days_step(request)
         df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
         df_sales = detailing_api_module.get_wb_sales_realization_pivot(df)
-        df_stock = API_WB.get_wb_pivot_sells_api()
+        df_stock = API_WB.get_wb_sales_realization_api_v2(date_from=date_from, date_to=date_end)
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = df_sales.merge(df_stock, how='outer', on='nm_id')
         df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')

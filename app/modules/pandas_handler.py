@@ -36,6 +36,29 @@ def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrang
     return df
 
 
+def df_merge_drop(left_df, right_df, left_on, right_on):
+    # Generate random suffixes
+
+
+    left_suffix = f'_col_on_drop_x_{randrange(10)}'
+    right_suffix = f'_col_on_drop_y_{randrange(10)}'
+
+    # Merge dataframes
+    merged_df = pd.merge(left_df, right_df, how='left', left_on=left_on, right_on=right_on,
+                         suffixes=(left_suffix, right_suffix))
+
+    # print(f"merged_df {merged_df}")
+
+    # Rename columns containing '_col_on_drop_x' by removing that part
+    merged_df.rename(columns=lambda x: x.replace(left_suffix, ''), inplace=True)
+
+    # Drop columns with '_col_on_drop_y'
+    columns_to_drop = [col for col in merged_df.columns if right_suffix in col]
+    merged_df.drop(columns_to_drop, axis=1, inplace=True)
+
+    return merged_df
+
+
 def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_col_name: str) -> pd.DataFrame:
     """
     Fill missing values in a DataFrame column with values from potential columns provided in nm_columns.

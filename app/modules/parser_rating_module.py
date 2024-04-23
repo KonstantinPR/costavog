@@ -6,12 +6,13 @@ import requests
 from random import randint
 
 
-def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=100):
+def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=500):
     try:
         # Retrieve unique nmIDs from the API
         nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
-        nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
-        logging.info(f"nmIDs is {nmIDs} cards ...")
+        # nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
+        logging.info(f"nmIDs is {len(nmIDs)} cards ...")
+        print(f"nmIDs is {len(nmIDs)} cards ...")
 
         # Split nmIDs into batches
         nmID_batches = [nmIDs[i:i + batch_size] for i in range(0, len(nmIDs), batch_size)]

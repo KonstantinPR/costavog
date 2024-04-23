@@ -24,7 +24,7 @@
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" enctype=multipart/form-data action="{{url_for('get_wb_pivot_sells_api')}}">
+                <form method="post" enctype=multipart/form-data action="{{url_for('get_sales_funnel_wb')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input type="date" class="form-control form-control-lg" id="date_from" name="date_from"
@@ -40,12 +40,6 @@
                             Что-то не так с датой
                         </div>
 
-                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input placeholder="Целое число. Чем выше тем сильнее меняем скидку. 1"
-                                   class="form-control form-control-lg"
-                                   type="number"
-                                   name="k_smooth">
-                        </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('get_sales_funnel_wb')}}"

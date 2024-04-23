@@ -7,62 +7,20 @@ import time
 import json
 from datetime import datetime, timedelta
 from app.modules import io_output
-from app.modules import yandex_disk_handler
+from app.modules import yandex_disk_handler, detailing_api_module, pandas_handler
 
 
 def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
     df = get_storage_cost(testing_mode, is_delete_shushary)
-    # Step 1: Get the DataFrame
-    if df is None:
-        return None
 
     df = df.groupby('vendorCode').agg(
         {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
     df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
 
-    # Calculate total_warehouse_price as Decimal
-    total_warehouse_price = df['storagePricePerBarcode'].sum()
-
-    # Calculate shareCost using Decimal arithmetic
-    # df['shareCost'] = (df['storagePricePerBarcode'] / total_warehouse_price)
-    # logging.info(f"df['shareCost'] {df['shareCost'].sum()}")
-
     return df
 
 
-# def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
-#     df = get_storage_cost(testing_mode, is_delete_shushary)
-#     # Step 1: Get the DataFrame
-#     if df is None:
-#         return None
-#
-#     df = df.groupby('vendorCode').agg(
-#         {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
-#     df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
-#     total_warehouse_price = Decimal(str(df['storagePricePerBarcode'].sum()))
-#     df['shareCost'] = df['storagePricePerBarcode'].apply(lambda x: Decimal(x) / total_warehouse_price)
-#
-#     return df
-
-
-# def get_average_storage_data_mean():
-#     df = get_storage_data()
-#     # Step 1: Get the DataFrame
-#     if df is None:
-#         return None
-#
-#     # Step 2: Calculate storage price per barcode count
-#     df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
-#
-#     # Step 3: Group by vendorCode and calculate average storage price per barcode count
-#     df_grouped = df.groupby('vendorCode')['storagePricePerBarcode'].mean().reset_index()
-#     df = df_grouped.merge(df, how='left', left_on='vendorCode', right_on='vendorCode')
-#     df = df[["vendorCode", "volume", "storagePricePerBarcode"]]
-#
-#     return df
-
-
-def get_storage_cost(testing_mode, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
+def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
                      days_delay=0,
                      upload_to_yadisk=True):
     if testing_mode:
@@ -189,8 +147,11 @@ def get_wb_stock_api(testing_mode=False, request=None, is_delete_shushary=None,
     """
 
     if testing_mode:
-        df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
         logging.info("testing mode, stock from yandex disk ...")
+        df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
+        if is_delete_shushary == 'is_delete_shushary':
+            logging.info("Удаление сгоревших товаров Шушар из остатков ...")
+            df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
         return df
 
     logging.info("stock from API WB ...")
@@ -468,13 +429,31 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
         return None
 
 
-def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_erase_points=True, is_to_yadisk=True):
+def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, is_to_yadisk=True) -> tuple:
     """get_wb_sales_funnel_api"""
 
+    date_from = detailing_api_module.request_date_from(request)
+    date_end = detailing_api_module.request_date_end(request)
+
     if testing_mode:
-        df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_SALES_FUNNEL_WB')
-        logging.info(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
-        return df
+        logging.warning(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
+        print(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
+        df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_SALES_FUNNEL_WB')
+        return df, filename
+
+    is_from_yadisk = request.form.get('is_from_yadisk')
+    testing_mode = request.form.get('testing_mode')
+    is_erase_points = request.form.get('is_erase_points')
+    is_exclude_nmIDs = request.form.get('is_exclude_nmIDs')
+
+    # Retrieve nmIDs from API and exclude cards from Yandex Disk
+    df_nmIDs = get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk)
+    if not 'nmID' in df_nmIDs.columns: logging.warning(f'column nmID in df_nmIDs is not found')
+
+    nmIDs = df_nmIDs['nmID'].unique()
+    if is_exclude_nmIDs:
+        nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
+        nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
 
     api_key = app.config['WB_API_TOKEN2']
     url = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
@@ -491,7 +470,7 @@ def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_e
     date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
     date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    logging.info(f" date_from {date_from}, date_end {date_end}")
+    logging.warning(f" date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
 
@@ -502,10 +481,14 @@ def get_wb_sales_funnel_api(nmIDs, date_from, date_end, testing_mode=False, is_e
     if is_to_yadisk and df is not None and not df.empty:
         io_df = io_output.io_output(df)
         file_name = f'wb_sales_funnel.xlsx'
-        logging.info(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
+        logging.warning(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_SALES_FUNNEL_WB'])
 
-    return df
+    # Log a message indicating successful retrieval of sales funnel data
+    logging.warning("Sales funnel data retrieved successfully")
+    file_name = f'wb_sales_funnel_{str(date_from)[:10]}_{str(date_end[:10])}.xlsx'
+
+    return df, file_name
 
 
 def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
@@ -513,7 +496,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
     cards_count = chunk_size
     for chunk in chunks:
-        logging.info(f"getting via get_wb_sales_funnel_api {cards_count} ...")
+        logging.warning(f"getting via get_wb_sales_funnel_api {cards_count} ...")
 
         payload = {
             "brandNames": [],
@@ -533,9 +516,9 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
         }
 
         response = requests.post(url, json=payload, headers=headers)
-        logging.info(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
+        logging.warning(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
         if response.status_code != 200:
-            logging.info(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
+            logging.warning(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
             return None
         else:
             try:
@@ -550,7 +533,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
 
 
             except Exception as e:
-                logging.info(f'Error parsing response: {e}')
+                logging.warning(f'Error parsing response: {e}')
                 return None
 
         df = pd.concat([df, df_chunk], ignore_index=True)

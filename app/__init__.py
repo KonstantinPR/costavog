@@ -1,3 +1,4 @@
+from app import logging_config
 from flask import Flask, session, redirect
 from flask import current_app
 from flask_migrate import Migrate
@@ -28,10 +29,10 @@ db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
 
-logging.info("Setting before set_config configuration...")
-
+logging.warning("Setting before set_config configuration...")
 
 def set_config():
+    logging_config.setup_logging()
     logging.info(f"Setting config for current_user in set_config {current_user}")
     start_time = time.time()
     company = Company.query.filter_by(id=current_user.company_id).first()
@@ -45,12 +46,6 @@ def set_config():
     elapsed_time = end_time - start_time
     logging.info(f"For current_user {current_user} config is set")
     logging.info(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
-
-
-def set_config_scheduler():
-    app.config['CURRENT_COMPANY_ID'] = environ.get('CURRENT_COMPANY_ID')
-    app.config['YANDEX_TOKEN'] = environ.get('YANDEX_TOKEN')
-    app.config['WB_API_TOKEN'] = environ.get('WB_API_TOKEN2')
 
 
 # Log when the function is called
@@ -159,3 +154,4 @@ from app.views import warehouse_views
 from app.views import models_views
 from app.views import youtube_views
 from app.views import api_views
+from app.views import sales_funnel_views

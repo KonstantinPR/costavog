@@ -1,20 +1,12 @@
-import schedule
-import logging
-import time
-from worker import run_batched_get_rating
-
-
-def print_message():
-    logging.info("Scheduler is working")
-
+from app import app
+from app.modules import parser_rating_module
+from app.logging_config import setup_logging
+from passwords import CURRENT_COMPANY_ID, YANDEX_TOKEN, WB_API_TOKEN
 
 if __name__ == '__main__':
-    # Schedule a job to print message every 1 hour
-    schedule.every().hour.do(print_message)
-    # Schedule a job to run batched_get_rating every 1 hour
-    schedule.every().hour.do(run_batched_get_rating)
-
-    # Run the scheduler continuously
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    with app.app_context():
+        setup_logging()
+        app.config['CURRENT_COMPANY_ID'] = CURRENT_COMPANY_ID
+        app.config['YANDEX_TOKEN'] = YANDEX_TOKEN
+        app.config['WB_API_TOKEN'] = WB_API_TOKEN
+        parser_rating_module.batched_get_rating()

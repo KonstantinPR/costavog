@@ -1,5 +1,5 @@
-import requests
-from bs4 import BeautifulSoup
+# import requests
+# from bs4 import BeautifulSoup
 import pandas as pd
 import math
 import numpy as np
@@ -84,17 +84,17 @@ def merge_dataframes(excel1_path: str, excel2_path: str, left_on: str, right_on:
     return df
 
 
-def is_img(art: str, r: float) -> None:
-    url_site = "https://www.wildberries.ru/catalog/" + str(art) + "/detail.aspx?targetUrl=IN"
-
-    if r == 999 or r == 499.5:
-        if BeautifulSoup(requests.get(url_site).content).find('img', {'class': 'preview-photo j-zoom-preview'}):
-            image = BeautifulSoup(requests.get(url_site).content).find('img', {'class': 'preview-photo j-zoom-preview'})
-            if image:
-                img_src = image['src']
-                print(img_src)
-                return img_src
-    return None
+# def is_img(art: str, r: float) -> None:
+#     url_site = "https://www.wildberries.ru/catalog/" + str(art) + "/detail.aspx?targetUrl=IN"
+#
+#     if r == 999 or r == 499.5:
+#         if BeautifulSoup(requests.get(url_site).content).find('img', {'class': 'preview-photo j-zoom-preview'}):
+#             image = BeautifulSoup(requests.get(url_site).content).find('img', {'class': 'preview-photo j-zoom-preview'})
+#             if image:
+#                 img_src = image['src']
+#                 print(img_src)
+#                 return img_src
+#     return None
 
 
 def is_discount_possible(x: int, y: int) -> int:
