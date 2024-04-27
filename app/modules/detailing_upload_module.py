@@ -21,39 +21,45 @@ INITIAL_COLUMNS_DICT = {
     'subject': 'Предмет',
     'article_supplier': 'Артикул поставщика',
     'nmId': 'nmId',
+    'outcome-net-storage': 'Маржа-себест.-хран.',
+    'Ч. Продажа': 'Ч. Продажа.',
+    'pure_sells_qt': 'Ч. Продажа шт.',
+    'commission_wb': 'commission_wb',
+    'sell': 'Продажа',
+    'back_qt': 'Возврат, шт.',
+    'stock': 'quantityFull',
+    'func_discount': 'func_discount',
+    'delta': 'delta',
+    'n_discount': 'n_discount',
+    'discount': 'discount',
+    'delta_discount': 'delta_discount',
+    'logistics': 'Логистика',
+    'storage': 'Хранение',
+    'Ср. Ц. Продажа/ед.': 'Ср. Ц. Продажа/ед.',
+    'net_cost': 'net_cost',
+    'volume': 'volume',
+    'quantity_full_sells_qt': 'quantityFull + Продажа, шт.',
+    'price_disc': 'price_disc',
+    'price': 'price',
+    'sells_days': 'Дней в продаже',
+    'outcome-net': 'Маржа-себест.',
+    'outcome': 'Маржа',
+    'back': 'Возврат',
+    'storage_single': 'Хранение.ед',
+    'storagePricePerBarcode': 'storagePricePerBarcode',
+    'shareCost': 'shareCost',
+    'logistics_single': 'Логистика. ед',
+    'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
+    'logistics_qt': 'Логистика шт.',
+    'supplier': 'Поставщик',
     'k_is_sell': 'k_is_sell',
     'k_revenue': 'k_revenue',
     'k_logistic': 'k_logistic',
     'k_net_cost': 'k_net_cost',
     'k_qt_full': 'k_qt_full',
     'k_rating': 'k_rating',
+    'k_dynamic': 'k_dynamic',
     'k_discount': 'k_discount',
-    'n_discount': 'n_discount',
-    'discount': 'discount',
-    'delta_discount': 'delta_discount',
-    'volume': 'volume',
-    'stock': 'quantityFull',
-    'quantity_full_sells_qt': 'quantityFull + Продажа, шт.',
-    'price_disc': 'price_disc',
-    'price': 'price',
-    'net_cost': 'net_cost',
-    'sells_days': 'Дней в продаже',
-    'outcome-net-storage': 'Маржа-себест.-хран.',
-    'outcome-net': 'Маржа-себест.',
-    'outcome': 'Маржа',
-    'pure_sells_qt': 'Ч. Продажа шт.',
-    'sell': 'Продажа',
-    'back': 'Возврат',
-    'back_qt': 'Возврат, шт.',
-    'storage': 'Хранение',
-    'storage_single': 'Хранение.ед',
-    'storagePricePerBarcode': 'storagePricePerBarcode',
-    'shareCost': 'shareCost',
-    'logistics': 'Логистика',
-    'logistics_single': 'Логистика. ед',
-    'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
-    'logistics_qt': 'Логистика шт.',
-    'supplier': 'Поставщик',
     'order_date': 'Дата заказа покупателем',
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
@@ -141,7 +147,9 @@ def zip_detail_V2(concatenated_dfs):
     # storage_col_name = 'Хранение'
     # penalty_col_name = 'Штраф'
 
+    df['Ч. Продажа'] = df['Продажа'] - df['Возврат']
     df['Ч. Продажа шт.'] = df['Продажа, шт.'] - df['Возврат, шт.']
+    df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
     df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
     df['Маржа'] = df[sales_name] - df[backs_name] - df[logistic_name] - df[compensation_substituted_col_name]
@@ -178,7 +186,7 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shus
 
         df['Хранение'] = df['Хранение'].fillna(0)
         print(f"df['Хранение'] {df['Хранение'].sum()}")
-        print(f"df['shareCost'] {df['shareCost']}")
+        # print(f"df['shareCost'] {df['shareCost']}")
         df.to_excel("df.xlsx")
         df['Хранение'].to_excel("storage.xlsx")
         df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
@@ -211,13 +219,17 @@ def profit_count(df):
             0
         )
     )
+    # df.to_excel('profit_count.xlsx')
+    df.loc[df['Ч. Продажа шт.'] > 0, 'commission_wb'] = round(1 - df['Маржа-себест.-хран.'] / df['Ч. Продажа'], 2)
+    df['commission_wb'] = df['commission_wb'].replace([np.inf, -np.inf], "")
+
     return df
 
 
 def merge_price(df, testing_mode, is_get_price):
     if is_get_price:
-        df_price = API_WB.get_wb_price_api(testing_mode=testing_mode)
-        df = df.merge(df_price, how='outer', left_on='nmId', right_on='nm_id')
+        df_price, _ = API_WB.get_wb_price_api(testing_mode=testing_mode)
+        df = df.merge(df_price, how='outer', left_on='nmId', right_on='nmID')
         df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
     return df
 
@@ -373,8 +385,10 @@ def get_dynamic_sales(df,
     Returns:
         DataFrame: DataFrame with dynamic sales information appended as new columns.
     """
+    days_by = int(days_by)
     print(f"get_dynamic_sales by {days_by} days_by...")
     if days_by <= 1:
+        print(f"not enough days for deviding period by days_by {days_by}, returning df without dividing")
         return None, INCLUDE_COLUMNS
 
     # Convert date_column to datetime format only for rows where Продажи != 0
@@ -409,18 +423,19 @@ def get_dynamic_sales(df,
 
         # Calculate sum of sales_column for each article_column in the current period
         sales = period_sales.groupby(nmId)[sales_column].sum().reset_index()
-        sales_column_name = f'{sales_column}_{period + 1}'  # Create a unique name for the sales column
+        sales_column_name = f'{type_name}_{period + 1}'  # Create a unique name for the sales column
         sales.rename(columns={sales_column: sales_column_name}, inplace=True)
 
-        print(sales)
         sales = sales[[nmId, sales_column_name]]
+        print(f"sum sales for {sales_column_name} is {sales[sales_column_name].sum()}")
+
         dfs_sales.append(sales)
         sales_columns.append(sales_column_name)
 
         start_date = end_date
 
     INCLUDE_COLUMNS = INCLUDE_COLUMNS + sales_columns
-    print(INCLUDE_COLUMNS)
+    # print(INCLUDE_COLUMNS)
 
     return dfs_sales, INCLUDE_COLUMNS
 

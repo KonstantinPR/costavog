@@ -111,14 +111,15 @@ def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_da
 #     return df
 
 
-def get_wb_price_api(request, testing_mode=None):
+def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     """
     Retrieve information price wb from the Wildberries API.
     """
     logging.warning("get_wb_price_api ...")
 
-    is_from_yadisk = request.form.get('is_from_yadisk')
-    if is_from_yadisk or testing_mode:
+    if request: is_from_yadisk = request.form.get('is_from_yadisk')
+
+    if testing_mode or is_from_yadisk:
         logging.warning("testing mode, ...")
         df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
         return df, filename
@@ -212,7 +213,7 @@ def get_wb_price_api(request, testing_mode=None):
 #         return df
 
 
-def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=None,
+def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
                      is_upload_yandex=True,
                      date_from: str = '2019-01-01'):
     """

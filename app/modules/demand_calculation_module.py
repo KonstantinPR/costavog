@@ -23,8 +23,8 @@ def demand_calculation_to_df(df_input, search_string):
     else:
         search_string_first = None
     df_all_cards = API_WB.get_all_cards_api_wb(textSearch=search_string_first)
-    df_report, file_name = yandex_disk_handler.download_from_YandexDisk()
-    df_report.to_excel("df_report.xlsx")
+    df_report, file_name = yandex_disk_handler.download_from_YandexDisk('YANDEX_ALL_CARDS_WB')
+    # df_report.to_excel("df_report.xlsx")
     # print(file_name)
     df_wb_stock = API_WB.get_wb_stock_api()
 
@@ -36,7 +36,7 @@ def demand_calculation_to_df(df_input, search_string):
     df_wb_stock = df_wb_stock.groupby(grouping_columns, as_index=False).agg(aggregation_dict)
 
     # Save the resulting DataFrame to a new Excel file
-    df_wb_stock.to_excel("df_wb_stock.xlsx")
+    # df_wb_stock.to_excel("df_wb_stock.xlsx")
 
     df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
                             suffixes=("", "_drop"))

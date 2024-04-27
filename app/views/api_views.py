@@ -89,7 +89,7 @@ def get_storage_wb():
             df_all_cards = API_WB.get_average_storage_cost()
             logging.warning(f"storage cost is received by API WB")
         else:
-            df_all_cards = API_WB.get_storage_cost(number_last_days, days_delay=0)
+            df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0)
 
         # logging.warning(f"df {df_all_cards}")
         df = io_output.io_output(df_all_cards)

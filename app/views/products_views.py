@@ -43,7 +43,7 @@ def upload_products():
 
         df3.to_sql('products', engine, if_exists='append', index=False)
 
-        print(df3)
+        # print(df3)
 
         df.to_sql('temp_table', engine, if_exists='replace')
 

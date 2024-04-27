@@ -4,8 +4,10 @@ from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module
+from app.modules import sales_funnel_module
 from app.modules import detailing_api_module
 import numpy as np
+
 from decimal import Decimal
 
 
@@ -20,7 +22,7 @@ def upload_detailing():
     if not request.method == 'POST':
         return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)
 
-    days_by = request.form.get('days_by')
+    days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")
     uploaded_files = request.files.getlist("file")
@@ -55,11 +57,10 @@ def upload_detailing():
 
     date_min = concatenated_dfs["Дата продажи"].min()
     print(f"date_min {date_min}")
-    concatenated_dfs.to_excel('ex.xlsx')
+    # concatenated_dfs.to_excel('ex.xlsx')
     date_max = concatenated_dfs["Дата продажи"].max()
 
-    dfs_sales, INCLUDE_COLUMNS = detailing_upload_module.get_dynamic_sales(concatenated_dfs, days_by,
-                                                                           INCLUDE_COLUMNS)
+    dfs_sales, INCLUDE_COLUMNS = detailing_upload_module.get_dynamic_sales(concatenated_dfs, days_by, INCLUDE_COLUMNS)
 
     # concatenated_dfs = detailing.get_dynamic_sales(concatenated_dfs)
 
@@ -75,7 +76,7 @@ def upload_detailing():
 
     df = detailing_upload_module.merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage)
     df = detailing_upload_module.merge_net_cost(df, is_net_cost)
-    df = detailing_upload_module.merge_price(df, testing_mode, is_get_price)
+    df = detailing_upload_module.merge_price(df, testing_mode, is_get_price).drop_duplicates(subset='nmID')
     df = detailing_upload_module.profit_count(df)
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
     df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
@@ -86,16 +87,33 @@ def upload_detailing():
     df = pandas_handler.fill_empty_val_by(['category'], df, 'Предмет')
 
     if dfs_sales:
-        [df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры') for d in dfs_sales]
+        print(f"merging dfs_sales ...")
+        for d in dfs_sales:
+            df = df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры')
+
+    # df.to_excel('dfs_sales.xlsx')
 
     df = price_module.discount(df)
+    discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
+    discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
+    df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
+    df = price_module.k_dynamic(df, days_by=days_by)
+    # 27/04/2024 - not yet prepared
+    # df[discount_columns['func_discount']] *= df['k_dynamic']
 
     # Reorder the columns
-    df = df[[col for col in INCLUDE_COLUMNS if col in df.columns]]
+
+    include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
+    df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
+
     df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
 
     # print(INCLUDE_COLUMNS)
+    file_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)
+    yandex_disk_handler.upload_to_YandexDisk(file, file_name=file_name, path=app.config['REPORT_DETAILING_UPLOAD'])
+    file = io_output.io_output(df)
+
     flash("Отчет успешно выгружен в excel файл")
     return send_file(file, download_name=f'report_detailing_{str(date_max)}_to_{str(date_min)}.xlsx',
                      as_attachment=True)
