@@ -13,6 +13,8 @@ SPEC_TYPE = {
     'OAJCAPRON': 'APRON',
     'SK': 'ECO_FURS_WOMEN',
     'SH': 'ECO_FURS_WOMEN',
+    'SHK': 'ECO_FURS_WOMEN',
+    'SF': 'ECO_FURS_WOMEN',
     'MHOJ': 'ECO_FURS_WOMEN',
     'MHOC': 'ECO_FURS_WOMEN',
     'MHOF': 'ECO_FURS_WOMEN',
@@ -58,6 +60,10 @@ def wrap_prefix_by_dash(prefix, i):
         return f"-{i}-"
     if prefix == 'SH':
         return f"{i}-"
+    if prefix == 'SHK':
+        return f"{i}-"
+    if prefix == 'SF':
+        return f"{i}-"
     return i
 
 
@@ -69,12 +75,16 @@ def spec_definition(df, col_name="Артикул товара"):
     # print(df)
     # print(df['Артикул товара'])
     # print(df['Артикул товара'][0].split('-')[0])
-    if str(df[col_name][0]).startswith("SH"):
+    if str(df[col_name][0]).startswith("SHK"):
+        prefix = "SHK"
+    elif str(df[col_name][0]).startswith("SH"):
         prefix = "SH"
     elif str(df[col_name][0]).startswith("J"):
         prefix = "J"
     elif str(df[col_name][0]).startswith("SK"):
         prefix = "SK"
+    elif str(df[col_name][0]).startswith("SF"):
+        prefix = "SF"
     else:
         prefix = df[col_name][0].split('-')[0]
 

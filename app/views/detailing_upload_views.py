@@ -36,6 +36,7 @@ def upload_detailing():
     is_get_stock = request.form.get('is_get_stock')
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
+    default_amount_days = 14
 
     if not uploaded_files:
         flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
@@ -92,23 +93,38 @@ def upload_detailing():
             df = df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры')
 
     # df.to_excel('dfs_sales.xlsx')
+    # --- DICOUNT ---
 
+    days_period = (date_max - date_min).days
+    df['days_period'] = days_period
+    df['smooth_days'] = df['days_period'] / default_amount_days
+    print(f"smooth_days {df['smooth_days'].mean()}")
     df = price_module.discount(df)
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
     discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
     df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
+    df['new_discount'] = round((df['func_discount'] + df['n_discount']) / 2)
+    df['d_disc'] = round(df['discount'] - df['new_discount'])
     df = price_module.k_dynamic(df, days_by=days_by)
     # 27/04/2024 - not yet prepared
     # df[discount_columns['func_discount']] *= df['k_dynamic']
 
     # Reorder the columns
 
+    #  --- PATTERN SPLITTING ---
+    df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
+    df['prefix'] = df['Артикул поставщика'].astype(str).apply(lambda x: x.split("-")[0])
+    prefixes = list(detailing_upload_module.PREFIXES_ART_DICT.keys())
+    df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
+    df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
+    df['material'] = df['Артикул поставщика'].apply(get_third_part)
+    MATERIAL_DICT = detailing_upload_module.MATERIAL_DICT
+    df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]
+
+    # print(INCLUDE_COLUMNS)
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
 
-    df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
-
-    # print(INCLUDE_COLUMNS)
     file_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)
     yandex_disk_handler.upload_to_YandexDisk(file, file_name=file_name, path=app.config['REPORT_DETAILING_UPLOAD'])
@@ -117,3 +133,28 @@ def upload_detailing():
     flash("Отчет успешно выгружен в excel файл")
     return send_file(file, download_name=f'report_detailing_{str(date_max)}_to_{str(date_min)}.xlsx',
                      as_attachment=True)
+
+
+def starts_with_prefix(string, prefixes):
+    for prefix in prefixes:
+        if string.startswith(prefix):
+            if len(string) > 10:
+                return ''
+            return prefix  # Return the prefix itself, not prefixes[prefix]
+    return string
+
+
+def get_second_part(x):
+    try:
+        return str(x).split("-")[1]
+    except IndexError:
+        # If the string doesn't contain the delimiter '-', return None or any other value as needed
+        return ''
+
+
+def get_third_part(x):
+    try:
+        return str(x).split("-")[2]
+    except IndexError:
+        # If the string doesn't contain the delimiter '-', return None or any other value as needed
+        return ''

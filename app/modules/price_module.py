@@ -65,8 +65,9 @@ def discount(df):
 
     df['n_discount'] = [n_discount(price_disc, k_discount, price) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
-
-    df['delta_discount'] = round(df['discount'] - df['n_discount'])
+    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days'])
+    df['n_discount'] = round(df['discount'] - df['n_delta'])
+    df.loc[df['n_discount'] < 0, 'n_discount'] = 0
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='value')
 
@@ -82,6 +83,14 @@ def k_dynamic(df, days_by=1):
     sales_columns = [col for col in df.columns if 'Продажа_' in col]
     window_size = min(len(sales_columns), days_by)  # Choose the smaller of the two for window size
     k_dynamic_sales_name = 'k_dynamic'
+
+    # Convert selected columns to numeric type
+    df[sales_columns] = df[sales_columns].apply(pd.to_numeric, errors='coerce')
+
+    # Replace non-numeric values with 0
+    df[sales_columns] = df[sales_columns].fillna(0)
+
+    # Calculate rolling mean
     df[k_dynamic_sales_name] = df[sales_columns].rolling(window=window_size, axis=1).mean().iloc[:, -1]
 
     # Normalize the result around 1 based on the mean value and rate of change

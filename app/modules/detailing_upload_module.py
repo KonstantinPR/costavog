@@ -14,43 +14,69 @@ from datetime import timedelta
 # file_names = [f for f in listdir('detailing')]
 # print(file_names)
 
+MATERIAL_DICT = {
+    'N30': 'N30',
+    'N511': 'N511',
+    'N1278': 'N1278',
+    'MUTON': 'MUTON',
+}
+
+PREFIXES_ART_DICT = {
+    'SH': 'SH',
+    'SK': 'SK',
+    'SN': 'SK',
+    'SF': 'SF',
+    'J': 'J',
+    'MIT': 'MIT',
+    'AN': 'MIT',
+    'MK': 'MIT',
+    'TIE': 'TIE',
+    'FATA': 'F',
+    'GR': 'GR',
+    'LQ3': 'LQ',
+    'SOHOCOAT': 'SOHO',
+    'TG': 'TG'
+}
+
 STRFORMAT_DEFAULT = '%Y-%m-%d'
 
 INITIAL_COLUMNS_DICT = {
     'brand': 'Бренд',
     'subject': 'Предмет',
+    'prefix': 'prefix',
+    'pattern': 'pattern',
+    'material': 'material',
     'article_supplier': 'Артикул поставщика',
     'nmId': 'nmId',
+
+    'new_discount': 'new_discount',
+    'discount': 'discount',
+    'd_disc': 'd_disc',
     'outcome-net-storage': 'Маржа-себест.-хран.',
+    'sell': 'Продажа',
     'Ч. Продажа': 'Ч. Продажа.',
     'pure_sells_qt': 'Ч. Продажа шт.',
-    'commission_wb': 'commission_wb',
-    'sell': 'Продажа',
+    'commission': 'commission',
     'back_qt': 'Возврат, шт.',
     'stock': 'quantityFull',
-    'func_discount': 'func_discount',
-    'delta': 'delta',
-    'n_discount': 'n_discount',
-    'discount': 'discount',
-    'delta_discount': 'delta_discount',
     'logistics': 'Логистика',
+    'logistics_single': 'Логистика. ед',
+    'logistics_qt': 'Логистика шт.',
     'storage': 'Хранение',
+    'storage_single': 'Хранение.ед',
+    'price': 'price',
+    'price_disc': 'price_disc',
     'Ср. Ц. Продажа/ед.': 'Ср. Ц. Продажа/ед.',
     'net_cost': 'net_cost',
     'volume': 'volume',
     'quantity_full_sells_qt': 'quantityFull + Продажа, шт.',
-    'price_disc': 'price_disc',
-    'price': 'price',
-    'sells_days': 'Дней в продаже',
     'outcome-net': 'Маржа-себест.',
     'outcome': 'Маржа',
     'back': 'Возврат',
-    'storage_single': 'Хранение.ед',
+    'sells_days': 'Дней в продаже',
     'storagePricePerBarcode': 'storagePricePerBarcode',
     'shareCost': 'shareCost',
-    'logistics_single': 'Логистика. ед',
     'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
-    'logistics_qt': 'Логистика шт.',
     'supplier': 'Поставщик',
     'k_is_sell': 'k_is_sell',
     'k_revenue': 'k_revenue',
@@ -63,6 +89,10 @@ INITIAL_COLUMNS_DICT = {
     'order_date': 'Дата заказа покупателем',
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
+    'func_discount': 'func_discount',
+    'n_discount': 'n_discount',
+    'func_delta': 'func_delta',
+    'n_delta': 'n_delta',
 }
 
 
@@ -220,8 +250,8 @@ def profit_count(df):
         )
     )
     # df.to_excel('profit_count.xlsx')
-    df.loc[df['Ч. Продажа шт.'] > 0, 'commission_wb'] = round(1 - df['Маржа-себест.-хран.'] / df['Ч. Продажа'], 2)
-    df['commission_wb'] = df['commission_wb'].replace([np.inf, -np.inf], "")
+    df.loc[df['Ч. Продажа шт.'] > 0, 'commission'] = round(1 - df['Маржа-себест.-хран.'] / df['Ч. Продажа'], 2)
+    df['commission'] = df['commission'].replace([np.inf, -np.inf], "")
 
     return df
 

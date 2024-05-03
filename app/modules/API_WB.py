@@ -384,14 +384,16 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
 def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None):
     """get_all_cards_api_wb"""
 
+    print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
+
     if testing_mode or is_from_yadisk:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_ALL_CARDS_WB')
         logging.warning("all cards is from yandex disk ...")
         return df
 
     logging.warning("get_all_cards_api_wb ...")
-    limit = 1000
-    total = 1000
+    limit = 100
+    total = 100
     updatedAt = None
     nmId = None
     dfs = []
@@ -422,6 +424,8 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 
         if response.status_code != 200:
             logging.warning(f"Error in API request: {response.status_code}")
+            print(f"response.statuse_code {response.status_code}")
+            print(f"response.text {response.text}")
             break
 
         df_json = response.json()
