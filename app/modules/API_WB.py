@@ -23,6 +23,9 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
 def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
                      days_delay=0,
                      upload_to_yadisk=True):
+
+    print(f"get_storage_cost...")
+
     if testing_mode:
         logging.warning(f"storage cost is receiving from Yandex Disk")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
@@ -384,7 +387,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
 def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None):
     """get_all_cards_api_wb"""
 
-    print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
+    # print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
 
     if testing_mode or is_from_yadisk:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_ALL_CARDS_WB')

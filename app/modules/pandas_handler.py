@@ -4,7 +4,32 @@ from random import randrange
 from typing import Union
 import logging
 
-FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, None, '', 'Null']
+FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
+
+
+def replace_false_values(df, columns, FALSE_LIST=None):
+    """
+    Replace values in specified columns that match FALSE_LIST or are strings with 0.
+
+    Args:
+    - df (DataFrame): The DataFrame containing the columns.
+    - columns (list): List of column names to process.
+    - FALSE_LIST (list, optional): List of values to be considered as false. Defaults to None.
+
+    Returns:
+    - DataFrame: The modified DataFrame.
+    """
+
+    if FALSE_LIST is None:
+        FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
+
+    for column in columns:
+        # Replace values from FALSE_LIST
+        df[column] = df[column].replace(FALSE_LIST, 0)
+        # Attempt to convert remaining string values to numeric type
+        print(f"column now is {column}")
+        # df[column] = pd.to_numeric(df[column], errors='coerce').fillna(0)
+    return df
 
 
 def max_len_dc(dc, max_length: int = 0):
@@ -23,12 +48,14 @@ def dc_adding_empty(dc, max_length_dc, sep=''):
     return dc
 
 
-def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrange(10)}', false_list=FALSE_LIST):
+def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrange(10)}', DEFAULT_FALSE_LIST=None):
+    if DEFAULT_FALSE_LIST is None:
+        DEFAULT_FALSE_LIST = FALSE_LIST
     df = df.merge(df_from, on=col_name, how='left', suffixes=("", random_suffix))
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
             for idj, val in enumerate(df[f'{col}{random_suffix}']):
-                if not pd.isna(val) or not val in false_list:
+                if not pd.isna(val) or not val in DEFAULT_FALSE_LIST:
                     df[col][idj] = val
 
     df = df.drop(columns=[x for x in df.columns if random_suffix in x]).fillna('')
@@ -38,7 +65,6 @@ def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrang
 
 def df_merge_drop(left_df, right_df, left_on, right_on):
     # Generate random suffixes
-
 
     left_suffix = f'_col_on_drop_x_{randrange(10)}'
     right_suffix = f'_col_on_drop_y_{randrange(10)}'
