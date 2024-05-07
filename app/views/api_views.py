@@ -82,9 +82,15 @@ def get_storage_wb():
 
     if request.method == 'POST':
         number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
+
         if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
         logging.warning(f'number_last_days {number_last_days}')
         logging.warning(f"{request.form.get('is_mean')}")
+
+
+        path_by_config = app.config['YANDEX_KEY_STORAGE_COST']
+        yandex_disk_handler.copy_file_to_archive_folder(request=request, path_or_config=path_by_config)
+
         if request.form.get('is_mean'):
             df_all_cards = API_WB.get_average_storage_cost()
             logging.warning(f"storage cost is received by API WB")

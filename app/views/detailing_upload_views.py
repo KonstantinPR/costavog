@@ -116,8 +116,10 @@ def upload_detailing():
     #  --- PATTERN SPLITTING ---
     df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
     df['prefix'] = df['Артикул поставщика'].astype(str).apply(lambda x: x.split("-")[0])
-    prefixes = list(detailing_upload_module.PREFIXES_ART_DICT.keys())
+    prefixes_dict = detailing_upload_module.PREFIXES_ART_DICT
+    prefixes = list(prefixes_dict.keys())
     df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
+    df['prefix'] = df['prefix'].apply(lambda x: prefixes_dict.get(x, x))
     df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
     df['material'] = df['Артикул поставщика'].apply(get_third_part)
     MATERIAL_DICT = detailing_upload_module.MATERIAL_DICT

@@ -7,7 +7,32 @@ import logging
 from app import app, Company
 from io import BytesIO
 import os
-from app.modules import io_output
+from app.modules import io_output, request_handler
+from flask import flash
+import datetime
+
+
+def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
+                                input_name='is_archive'):
+
+    if not request_handler.is_checkbox_true(request, input_name):
+        return None
+
+    print(f"copy_file_to_archive_folder in Yandex Disk...")
+
+    if not path_or_config:
+        print("No file path provided.")
+        return None
+
+    file_content, file_name = download_from_YandexDisk(path=path_or_config)
+    file_name, file_extension = os.path.splitext(file_name)
+    file_name = f"{file_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}{file_extension}"
+    file_path_archive = f"{path_or_config}/{archive_folder_name}"
+    print(f"file_path_archive {file_path_archive}")
+    upload_to_YandexDisk(file=file_content, file_name=file_name, path=file_path_archive)
+    print(f"File '{file_name}' copied to archive successfully.")
+
+    return None
 
 
 def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
@@ -30,15 +55,20 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
 
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_full_to = f"{path}/{file_name}"
-    print(f"path_full_to upload yndex disk {path_full_to}")
+    print(f"path_full_to upload yandex disk {path_full_to}")
     y.upload(file, path_full_to, overwrite=True)
 
     return None
 
 
 def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH'):
+    print(f"{path}")
+    if not path.startswith("/"):
+        path = app.config[path]
+
+    print(f"{path}")
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-    path_yandex_file = f"{list(y.listdir(app.config[path]))[-1]['path']}".replace('disk:', '')
+    path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)
@@ -145,66 +175,3 @@ def get_all_file_urls(subfolder_names, file_name_list, dir_path):
     if len(found_files) != len(file_name_list):
         print(f"Warning: Some files were not found: {set(file_name_list) - found_files}")
     return all_file_urls
-
-#
-# async def get_url(y, file_path):
-#     try:
-#         return await y.get_download_link(file_path)
-#     except yadisk.exceptions.NotFoundError:
-#         print(f"File {file_path} not found on YandexDisk, skipping")
-#         return None
-#
-#
-# async def get_urls_async(dir_path, files_path: list):
-#     # Get the URLs of the images
-#     file_urls = []
-#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-#     tasks = [get_url(y, os.path.join(dir_path, file_name).replace("\\", "/")) for file_name in files_path]
-#     urls = await asyncio.gather(*tasks)
-#     file_urls = [url for url in urls if url is not None]
-#     return file_urls
-#
-#
-# def zip_buffer_files(file_urls, file_name_list) -> BytesIO:
-#     # Download the images and save them to an in-memory buffer
-#     zip_buffer = BytesIO()
-#     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-#         for file_url, file_name in zip(file_urls, file_name_list):
-#             response = requests.get(file_url)
-#             zip_file.writestr(file_name, response.content)
-#     return zip_buffer
-#
-#
-# def get_subfolders_names(dir_path):
-#     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-#     subfolder_names = []
-#     for item in y.listdir(dir_path):
-#         if item.type == 'dir':
-#             subfolder_names.append(item.name)
-#     print(f"subfolder_names {subfolder_names}")
-#     return subfolder_names
-#
-#
-# def get_all_file_urls(subfolder_names, file_name_list, dir_path):
-#     all_file_urls = []
-#     found_files = set()  # to keep track of found files
-#     for sub in reversed(subfolder_names):
-#         path = os.path.join(dir_path, sub).replace("\\", "/")
-#         # only search for files that haven't been found yet
-#         file_urls = asyncio.run(get_urls_async(path, list(set(file_name_list) - found_files)))
-#         all_file_urls += file_urls
-#         for url, file_name in zip(file_urls, file_name_list):
-#             if file_name not in found_files and url is not None:  # file not already found and exists
-#                 found_files.add(file_name)
-#                 if len(found_files) == len(file_name_list):  # all files have been found, break out of the loop
-#                     break
-#         if len(found_files) == len(file_name_list):  # all files have been found, break out of the loop
-#             break
-#     return all_file_urls
-#
-# # def get_files_from_dir_ydisk(dir_path, file_name_list, zip_name):
-# #     subfolder_names = get_subfolders_names(dir_path)
-# #     all_file_urls = get_all_file_urls(subfolder_names, file_name_list, dir_path)
-# #     zip_buffer = zip_buffer_files(all_file_urls, file_name_list)
-# #     zip_buffer.seek(0)
-# #     return zip_buffer

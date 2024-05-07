@@ -146,6 +146,7 @@ def nmIDs_exclude(nmIDs, nmIDs_exclude):
 
 import numpy as np
 
+
 def round_df_if(df, half=10):
     # Function to format numeric values
     # If number more abs half then round, else don't
@@ -153,7 +154,7 @@ def round_df_if(df, half=10):
         if isinstance(x, (int, float)):
             if np.isfinite(x):
                 if abs(x) < half:
-                    return x
+                    return round(x, 2)
                 else:
                     return round(x)
             else:
@@ -165,4 +166,3 @@ def round_df_if(df, half=10):
     df = df.applymap(format_numeric)
 
     return df
-

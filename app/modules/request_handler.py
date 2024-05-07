@@ -43,3 +43,10 @@ def request_last_days(request, input_name, config_name_default='DAYS_STEP_DEFAUL
     else:
         days = app.config['LAST_DAYS_DEFAULT']
     return days
+
+
+def is_checkbox_true(request=None, request_name=None):
+    if request and request_name in request.form:
+        return True
+    return False
+
