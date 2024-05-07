@@ -23,7 +23,6 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
 def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
                      days_delay=0,
                      upload_to_yadisk=True):
-
     print(f"get_storage_cost...")
 
     if testing_mode:
@@ -513,7 +512,7 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
         return None
 
 
-def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, is_to_yadisk=True) -> tuple:
+def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, is_re_double=True, is_to_yadisk=True):
     """get_wb_sales_funnel_api"""
 
     date_from = detailing_api_module.request_date_from(request)
@@ -561,6 +560,9 @@ def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, i
     # Rename columns (stay only last part before points, for example statistic.order.date to only date)
     if is_erase_points:
         df = df.rename(columns=lambda x: x.split('.')[-1])
+
+    if is_re_double:
+        df = _rename_double_columns(df, "_re")
 
     if is_to_yadisk and df is not None and not df.empty:
         io_df = io_output.io_output(df)
@@ -624,3 +626,31 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
         cards_count += len(chunk)
 
     return df
+
+
+def _rename_double_columns(df, suffix):
+    # Get the list of column names
+    columns = df.columns
+
+    # Dictionary to store the count of each column name
+    column_counts = {}
+
+    # List to store the new column names
+    new_columns = []
+
+    # Iterate through the columns
+    for column in columns:
+        # If the column name is repeated, append "_prev" with count to it
+        if column in column_counts:
+            count = column_counts[column]
+            new_column_name = f"{column}_{suffix}_{count}"
+            column_counts[column] += 1
+            new_columns.append(new_column_name)
+        else:
+            column_counts[column] = 1
+            new_columns.append(column)
+
+    # Update the DataFrame with the new column names
+    df.columns = new_columns
+    return df
+

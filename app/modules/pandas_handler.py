@@ -142,3 +142,27 @@ def nmIDs_exclude(nmIDs, nmIDs_exclude):
     nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
     logging.warning(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
     return nmIDs
+
+
+import numpy as np
+
+def round_df_if(df, half=10):
+    # Function to format numeric values
+    # If number more abs half then round, else don't
+    def format_numeric(x):
+        if isinstance(x, (int, float)):
+            if np.isfinite(x):
+                if abs(x) < half:
+                    return x
+                else:
+                    return round(x)
+            else:
+                return x
+        else:
+            return x
+
+    # Apply formatting function to all columns
+    df = df.applymap(format_numeric)
+
+    return df
+

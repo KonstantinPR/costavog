@@ -69,13 +69,15 @@ def upload_detailing():
 
     df = detailing_upload_module.zip_detail_V2(concatenated_dfs)
 
-    df = detailing_upload_module.merge_stock(df, testing_mode=testing_mode, is_get_stock=is_get_stock)
+    df = detailing_upload_module.merge_stock(df, testing_mode=testing_mode, is_get_stock=is_get_stock,
+                                             is_delete_shushary=is_delete_shushary)
 
     if not 'quantityFull' in df.columns: df['quantityFull'] = 0
     df['quantityFull'].replace(np.NaN, 0, inplace=True)
     df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
 
-    df = detailing_upload_module.merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage)
+    df = detailing_upload_module.merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage,
+                                               is_delete_shushary=is_delete_shushary)
     df = detailing_upload_module.merge_net_cost(df, is_net_cost)
     df = detailing_upload_module.merge_price(df, testing_mode, is_get_price).drop_duplicates(subset='nmID')
     df = detailing_upload_module.profit_count(df)
@@ -124,6 +126,7 @@ def upload_detailing():
     # print(INCLUDE_COLUMNS)
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
+    df = pandas_handler.round_df_if(df, half=10)
 
     file_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)
