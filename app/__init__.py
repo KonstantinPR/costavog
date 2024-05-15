@@ -26,6 +26,9 @@ if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
 
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
 login.init_app(app)
 login.login_view = 'login'
@@ -118,8 +121,8 @@ def load_user_from_request(request):
 @app.before_request
 def before_request():
     logging.warning('Before request hook triggered.')  # Add this logging statement
-    if current_user.is_authenticated:
-        set_config()
+    # if current_user.is_authenticated:
+    set_config()
     return None
 
 

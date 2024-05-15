@@ -174,7 +174,10 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     # Convert all goods data to DataFrame
     # df = pd.DataFrame(all_goods)
     df = pd.json_normalize(all_goods, 'sizes', ["vendorCode", 'nmID'], errors='ignore')
-    df['discount'] = (1 - (df['discountedPrice'] / df['price'])) * 100
+    # df['discount'] = (1 - (df['discountedPrice'] / df['price'])) * 100
+    df['discount'] = ((df['price']-df['discountedPrice'])/df['price']) * 100
+
+
 
     # Upload data to Yandex Disk
     file_name = "wb_price_data.xlsx"

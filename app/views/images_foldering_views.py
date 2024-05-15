@@ -92,6 +92,7 @@ def images_foldering():
     """
     if request.method == 'POST':
         df = request_handler.to_df(request, input_column="Article")
+        df.columns = [col.strip() for col in df.columns]
         marketplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]
@@ -100,19 +101,18 @@ def images_foldering():
         # Use get_all_cards_api_wb to retrieve nmID values based on vendorCode
         if marketplace == "WB":
             if 'Article_WB' not in df.columns:
+                print(f"Article_WB not in df.columns")
                 df_nm_wb = API_WB.get_all_cards_api_wb()
                 # Merge df and df_nm_wb on Article and vendorCode columns
                 df = pd.merge(df, df_nm_wb, left_on="Article", right_on="vendorCode", how="left")
                 # Duplicate and rename nmID column to 'Article_WB'
                 df['Article_WB'] = df['nmID'].copy()
-
         if marketplace == "OZON":
             df['Article_WB'] = df['Article'].copy()
 
         # Remove duplicate rows based on the 'Article' column
         # df.drop_duplicates(subset='Article', keep='first', inplace=True)
         df.reset_index(drop=True, inplace=True)
-        print(f'HERE merged_df {df}')
 
         # Now merged_df contains nmID values along with other columns from df and df_nm_wb
 
