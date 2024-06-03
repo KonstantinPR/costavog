@@ -70,6 +70,10 @@ def request_last_days(request, input_name, config_name_default='DAYS_STEP_DEFAUL
 
 
 def is_checkbox_true(request=None, request_name=None):
-    if request and request_name in request.form:
-        return True
+    print(f"is_checkbox_true...")
+    if request:
+        print(f"request passed")
+        if request_name in request.form:
+            print(f"request_name in request.form")
+            return True
     return False

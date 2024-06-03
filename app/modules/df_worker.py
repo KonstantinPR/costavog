@@ -2,14 +2,17 @@ import pandas as pd
 from app.modules import pandas_handler
 
 
-def qt_to_order(df):
+def qt_to_order(df, min_stock=1):
     """
     stay only goods for order that 0 on wherehouse
     :param df:
     :return df:
     """
-    false_list = pandas_handler.FALSE_LIST
-    df['Кол-во'] = [1 if pd.isna(x) or x in false_list else 0 for x in df['quantityFull']]
+    false_list = pandas_handler.FALSE_LIST_2
+    # df.to_excel('qt_to_order.xlsx')
+    df['Кол-во'] = [min_stock if x in false_list else min_stock - x for x in df['quantityFull']]
+    # df['Кол-во'] = [0 if x < 0 else x for x in df['Кол-во']]
+
     return df
 
 

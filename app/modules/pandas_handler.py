@@ -5,6 +5,7 @@ from typing import Union
 import logging
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
+FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
 
 
 def replace_false_values(df, columns, FALSE_LIST=None):
@@ -142,9 +143,6 @@ def nmIDs_exclude(nmIDs, nmIDs_exclude):
     nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
     logging.warning(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
     return nmIDs
-
-
-import numpy as np
 
 
 def round_df_if(df, half=10):

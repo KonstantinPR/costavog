@@ -22,6 +22,9 @@ def upload_detailing():
     if not request.method == 'POST':
         return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)
 
+    yandex_disk_handler.copy_file_to_archive_folder(request=request,
+                                                    path_or_config=app.config['REPORT_DETAILING_UPLOAD'])
+
     days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")

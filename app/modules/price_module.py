@@ -207,12 +207,12 @@ def k_net_cost(net_cost, price_disc):
         return 1.04
     if price_disc >= net_cost * 2 * k_net_cost:
         return 1.02
-    if price_disc >= net_cost * 1 * k_net_cost:
-        return 1.01
+    # if price_disc >= net_cost * 1 * k_net_cost:
+    #     return 1.01
     if price_disc == 0:
         return 1
 
-    return 0.99
+    return 1
 
 
 def k_rating(rating):

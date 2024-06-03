@@ -15,18 +15,22 @@ def demand_calculation_df_to_pdf(df, file_name="output_file"):
     return pdf
 
 
-def demand_calculation_to_df(df_input, search_string):
+def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=False):
     search_string_list = search_string.split()
     print(search_string_list)
     if search_string_list:
         search_string_first = search_string_list[0]
     else:
         search_string_first = None
-    df_all_cards = API_WB.get_all_cards_api_wb(textSearch=search_string_first)
-    df_report, file_name = yandex_disk_handler.download_from_YandexDisk('YANDEX_ALL_CARDS_WB')
+
+    request = {'no_sizes': False, 'no_city': 'no_city'}
+
+    df_all_cards = API_WB.get_all_cards_api_wb(testing_mode=testing_mode, textSearch=search_string_first)
+    df_report, file_name = yandex_disk_handler.download_from_YandexDisk('REPORT_DETAILING_UPLOAD')
     # df_report.to_excel("df_report.xlsx")
     # print(file_name)
-    df_wb_stock = API_WB.get_wb_stock_api()
+
+    df_wb_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request)
 
     # Assuming df is your original DataFrame
     grouping_columns = ['supplierArticle', 'techSize']
@@ -38,11 +42,12 @@ def demand_calculation_to_df(df_input, search_string):
     # Save the resulting DataFrame to a new Excel file
     # df_wb_stock.to_excel("df_wb_stock.xlsx")
 
-    df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='supplierArticle',
+    df = df_all_cards.merge(df_report, how='left', left_on='vendorCode', right_on='Артикул поставщика',
                             suffixes=("", "_drop"))
+
     df = df.merge(df_wb_stock, how='left',
-                  left_on=['vendorCode', 'techSize'],
-                  right_on=['supplierArticle', 'techSize'], suffixes=("", "_drop"))
+                  right_on=['supplierArticle', 'techSize'], left_on=['vendorCode', 'techSize'],
+                  suffixes=("_drop", ""))
 
     # df.to_excel("df_all_actual_stock_and_art.xlsx")
 
@@ -54,6 +59,7 @@ def demand_calculation_to_df(df_input, search_string):
     # print(cols)
 
     df = df.drop_duplicates(subset=['vendorCode', 'techSize'])
+    df.to_excel('qt_to_order.xlsx')
 
     if search_string_list:
         m = pd.concat([df[cols].agg("".join, axis=1).str.contains(s) for s in search_string_list], axis=1).all(1)
@@ -61,9 +67,9 @@ def demand_calculation_to_df(df_input, search_string):
     else:
         df = df.reset_index()
 
-    df = df_worker.qt_to_order(df)
+    df = df_worker.qt_to_order(df, min_stock=min_stock)
     df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
     df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
-    df = df.sort_values(by=['Прибыль_sum', 'vendorCode', 'techSize'], ascending=False)
+    df = df.sort_values(by=['Маржа-себест.-хран.', 'vendorCode', 'techSize'], ascending=False)
     df = df.reset_index(drop=True)
     return df

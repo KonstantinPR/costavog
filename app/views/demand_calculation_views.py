@@ -23,7 +23,10 @@ def demand_calculation_excel():
     if request.method == 'POST':
         df = request_handler.to_df(request)
         search_string = str(request.form['search_string'])
-        df = demand_calculation_module.demand_calculation_to_df(df, search_string)
+        min_stock = int(request.form['min_stock'])
+        testing_mode = False
+        df = demand_calculation_module.demand_calculation_to_df(df, search_string, min_stock=min_stock,
+                                                                testing_mode=testing_mode)
         df = io_output.io_output(df)
         file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
         # df.to_excel("df_output.xlsx")

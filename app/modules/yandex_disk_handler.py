@@ -14,6 +14,7 @@ import datetime
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
                                 input_name='is_archive'):
+    print(f"copy_file_to_archive_folder...")
 
     if not request_handler.is_checkbox_true(request, input_name):
         return None
