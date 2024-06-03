@@ -223,22 +223,22 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     return df
 
 
-def request_date_from(request):
+def request_date_from(request, date_format = DATE_FORMAT):
     if request.form.get('date_from'):
         date_from = request.form.get('date_from')
     else:
         date_from = datetime.datetime.today() - datetime.timedelta(
             days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
-        date_from = date_from.strftime(DATE_FORMAT)
+        date_from = date_from.strftime(date_format)
     return date_from
 
 
-def request_date_end(request):
+def request_date_end(request, date_format = DATE_FORMAT):
     if request.form.get('date_end'):
         date_end = request.form.get('date_end')
     else:
         date_end = datetime.datetime.today() - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
-        date_end = date_end.strftime(DATE_FORMAT)
+        date_end = date_end.strftime(date_format)
         # date_end = time.strftime(date_format)- datetime.timedelta(3)
     return date_end
 
@@ -636,7 +636,7 @@ def get_important_columns(df):
         'company_id',
         'sa_name',
     ]]
-    # print(df)
+    print(df)
     return df
 
 
