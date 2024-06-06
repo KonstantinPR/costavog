@@ -3,7 +3,7 @@ from app import app
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import pandas as pd
-from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module
+from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module, API_WB
 from app.modules import sales_funnel_module
 from app.modules import detailing_api_module
 import numpy as np
@@ -37,6 +37,7 @@ def upload_detailing():
     is_delete_shushary = request.form.get('is_delete_shushary')
     is_get_price = request.form.get('is_get_price')
     is_get_stock = request.form.get('is_get_stock')
+    is_funnel = request.form.get('is_funnel')
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
     default_amount_days = 14
@@ -132,6 +133,12 @@ def upload_detailing():
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
     df = pandas_handler.round_df_if(df, half=10)
+
+    if is_funnel:
+        df_funnel, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
+        df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+
+
 
     file_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)

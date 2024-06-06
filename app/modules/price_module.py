@@ -29,7 +29,7 @@ def discount(df):
                         zip(df['logistics'], df['sell'], df['back'], df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
-    df['k_qt_full'] = [k_qt_full(x) for x in df['stock']]
+    df['k_qt_full'] = [k_qt_full(qt, volume) for qt, volume in zip(df['stock'], df['volume'])]
     df['k_rating'] = [k_rating(x) for x in df['Rating']]
     # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
     #     'k_qt_full']) / 5
@@ -138,18 +138,20 @@ def k_is_sell(pure_sells_qt, net_cost):
     return 1.01
 
 
-def k_qt_full(qt):
+def k_qt_full(qt, volume):
     k = 1
-    if qt <= 3:
+    k_volume = 10
+    volume_all = qt * volume
+    if volume_all <= 3 * k_volume:
         return 0.98
-    if qt <= 5:
+    if volume_all <= 5 * k_volume:
         return 0.99
-    if 10 < qt <= 50:
+    if 100 * k_volume < volume_all <= 50 * k_volume:
         return 1.01
-    if 50 < qt <= 100:
+    if 50 * k_volume < volume_all <= 100 * k_volume:
         return 1.03
-    if qt > 100:
-        return 1.04
+    if volume_all > 100 * k_volume:
+        return 1.05
     return k
 
 
@@ -174,6 +176,16 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
 
+    if to_rub == 0:
+        if log_rub >= net_cost * 2:
+            return 0.95
+        if log_rub >= net_cost:
+            return 0.96
+        if log_rub >= net_cost / 2:
+            return 0.97
+        if log_rub >= net_cost / 4:
+            return 0.98
+
     if to_rub > 0:
         if log_rub > 0.50 * to_rub:
             return 0.96
@@ -191,10 +203,14 @@ def k_net_cost(net_cost, price_disc):
         net_cost = DEFAULT_NET_COST
     k_net_cost = ((DEFAULT_NET_COST / net_cost) * 2) ** 0.5
     if k_net_cost < 1:  k_net_cost = 1
+    if price_disc <= net_cost / 4:
+        return 0.82
+    if price_disc <= net_cost / 2:
+        return 0.86
     if price_disc <= net_cost:
-        return 0.94
+        return 0.90
     if price_disc <= net_cost * k_net_cost:
-        return 0.95
+        return 0.94
     if price_disc <= net_cost * 1.1 * k_net_cost:
         return 0.96
     if price_disc <= net_cost * 1.3 * k_net_cost:

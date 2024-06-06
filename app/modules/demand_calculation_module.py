@@ -23,12 +23,13 @@ def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=
     else:
         search_string_first = None
 
-    request = {'no_sizes': False, 'no_city': 'no_city'}
 
     df_all_cards = API_WB.get_all_cards_api_wb(testing_mode=testing_mode, textSearch=search_string_first)
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk('REPORT_DETAILING_UPLOAD')
     # df_report.to_excel("df_report.xlsx")
     # print(file_name)
+
+    request = {'no_sizes': False, 'no_city': 'no_city'}
 
     df_wb_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request)
 
@@ -67,9 +68,9 @@ def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=
     else:
         df = df.reset_index()
 
+    df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
     df = df_worker.qt_to_order(df, min_stock=min_stock)
     df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
-    df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
     df = df.sort_values(by=['Маржа-себест.-хран.', 'vendorCode', 'techSize'], ascending=False)
     df = df.reset_index(drop=True)
     return df
