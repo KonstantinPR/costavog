@@ -2,7 +2,6 @@ from app import logging_config
 from flask import Flask, session, redirect
 from flask import current_app
 from flask_migrate import Migrate
-import os
 from os import environ
 from app.models import db, login, Company, UserModel
 from flask_login import LoginManager, current_user
