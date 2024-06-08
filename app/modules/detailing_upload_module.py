@@ -50,6 +50,8 @@ INITIAL_COLUMNS_DICT = {
     'nmId': 'nmId',
 
     'new_discount': 'new_discount',
+    'n_discount': 'n_discount',
+    'n_delta': 'n_delta',
     'discount': 'discount',
     'd_disc': 'd_disc',
     'outcome-net-storage': 'Маржа-себест.-хран.',
@@ -79,7 +81,7 @@ INITIAL_COLUMNS_DICT = {
     'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
     'supplier': 'Поставщик',
     'k_is_sell': 'k_is_sell',
-    'k_revenue': 'k_revenue',
+    # 'k_revenue': 'k_revenue',
     'k_logistic': 'k_logistic',
     'k_net_cost': 'k_net_cost',
     'k_qt_full': 'k_qt_full',
@@ -90,9 +92,7 @@ INITIAL_COLUMNS_DICT = {
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
     'func_discount': 'func_discount',
-    'n_discount': 'n_discount',
     'func_delta': 'func_delta',
-    'n_delta': 'n_delta',
 }
 
 

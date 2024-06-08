@@ -38,6 +38,8 @@ def upload_detailing():
     is_get_price = request.form.get('is_get_price')
     is_get_stock = request.form.get('is_get_stock')
     is_funnel = request.form.get('is_funnel')
+    k_delta = int(request.form.get('k_delta'))
+    if not k_delta: k_delta = 1
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
     default_amount_days = 14
@@ -105,12 +107,13 @@ def upload_detailing():
     df['days_period'] = days_period
     df['smooth_days'] = df['days_period'] / default_amount_days
     print(f"smooth_days {df['smooth_days'].mean()}")
-    df = price_module.discount(df)
+    df = price_module.discount(df, k_delta=k_delta)
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
     discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
     df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
-    df['new_discount'] = round((df['func_discount'] + df['n_discount']) / 2)
-    df['d_disc'] = round(df['discount'] - df['new_discount'])
+    # df['new_discount'] = round((df['func_discount'] * 1 + df['n_discount'] * 4) / 5)
+    # df['d_disc'] = round(df['discount'] - df['new_discount'])
+    df['d_disc'] = round(df['discount'])
     df = price_module.k_dynamic(df, days_by=days_by)
     # 27/04/2024 - not yet prepared
     # df[discount_columns['func_discount']] *= df['k_dynamic']
@@ -137,8 +140,6 @@ def upload_detailing():
     if is_funnel:
         df_funnel, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
         df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
-
-
 
     file_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)

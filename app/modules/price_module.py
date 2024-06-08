@@ -13,7 +13,7 @@ DEFAULT_NET_COST = 500
 # /// --- K REVENUE FORMING ---
 
 
-def discount(df):
+def discount(df, k_delta=1):
     col_map = detailing_upload_module.INITIAL_COLUMNS_DICT
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='key')
@@ -40,16 +40,16 @@ def discount(df):
     #     (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
     weight_dict = {}
-    weight_dict['k_is_sell'] = 1.4
-    weight_dict['k_revenue'] = 1
+    weight_dict['k_is_sell'] = 2
+    # weight_dict['k_revenue'] = 1
     weight_dict['k_logistic'] = 1
-    weight_dict['k_net_cost'] = 1.2
+    weight_dict['k_net_cost'] = 4
     weight_dict['k_qt_full'] = 1
     weight_dict['k_rating'] = 1
 
     weighted_sum = (
             df['k_is_sell'] * weight_dict['k_is_sell'] +
-            df['k_revenue'] * weight_dict['k_revenue'] +
+            # df['k_revenue'] * weight_dict['k_revenue'] +
             df['k_logistic'] * weight_dict['k_logistic'] +
             df['k_net_cost'] * weight_dict['k_net_cost'] +
             df['k_qt_full'] * weight_dict['k_qt_full'] +
@@ -61,12 +61,15 @@ def discount(df):
     total_weight = sum(weight_dict.values())
 
     # Update the 'k_discount' column based on the weighted sum and total weight
-    df.loc[(df['stock'] > 0) | (df['outcome-net-storage'] != 0), 'k_discount'] = weighted_sum / total_weight
+    # df.loc[(df['stock'] > 0) | (df['outcome-net-storage'] != 0), 'k_discount'] = weighted_sum / total_weight
+    df['k_discount'] = weighted_sum / total_weight
 
     df['n_discount'] = [n_discount(price_disc, k_discount, price) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
-    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days'])
+    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
+    df['n_discount'] = df['discount']
     df['n_discount'] = round(df['discount'] - df['n_delta'])
+    df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = df['discount']
     df.loc[df['n_discount'] < 0, 'n_discount'] = 0
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='value')
@@ -118,21 +121,23 @@ def normalize_around_one(value):
 def k_is_sell(pure_sells_qt, net_cost):
     '''v 1.0'''
     if not net_cost: net_cost = DEFAULT_NET_COST
-    k_net_cost = math.sqrt(DEFAULT_NET_COST / net_cost)
+    k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
 
     if pure_sells_qt > 100 * k_net_cost:
-        return 0.90
+        return 0.80
     if pure_sells_qt > 50 * k_net_cost:
-        return 0.92
+        return 0.85
     if pure_sells_qt > 20 * k_net_cost:
-        return 0.94
+        return 0.90
     if pure_sells_qt > 10 * k_net_cost:
-        return 0.96
+        return 0.92
     if pure_sells_qt > 5 * k_net_cost:
-        return 0.97
+        return 0.94
     if pure_sells_qt > 3 * k_net_cost:
-        return 0.98
+        return 0.96
     if pure_sells_qt > 1 * k_net_cost:
+        return 0.98
+    if pure_sells_qt >= 1:
         return 0.99
 
     return 1.01
@@ -142,16 +147,28 @@ def k_qt_full(qt, volume):
     k = 1
     k_volume = 10
     volume_all = qt * volume
-    if volume_all <= 3 * k_volume:
+    if volume_all < 1:
+        return 0.96
+    if volume_all < 1 * k_volume:
+        return 0.97
+    if volume_all <= 1 * k_volume:
+        return 0.975
+    if volume_all <= 2 * k_volume:
         return 0.98
-    if volume_all <= 5 * k_volume:
+    if volume_all <= 3 * k_volume:
         return 0.99
-    if 100 * k_volume < volume_all <= 50 * k_volume:
+    if volume_all <= 5 * k_volume:
+        return 0.995
+    if volume_all <= 10 * k_volume:
+        return 1
+    if 10 * k_volume < volume_all <= 20 * k_volume:
         return 1.01
+    if 20 * k_volume < volume_all <= 50 * k_volume:
+        return 1.02
     if 50 * k_volume < volume_all <= 100 * k_volume:
         return 1.03
     if volume_all > 100 * k_volume:
-        return 1.05
+        return 1.5
     return k
 
 
@@ -199,30 +216,53 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
 
 
 def k_net_cost(net_cost, price_disc):
+    k_norma = 2.2
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
     k_net_cost = ((DEFAULT_NET_COST / net_cost) * 2) ** 0.5
     if k_net_cost < 1:  k_net_cost = 1
     if price_disc <= net_cost / 4:
-        return 0.82
+        return 0.80
     if price_disc <= net_cost / 2:
-        return 0.86
+        return 0.83
     if price_disc <= net_cost:
-        return 0.90
+        return 0.86
     if price_disc <= net_cost * k_net_cost:
-        return 0.94
+        return 0.90
     if price_disc <= net_cost * 1.1 * k_net_cost:
-        return 0.96
+        return 0.92
     if price_disc <= net_cost * 1.3 * k_net_cost:
-        return 0.97
+        return 0.93
     if price_disc <= net_cost * 1.4 * k_net_cost:
+        return 0.94
+    if price_disc <= net_cost * 1.5 * k_net_cost:
+        return 0.95
+    if price_disc <= net_cost * 1.6 * k_net_cost:
+        return 0.96
+    if price_disc <= net_cost * 1.7 * k_net_cost:
+        return 0.97
+    if price_disc <= net_cost * 1.8 * k_net_cost:
         return 0.98
-    if price_disc >= net_cost * 4 * k_net_cost:
+    if price_disc <= net_cost * 1.9 * k_net_cost:
+        return 0.99
+    if price_disc >= net_cost * 20 * k_net_cost:
+        return 1.20
+    if price_disc >= net_cost * 10 * k_net_cost:
+        return 1.10
+    if price_disc >= net_cost * 6 * k_net_cost:
+        return 1.06
+    if price_disc >= net_cost * 5 * k_net_cost:
         return 1.05
-    if price_disc >= net_cost * 3 * k_net_cost:
+    if price_disc >= net_cost * 4 * k_net_cost:
         return 1.04
-    if price_disc >= net_cost * 2 * k_net_cost:
+    if price_disc >= net_cost * 3 * k_net_cost:
+        return 1.03
+    if price_disc >= net_cost * 2.5 * k_net_cost:
         return 1.02
+    if price_disc > net_cost * 2.3 * k_net_cost:
+        return 1.01
+    if price_disc > net_cost * k_norma * k_net_cost:
+        return 1
     # if price_disc >= net_cost * 1 * k_net_cost:
     #     return 1.01
     if price_disc == 0:
