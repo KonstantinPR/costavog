@@ -12,6 +12,25 @@ DEFAULT_NET_COST = 500
 
 # /// --- K REVENUE FORMING ---
 
+def mix_discounts(df, is_mix_discounts=False, k_func_discount=1, k_n_discount=3):
+    """
+
+    :param df: DataFrame Pandas
+    :param is_mix_discounts: new_discount is influenced by func_discount if True
+    :param k_func_discount: influence coefficient of func_discount
+    :param k_n_discount: influence coefficient of n_discount
+    :return: df: DataFrame Pandas
+    """
+    if not is_mix_discounts:
+        df['d_disc'] = round(df['discount'])
+        return df
+
+    sum_k_discount = k_func_discount + k_n_discount
+    df['new_discount'] = round((df['func_discount'] * k_func_discount + df['n_discount'] * 3) / sum_k_discount)
+    df['d_disc'] = round(df['discount'] - df['new_discount'])
+
+    return df
+
 
 def discount(df, k_delta=1):
     col_map = detailing_upload_module.INITIAL_COLUMNS_DICT

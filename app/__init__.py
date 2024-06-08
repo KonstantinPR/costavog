@@ -162,3 +162,4 @@ from app.views import youtube_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
+from app.views import dumps_views

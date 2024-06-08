@@ -29,7 +29,7 @@ def upload_detailing():
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")
     uploaded_files = request.files.getlist("file")
-    testing_mode = request.form.get('is_testing_mode') == 'on'
+    testing_mode = request.form.get('is_testing_mode')
     is_net_cost = request.form.get('is_net_cost')
     is_get_storage = request.form.get('is_get_storage')
     change_discount = request.form.get('change_discount')
@@ -39,6 +39,7 @@ def upload_detailing():
     is_get_stock = request.form.get('is_get_stock')
     is_funnel = request.form.get('is_funnel')
     k_delta = int(request.form.get('k_delta'))
+    is_mix_discounts = request.form.get('is_mix_discounts')
     if not k_delta: k_delta = 1
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
@@ -111,9 +112,8 @@ def upload_detailing():
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
     discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
     df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
-    # df['new_discount'] = round((df['func_discount'] * 1 + df['n_discount'] * 4) / 5)
-    # df['d_disc'] = round(df['discount'] - df['new_discount'])
-    df['d_disc'] = round(df['discount'])
+    df = price_module.mix_discounts(df, is_mix_discounts)
+
     df = price_module.k_dynamic(df, days_by=days_by)
     # 27/04/2024 - not yet prepared
     # df[discount_columns['func_discount']] *= df['k_dynamic']
