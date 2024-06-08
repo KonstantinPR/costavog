@@ -1,4 +1,3 @@
-import logging
 from app import app, db, logging_config
 from app.models import UserModel, Company, Task, Transaction, Product, login
 

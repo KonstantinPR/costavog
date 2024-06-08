@@ -6,6 +6,7 @@ from app import app
 from flask import render_template, request, send_file
 from flask_login import login_required
 from passwords import neon_password, local_password  # Importing sensitive info
+from app.modules.decorators import local_only
 
 # Variables for your databases
 neon_host = "ep-blue-breeze-061984-pooler.eu-central-1.aws.neon.tech"
@@ -108,6 +109,7 @@ def import_neon_postgres_dump():
 
 @app.route('/get_neon_postgres_dump', methods=['POST', 'GET'])
 @login_required
+@local_only
 def get_neon_postgres_dump():
     """
     To get dumps db

@@ -1,9 +1,8 @@
 import re
-import logging
 from app import app, Company
 from flask import render_template, request, redirect
 from urllib.parse import urlencode
-from app.modules import img_cropper, io_output, img_processor, base_module, API_WB, pdf_processor, yandex_disk_handler
+from app.modules import img_cropper, io_output, img_processor, base_module, pdf_processor, yandex_disk_handler
 import pandas as pd
 import flask
 from random import randrange
@@ -11,11 +10,11 @@ import shutil
 from PIL import Image
 import glob
 from flask_login import login_required, current_user
-import datetime
 import yadisk
 import os
 import requests
 from flask import send_file
+from app.modules.decorators import local_only
 
 
 # /// YandexDisk ////////////
@@ -23,6 +22,7 @@ from flask import send_file
 
 # Return the zip file as a response
 @app.route("/get_files_from_dir_ydisk", methods=['POST', 'GET'])
+@login_required
 def get_files_from_dir_ydisk():
     """
     Взаимодействует с хранилищем яндекс.диска через API,

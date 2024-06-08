@@ -9,6 +9,20 @@ import time
 import psycopg2  # Assuming you're using psycopg2 for PostgreSQL connection
 from os import environ
 
+from flask import abort
+import os
+
+
+def local_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        environment = os.getenv('ENVIRONMENT', 'production')
+        if environment != 'local':
+            return abort(403)  # Forbidden
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 def keep_alive_decorator():
     def decorator(func):

@@ -1,12 +1,12 @@
 from app import logging_config
-from flask import Flask, session, redirect
-from flask import current_app
+from flask import Flask
 from flask_migrate import Migrate
 from os import environ
 from app.models import db, login, Company, UserModel
 from flask_login import LoginManager, current_user
 import time
 import logging
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -15,6 +15,17 @@ app.secret_key = 'xyz1b9zs8erh8be1g8-vw4-1be89ts4er1v'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login.init_app(app)
+
+# Load environment variables from .env file
+load_dotenv()
+app.config['ENVIRONMENT'] = environ.get('ENVIRONMENT')
+
+
+# Context processor to inject environment variable into templates (for hiding links in base.py... for example)
+@app.context_processor
+def inject_environment():
+    return {'ENVIRONMENT': app.config['ENVIRONMENT']}
+
 
 migrate = Migrate(app, db)
 

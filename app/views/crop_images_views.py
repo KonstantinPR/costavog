@@ -5,10 +5,12 @@ from app import app
 from flask import render_template, request, send_file
 from app.modules import img_cropper
 import flask
+from app.modules.decorators import local_only
 
 
 @app.route('/upload_img_crop', methods=['POST', 'GET'])
 @login_required
+@local_only
 def upload_img_crop():
     if request.method == "POST":
         logging.warning(flask.request.files.getlist("images"))
