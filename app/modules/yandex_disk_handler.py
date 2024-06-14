@@ -13,8 +13,11 @@ import datetime
 
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
-                                input_name='is_archive'):
+                                input_name='is_archive', testing_mode=False):
     print(f"copy_file_to_archive_folder...")
+
+    if testing_mode:
+        return None
 
     if not request_handler.is_checkbox_true(request, input_name):
         return None
@@ -50,7 +53,9 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 
 
 def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH'],
-                         is_upload_yadisk=True, ):
+                         is_upload_yadisk=True, testing_mode=False):
+    if testing_mode:
+        return None
     if not isinstance(file, BytesIO):
         file = io_output.io_output(file)
 

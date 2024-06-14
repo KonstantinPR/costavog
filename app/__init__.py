@@ -112,7 +112,7 @@ app.config["FULL_PATH_ARRIVALS"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
 app.config["FULL_PATH_ARRIVALS_RECURSIVELY"] = \
     f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
-app.config['DAYS_STEP_DEFAULT'] = 14
+app.config['DAYS_STEP_DEFAULT'] = 7
 app.config['DAYS_DELAY_REPORT'] = 1
 app.config['DAYS_PERIOD_DEFAULT'] = 1
 app.config['LAST_DAYS_DEFAULT'] = 7

@@ -3,6 +3,9 @@ import numpy as np
 from random import randrange
 from typing import Union
 import logging
+import zipfile
+import io
+from app.modules import io_output, API_WB
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
 FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
@@ -164,3 +167,99 @@ def round_df_if(df, half=10):
     df = df.applymap(format_numeric)
 
     return df
+
+
+def files_to_zip(list_files: list, list_names: list):
+    print(f"files_to_zip...")
+    # Check if list_files has exactly one non-None element
+    valid_files = [file for file in list_files if file is not None]
+    if len(valid_files) == 1:
+        return io_output.io_output(valid_files[0]), list_names[0]  # Return the DataFrame directly
+
+    # Create an in-memory zip file
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+        for file, name in zip(list_files, list_names):
+            if file is not None:
+                df_output = io.BytesIO()
+                with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
+                    file.to_excel(writer, index=False)
+                df_output.seek(0)
+                zip_file.writestr(name, df_output.getvalue())
+
+    zip_buffer.seek(0)
+    return zip_buffer, 'detailing_promo_files.zip'
+
+
+def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
+    if not is_discount_template:
+        return None
+
+    # Fetch all cards and extract unique nmID values
+    df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
+    unique_nmID_values = df_all_cards["nmID"].unique()
+
+    # Define the columns for the discount template
+    df_disc_template_columns = [
+        "Бренд", "Категория", "Артикул WB", "Артикул продавца",
+        "Последний баркод", "Остатки WB", "Остатки продавца",
+        "Оборачиваемость", "Текущая цена", "Новая цена",
+        "Текущая скидка", "Новая скидка"
+    ]
+
+    # Create an empty DataFrame with the specified columns
+    df_disc_template = pd.DataFrame(columns=df_disc_template_columns)
+
+    # Populate "Артикул WB" with unique nmID values
+    df_disc_template["Артикул WB"] = unique_nmID_values
+
+    # Merge with the main DataFrame to get relevant columns
+    df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId")
+
+    # Initialize "Новая скидка" with "new_discount" from the main DataFrame
+    df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
+
+    # If promo DataFrame is provided, merge and update "Новая скидка"
+    if df_promo is not None:
+        df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB")
+        df_disc_template["Новая скидка"] = df_disc_template["Загружаемая скидка для участия в акции"].fillna(
+            df_disc_template["Новая скидка"])
+
+    # Ensure "Новая скидка" is filled with default_discount where NaN
+    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
+
+    # Return the template DataFrame with the correct columns
+    return df_disc_template[df_disc_template_columns]
+
+# def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
+#     if not is_discount_template:
+#         return None
+#
+#     df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
+#     df_all_cards = df_all_cards["nmID"].unique()
+#
+#     # Define the columns for the discount template
+#     df_disc_template_columns = [
+#         "Бренд", "Категория", "Артикул WB", "Артикул продавца",
+#         "Последний баркод", "Остатки WB", "Остатки продавца",
+#         "Оборачиваемость", "Текущая цена", "Новая цена",
+#         "Текущая скидка", "Новая скидка"
+#     ]
+#
+#     # Create an empty DataFrame with the specified columns
+#     df_disc_template = pd.DataFrame(columns=df_disc_template_columns)
+#
+#     df_disc_template["Артикул WB"] = df_all_cards["nmId"]
+#
+#     df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId")
+#     df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
+#
+#     if df_promo is not None:
+#         df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB")
+#         df_disc_template["Новая скидка"] = df_disc_template["Загружаемая скидка для участия в акции"]
+#         return df_disc_template
+#
+#     df_disc_template = df_disc_template[df_disc_template_columns]
+#     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
+#
+#     return df_disc_template

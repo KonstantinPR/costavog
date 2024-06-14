@@ -52,9 +52,12 @@ INITIAL_COLUMNS_DICT = {
     'new_discount': 'new_discount',
     'n_discount': 'n_discount',
     'n_delta': 'n_delta',
-    'discount': 'discount',
     'd_disc': 'd_disc',
+    'func_discount': 'func_discount',
+    'func_delta': 'func_delta',
+    'discount': 'discount',
     'outcome-net-storage': 'Маржа-себест.-хран.',
+    'outcome-storage': 'Маржа-хран.',
     'sell': 'Продажа',
     'Ч. Продажа': 'Ч. Продажа.',
     'pure_sells_qt': 'Ч. Продажа шт.',
@@ -84,6 +87,7 @@ INITIAL_COLUMNS_DICT = {
     # 'k_revenue': 'k_revenue',
     'k_logistic': 'k_logistic',
     'k_net_cost': 'k_net_cost',
+    'k_pure_value': 'k_pure_value',
     'k_qt_full': 'k_qt_full',
     'k_rating': 'k_rating',
     'k_dynamic': 'k_dynamic',
@@ -91,8 +95,6 @@ INITIAL_COLUMNS_DICT = {
     'order_date': 'Дата заказа покупателем',
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
-    'func_discount': 'func_discount',
-    'func_delta': 'func_delta',
 }
 
 
@@ -237,6 +239,7 @@ def merge_net_cost(df, is_net_cost):
 
 def profit_count(df):
     df = df.fillna(0)
+    df['Маржа-хран.'] = df['Маржа'] - df['Хранение'].astype(float)
     df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Ч. Продажа шт.']
     df = df.fillna(0)
     df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение'].astype(float)
@@ -686,3 +689,43 @@ def zip_detail(concatenated_dfs, df_net_cost):
     df_result["Дата заказа покупателем"] = pd.to_datetime(df_result["Дата заказа покупателем"])
     df_result.to_excel('df_result.xlsx')
     return df_result
+
+
+def promofiling(promo_file, df, allowed_delta_percent=10):
+    if not promo_file:
+        return None
+
+    # Read the promo file into a DataFrame
+    df_promo = pd.read_excel(promo_file)
+
+    # Merge df_promo with df
+    df_promo = df_promo.merge(df, how='left', left_on="Артикул WB", right_on="nmId")
+    df_promo = check_discount(df_promo, allowed_delta_percent)
+
+    return df_promo
+
+
+def check_discount(df, allowed_delta_percent):
+    plan_price_name = "Плановая цена для акции"
+    current_price_name = "Текущая розничная цена"
+    new_discount_col = "new_discount"
+    promo_discount_name = "Загружаемая скидка для участия в акции"
+
+    # Calculate the discount price
+    df["discount_price"] = df[current_price_name] * (1 - df[new_discount_col] / 100)
+
+    # Calculate the price difference
+    df["price_difference"] = df[plan_price_name] / df["discount_price"]
+
+    # Apply the discount condition
+    allowed_ratio = 1 - allowed_delta_percent / 100
+
+    # Store original promo discounts
+    df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name]
+    df["Allowed"] = "Yes"
+
+    # Update promo discounts based on allowed delta percent
+    df.loc[df["price_difference"] < allowed_ratio, promo_discount_name] = df[new_discount_col]
+    df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
+
+    return df

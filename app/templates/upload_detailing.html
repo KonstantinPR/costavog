@@ -25,6 +25,14 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>
+                            <small class="form-text text-muted">Файлы с zip детализациями от вайлдберриз, может быть
+                                несколько</small>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <input class="form-control form-control-lg" type="file" id="promofile" name="promofile"
+                                   multiple>
+                            <small class="form-text text-muted">Файл с акцией вайлдберриз в формате excel (для проверки
+                                адекватности величины скидки)</small>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input placeholder="На сколько частей делим период" id="days_by"
@@ -158,6 +166,15 @@
                                    id="is_mix_discounts" checked>
                             <label class="is_mix_discounts" for="is_mix_discounts">
                                 На скидку будет влиять доп. анализ (недавние продажи)
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_discount_template"
+                                   name="is_discount_template"
+                                   id="is_discount_template" checked>
+                            <label class="is_discount_template" for="is_discount_template">
+                                Создать шаблон для загрузки скидок на wb (по-умолчанию за 7 дней)?
                             </label>
                         </div>
 

@@ -61,15 +61,20 @@ def images_foldering():
         marketplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]
+        is_cards_from_yadisk = request.form["is_cards_from_yadisk"]
         # print(df)
 
         # Use get_all_cards_api_wb to retrieve nmID values based on vendorCode
         if marketplace == "WB":
             if 'Article_WB' not in df.columns:
                 print(f"Article_WB not in df.columns")
-                df_nm_wb = API_WB.get_all_cards_api_wb()
+
+                df_nm_wb = API_WB.get_all_cards_api_wb(is_from_yadisk=is_cards_from_yadisk)
+                df_nm_wb = df_nm_wb[['vendorCode', 'nmID']].drop_duplicates(subset=['nmID'])
+
                 # Merge df and df_nm_wb on Article and vendorCode columns
                 df = pd.merge(df, df_nm_wb, left_on="Article", right_on="vendorCode", how="left")
+                # print (df)
                 # Duplicate and rename nmID column to 'Article_WB'
                 df['Article_WB'] = df['nmID'].copy()
         if marketplace == "OZON":

@@ -236,17 +236,28 @@ def rename_folders(df, folder_path, marketplace):
     if not df["Article_WB"].empty:
         article_wb_col_name = "Article_WB"
         article_col_name = "Article"
+
     for folder_name in os.listdir(folder_path):
         for d in range(len(df.index)):
             if df[article_col_name][d] == folder_name:
-                os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{df[article_wb_col_name][d]}")
+                try:
+                    os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{df[article_wb_col_name][d]}")
+                except FileNotFoundError:
+                    print(f"FileNotFoundError: Could not find or rename {folder_name} to {df[article_wb_col_name][d]}")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
 
     if marketplace == "OZON":
         for folder_name in os.listdir(folder_path):
-            if folder_name.endswith('-1.JPG'):
-                os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{folder_name.replace('-1.JPG', '.JPG')}")
-            else:
-                os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{'_'.join(folder_name.rsplit('-', 1))}")
+            try:
+                if folder_name.endswith('-1.JPG'):
+                    os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{folder_name.replace('-1.JPG', '.JPG')}")
+                else:
+                    os.rename(f"{folder_path}/{folder_name}", f"{folder_path}/{'_'.join(folder_name.rsplit('-', 1))}")
+            except FileNotFoundError:
+                print(f"FileNotFoundError: Could not rename {folder_name}")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
 
 
 def create_zip_file(folder_path):

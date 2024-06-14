@@ -10,6 +10,8 @@ import numpy as np
 
 from decimal import Decimal
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
+
 
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
@@ -22,13 +24,11 @@ def upload_detailing():
     if not request.method == 'POST':
         return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)
 
-    yandex_disk_handler.copy_file_to_archive_folder(request=request,
-                                                    path_or_config=app.config['REPORT_DETAILING_UPLOAD'])
-
     days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")
     uploaded_files = request.files.getlist("file")
+    promo_file = request.files.get("promofile")
     testing_mode = request.form.get('is_testing_mode')
     is_net_cost = request.form.get('is_net_cost')
     is_get_storage = request.form.get('is_get_storage')
@@ -38,12 +38,19 @@ def upload_detailing():
     is_get_price = request.form.get('is_get_price')
     is_get_stock = request.form.get('is_get_stock')
     is_funnel = request.form.get('is_funnel')
-    k_delta = int(request.form.get('k_delta'))
+    k_delta = request.form.get('k_delta')
     is_mix_discounts = request.form.get('is_mix_discounts')
+    is_discount_template = request.form.get('is_discount_template')
+    print(f"is_discount_template {is_discount_template}")
     if not k_delta: k_delta = 1
+    k_delta = int(k_delta)
+
+    yandex_disk_handler.copy_file_to_archive_folder(request=request,
+                                                    path_or_config=app.config['REPORT_DETAILING_UPLOAD'],
+                                                    testing_mode=testing_mode)
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
-    default_amount_days = 14
+    default_amount_days = 7
 
     if not uploaded_files:
         flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
@@ -104,17 +111,16 @@ def upload_detailing():
     # df.to_excel('dfs_sales.xlsx')
     # --- DICOUNT ---
 
-    days_period = (date_max - date_min).days
+    # days_period = (date_max - date_min).days
+    days_period = 7
     df['days_period'] = days_period
     df['smooth_days'] = df['days_period'] / default_amount_days
     print(f"smooth_days {df['smooth_days'].mean()}")
     df = price_module.discount(df, k_delta=k_delta)
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
-    discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
-    df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
-    df = price_module.mix_discounts(df, is_mix_discounts)
+    # discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
 
-    df = price_module.k_dynamic(df, days_by=days_by)
+    # df = price_module.k_dynamic(df, days_by=days_by)
     # 27/04/2024 - not yet prepared
     # df[discount_columns['func_discount']] *= df['k_dynamic']
 
@@ -132,23 +138,35 @@ def upload_detailing():
     MATERIAL_DICT = detailing_upload_module.MATERIAL_DICT
     df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]
 
+    if is_funnel:
+        df_funnel, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
+        df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+        df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
+        df = price_module.mix_discounts(df, is_mix_discounts)
+
     # print(INCLUDE_COLUMNS)
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
     df = pandas_handler.round_df_if(df, half=10)
 
-    if is_funnel:
-        df_funnel, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
-        df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+    df_promo = detailing_upload_module.promofiling(promo_file, df[['nmId', 'new_discount']])
 
-    file_name = "report_detailing_upload.xlsx"
+    detailing_name = "report_detailing_upload.xlsx"
     file = io_output.io_output(df)
-    yandex_disk_handler.upload_to_YandexDisk(file, file_name=file_name, path=app.config['REPORT_DETAILING_UPLOAD'])
-    file = io_output.io_output(df)
+    yandex_disk_handler.upload_to_YandexDisk(file, file_name=detailing_name, path=app.config['REPORT_DETAILING_UPLOAD'],
+                                             testing_mode=testing_mode)
 
-    flash("Отчет успешно выгружен в excel файл")
-    return send_file(file, download_name=f'report_detailing_{str(date_max)}_to_{str(date_min)}.xlsx',
-                     as_attachment=True)
+    promo_name = "promo.xlsx"
+    template_name = "discount_template.xlsx"
+
+    # Define the filenames for the zip file
+    df_template = pandas_handler.df_disc_template_create(df, df_promo, is_discount_template)
+    # Create a zip file containing the DataFrames
+    file, name = pandas_handler.files_to_zip([df, df_promo, df_template], [detailing_name, promo_name, template_name])
+
+    # Flash message and return the zip file for download
+    flash("Отчет успешно создан")
+    return send_file(file, download_name=name, as_attachment=True)
 
 
 def starts_with_prefix(string, prefixes):

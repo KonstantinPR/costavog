@@ -8,11 +8,12 @@ from typing import Union
 from app.modules import detailing_upload_module
 
 DEFAULT_NET_COST = 500
+DEFAULT_PURE_VALUE = DEFAULT_NET_COST * 1.5
 
 
 # /// --- K REVENUE FORMING ---
 
-def mix_discounts(df, is_mix_discounts=False, k_func_discount=1, k_n_discount=3):
+def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
     """
 
     :param df: DataFrame Pandas
@@ -25,8 +26,8 @@ def mix_discounts(df, is_mix_discounts=False, k_func_discount=1, k_n_discount=3)
         df['d_disc'] = round(df['discount'])
         return df
 
-    sum_k_discount = k_func_discount + k_n_discount
-    df['new_discount'] = round((df['func_discount'] * k_func_discount + df['n_discount'] * 3) / sum_k_discount)
+    sum_k_discount = k_func_disc + k_n_disc
+    df['new_discount'] = round((df['func_discount'] * k_func_disc + df['n_discount'] * k_n_disc) / sum_k_discount)
     df['d_disc'] = round(df['discount'] - df['new_discount'])
 
     return df
@@ -48,6 +49,7 @@ def discount(df, k_delta=1):
                         zip(df['logistics'], df['sell'], df['back'], df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
     df['k_net_cost'] = [k_net_cost(x, y) for x, y in zip(df['net_cost'], df['price_disc'])]
+    df['k_pure_value'] = [k_pure_value(x, y) for x, y in zip(df['pure_value'], df['price_disc'])]
     df['k_qt_full'] = [k_qt_full(qt, volume) for qt, volume in zip(df['stock'], df['volume'])]
     df['k_rating'] = [k_rating(x) for x in df['Rating']]
     # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
@@ -63,6 +65,7 @@ def discount(df, k_delta=1):
     # weight_dict['k_revenue'] = 1
     weight_dict['k_logistic'] = 1
     weight_dict['k_net_cost'] = 4
+    weight_dict['k_pure_value'] = 1
     weight_dict['k_qt_full'] = 1
     weight_dict['k_rating'] = 1
 
@@ -71,6 +74,7 @@ def discount(df, k_delta=1):
             # df['k_revenue'] * weight_dict['k_revenue'] +
             df['k_logistic'] * weight_dict['k_logistic'] +
             df['k_net_cost'] * weight_dict['k_net_cost'] +
+            df['k_pure_value'] * weight_dict['k_pure_value'] +
             df['k_qt_full'] * weight_dict['k_qt_full'] +
             df['k_rating'] * weight_dict['k_rating']
         # Add other coefficients here with their respective weights
@@ -85,8 +89,9 @@ def discount(df, k_delta=1):
 
     df['n_discount'] = [n_discount(price_disc, k_discount, price) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
+    df.loc[(df['n_discount'] == 0), 'n_discount'] = df['discount']
     df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
-    df['n_discount'] = df['discount']
+    # df['n_discount'] = df['discount']
     df['n_discount'] = round(df['discount'] - df['n_delta'])
     df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = df['discount']
     df.loc[df['n_discount'] < 0, 'n_discount'] = 0
@@ -143,9 +148,9 @@ def k_is_sell(pure_sells_qt, net_cost):
     k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
 
     if pure_sells_qt > 100 * k_net_cost:
-        return 0.80
+        return 0.70
     if pure_sells_qt > 50 * k_net_cost:
-        return 0.85
+        return 0.80
     if pure_sells_qt > 20 * k_net_cost:
         return 0.90
     if pure_sells_qt > 10 * k_net_cost:
@@ -234,7 +239,65 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
     return 1
 
 
+def k_pure_value(pure_value, price_disc):
+    """real net_cost of good on market"""
+    k_norma = 2.2
+    if pure_value == 0:
+        pure_value = DEFAULT_PURE_VALUE
+    k_pure_value = ((DEFAULT_PURE_VALUE / pure_value) * 2) ** 0.5
+    if k_pure_value < 1:  k_pure_value = 1
+    if price_disc <= pure_value / 4:
+        return 0.80
+    if price_disc <= pure_value / 2:
+        return 0.83
+    if price_disc <= pure_value:
+        return 0.86
+    if price_disc <= pure_value * k_pure_value:
+        return 0.90
+    if price_disc <= pure_value * 1.1 * k_pure_value:
+        return 0.92
+    if price_disc <= pure_value * 1.3 * k_pure_value:
+        return 0.93
+    if price_disc <= pure_value * 1.4 * k_pure_value:
+        return 0.94
+    if price_disc <= pure_value * 1.5 * k_pure_value:
+        return 0.95
+    if price_disc <= pure_value * 1.6 * k_pure_value:
+        return 0.96
+    if price_disc <= pure_value * 1.7 * k_pure_value:
+        return 0.97
+    if price_disc <= pure_value * 1.8 * k_pure_value:
+        return 0.98
+    if price_disc <= pure_value * 1.9 * k_pure_value:
+        return 0.99
+    if price_disc >= pure_value * 20 * k_pure_value:
+        return 1.20
+    if price_disc >= pure_value * 10 * k_pure_value:
+        return 1.10
+    if price_disc >= pure_value * 6 * k_pure_value:
+        return 1.06
+    if price_disc >= pure_value * 5 * k_pure_value:
+        return 1.05
+    if price_disc >= pure_value * 4 * k_pure_value:
+        return 1.04
+    if price_disc >= pure_value * 3 * k_pure_value:
+        return 1.03
+    if price_disc >= pure_value * 2.5 * k_pure_value:
+        return 1.02
+    if price_disc > pure_value * 2.3 * k_pure_value:
+        return 1.01
+    if price_disc > pure_value * k_norma * k_pure_value:
+        return 1
+    # if price_disc >= pure_value * 1 * k_pure_value:
+    #     return 1.01
+    if price_disc == 0:
+        return 1
+
+    return 1
+
+
 def k_net_cost(net_cost, price_disc):
+    """cost to buy and deliver good to wb"""
     k_norma = 2.2
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
@@ -263,7 +326,11 @@ def k_net_cost(net_cost, price_disc):
     if price_disc <= net_cost * 1.8 * k_net_cost:
         return 0.98
     if price_disc <= net_cost * 1.9 * k_net_cost:
+        return 0.985
+    if price_disc <= net_cost * 2 * k_net_cost:
         return 0.99
+    if price_disc <= net_cost * 2.1 * k_net_cost:
+        return 0.995
     if price_disc >= net_cost * 20 * k_net_cost:
         return 1.20
     if price_disc >= net_cost * 10 * k_net_cost:
@@ -304,11 +371,11 @@ def k_rating(rating):
     return 1
 
 
-def n_discount(price_disc, k_discount, price):
+def n_discount(price_disc, k_discount, price, k=5):
     if price == 0 or np.isnan(price_disc) or np.isnan(k_discount):
         return np.nan  # Return NaN if any of the values are NaN or if price is zero
     else:
-        n_discount = (1 - (price_disc / (price * (k_discount ** 10)))) * 100
+        n_discount = (1 - (price_disc / (price * (k_discount ** k)))) * 100
         if n_discount < 0:
             return 0
         return int(round(n_discount))

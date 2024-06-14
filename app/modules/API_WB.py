@@ -175,9 +175,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     # df = pd.DataFrame(all_goods)
     df = pd.json_normalize(all_goods, 'sizes', ["vendorCode", 'nmID'], errors='ignore')
     # df['discount'] = (1 - (df['discountedPrice'] / df['price'])) * 100
-    df['discount'] = ((df['price']-df['discountedPrice'])/df['price']) * 100
-
-
+    df['discount'] = ((df['price'] - df['discountedPrice']) / df['price']) * 100
 
     # Upload data to Yandex Disk
     file_name = "wb_price_data.xlsx"
@@ -267,6 +265,8 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
         no_sizes = request.get('no_sizes')
     else:
         raise ValueError("Invalid request type. It should be either a 'requests' object or a dictionary.")
+
+    df.to_excel("df_stock.xlsx")
 
     if no_city == 'no_city' and no_sizes == 'no_sizes':
         df = df.pivot_table(index=['nmId'],
@@ -386,7 +386,8 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
 #     return df
 
 
-def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None):
+def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None,
+                         is_unique=False):
     """get_all_cards_api_wb"""
 
     # print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
@@ -656,4 +657,3 @@ def _rename_double_columns(df, suffix):
     # Update the DataFrame with the new column names
     df.columns = new_columns
     return df
-
