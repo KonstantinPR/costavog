@@ -60,6 +60,7 @@ INITIAL_COLUMNS_DICT = {
     'outcome-storage': 'Маржа-хран.',
     'sell': 'Продажа',
     'Ч. Продажа': 'Ч. Продажа.',
+    'Ч. Продажа шт./Логистика шт.': 'Ч. Продажа шт./Логистика шт.',
     'pure_sells_qt': 'Ч. Продажа шт.',
     'commission': 'commission',
     'back_qt': 'Возврат, шт.',
@@ -727,5 +728,29 @@ def check_discount(df, allowed_delta_percent):
     # Update promo discounts based on allowed delta percent
     df.loc[df["price_difference"] < allowed_ratio, promo_discount_name] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
+
+    return df
+
+
+def add_k(df):
+    # Check if the required columns exist in the DataFrame
+    clear_sell_qt_name = 'Ч. Продажа шт.'
+    losistics_qt_name = 'Логистика шт.'
+    if clear_sell_qt_name in df.columns and losistics_qt_name in df.columns:
+        def calculate_ratio(row):
+            # Apply the specified logic
+            if row[clear_sell_qt_name] == 0:
+                return 0
+            elif row[losistics_qt_name] == 0 and row[clear_sell_qt_name] == 0:
+                return 0
+            elif row[losistics_qt_name] == 0 and row[clear_sell_qt_name] != 0:
+                return 1
+            else:
+                return row[clear_sell_qt_name] / row[losistics_qt_name]
+
+        # Apply the function to each row in the DataFrame
+        df['Ч. Продажа шт./Логистика шт.'] = df.apply(calculate_ratio, axis=1)
+    else:
+        print("Required columns are not present in the DataFrame.")
 
     return df
