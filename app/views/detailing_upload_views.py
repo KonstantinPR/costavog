@@ -144,6 +144,8 @@ def upload_detailing():
         df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
         df = price_module.mix_discounts(df, is_mix_discounts)
 
+    df = detailing_upload_module.add_k(df)
+
     # print(INCLUDE_COLUMNS)
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
