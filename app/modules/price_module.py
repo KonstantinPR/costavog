@@ -189,10 +189,12 @@ def k_qt_full(qt, volume):
         return 1.01
     if 20 * k_volume < volume_all <= 50 * k_volume:
         return 1.02
-    if 50 * k_volume < volume_all <= 100 * k_volume:
+    if 50 * k_volume < volume_all <= 70 * k_volume:
         return 1.03
+    if 70 * k_volume < volume_all <= 100 * k_volume:
+        return 1.04
     if volume_all > 100 * k_volume:
-        return 1.5
+        return 1.05
     return k
 
 

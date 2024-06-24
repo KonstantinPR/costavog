@@ -50,9 +50,9 @@ INITIAL_COLUMNS_DICT = {
     'nmId': 'nmId',
 
     'new_discount': 'new_discount',
+    'd_disc': 'd_disc',
     'n_discount': 'n_discount',
     'n_delta': 'n_delta',
-    'd_disc': 'd_disc',
     'func_discount': 'func_discount',
     'func_delta': 'func_delta',
     'discount': 'discount',
