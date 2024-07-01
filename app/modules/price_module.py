@@ -84,7 +84,7 @@ def discount(df, k_delta=1):
     total_weight = sum(weight_dict.values())
 
     # Update the 'k_discount' column based on the weighted sum and total weight
-    # df.loc[(df['stock'] > 0) | (df['outcome-net-storage'] != 0), 'k_discount'] = weighted_sum / total_weight
+    # df.loc[(df['stock'] > 0) | (df['outcome-net'] != 0), 'k_discount'] = weighted_sum / total_weight
     df['k_discount'] = weighted_sum / total_weight
 
     df['n_discount'] = [n_discount(price_disc, k_discount, price) for price_disc, k_discount, price in

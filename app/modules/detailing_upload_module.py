@@ -56,8 +56,11 @@ INITIAL_COLUMNS_DICT = {
     'func_discount': 'func_discount',
     'func_delta': 'func_delta',
     'discount': 'discount',
-    'outcome-net-storage': 'Маржа-себест.-хран.',
-    'outcome-storage': 'Маржа-хран.',
+    'outcome-net': 'Маржа-себест.',
+    'Маржа-себест./ шт.': 'Маржа-себест./ шт.',
+    'outcome': 'Маржа',
+    'income-logistic': 'Выручка-Логистика',
+    'income': 'Выручка',
     'sell': 'Продажа',
     'Ч. Продажа': 'Ч. Продажа.',
     'Ч. Продажа шт./Логистика шт.': 'Ч. Продажа шт./Логистика шт.',
@@ -76,8 +79,6 @@ INITIAL_COLUMNS_DICT = {
     'net_cost': 'net_cost',
     'volume': 'volume',
     'quantity_full_sells_qt': 'quantityFull + Продажа, шт.',
-    'outcome-net': 'Маржа-себест.',
-    'outcome': 'Маржа',
     'back': 'Возврат',
     'sells_days': 'Дней в продаже',
     'storagePricePerBarcode': 'storagePricePerBarcode',
@@ -185,7 +186,8 @@ def zip_detail_V2(concatenated_dfs):
     df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
     df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
-    df['Маржа'] = df[sales_name] - df[backs_name] - df[logistic_name] - df[compensation_substituted_col_name]
+    df['Выручка'] = df[sales_name] - df[backs_name] - df[compensation_substituted_col_name]
+    df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
     # df.to_excel('V2.xlsx')
@@ -240,21 +242,20 @@ def merge_net_cost(df, is_net_cost):
 
 def profit_count(df):
     df = df.fillna(0)
-    df['Маржа-хран.'] = df['Маржа'] - df['Хранение'].astype(float)
+    df['Маржа'] = df['Выручка-Логистика'] - df['Хранение'].astype(float)
     df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Ч. Продажа шт.']
     df = df.fillna(0)
-    df['Маржа-себест.-хран.'] = df['Маржа-себест.'] - df['Хранение'].astype(float)
-    df['Маржа-себест.-хран./ шт.'] = np.where(
+    df['Маржа-себест./ шт.'] = np.where(
         df['Продажа, шт.'] != 0,
-        df['Маржа-себест.-хран.'] / df['Продажа, шт.'],
+        df['Маржа-себест.'] / df['Продажа, шт.'],
         np.where(
             df['quantityFull'] != 0,
-            df['Маржа-себест.-хран.'] / df['quantityFull'],
+            df['Маржа-себест.'] / df['quantityFull'],
             0
         )
     )
     # df.to_excel('profit_count.xlsx')
-    df.loc[df['Ч. Продажа шт.'] > 0, 'commission'] = round(1 - df['Маржа-себест.-хран.'] / df['Ч. Продажа'], 2)
+    df.loc[df['Ч. Продажа шт.'] > 0, 'commission'] = round(1 - df['Маржа-себест.'] / df['Ч. Продажа'], 2)
     df['commission'] = df['commission'].replace([np.inf, -np.inf], "")
 
     return df
@@ -752,5 +753,7 @@ def add_k(df):
         df['Ч. Продажа шт./Логистика шт.'] = df.apply(calculate_ratio, axis=1)
     else:
         print("Required columns are not present in the DataFrame.")
+
+    df.loc[df['Ч. Продажа шт.'] > 0, 'Маржа-себест.-хран. шт.'] = df["Маржа-себест.-хран."] / df["Ч. Продажа шт."]
 
     return df

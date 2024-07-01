@@ -77,6 +77,7 @@ def images_foldering():
                 # print (df)
                 # Duplicate and rename nmID column to 'Article_WB'
                 df['Article_WB'] = df['nmID'].copy()
+                df['Article_WB'] = df['nmID'].apply(int).apply(str)
         if marketplace == "OZON":
             df['Article_WB'] = df['Article'].copy()
 
