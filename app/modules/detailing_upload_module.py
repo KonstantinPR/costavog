@@ -61,8 +61,8 @@ INITIAL_COLUMNS_DICT = {
     'outcome': 'Маржа',
     'income-logistic': 'Выручка-Логистика',
     'income': 'Выручка',
+    'Ч. Продажа': 'Ч. Продажа',
     'sell': 'Продажа',
-    'Ч. Продажа': 'Ч. Продажа.',
     'Ч. Продажа шт./Логистика шт.': 'Ч. Продажа шт./Логистика шт.',
     'pure_sells_qt': 'Ч. Продажа шт.',
     'commission': 'commission',
@@ -83,10 +83,10 @@ INITIAL_COLUMNS_DICT = {
     'sells_days': 'Дней в продаже',
     'storagePricePerBarcode': 'storagePricePerBarcode',
     'shareCost': 'shareCost',
-    'outcome_net_storage_single': 'Маржа-себест.-хран./ шт.',
+    'outcome_net_storage_single': 'Маржа-себест./ шт.',
     'supplier': 'Поставщик',
     'k_is_sell': 'k_is_sell',
-    # 'k_revenue': 'k_revenue',
+
     'k_logistic': 'k_logistic',
     'k_net_cost': 'k_net_cost',
     'k_pure_value': 'k_pure_value',
@@ -97,6 +97,7 @@ INITIAL_COLUMNS_DICT = {
     'order_date': 'Дата заказа покупателем',
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
+    'k_norma_revenue': 'k_norma_revenue',
 }
 
 
@@ -697,6 +698,7 @@ def promofiling(promo_file, df, allowed_delta_percent=10):
     if not promo_file:
         return None
 
+
     # Read the promo file into a DataFrame
     df_promo = pd.read_excel(promo_file)
 
@@ -754,6 +756,6 @@ def add_k(df):
     else:
         print("Required columns are not present in the DataFrame.")
 
-    df.loc[df['Ч. Продажа шт.'] > 0, 'Маржа-себест.-хран. шт.'] = df["Маржа-себест.-хран."] / df["Ч. Продажа шт."]
+    df.loc[df['Ч. Продажа шт.'] > 0, 'Маржа-себест./ шт.'] = df["Маржа-себест./ шт."] / df["Ч. Продажа шт."]
 
     return df

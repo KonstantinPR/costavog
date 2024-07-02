@@ -71,6 +71,6 @@ def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=
     df['quantityFull'] = pd.to_numeric(df['quantityFull'], errors='coerce').fillna(0).astype(np.int64)
     df = df_worker.qt_to_order(df, min_stock=min_stock)
     df['techSize'] = pd.to_numeric(df['techSize'], errors='coerce').fillna(0).astype(np.int64)
-    df = df.sort_values(by=['Маржа-себест.-хран.', 'vendorCode', 'techSize'], ascending=False)
+    df = df.sort_values(by=['Маржа-себест.', 'vendorCode', 'techSize'], ascending=False)
     df = df.reset_index(drop=True)
     return df

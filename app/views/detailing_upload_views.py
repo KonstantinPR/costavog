@@ -116,7 +116,8 @@ def upload_detailing():
     df['days_period'] = days_period
     df['smooth_days'] = df['days_period'] / default_amount_days
     print(f"smooth_days {df['smooth_days'].mean()}")
-    df = price_module.discount(df, k_delta=k_delta)
+    k_norma_revenue = price_module.count_norma_revenue(df)
+    df = price_module.discount(df, k_delta=k_delta, k_norma_revenue=k_norma_revenue)
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
     # discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
 
@@ -150,7 +151,7 @@ def upload_detailing():
     include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
     df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
     df = pandas_handler.round_df_if(df, half=10)
-
+    if 'new_discount' not in df.columns: df['new_discount'] = df['n_discount']
     df_promo = detailing_upload_module.promofiling(promo_file, df[['nmId', 'new_discount']])
 
     detailing_name = "report_detailing_upload.xlsx"
