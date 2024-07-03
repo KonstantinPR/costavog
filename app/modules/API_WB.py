@@ -387,7 +387,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
 
 
 def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None,
-                         is_unique=False):
+                         is_unique=False, limit_cards=None):
     """get_all_cards_api_wb"""
 
     # print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
@@ -445,8 +445,11 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
         dfs += df_json['cards']
         count = count + total
 
+        if limit_cards and count > limit_cards:
+            break
+
     logging.warning(f"{get_all_cards_api_wb.__name__} forming df ...")
-    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'], errors='ignore')
+    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions"], errors='ignore')
 
     if is_to_yadisk:
         io_df = io_output.io_output(df)
