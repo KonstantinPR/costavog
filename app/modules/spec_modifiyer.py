@@ -2,7 +2,11 @@ import pandas as pd
 import numpy as np
 from random import randrange
 
-COL_ART_NAME = "Артикул товара"
+# until 06/07/2024
+# COL_ART_NAME = "Артикул товара"
+
+COL_ART_NAME = "Артикул продавца"
+
 
 PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 10000**0.3 = 2.52"""

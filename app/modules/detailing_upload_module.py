@@ -729,8 +729,8 @@ def check_discount(df, allowed_delta_percent):
     df["Allowed"] = "Yes"
 
     # Update promo discounts based on allowed delta percent
-    df.loc[df["price_difference"] < allowed_ratio, promo_discount_name] = df[new_discount_col]
-    df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
+    df.loc[df["price_difference"] > allowed_ratio, promo_discount_name] = df[new_discount_col]
+    df.loc[df["price_difference"] > allowed_ratio, "Allowed"] = "No"
 
     return df
 
@@ -756,6 +756,6 @@ def add_k(df):
     else:
         print("Required columns are not present in the DataFrame.")
 
-    df.loc[df['Ч. Продажа шт.'] > 0, 'Маржа-себест./ шт.'] = df["Маржа-себест./ шт."] / df["Ч. Продажа шт."]
+    df.loc[df['Ч. Продажа шт.'] > 0, 'Маржа-себест./ шт.'] = df["Маржа-себест."] / df["Ч. Продажа шт."]
 
     return df
