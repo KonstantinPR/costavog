@@ -30,14 +30,14 @@ def get_sales_wb():
     """
 
     if request.method == 'POST':
-        date_from = detailing_api_module.request_date_from(request)
+        date_from = detailing_api_module.request_date_from(request, delta=28)
         date_end = detailing_api_module.request_date_end(request)
         days_step = detailing_api_module.request_days_step(request)
         df_sales = API_WB.get_wb_sales_realization_api_v2(date_from, date_end, days_step)
         df = io_output.io_output(df_sales)
         file_name = f'wb_sales_{str(date_from)}_{str(date_end)}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_sales_wb.html', doc_string=get_cards_wb.__doc__)
+    return render_template('upload_sales_wb.html', doc_string=get_sales_wb.__doc__)
 
 
 @app.route('/get_cards_wb', methods=['POST', 'GET'])
@@ -86,7 +86,6 @@ def get_storage_wb():
         if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
         logging.warning(f'number_last_days {number_last_days}')
         logging.warning(f"{request.form.get('is_mean')}")
-
 
         path_by_config = app.config['YANDEX_KEY_STORAGE_COST']
         yandex_disk_handler.copy_file_to_archive_folder(request=request, path_or_config=path_by_config)

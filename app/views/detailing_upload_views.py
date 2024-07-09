@@ -50,7 +50,7 @@ def upload_detailing():
                                                     testing_mode=testing_mode)
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
-    default_amount_days = 7
+
 
     if not uploaded_files:
         flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
@@ -81,7 +81,7 @@ def upload_detailing():
 
     storage_cost = detailing_upload_module.get_storage_cost(concatenated_dfs)
 
-    df = detailing_upload_module.zip_detail_V2(concatenated_dfs)
+    df = detailing_upload_module.zip_detail_V2(concatenated_dfs, drop_duplicates_in="Артикул поставщика")
 
     df = detailing_upload_module.merge_stock(df, testing_mode=testing_mode, is_get_stock=is_get_stock,
                                              is_delete_shushary=is_delete_shushary)
@@ -93,10 +93,12 @@ def upload_detailing():
     df = detailing_upload_module.merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage,
                                                is_delete_shushary=is_delete_shushary)
     df = detailing_upload_module.merge_net_cost(df, is_net_cost)
-    df = detailing_upload_module.merge_price(df, testing_mode, is_get_price).drop_duplicates(subset='nmID')
+    df = detailing_upload_module.merge_price(df, testing_mode, is_get_price).drop_duplicates(subset='nmId')
     df = detailing_upload_module.profit_count(df)
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
-    df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
+    # df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
+    df = pandas_handler.df_merge_drop(df, df_rating, 'nmId', 'Артикул', how="outer")
+    df.to_excel("rating_merged.xlsx")
 
     df = pandas_handler.fill_empty_val_by(['article', 'vendorCode', 'supplierArticle'], df, 'Артикул поставщика')
     df = pandas_handler.fill_empty_val_by(['brand'], df, 'Бренд')
@@ -106,16 +108,15 @@ def upload_detailing():
     if dfs_sales:
         print(f"merging dfs_sales ...")
         for d in dfs_sales:
-            df = df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры')
+            df = pandas_handler.df_merge_drop(df, d, 'nmId', 'Код номенклатуры', how="outer")
+            # df = df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры')
+
+    df.to_excel("sales_merged.xlsx")
 
     # df.to_excel('dfs_sales.xlsx')
     # --- DICOUNT ---
 
-    # days_period = (date_max - date_min).days
-    days_period = 7
-    df['days_period'] = days_period
-    df['smooth_days'] = df['days_period'] / default_amount_days
-    print(f"smooth_days {df['smooth_days'].mean()}")
+    df = detailing_upload_module.get_period_sales(df, date_min, date_max)
     k_norma_revenue = price_module.count_norma_revenue(df)
     df = price_module.discount(df, k_delta=k_delta, k_norma_revenue=k_norma_revenue)
     discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
@@ -141,7 +142,8 @@ def upload_detailing():
 
     if is_funnel:
         df_funnel, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
-        df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+        # df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+        df = pandas_handler.df_merge_drop(df, df_funnel, "nmId", "nmID")
         df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
         df = price_module.mix_discounts(df, is_mix_discounts)
 

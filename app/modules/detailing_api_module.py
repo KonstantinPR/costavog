@@ -111,63 +111,7 @@ def _revenue_potential_cost(rev_per, net, qt, k_dif):
     return rev_pot
 
 
-def key_indicators_module(file_content):
-    key_indicators = {}
-    df = file_content
-    df.to_excel('key_indocators_begin.xlsx')
-    df['market_cost'] = df['price_disc'] * df['quantity']
-    key_indicators['market_cost'] = df['market_cost'].sum()
-    key_indicators['Перечисление руб'] = df['Перечисление руб'].sum()
-    key_indicators['retail_price_Пр_Взвр'] = df['retail_price_withdisc_rub_Продажа_sum'].sum() - df[
-        'retail_price_withdisc_rub_Возврат_sum'].sum()
-    key_indicators['comission_and_exp_all'] = 1 - (
-            key_indicators['Перечисление руб'] / key_indicators['retail_price_Пр_Взвр'])
-    print(f"comission_to_wb {key_indicators['comission_and_exp_all']}")
-    key_indicators['our_income_for_all'] = key_indicators['market_cost'] * (1 - key_indicators['comission_and_exp_all'])
-
-    key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
-        "quantity"]).sum() / df[df["net_cost"] != 0]["quantity"].sum()
-
-    df['net_cost'] = np.where(df.net_cost == 0, key_indicators['net_cost_med'], df.net_cost)
-
-    df['nets_cost'] = df['net_cost'] * df['quantity']
-    key_indicators['nets_cost'] = df['nets_cost'].sum()
-    df['sells_qt_with_back'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
-    key_indicators['sells_qt_with_back'] = df['sells_qt_with_back'].sum()
-    df['revenue_per_one'] = [_revenue_per_one(rev, sel, net, log) for
-                             rev, sel, net, log in
-                             zip(df['Прибыль_sum'],
-                                 df['sells_qt_with_back'],
-                                 df['net_cost'],
-                                 df['Логистика руб'],
-                                 )]
-    df['revenue_net_dif'] = [_revenue_net_dif(rev_per, net) for
-                             rev_per, net in
-                             zip(df['revenue_per_one'],
-                                 df['net_cost'],
-                                 )]
-
-    key_indicators['revenue_net_dif_med'] = df[df["revenue_net_dif"] != 1]["revenue_net_dif"].mean()
-
-    df['revenue_potential_cost'] = [
-        _revenue_potential_cost(rev_per, net, qt, k_dif=key_indicators['revenue_net_dif_med']) for
-        rev_per, net, qt in
-        zip(df['revenue_per_one'],
-            df['net_cost'],
-            df['quantity'],
-            )]
-
-    key_indicators['revenue_potential_cost'] = df['revenue_potential_cost'].sum()
-
-    for k, v in key_indicators.items():
-        if not 'revenue_net_dif_med' in k:
-            print(f'{k} {key_indicators[k]}')
-            if key_indicators[k] > 1000:
-                key_indicators[k] = int(v)
-
-    df = df.from_dict(key_indicators, orient='index', columns=['key_indicator'])
-
-    return df
+#
 
 
 def divide_handle(rub, sht):
@@ -223,17 +167,17 @@ def df_forming_goal_column(df, df_revenue_col_name_list, k_smooth):
     return df
 
 
-def request_date_from(request, date_format = DATE_FORMAT):
+def request_date_from(request, date_format=DATE_FORMAT, delta=app.config['DAYS_STEP_DEFAULT']):
     if request.form.get('date_from'):
         date_from = request.form.get('date_from')
     else:
         date_from = datetime.datetime.today() - datetime.timedelta(
-            days=app.config['DAYS_STEP_DEFAULT']) - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
+            days=delta) - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
         date_from = date_from.strftime(date_format)
     return date_from
 
 
-def request_date_end(request, date_format = DATE_FORMAT):
+def request_date_end(request, date_format=DATE_FORMAT):
     if request.form.get('date_end'):
         date_end = request.form.get('date_end')
     else:
@@ -267,91 +211,91 @@ def request_k_smooth(request):
     return k_smooth
 
 
-def revenue_processing_module(request):
-    """forming via wb api table dynamic revenue and correcting discount"""
-    # --- REQUEST PROCESSING ---
-
-    date_from = request_date_from(request)
-    date_end = request_date_end(request)
-    days_step = request_days_step(request)
-    date_parts = request_date_parts(request)
-    k_smooth = request_k_smooth(request)
-
-    # --- GET DATA VIA WB API /// ---
-
-    df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-    df_sales.to_excel('df_sales_excel.xlsx')
-    # df_sales = pd.read_excel("df_sales_excel.xlsx")
-
-    df_stock = API_WB.get_wb_stock_api_no_sizes()
-    # df_sales.to_excel('wb_stock.xlsx')
-    # df_stock = pd.read_excel("wb_stock.xlsx")
-
-    # --- GET DATA FROM YADISK /// ---
-    df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-    df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
-    # df_rating.to_excel('df_rating.xlsx')
-    df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
-    df_sales_pivot.to_excel('sales_pivot.xlsx')
-    # таблица с итоговыми значениями с префиксом _sum
-    df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
-    days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
-    period_dates_list = get_period_dates_list(date_from, date_end, days_bunch, date_parts)
-    df_sales_list = dataframe_divide(df_sales, period_dates_list, date_from)
-
-    df_pivot_list = [get_wb_sales_realization_pivot(d) for d in df_sales_list]
-
-    df = df_pivot_list[0]
-    date = iter(period_dates_list[1:])
-    df_p = df_pivot_list[1:]
-    for d in df_p:
-        df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
-        df = df_pivot
-
-    df_price = get_wb_price_api()
-    df = df.merge(df_price, how='outer', on='nm_id')
-    df = df.merge(df_rating, how='outer', left_on='nm_id', right_on="Артикул")
-
-    df_complete = df.merge(df_stock, how='outer', on='nm_id')
-    df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
-    df.to_excel('df_complete.xlsx')
-    df = get_revenue_by_part(df, period_dates_list)
-
-    df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
-    df_revenue_col_name_list = df_revenue_column_name_list(df)
-
-    df.fillna(0, inplace=True, downcast='infer')
-    # чтобы были видны итоговые значения из первоначальной таблицы с продажами
-    df = df.merge(df_sales_pivot, how='outer', on='nm_id')
-
-    df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
-
-    # df = detailing_api_module.df_revenue_speed(df, period_dates_list)
-
-    list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
-    df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)
-    list_re_col_names_brand = ['brand_name_sum']
-    df = combine_duplicate_column(df, 'brand_name', list_re_col_names_brand)
-    list_re_col_names_subject = ['subject_name_sum']
-    df = combine_duplicate_column(df, 'subject_name', list_re_col_names_subject)
-    drop_list = list_re_col_names_brand + list_re_col_names_art + list_re_col_names_subject
-    df = df.drop(drop_list, axis=1)
-    df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
-    df['Артикул WB'] = df['nm_id']
-    df = df_stay_column_not_null(df)
-    df = combine_duplicate_column(df, "Предмет", ["subject_name"])
-
-    df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
-    df = df.sort_values(by='Прибыль_sum')
-
-    file_name_specific = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
-    file_name_common = f"wb_dynamic_revenue_report.xlsx"
-    file_content = io_output.io_output(df)
-    # добавляем полученный файл на яндекс.диск
-    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_specific)
-    yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_common, app_config_path=app.config['YANDEX_PATH'])
-
-    return df, file_name_specific
+# def revenue_processing_module(request):
+#     """forming via wb api table dynamic revenue and correcting discount"""
+#     # --- REQUEST PROCESSING ---
+#
+#     date_from = request_date_from(request)
+#     date_end = request_date_end(request)
+#     days_step = request_days_step(request)
+#     date_parts = request_date_parts(request)
+#     k_smooth = request_k_smooth(request)
+#
+#     # --- GET DATA VIA WB API /// ---
+#
+#     df_sales = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
+#     df_sales.to_excel('df_sales_excel.xlsx')
+#     # df_sales = pd.read_excel("df_sales_excel.xlsx")
+#
+#     df_stock = API_WB.get_wb_stock_api_no_sizes()
+#     # df_sales.to_excel('wb_stock.xlsx')
+#     # df_stock = pd.read_excel("wb_stock.xlsx")
+#
+#     # --- GET DATA FROM YADISK /// ---
+#     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+#     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
+#     # df_rating.to_excel('df_rating.xlsx')
+#     df_sales_pivot = get_wb_sales_realization_pivot(df_sales)
+#     df_sales_pivot.to_excel('sales_pivot.xlsx')
+#     # таблица с итоговыми значениями с префиксом _sum
+#     df_sales_pivot.columns = [f'{x}_sum' for x in df_sales_pivot.columns]
+#     days_bunch = get_days_bunch_from_delta_date(date_from, date_end, date_parts, DATE_FORMAT)
+#     period_dates_list = get_period_dates_list(date_from, date_end, days_bunch, date_parts)
+#     df_sales_list = dataframe_divide(df_sales, period_dates_list, date_from)
+#
+#     df_pivot_list = [get_wb_sales_realization_pivot(d) for d in df_sales_list]
+#
+#     df = df_pivot_list[0]
+#     date = iter(period_dates_list[1:])
+#     df_p = df_pivot_list[1:]
+#     for d in df_p:
+#         df_pivot = df.merge(d, how="outer", on='nm_id', suffixes=(None, f'_{str(next(date))[:10]}'))
+#         df = df_pivot
+#
+#     df_price = get_wb_price_api()
+#     df = df.merge(df_price, how='outer', on='nm_id')
+#     df = df.merge(df_rating, how='outer', left_on='nm_id', right_on="Артикул")
+#
+#     df_complete = df.merge(df_stock, how='outer', on='nm_id')
+#     df = df_complete.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
+#     df.to_excel('df_complete.xlsx')
+#     df = get_revenue_by_part(df, period_dates_list)
+#
+#     df = df.rename(columns={'Прибыль': f"Прибыль_{str(period_dates_list[0])[:10]}"})
+#     df_revenue_col_name_list = df_revenue_column_name_list(df)
+#
+#     df.fillna(0, inplace=True, downcast='infer')
+#     # чтобы были видны итоговые значения из первоначальной таблицы с продажами
+#     df = df.merge(df_sales_pivot, how='outer', on='nm_id')
+#
+#     df = df_forming_goal_column(df, df_revenue_col_name_list, k_smooth)
+#
+#     # df = detailing_api_module.df_revenue_speed(df, period_dates_list)
+#
+#     list_re_col_names_art = ['article', 'sa_name', 'sa_name_sum']
+#     df = combine_duplicate_column(df, 'supplierArticle', list_re_col_names_art)
+#     list_re_col_names_brand = ['brand_name_sum']
+#     df = combine_duplicate_column(df, 'brand_name', list_re_col_names_brand)
+#     list_re_col_names_subject = ['subject_name_sum']
+#     df = combine_duplicate_column(df, 'subject_name', list_re_col_names_subject)
+#     drop_list = list_re_col_names_brand + list_re_col_names_art + list_re_col_names_subject
+#     df = df.drop(drop_list, axis=1)
+#     df = df.drop_duplicates(subset=['Номенклатура (код 1С)'])
+#     df['Артикул WB'] = df['nm_id']
+#     df = df_stay_column_not_null(df)
+#     df = combine_duplicate_column(df, "Предмет", ["subject_name"])
+#
+#     df = df[VISIBLE_COL + [col for col in df.columns if col not in VISIBLE_COL]]
+#     df = df.sort_values(by='Прибыль_sum')
+#
+#     file_name_specific = f"wb_dynamic_revenue_report_to_{str(date_end)}_from_{str(date_from)}.xlsx"
+#     file_name_common = f"wb_dynamic_revenue_report.xlsx"
+#     file_content = io_output.io_output(df)
+#     # добавляем полученный файл на яндекс.диск
+#     yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_specific)
+#     yandex_disk_handler.upload_to_YandexDisk(file_content, file_name_common, app_config_path=app.config['YANDEX_PATH'])
+#
+#     return df, file_name_specific
 
 
 def combine_duplicate_column(df, col_name_in: str, list_re_col_names: list):
@@ -748,3 +692,63 @@ def get_wb_price_api(g=None):
     df = pd.DataFrame(data)
     df = df.rename(columns={'nmId': 'nm_id'})
     return df
+
+
+
+# def key_indicators_module(file_content):
+#     key_indicators = {}
+#     df = file_content
+#     # df.to_excel('key_indocators_begin.xlsx')
+#     df['market_cost'] = df['price_disc'] * df['quantity']
+#     key_indicators['market_cost'] = df['market_cost'].sum()
+#     key_indicators['Перечисление руб'] = df['Перечисление руб'].sum()
+#     key_indicators['retail_price_Пр_Взвр'] = df['retail_price_withdisc_rub_Продажа_sum'].sum() - df[
+#         'retail_price_withdisc_rub_Возврат_sum'].sum()
+#     key_indicators['comission_and_exp_all'] = 1 - (
+#             key_indicators['Перечисление руб'] / key_indicators['retail_price_Пр_Взвр'])
+#     print(f"comission_to_wb {key_indicators['comission_and_exp_all']}")
+#     key_indicators['our_income_for_all'] = key_indicators['market_cost'] * (1 - key_indicators['comission_and_exp_all'])
+#
+#     key_indicators['net_cost_med'] = (df[df["net_cost"] != 0]["net_cost"] * df[df["net_cost"] != 0][
+#         "quantity"]).sum() / df[df["net_cost"] != 0]["quantity"].sum()
+#
+#     df['net_cost'] = np.where(df.net_cost == 0, key_indicators['net_cost_med'], df.net_cost)
+#
+#     df['nets_cost'] = df['net_cost'] * df['quantity']
+#     key_indicators['nets_cost'] = df['nets_cost'].sum()
+#     df['sells_qt_with_back'] = df['quantity_Продажа_sum'] - df['quantity_Возврат_sum']
+#     key_indicators['sells_qt_with_back'] = df['sells_qt_with_back'].sum()
+#     df['revenue_per_one'] = [_revenue_per_one(rev, sel, net, log) for
+#                              rev, sel, net, log in
+#                              zip(df['Прибыль_sum'],
+#                                  df['sells_qt_with_back'],
+#                                  df['net_cost'],
+#                                  df['Логистика руб'],
+#                                  )]
+#     df['revenue_net_dif'] = [_revenue_net_dif(rev_per, net) for
+#                              rev_per, net in
+#                              zip(df['revenue_per_one'],
+#                                  df['net_cost'],
+#                                  )]
+#
+#     key_indicators['revenue_net_dif_med'] = df[df["revenue_net_dif"] != 1]["revenue_net_dif"].mean()
+#
+#     df['revenue_potential_cost'] = [
+#         _revenue_potential_cost(rev_per, net, qt, k_dif=key_indicators['revenue_net_dif_med']) for
+#         rev_per, net, qt in
+#         zip(df['revenue_per_one'],
+#             df['net_cost'],
+#             df['quantity'],
+#             )]
+#
+#     key_indicators['revenue_potential_cost'] = df['revenue_potential_cost'].sum()
+#
+#     for k, v in key_indicators.items():
+#         if not 'revenue_net_dif_med' in k:
+#             print(f'{k} {key_indicators[k]}')
+#             if key_indicators[k] > 1000:
+#                 key_indicators[k] = int(v)
+#
+#     df = df.from_dict(key_indicators, orient='index', columns=['key_indicator'])
+#
+#     return df

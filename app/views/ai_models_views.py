@@ -3,7 +3,7 @@ import logging
 from app import app
 from flask import render_template, request, send_file
 from flask_login import login_required
-from app.modules import models_module, io_output
+from app.modules import ai_models_module, io_output
 import pickle
 
 file_name_train = "wb_dynamic_revenue_report-2022-10-28-2023-01-28.xlsx"

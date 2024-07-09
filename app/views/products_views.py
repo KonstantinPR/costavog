@@ -1,5 +1,4 @@
 import app.modules.API_WB
-import logging
 from app import app
 import flask
 from flask import flash, render_template, request, redirect, send_file
@@ -8,7 +7,6 @@ from app.models import Company, Product, db
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
-from app.modules import discount, API_WB
 from app.modules import io_output
 
 
@@ -134,23 +132,23 @@ def drop_products():
     return render_template('upload_products.html')
 
 
-@app.route('/upload_turnover', methods=['POST', 'GET'])
-@login_required
-def upload_turnover():
-    """on 06/05/2023 need to be checked, not used for a long time"""
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
-
-    if request.method == 'POST':
-        uploaded_files = flask.request.files.getlist("file")
-        df = pd.read_excel(uploaded_files[0])
-        df.replace(np.NaN, "", inplace=True)
-        df_products = pd.read_sql(db.session.query(Product).statement, db.session.bind)
-        df = discount.discount(df, df_products)
-        file = io_output.io_output(df)
-
-        return send_file(file, download_name="excel.xlsx", as_attachment=True)
-
-    return render_template('upload_turnover.html')
+# @app.route('/upload_turnover', methods=['POST', 'GET'])
+# @login_required
+# def upload_turnover():
+#     """on 06/05/2023 need to be checked, not used for a long time"""
+#     if not current_user.is_authenticated:
+#         return redirect('/company_register')
+#
+#     if request.method == 'POST':
+#         uploaded_files = flask.request.files.getlist("file")
+#         df = pd.read_excel(uploaded_files[0])
+#         df.replace(np.NaN, "", inplace=True)
+#         df_products = pd.read_sql(db.session.query(Product).statement, db.session.bind)
+#         df = discount.discount(df, df_products)
+#         file = io_output.io_output(df)
+#
+#         return send_file(file, download_name="excel.xlsx", as_attachment=True)
+#
+#     return render_template('upload_turnover.html')
 
 

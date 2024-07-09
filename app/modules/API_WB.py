@@ -498,14 +498,16 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int = 7):
     """Get sales data from the Wildberries API v2"""
 
-    api_key = app.config['WB_API_TOKEN']  # Assuming you have the API token configured in your app
+    api_key = app.config['WB_API_TOKEN2']  # Assuming you have the API token configured in your app
     headers = {'Authorization': api_key}
-    url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod"
+    # url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod"
+    url = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
 
     url_params = {
         'dateFrom': date_from,
         'dateTo': date_to
     }
+    print(f"dateFrom {date_from}")
 
     response = requests.get(url, headers=headers, params=url_params)
     logging.warning(f'response {response}')

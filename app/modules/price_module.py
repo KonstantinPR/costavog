@@ -162,6 +162,12 @@ def calculate_ema(row, alpha, sales_columns):
 def normalize_around_one(value):
     return 1 + (1 - value) / 50
 
+def nice_price(plan_delta_discount: float, current_price: float) -> float:
+    """формирование цены в виде 995"""
+    new_price = int(round(current_price * (1 - plan_delta_discount / 100), 0))
+    nice_new_price = round(new_price, -2) - random.randint(1, 2) * 5
+    return nice_new_price
+
 
 def k_is_sell(pure_sells_qt, net_cost):
     '''v 1.0'''
@@ -333,11 +339,11 @@ def k_net_cost(net_cost, price_disc, k_norma_revenue):
         k_net_cost = 1
 
     if price_disc <= net_cost / 4:
-        return 0.80
+        return 0.60
     if price_disc <= net_cost / 2:
-        return 0.83
+        return 0.75
     if price_disc <= net_cost:
-        return 0.86
+        return 0.80
     if price_disc <= net_cost * k_net_cost:
         return 0.90
     if price_disc <= net_cost * ((0.50 * k_norma_revenue) * k_net_cost):

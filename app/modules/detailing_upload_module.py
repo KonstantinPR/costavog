@@ -14,6 +14,8 @@ from datetime import timedelta
 # file_names = [f for f in listdir('detailing')]
 # print(file_names)
 
+DEFAULT_AMOUNT_DAYS = 7
+
 MATERIAL_DICT = {
     'N30': 'N30',
     'N511': 'N511',
@@ -101,6 +103,16 @@ INITIAL_COLUMNS_DICT = {
 }
 
 
+def get_period_sales(df, date_min, date_max, default_amount_days=DEFAULT_AMOUNT_DAYS, days_fading=0.25):
+    days_period = (date_max - date_min).days
+    # days_period = 7
+
+    df['days_period'] = days_period
+    df['smooth_days'] = (df['days_period'] / default_amount_days) ** days_fading
+    print(f"smooth_days {df['smooth_days'].mean()}")
+    return df
+
+
 def rename_mapping(df, col_map, to='key'):
     # Rename columns to keys from INITIAL_COLUMNS_DICT
     rename_mapping = {}
@@ -123,7 +135,7 @@ def rename_mapping(df, col_map, to='key'):
     return df
 
 
-def zip_detail_V2(concatenated_dfs):
+def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     article_column_name = 'Артикул поставщика'
     df = concatenated_dfs
     # result.dropna(subset=["Артикул поставщика"], inplace=True)
@@ -191,6 +203,8 @@ def zip_detail_V2(concatenated_dfs):
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
+    if drop_duplicates_in:
+        df.drop_duplicates(subset=drop_duplicates_in)
     # df.to_excel('V2.xlsx')
 
     return df
@@ -213,7 +227,9 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shus
         df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
                                                      is_delete_shushary=is_delete_shushary)
         df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
-        df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
+        # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
+        df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
+        # df.to_excel("merged_storage.xlsx")
         df = df.fillna(0)
 
         df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
@@ -223,7 +239,7 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shus
         df['Хранение'] = df['Хранение'].fillna(0)
         print(f"df['Хранение'] {df['Хранение'].sum()}")
         # print(f"df['shareCost'] {df['shareCost']}")
-        df.to_excel("df.xlsx")
+        # df.to_excel("df.xlsx")
         df['Хранение'].to_excel("storage.xlsx")
         df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
         return df
@@ -234,7 +250,8 @@ def merge_net_cost(df, is_net_cost):
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df_net_cost['net_cost'].replace(np.NaN, 0, inplace=True)
         df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')
-        df = df.merge(df_net_cost, how='outer', left_on='nmId', right_on='nm_id')
+        df = pandas_handler.df_merge_drop(df, df_net_cost, 'nmId', 'nm_id', how="outer")
+        # df.to_excel("net_cost_merged.xlsx")
     else:
         df['net_cost'] = 0
 
@@ -265,7 +282,9 @@ def profit_count(df):
 def merge_price(df, testing_mode, is_get_price):
     if is_get_price:
         df_price, _ = API_WB.get_wb_price_api(testing_mode=testing_mode)
-        df = df.merge(df_price, how='outer', left_on='nmId', right_on='nmID')
+        # df = df.merge(df_price, how='outer', left_on='nmId', right_on='nmID')
+        df = pandas_handler.df_merge_drop(df, df_price, 'nmId', 'nmID', how="outer")
+        # df.to_excel("price_merged.xlsx")
         df['price_disc'] = df['price'] - df['price'] * df['discount'] / 100
     return df
 
@@ -698,12 +717,12 @@ def promofiling(promo_file, df, allowed_delta_percent=10):
     if not promo_file:
         return None
 
-
     # Read the promo file into a DataFrame
     df_promo = pd.read_excel(promo_file)
 
     # Merge df_promo with df
-    df_promo = df_promo.merge(df, how='left', left_on="Артикул WB", right_on="nmId")
+    # df_promo = df_promo.merge(df, how='left', left_on="Артикул WB", right_on="nmId")
+    df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
     df_promo = check_discount(df_promo, allowed_delta_percent)
 
     return df_promo
@@ -729,8 +748,9 @@ def check_discount(df, allowed_delta_percent):
     df["Allowed"] = "Yes"
 
     # Update promo discounts based on allowed delta percent
-    df.loc[df["price_difference"] > allowed_ratio, promo_discount_name] = df[new_discount_col]
-    df.loc[df["price_difference"] > allowed_ratio, "Allowed"] = "No"
+    df.loc[df["price_difference"] >= allowed_ratio, promo_discount_name] = df[promo_discount_name]
+    df.loc[df["price_difference"] < allowed_ratio, promo_discount_name] = df[new_discount_col]
+    df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
 
     return df
 

@@ -67,20 +67,25 @@ def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrang
     return df
 
 
-def df_merge_drop(left_df, right_df, left_on, right_on):
+def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
     # Generate random suffixes
 
     left_suffix = f'_col_on_drop_x_{randrange(10)}'
     right_suffix = f'_col_on_drop_y_{randrange(10)}'
 
     # Merge dataframes
-    merged_df = pd.merge(left_df, right_df, how='left', left_on=left_on, right_on=right_on,
+    merged_df = pd.merge(left_df, right_df, how=how, left_on=left_on, right_on=right_on,
                          suffixes=(left_suffix, right_suffix))
 
     # print(f"merged_df {merged_df}")
 
     # Rename columns containing '_col_on_drop_x' by removing that part
     merged_df.rename(columns=lambda x: x.replace(left_suffix, ''), inplace=True)
+
+    if how == 'outer':
+        # Update the left_on column with values from right_on where they are missing
+        condition = merged_df[left_on].isin(FALSE_LIST)
+        merged_df.loc[condition, left_on] = merged_df[right_on]
 
     # Drop columns with '_col_on_drop_y'
     columns_to_drop = [col for col in merged_df.columns if right_suffix in col]
@@ -214,14 +219,14 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     df_disc_template["Артикул WB"] = unique_nmID_values
 
     # Merge with the main DataFrame to get relevant columns
-    df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId")
+    df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
 
     # Initialize "Новая скидка" with "new_discount" from the main DataFrame
     df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
 
     # If promo DataFrame is provided, merge and update "Новая скидка"
     if df_promo is not None:
-        df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB")
+        df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB", how='outer')
         df_disc_template["Новая скидка"] = df_disc_template["Загружаемая скидка для участия в акции"].fillna(
             df_disc_template["Новая скидка"])
 

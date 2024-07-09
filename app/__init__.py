@@ -167,8 +167,7 @@ from app.views import images_foldering_views
 from app.views import barcode_views
 from app.views import data_transforming
 from app.views import warehouse_views
-from app.views import models_views
-from app.views import youtube_views
+from app.views import ai_models_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
