@@ -16,7 +16,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
 def upload_detailing():
-    """Analize detailing of excel that can be downloaded in wb portal in zips, you can put any number zips"""
+    """Analize detailing of excel that can be downloaded in wb portal in zips, you can put any number zips."""
 
     if not current_user.is_authenticated:
         return redirect('/company_register')
@@ -50,7 +50,6 @@ def upload_detailing():
                                                     testing_mode=testing_mode)
 
     INCLUDE_COLUMNS = list(detailing_upload_module.INITIAL_COLUMNS_DICT.values())
-
 
     if not uploaded_files:
         flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")

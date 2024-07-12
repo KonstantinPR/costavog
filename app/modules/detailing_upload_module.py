@@ -63,6 +63,8 @@ INITIAL_COLUMNS_DICT = {
     'outcome': 'Маржа',
     'income-logistic': 'Выручка-Логистика',
     'income': 'Выручка',
+    'hold_up': 'Удержания_minus',
+    'hold_down': 'Удержания_plus',
     'Ч. Продажа': 'Ч. Продажа',
     'sell': 'Продажа',
     'Ч. Продажа шт./Логистика шт.': 'Ч. Продажа шт./Логистика шт.',
@@ -164,8 +166,14 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     logistic_name = 'Логистика'
     type_delivery_service_col_name = 'Услуги по доставке товара покупателю'
 
-    compensation_substituted_col_name = 'Компенсация подмененного товара'
+    substituted_col_name = 'Компенсация подмененного товара'
+    damages_col_name = 'Компенсация ущерба'
+    penalty_col_name = 'Штраф'
     type_sales_col_name = 'К перечислению Продавцу за реализованный Товар'
+    type_penalty_col_name = 'Общая сумма штрафов'
+    type_acquiring_col_name = 'Возмещение издержек по эквайрингу'
+    type_give_col_name = 'Возмещение за выдачу и возврат товаров на ПВЗ'
+    type_store_moves_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
 
     qt_col_name = 'Кол-во'
     qt_logistic_to_col_name = 'Количество доставок'
@@ -174,18 +182,26 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df_sales = pivot_expanse(df, sales_name, type_sales_col_name_all)
     df_backs = pivot_expanse(df, backs_name, type_sales_col_name_all)
     df_logistic = pivot_expanse(df, logistic_name, type_delivery_service_col_name)
-    df_compensation_substituted = pivot_expanse(df, compensation_substituted_col_name, type_sales_col_name)
+    df_compensation_substituted = pivot_expanse(df, substituted_col_name, type_sales_col_name)
+    df_compensation_damages = pivot_expanse(df, damages_col_name, type_sales_col_name)
+    df_penalty = pivot_expanse(df, penalty_col_name, type_penalty_col_name)
+    df_acquiring = pivot_expanse(df, sales_name, type_acquiring_col_name, col_name="Эквайринг")
+    df_give_to = pivot_expanse(df, sales_name, type_give_col_name, col_name="При выдачи от")
+    df_give_back = pivot_expanse(df, backs_name, type_give_col_name, col_name="При выдачи в")
+    df_store_moves = pivot_expanse(df, type_store_moves_col_name, type_store_moves_col_name, col_name='Склады удержали')
     df_qt_sales = pivot_expanse(df, sales_name, qt_col_name, col_name='Продажа, шт.')
     df_qt_backs = pivot_expanse(df, backs_name, qt_col_name, col_name='Возврат, шт.')
     df_qt_logistic_to = pivot_expanse(df, logistic_name, qt_logistic_to_col_name, col_name='Логистика до, шт.')
     df_qt_logistic_back = pivot_expanse(df, logistic_name, qt_logistic_back_col_name, col_name='Логистика от, шт.')
 
     df = df.drop_duplicates(subset=[article_column_name])
-    dfs = [df_sales, df_backs, df_logistic, df_compensation_substituted, df_qt_sales, df_qt_backs, df_qt_logistic_to,
+    dfs = [df_sales, df_backs, df_logistic, df_compensation_substituted, df_compensation_damages, df_penalty,
+           df_acquiring, df_give_to, df_give_back, df_store_moves, df_qt_sales, df_qt_backs, df_qt_logistic_to,
            df_qt_logistic_back]
+
     for d in dfs:
         df = pd.merge(df, d, how='outer', on=article_column_name)
-    # dfs_names = [sales_name, logistic_name, backs_name, compensation_substituted_col_name]
+    # dfs_names = [sales_name, logistic_name, backs_name, substituted_col_name]
     df = df.fillna(0)
 
     # warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
@@ -194,12 +210,18 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     # storage_col_name = 'Хранение'
     # penalty_col_name = 'Штраф'
 
+    # df.to_excel("v2.xlsx")
+
     df['Ч. Продажа'] = df['Продажа'] - df['Возврат']
     df['Ч. Продажа шт.'] = df['Продажа, шт.'] - df['Возврат, шт.']
     df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
     df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
-    df['Выручка'] = df[sales_name] - df[backs_name] - df[compensation_substituted_col_name]
+    df['Удержания_plus'] = df[damages_col_name] + df[substituted_col_name]
+    df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['При выдачи от'] + df['При выдачи в'] + df[
+        'Склады удержали']
+    df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
+
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
@@ -306,6 +328,7 @@ def pivot_expanse(df, type_name, sum_name, agg_col_name='Артикул пост
         df = df.rename(columns={sum_name: f'{str(col_name)}'})
     else:
         df = df.rename(columns={sum_name: f'{str(type_name)}'})
+
     return df
 
 

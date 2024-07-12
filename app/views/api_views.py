@@ -48,8 +48,11 @@ def get_cards_wb():
     """
 
     if request.method == 'POST':
+        is_to_yadisk = request.form.get('is_to_yadisk')
         is_from_yadisk = request.form.get('is_from_yadisk')
-        df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
+        limit_cards = request.form.get('limit_cards', 0)
+        df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk, is_to_yadisk=is_to_yadisk,
+                                                   limit_cards=limit_cards)
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -63,11 +66,12 @@ def get_stock_wb():
     Достает все остатки с WB через API, на яндекс диск сохранится без городов и размеров
     """
     is_delete_shushary = request.form.get('is_delete_shushary')
+    testing_mode = request.form.get('testing_mode')
     logging.warning(f"is_delete_shushary {is_delete_shushary}")
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
         logging.warning(f"request {request}")
-        df = API_WB.get_wb_stock_api(request=request, is_delete_shushary=is_delete_shushary)
+        df = API_WB.get_wb_stock_api(request=request, is_delete_shushary=is_delete_shushary, testing_mode=testing_mode)
         df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
     return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)

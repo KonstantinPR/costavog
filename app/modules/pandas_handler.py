@@ -193,7 +193,7 @@ def files_to_zip(list_files: list, list_names: list):
                 zip_file.writestr(name, df_output.getvalue())
 
     zip_buffer.seek(0)
-    return zip_buffer, 'detailing_promo_files.zip'
+    return zip_buffer, 'zip_files.zip'
 
 
 def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):

@@ -217,8 +217,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
 
 
 def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
-                     is_upload_yandex=True,
-                     date_from: str = '2019-01-01'):
+                     is_upload_yandex=True, date_from: str = '2019-01-01'):
     """
     get wb stock via api put in df
     :return: df
@@ -386,7 +385,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
 #     return df
 
 
-def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=True, textSearch: str = None,
+def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=False, textSearch: str = None,
                          is_unique=False, limit_cards=None):
     """get_all_cards_api_wb"""
 
@@ -445,11 +444,12 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
         dfs += df_json['cards']
         count = count + total
 
-        if limit_cards and count > limit_cards:
+        if limit_cards and count > int(limit_cards):
             break
 
     logging.warning(f"{get_all_cards_api_wb.__name__} forming df ...")
-    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions"], errors='ignore')
+    df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions", "characteristics"],
+                           errors='ignore')
 
     if is_to_yadisk:
         io_df = io_output.io_output(df)

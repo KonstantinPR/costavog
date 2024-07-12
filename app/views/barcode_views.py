@@ -1,18 +1,15 @@
 from werkzeug.datastructures import FileStorage
-import logging
 from app import app
 from flask import flash, render_template, request, send_file
 import pandas as pd
 from flask_login import login_required
-from PIL import Image
 from PIL import ImageDraw, ImageFont
 from app.modules import io_output, zip_handler
-import treepoem
 import os
 from barcode.writer import ImageWriter
 from io import BytesIO
 from barcode import Code128
-
+import treepoem
 import io
 import zipfile
 from PIL import Image
@@ -22,10 +19,7 @@ from flask import make_response
 @app.route('/testbarcodegpt', methods=['GET', 'POST'])
 @login_required
 def testbarcodegpt():
-    import io
-    import zipfile
-    import treepoem
-    from flask import Flask, make_response
+
 
     # Your list of strings
     data = ["string1", "string2", "string3"]

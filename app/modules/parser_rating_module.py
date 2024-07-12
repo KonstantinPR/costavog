@@ -1,4 +1,5 @@
 import logging
+
 import pandas as pd
 from app import app
 from app.modules import io_output, request_handler, yandex_disk_handler, API_WB, pandas_handler
@@ -7,60 +8,55 @@ from random import randint
 
 
 def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=500):
-    try:
-        # Retrieve unique nmIDs from the API
-        nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
-        # nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
-        logging.warning(f"nmIDs is {len(nmIDs)} cards ...")
-        print(f"nmIDs is {len(nmIDs)} cards ...")
+    # Retrieve unique nmIDs from the API
+    nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
+    # nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
+    logging.warning(f"nmIDs is {len(nmIDs)} cards ...")
+    print(f"nmIDs is {len(nmIDs)} cards ...")
 
-        # Split nmIDs into batches
-        nmID_batches = [nmIDs[i:i + batch_size] for i in range(0, len(nmIDs), batch_size)]
+    # Split nmIDs into batches
+    nmID_batches = [nmIDs[i:i + batch_size] for i in range(0, len(nmIDs), batch_size)]
 
-        # Iterate through batches
-        gotten_cards = batch_size
-        for nmID_batch in nmID_batches:
-            logging.warning(f"got ratings on {gotten_cards} cards ...")
+    # Iterate through batches
+    gotten_cards = batch_size
+    for nmID_batch in nmID_batches:
+        logging.warning(f"got ratings on {gotten_cards} cards ...")
 
-            # Create a new DataFrame to store ratings
-            rating_df = pd.DataFrame(columns=[col_name, 'Rating', 'Feedbacks'])
+        # Create a new DataFrame to store ratings
+        rating_df = pd.DataFrame(columns=[col_name, 'Rating', 'Feedbacks'])
 
-            # Fill in the 'Артикул' column with the current batch of nmIDs
-            rating_df[col_name] = nmID_batch
+        # Fill in the 'Артикул' column with the current batch of nmIDs
+        rating_df[col_name] = nmID_batch
 
-            # Download the current DataFrame from Yandex Disk
-            current_df, _ = yandex_disk_handler.download_from_YandexDisk(path='RATING')
+        # Download the current DataFrame from Yandex Disk
+        current_df, _ = yandex_disk_handler.download_from_YandexDisk(path='RATING')
 
-            # Update ratings in the current DataFrame
-            rating_df = get_rating(rating_df, col_name=col_name, is_to_yadisk=False)
+        # Update ratings in the current DataFrame
+        rating_df = get_rating(rating_df, col_name=col_name, is_to_yadisk=False)
 
-            # Set the 'key' column as index
-            current_df.set_index(col_name, inplace=True)
-            rating_df.set_index(col_name, inplace=True)
+        # Set the 'key' column as index
+        current_df.set_index(col_name, inplace=True)
+        rating_df.set_index(col_name, inplace=True)
 
-            # Update values in df1 using values from df2
-            current_df.update(rating_df)
+        # Update values in df1 using values from df2
+        current_df.update(rating_df)
 
-            # Reset index to make 'key' a column again
-            current_df.reset_index(inplace=True)
+        # Reset index to make 'key' a column again
+        current_df.reset_index(inplace=True)
 
-            # merged_df = pandas_handler.df_col_merging(current_df, rating_df, col_name)
+        # merged_df = pandas_handler.df_col_merging(current_df, rating_df, col_name)
 
-            # # Filter out columns with the '_DROP' suffix
-            # merged_df = merged_df.filter(regex='^(?!.*_DROP)')
+        # Filter out columns with the '_DROP' suffix
+        # merged_df = merged_df.filter(regex='^(?!.*_DROP)')
 
-            # Save the updated DataFrame to Yandex Disk
-            io_df = io_output.io_output(current_df)
-            file_name = f'rating.xlsx'
-            logging.warning(f'Updated DataFrame uploaded to YandexDisk with name {file_name}')
-            yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
-            gotten_cards += len(nmID_batch)
+        # Save the updated DataFrame to Yandex Disk
+        io_df = io_output.io_output(current_df)
+        file_name = f'rating.xlsx'
+        logging.warning(f'Updated DataFrame uploaded to YandexDisk with name {file_name}')
+        yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
+        gotten_cards += len(nmID_batch)
 
-        return current_df
-
-    except Exception as e:
-        logging.exception(f"An error occurred: {e}")
-        return None
+    return current_df
 
 
 def get_rating(df, col_name='Артикул', is_to_yadisk=True):

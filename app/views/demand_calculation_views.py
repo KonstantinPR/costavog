@@ -5,7 +5,7 @@ from werkzeug.datastructures import FileStorage
 import logging
 from app import app
 from flask import render_template, request, send_file, flash
-from app.modules import io_output, demand_calculation_module, request_handler
+from app.modules import io_output, demand_calculation_module, request_handler, pandas_handler
 import pandas as pd
 
 
@@ -24,14 +24,24 @@ def demand_calculation_excel():
         df = request_handler.to_df(request)
         search_string = str(request.form['search_string'])
         min_stock = int(request.form['min_stock'])
-        testing_mode = False
+        testing_mode = request.form.get('testing_mode')
+        is_from_yadisk = request.form.get('is_from_yadisk')
+
         df = demand_calculation_module.demand_calculation_to_df(df, search_string, min_stock=min_stock,
-                                                                testing_mode=testing_mode)
-        df = io_output.io_output(df)
+                                                                testing_mode=testing_mode,
+                                                                is_from_yadisk=is_from_yadisk)
+        df_clear = demand_calculation_module.clear_demand(df)
+
         file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
+        clear_name = f"clear_demand_{str(datetime.date.today())}.xlsx"
+        dfs = [df, df_clear]
+        names = [file_name, clear_name]
+
+        zip_files, name_files = pandas_handler.files_to_zip(list_files=dfs, list_names=names)
+
         # df.to_excel("df_output.xlsx")
 
-        return send_file(df, download_name=file_name, as_attachment=False)
+        return send_file(zip_files, download_name=name_files, as_attachment=False)
     return render_template('upload_demand_calculation_with_image_catalog.html',
                            doc_string=demand_calculation_excel.__doc__)
 
@@ -43,7 +53,7 @@ def demand_calculation_with_image_catalog():
     Каталог PDF с потребностями:
     Делает PDF каталог с потребностями. С фото артикула и другой информацией.
     Работает на локальном яндекс.диске.
-    Напечатает те артикулы, которые передали в txt с шапкой vendorCode, [techSize], [Кол-во]  или через копипасту.
+    Напечатает те артикулы, которые передали в txt с шапкой vendorCode, techSize, Кол-во  или через копипасту.
     Если не указаны размеры - тогда по 1й, если не указаны размеры - то скачается через API анализ какие размеры нужны
     (долго).
     В строке пишем через пробел подстроки, которые ищем в артикуле, которые хотим вывести в каталог.

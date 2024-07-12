@@ -46,9 +46,18 @@ def count_norma_revenue(df):
     bank_percentage = 0.2
     k_bank_leverage = 2
     k = bank_percentage * k_bank_leverage
-    expenses = (df['Хранение'].sum() + df['Логистика'].sum())
-    clear_sells = df['Ч. Продажа'].sum()
-    k_norma_revenue = 1 + (expenses / (clear_sells - expenses)) + k
+    expenses = df['Хранение'].sum() + df['Логистика'].sum() + df['Удержания_minus'].sum()
+    clear_sells = df['Ч. Продажа'].sum() + df['Удержания_plus'].sum()
+    revenue = clear_sells - expenses
+
+    if expenses <= 0:
+        expenses = 0
+
+    k_norma_revenue = 1 + (expenses / revenue) + k
+
+    if revenue <= 0:
+        k_norma_revenue = 100
+
     df['k_norma_revenue'] = k_norma_revenue
 
     return k_norma_revenue
@@ -161,6 +170,7 @@ def calculate_ema(row, alpha, sales_columns):
 # Define the normalization function
 def normalize_around_one(value):
     return 1 + (1 - value) / 50
+
 
 def nice_price(plan_delta_discount: float, current_price: float) -> float:
     """формирование цены в виде 995"""
