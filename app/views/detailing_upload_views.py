@@ -50,21 +50,21 @@ def extract_financial_data_from_pdf():
             return f"Failed to process PDF file: {str(e)}", 500
 
         print("Extracted Text:\n", text)  # Debug: Print the extracted text
-
+        default_pattern = r".*?(\d{1,9}(?:\.\d{2})*,\d{2})"
         # Define patterns for extracting financial data
         patterns = {
-            "total_product_value": r"Всего стоимость реализованного товара.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "total_deducted_value": r"Итого зачтено из стоимости реализованного товара.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "wildberries_reward": r"Сумма вознаграждения Вайлдберриз.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "vat": r"НДС с вознаграждения Вайлдберриз.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "international_shipping_cost": r"Стоимость услуг Вайлдберриз по организации международной перевозки.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "acquiring_costs": r"Возмещение издержек по эквайрингу.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "agent_expenses": r"Возмещение расходов поверенного.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "penalties": r"Штрафы.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "other_deductions": r"Прочие удержания.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "compensation_damage": r"Компенсация ущерба.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "other_payments": r"Прочие выплаты.*?(\d{1,9}(?:\.\d{2})*,\d{2})",
-            "final_amount": r"Итого к перечислению Продавцу за текущий период.*?(\d{1,9}(?:\.\d{2})*,\d{2})"
+            "total_product_value": r"Всего стоимость реализованного товара" + default_pattern,
+            "total_deducted_value": r"Итого зачтено из стоимости реализованного товара" + default_pattern,
+            "wildberries_reward": r"Сумма вознаграждения Вайлдберриз" + default_pattern,
+            "vat": r"НДС с вознаграждения Вайлдберриз" + default_pattern,
+            "international_shipping_cost": r"Стоимость услуг Вайлдберриз по организации международной перевозки" + default_pattern,
+            "acquiring_costs": r"Возмещение издержек по эквайрингу" + default_pattern,
+            "agent_expenses": r"Возмещение расходов поверенного" + default_pattern,
+            "penalties": r"Штрафы" + default_pattern,
+            "other_deductions": r"Прочие удержания" + default_pattern,
+            "compensation_damage": r"Компенсация ущерба" + default_pattern,
+            "other_payments": r"Прочие выплаты" + default_pattern,
+            "final_amount": r"Итого к перечислению Продавцу за текущий период" + default_pattern
         }
 
         # Define the desired column names
