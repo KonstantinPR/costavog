@@ -4,7 +4,7 @@ from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module, API_WB
-from app.modules import sales_funnel_module
+from app.modules import sales_funnel_module, implementation_report, request_handler
 from app.modules import detailing_api_module
 import numpy as np
 import re
@@ -24,157 +24,24 @@ def extract_financial_data_from_pdf():
         return render_template('upload_weekly_implementation_report.html',
                                doc_string=extract_financial_data_from_pdf.__doc__)
 
-    # Check if the post request has the file part
-    if 'file' not in request.files:
-        return 'No file part', 400
-
-    pdf_files = request.files.getlist("file")
-
-    # Ensure at least one file is uploaded
-    if len(pdf_files) == 0:
-        return 'No files uploaded', 400
-
-    all_data = []
-
-    for pdf_file in pdf_files:
-        try:
-            # Use pdfplumber to open the PDF file
-            with pdfplumber.open(pdf_file) as pdf:
-                text = ''
-                for page in pdf.pages:
-                    # Extract text from each page
-                    page_text = page.extract_text() or ''
-                    text += page_text
-
-        except Exception as e:
-            return f"Failed to process PDF file: {str(e)}", 500
-
-        print("Extracted Text:\n", text)  # Debug: Print the extracted text
-        default_pattern = r".*?(\d{1,9}(?:\.\d{2})*,\d{2})"
-        # Define patterns for extracting financial data
-        patterns = {
-            "total_product_value": r"Всего стоимость реализованного товара" + default_pattern,
-            "total_deducted_value": r"Итого зачтено из стоимости реализованного товара" + default_pattern,
-            "wildberries_reward": r"Сумма вознаграждения Вайлдберриз" + default_pattern,
-            "vat": r"НДС с вознаграждения Вайлдберриз" + default_pattern,
-            "international_shipping_cost": r"Стоимость услуг Вайлдберриз по организации международной перевозки" + default_pattern,
-            "acquiring_costs": r"Возмещение издержек по эквайрингу" + default_pattern,
-            "agent_expenses": r"Возмещение расходов поверенного" + default_pattern,
-            "penalties": r"Штрафы" + default_pattern,
-            "other_deductions": r"Прочие удержания" + default_pattern,
-            "compensation_damage": r"Компенсация ущерба" + default_pattern,
-            "other_payments": r"Прочие выплаты" + default_pattern,
-            "final_amount": r"Итого к перечислению Продавцу за текущий период" + default_pattern
-        }
-
-        # Define the desired column names
-        column_names = {
-            "total_product_value": "Всего стоимость реализованного товара",
-            "total_deducted_value": "Итого зачтено из стоимости реализованного товара",
-            "wildberries_reward": "Сумма вознаграждения Вайлдберриз",
-            "vat": "НДС с вознаграждения Вайлдберриз",
-            "international_shipping_cost": "Стоимость услуг Вайлдберриз по организации международной перевозки",
-            "acquiring_costs": "Возмещение издержек по эквайрингу",
-            "agent_expenses": "Возмещение расходов поверенного",
-            "penalties": "Штрафы",
-            "other_deductions": "Прочие удержания",
-            "compensation_damage": "Компенсация ущерба",
-            "other_payments": "Прочие выплаты",
-            "final_amount": "Итого к перечислению Продавцу за текущий период"
-        }
-
-        # Extract values using regex
-        extracted_data = {}
-        for key, pattern in patterns.items():
-            match = re.search(pattern, text, re.DOTALL)
-            if match:
-                # Replace commas with periods for float conversion
-                value = float(match.group(1).replace(',', '.'))
-                extracted_data[column_names[key]] = value
-                print(f"{column_names[key]}: {extracted_data[column_names[key]]}")  # Debug: Print extracted value
-            else:
-                extracted_data[column_names[key]] = None
-                print(f"{column_names[key]}: No match found")  # Debug: Indicate no match
-
-        # Extract additional information: file name, document number, and period
-        file_name = pdf_file.filename
-        extracted_data["Имя файла"] = file_name
-        print(f"File Name: {file_name}")  # Debug: Print the file name
-
-        # Pattern to extract document number
-        doc_number_pattern = r"Отчет Вайлдберриз[а-яА-Яa-zA-Z\s]*.\s*(\d+)\s*от\s*"
-        doc_number_match = re.search(doc_number_pattern, text)
-        if doc_number_match:
-            document_number = doc_number_match.group(1)
-            extracted_data["Номер документа"] = f"{document_number}"
-            print(f"Document Number: {extracted_data['Номер документа']}")  # Debug: Print the document number
-        else:
-            extracted_data["Номер документа"] = None
-            print("Document Number: No match found")  # Debug: Indicate no match
-
-        # Pattern to extract period
-        period_pattern = r"за период с (\d{4}-\d{2}-\d{2}) по (\d{4}-\d{2}-\d{2})"
-        period_match = re.search(period_pattern, text)
-        if period_match:
-            start_date_str = period_match.group(1)
-            end_date_str = period_match.group(2)
-            extracted_data["Дата начала"] = start_date_str
-            extracted_data["Дата окончания"] = end_date_str
-            print(f"Start Date: {start_date_str}, End Date: {end_date_str}")  # Debug: Print the start and end dates
-        else:
-            extracted_data["Дата начала"] = None
-            extracted_data["Дата окончания"] = None
-            print("Period: No match found")  # Debug: Indicate no match
-
-        # Calculate new columns
-        extracted_data["Добавить доход в бухгалтерию"] = extracted_data[column_names["total_product_value"]] - \
-                                                         extracted_data[column_names["final_amount"]] + \
-                                                         extracted_data[column_names["compensation_damage"]] + \
-                                                         extracted_data[column_names["other_payments"]]
-
-        total_deducted_value = extracted_data.get("Итого зачтено из стоимости реализованного товара", 0) or 0
-        penalties = extracted_data.get("Штрафы", 0) or 0
-        other_deductions = extracted_data.get("Прочие удержания", 0) or 0
-        compensation_damage = extracted_data.get("Компенсация ущерба", 0) or 0
-        extracted_data["Добавить расход в бухгалтерию"] = total_deducted_value - penalties
-
-        # Extract the period and determine the quarter
-        date_pattern = r"за период с (\d{4}-\d{2}-\d{2}) по (\d{4}-\d{2}-\d{2})"
-        date_match = re.search(date_pattern, text)
-        if date_match:
-            start_date_str = date_match.group(1)
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-            quarter = (start_date.month - 1) // 3 + 1
-            extracted_data['Квартал'] = f'Q{quarter}'
-            print(f"Quarter: Q{quarter}")  # Debug: Print the quarter
-        else:
-            extracted_data['Квартал'] = None
-            print("Quarter: No match found")  # Debug: Indicate no match
-
-        # Collect data from each PDF
-        all_data.append(extracted_data)
+    pdf_files = request_handler.get_files(request)
+    all_data = implementation_report.pdf_files_process(pdf_files)
 
     # Convert the collected data into a DataFrame
     df = pd.DataFrame(all_data)
 
     # Calculate totals for each quarter
-    df.loc['Total'] = df.sum(numeric_only=True)
-    df_totals = df.groupby('Квартал').sum(numeric_only=True).reset_index()
-    df_totals['Квартал'] = df_totals['Квартал'].astype(str)
-    # df_totals = df_totals.rename(columns=lambda x: f"total_by_quarter_{x}" if x != 'Квартал' else 'Квартал')
+    df_totals = implementation_report.totals_calculate(df)
 
     # Calculate grand totals
-    grand_totals = df.sum(numeric_only=True).to_frame().T
-    grand_totals['Квартал'] = 'Total'
-    # grand_totals = grand_totals.rename(columns=lambda x: f"total_by_quarter_{x}" if x != 'Квартал' else 'Квартал')
+    df_grand = implementation_report.grand_calculate(df)
 
     # Create a DataFrame for totals by quarter and grand totals
-    # totals_df = pd.concat([df_totals, grand_totals], ignore_index=True)
-    zip_name = "upload_weekly_implementation_report"
+    zip_name = "upload_weekly_implementation_report.zip"
     name = "detailing_for_tax_purpose.xlsx"
     name_quarter = "detailing_for_tax_purpose_by_quarter.xlsx"
     name_total = "detailing_for_tax_purpose_total.xlsx"
-    file, zip_name = pandas_handler.files_to_zip([df, df_totals, grand_totals], [name, name_quarter, name_total])
+    file, zip_name = pandas_handler.files_to_zip([df, df_totals, df_grand], [name, name_quarter, name_total], zip_name)
 
     return send_file(file, download_name=zip_name, as_attachment=True)
 

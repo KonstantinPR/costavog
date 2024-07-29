@@ -174,7 +174,7 @@ def round_df_if(df, half=10):
     return df
 
 
-def files_to_zip(list_files: list, list_names: list):
+def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
     print(f"files_to_zip...")
     # Check if list_files has exactly one non-None element
     valid_files = [file for file in list_files if file is not None]
@@ -193,7 +193,7 @@ def files_to_zip(list_files: list, list_names: list):
                 zip_file.writestr(name, df_output.getvalue())
 
     zip_buffer.seek(0)
-    return zip_buffer, 'zip_files.zip'
+    return zip_buffer, zip_name
 
 
 def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):

@@ -9,6 +9,20 @@ from werkzeug.datastructures import FileStorage
 
 DATE_FORMAT = "%Y-%m-%d"
 
+
+def get_files(request):
+    # Check if the post request has the file part
+    if 'file' not in request.files:
+        return 'No file part', 400
+
+    files = request.files.getlist("file")
+
+    # Ensure at least one file is uploaded
+    if len(files) == 0:
+        return 'No files uploaded', 400
+    return files
+
+
 def to_df(request, html_text_input_name='text_input', html_file_input_name='file', input_column='vendorCode'):
     """To get request and take from it text_input and make from it df, or take file and make df"""
     df = pd.DataFrame
