@@ -18,7 +18,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 @app.route('/extract_financial_data_from_pdf', methods=['POST', 'GET'])
 @login_required
 def extract_financial_data_from_pdf():
-    """Extract financial data from uploaded PDF files."""
+    """Extract financial data from uploaded PDF files weekly_implementation_report.pdf"""
 
     if request.method != 'POST':
         return render_template('upload_weekly_implementation_report.html',
@@ -96,10 +96,37 @@ def extract_financial_data_from_pdf():
                 extracted_data[column_names[key]] = None
                 print(f"{column_names[key]}: No match found")  # Debug: Indicate no match
 
+        # Extract additional information: file name, document number, and period
+        file_name = pdf_file.filename
+        extracted_data["Имя файла"] = file_name
+        print(f"File Name: {file_name}")  # Debug: Print the file name
+
+        # Pattern to extract document number
+        doc_number_pattern = r"Отчет Вайлдберриз[а-яА-Яa-zA-Z\s]*.\s*(\d+)\s*от\s*"
+        doc_number_match = re.search(doc_number_pattern, text)
+        if doc_number_match:
+            document_number = doc_number_match.group(1)
+            extracted_data["Номер документа"] = f"{document_number}"
+            print(f"Document Number: {extracted_data['Номер документа']}")  # Debug: Print the document number
+        else:
+            extracted_data["Номер документа"] = None
+            print("Document Number: No match found")  # Debug: Indicate no match
+
+        # Pattern to extract period
+        period_pattern = r"за период с (\d{4}-\d{2}-\d{2}) по (\d{4}-\d{2}-\d{2})"
+        period_match = re.search(period_pattern, text)
+        if period_match:
+            start_date_str = period_match.group(1)
+            end_date_str = period_match.group(2)
+            extracted_data["Дата начала"] = start_date_str
+            extracted_data["Дата окончания"] = end_date_str
+            print(f"Start Date: {start_date_str}, End Date: {end_date_str}")  # Debug: Print the start and end dates
+        else:
+            extracted_data["Дата начала"] = None
+            extracted_data["Дата окончания"] = None
+            print("Period: No match found")  # Debug: Indicate no match
+
         # Calculate new columns
-        # total_product_value = extracted_data.get("Всего стоимость реализованного товара", 0) or 0
-        # final_amount = extracted_data.get("Итого к перечислению Продавцу за текущий период", 0) or 0
-        # final_amount = extracted_data.get("Итого к перечислению Продавцу за текущий период", 0) or 0
         extracted_data["Добавить доход в бухгалтерию"] = extracted_data[column_names["total_product_value"]] - \
                                                          extracted_data[column_names["final_amount"]] + \
                                                          extracted_data[column_names["compensation_damage"]] + \
