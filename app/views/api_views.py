@@ -1,4 +1,6 @@
 import logging
+
+import app.modules.request_handler
 from app import app
 from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
@@ -30,9 +32,9 @@ def get_sales_wb():
     """
 
     if request.method == 'POST':
-        date_from = detailing_api_module.request_date_from(request, delta=28)
-        date_end = detailing_api_module.request_date_end(request)
-        days_step = detailing_api_module.request_days_step(request)
+        date_from = request_handler.request_date_from(request, delta=28)
+        date_end = request_handler.request_date_end(request)
+        days_step = request_handler.request_days_step(request)
         df_sales = API_WB.get_wb_sales_realization_api_v2(date_from, date_end, days_step)
         df = io_output.io_output(df_sales)
         file_name = f'wb_sales_{str(date_from)}_{str(date_end)}.xlsx'
@@ -107,59 +109,59 @@ def get_storage_wb():
     return render_template('upload_storage_wb.html', doc_string=get_storage_wb.__doc__)
 
 
-@app.route('/get_wb_sales_realization_api', methods=['POST', 'GET'])
-@login_required
-def get_wb_sales_realization_api():
-    """To get speed of sales for all products in period"""
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
-    if request.method == 'POST':
-        date_from = detailing_api_module.request_date_from(request)
-        date_end = detailing_api_module.request_date_end(request)
-        days_step = detailing_api_module.request_days_step(request)
-        t = time.process_time()
-        logging.warning(time.process_time() - t)
-        # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
-        # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-        logging.warning(time.process_time() - t)
-        file = io_output.io_output(df_sales_wb_api)
-        logging.warning(time.process_time() - t)
-        return send_file(file, download_name=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
-                         as_attachment=True)
+# @app.route('/get_wb_sales_realization_api', methods=['POST', 'GET'])
+# @login_required
+# def get_wb_sales_realization_api():
+#     """To get speed of sales for all products in period"""
+#     if not current_user.is_authenticated:
+#         return redirect('/company_register')
+#     if request.method == 'POST':
+#         date_from = request_handler.request_date_from(request)
+#         date_end = request_handler.request_date_end(request)
+#         days_step = request_handler.request_days_step(request)
+#         t = time.process_time()
+#         logging.warning(time.process_time() - t)
+#         # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
+#         # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
+#         df_sales_wb_api = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
+#         logging.warning(time.process_time() - t)
+#         file = io_output.io_output(df_sales_wb_api)
+#         logging.warning(time.process_time() - t)
+#         return send_file(file, download_name=f"wb_sales_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx",
+#                          as_attachment=True)
+#
+#     return render_template('upload_get_dynamic_sales.html')
 
-    return render_template('upload_get_dynamic_sales.html')
-
-
-@app.route('/get_wb_pivot_sells_api', methods=['POST', 'GET'])
-@login_required
-def get_wb_pivot_sells_api() -> object:
-    """
-    Форма возвращает отчет в excel о прибыльности на основе анализа отчетов о продажах, остатков с сайта wb
-    и данных о себестоимости с яндексдиска. Отчет формируется От и до указанных дат - в случае с "динамикой"
-    отчет будет делиться на указанное количество частей, в каждой из которых будет высчитываться прибыль и
-    далее рассчитыватья показатели на основе изменения прибыли от одного периода к другому. На выходе
-    получим сводную таблицу с реккомендациями по скидке.
-    """
-    if not current_user.is_authenticated:
-        return redirect('/company_register')
-    if request.method == 'POST':
-        date_from = detailing_api_module.request_date_from(request)
-        date_end = detailing_api_module.request_date_end(request)
-        days_step = detailing_api_module.request_days_step(request)
-        df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales = detailing_api_module.get_wb_sales_realization_pivot(df)
-        df_stock = API_WB.get_wb_sales_realization_api_v2(date_from=date_from, date_to=date_end)
-        df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-        df = df_sales.merge(df_stock, how='outer', on='nm_id')
-        df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
-        df = detailing_api_module.get_revenue(df)
-        df = detailing_api_module.get_important_columns(df)
-        file = io_output.io_output(df)
-        name_of_file = f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
-        return send_file(file, download_name=name_of_file, as_attachment=True)
-
-    return render_template('upload_get_dynamic_sales.html', doc_string=get_wb_pivot_sells_api.__doc__)
+#
+# @app.route('/get_wb_pivot_sells_api', methods=['POST', 'GET'])
+# @login_required
+# def get_wb_pivot_sells_api() -> object:
+#     """
+#     Форма возвращает отчет в excel о прибыльности на основе анализа отчетов о продажах, остатков с сайта wb
+#     и данных о себестоимости с яндексдиска. Отчет формируется От и до указанных дат - в случае с "динамикой"
+#     отчет будет делиться на указанное количество частей, в каждой из которых будет высчитываться прибыль и
+#     далее рассчитыватья показатели на основе изменения прибыли от одного периода к другому. На выходе
+#     получим сводную таблицу с реккомендациями по скидке.
+#     """
+#     if not current_user.is_authenticated:
+#         return redirect('/company_register')
+#     if request.method == 'POST':
+#         date_from = request_handler.request_date_from(request)
+#         date_end = request_handler.request_date_end(request)
+#         days_step = request_handler.request_days_step(request)
+#         df = API_WB.get_wb_sales_realization_api(date_from, date_end, days_step)
+#         df_sales = detailing_api_module.get_wb_sales_realization_pivot(df)
+#         df_stock = API_WB.get_wb_sales_realization_api_v2(date_from=date_from, date_to=date_end)
+#         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+#         df = df_sales.merge(df_stock, how='outer', on='nm_id')
+#         df = df.merge(df_net_cost, how='outer', left_on='nm_id', right_on='nm_id')
+#         df = detailing_api_module.get_revenue(df)
+#         df = detailing_api_module.get_important_columns(df)
+#         file = io_output.io_output(df)
+#         name_of_file = f"wb_revenue_report-{str(date_from)}-{str(date_end)}-{datetime.time()}.xlsx"
+#         return send_file(file, download_name=name_of_file, as_attachment=True)
+#
+#     return render_template('upload_get_dynamic_sales.html', doc_string=get_wb_pivot_sells_api.__doc__)
 
 
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])

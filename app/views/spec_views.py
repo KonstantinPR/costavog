@@ -105,33 +105,34 @@ def data_to_spec_merging():
 
     if merge_option == "merge":
         # Initialize an empty DataFrame to store the merged data
-        merged_data = pd.read_excel(uploaded_files[0], sheet_name=sheet_name, header=2)
+        merged_data = pd.read_excel(uploaded_files[0], sheet_name=sheet_name)
+        # print(merged_data)
         for uploaded_file in uploaded_files[1:]:
-            df_to_merge = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=2)
+            df_to_merge = pd.read_excel(uploaded_file, sheet_name=sheet_name)
             # Merge the data based on the specified column
-            merged_data = spec_modifiyer.merge_spec(merged_data, df_to_merge, left_on=col_merge, right_on=col_merge)
+            df = spec_modifiyer.merge_spec(merged_data, df_to_merge, left_on=col_merge, right_on=col_merge)
     elif merge_option == "concatenate":
         # Initialize an empty DataFrame to store the concatenated data
         concatenated_data = pd.DataFrame()
         for uploaded_file in uploaded_files:
             if not sheet_name:  # If sheet_name is empty, default to the first sheet
-                df = pd.read_excel(uploaded_file, header=2)
+                df = pd.read_excel(uploaded_file)
             else:
-                df = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=2)
+                df = pd.read_excel(uploaded_file, sheet_name=sheet_name)
             # Select only the relevant columns in the concatenate case
-            relevant_columns = ["Штрихкод", "Артикул", "Размер", "Кол-во"]
-            df = df[relevant_columns]
+            # relevant_columns = ["Штрихкод", "Артикул", "Размер", "Кол-во"]
+            # df = df[relevant_columns]
             # Convert Штрихкод column to string format to preserve its original value
-            df["Штрихкод"] = df["Штрихкод"].astype(str)
-            df["Размер"] = df["Размер"].astype(str)
             concatenated_data = pd.concat([concatenated_data, df])
+            df = concatenated_data
 
-        merged_data = concatenated_data
+    df["Баркоды"] = df["Баркоды"].astype(str)
+    df["Размер"] = df["Размер"].apply(lambda x: int(x)).astype(str)
 
     # You can optionally save the resulting DataFrame to an Excel file or return it for download.
     # For saving to an Excel file:
     output_file = 'merged_data.xlsx'
-    df = io_output.io_output(merged_data)
+    df = io_output.io_output(df)
 
     return send_file(df, as_attachment=True, download_name=output_file)
 

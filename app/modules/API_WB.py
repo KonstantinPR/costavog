@@ -1,4 +1,6 @@
 import logging
+
+import app.modules.request_handler
 from app import app
 import requests
 import pandas as pd
@@ -7,7 +9,7 @@ import time
 import json
 from datetime import datetime, timedelta
 from app.modules import io_output
-from app.modules import yandex_disk_handler, detailing_api_module, pandas_handler
+from app.modules import yandex_disk_handler, pandas_handler, request_handler
 
 
 def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
@@ -48,6 +50,7 @@ def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_da
     }
     response = requests.get(create_report_url, headers=headers, params=params)
     logging.warning(f"status_code {response.status_code}")
+    logging.warning(f"status_code {response.text}")
     if response.status_code not in {200, 201}:  # Check for successful response (200 or 201)
         logging.warning("Failed to create report so file will be got from yadisk::", response.text)
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
@@ -524,8 +527,8 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
 def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, is_re_double=True, is_to_yadisk=True):
     """get_wb_sales_funnel_api"""
 
-    date_from = detailing_api_module.request_date_from(request)
-    date_end = detailing_api_module.request_date_end(request)
+    date_from = request_handler.request_date_from(request)
+    date_end = request_handler.request_date_end(request)
 
     if testing_mode:
         logging.warning(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")

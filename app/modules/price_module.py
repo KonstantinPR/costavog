@@ -4,7 +4,7 @@ import pandas as pd
 import math
 import numpy as np
 import random
-from typing import Union
+
 from app.modules import detailing_upload_module
 
 DEFAULT_NET_COST = 500
@@ -184,17 +184,17 @@ def k_is_sell(pure_sells_qt, net_cost):
     if not net_cost: net_cost = DEFAULT_NET_COST
     k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
 
-    if pure_sells_qt > 100 * k_net_cost:
-        return 0.70
     if pure_sells_qt > 50 * k_net_cost:
-        return 0.80
+        return 0.70
     if pure_sells_qt > 20 * k_net_cost:
-        return 0.90
+        return 0.80
     if pure_sells_qt > 10 * k_net_cost:
-        return 0.92
+        return 0.90
     if pure_sells_qt > 5 * k_net_cost:
-        return 0.94
+        return 0.92
     if pure_sells_qt > 3 * k_net_cost:
+        return 0.94
+    if pure_sells_qt > 2 * k_net_cost:
         return 0.96
     if pure_sells_qt > 1 * k_net_cost:
         return 0.98
@@ -344,7 +344,7 @@ def k_net_cost(net_cost, price_disc, k_norma_revenue):
     if net_cost == 0:
         net_cost = DEFAULT_NET_COST
 
-    k_net_cost = ((DEFAULT_NET_COST / net_cost) * 2) ** 0.5
+    k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
     if k_net_cost < 1:
         k_net_cost = 1
 

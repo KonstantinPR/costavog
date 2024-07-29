@@ -24,7 +24,7 @@
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" enctype=multipart/form-data action="{{url_for('get_wb_pivot_sells_api')}}">
+                <form method="post" enctype=multipart/form-data>
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input type="date" class="form-control form-control-lg" id="date_from" name="date_from"
@@ -80,11 +80,11 @@
                                    class="w-100 btn btn-primary btn-lg" type="submit"
                                    value="Сводный отчет о динамике прибыльности">
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
-                            <input formaction="{{url_for('get_wb_pivot_sells_api')}}"
-                                   class="w-100 btn btn-primary btn-lg" type="submit"
-                                   value="Сводный отчет прибыльности товара">
-                        </div>
+<!--                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">-->
+<!--                            <input formaction="{{url_for('get_wb_pivot_sells_api')}}"-->
+<!--                                   class="w-100 btn btn-primary btn-lg" type="submit"-->
+<!--                                   value="Сводный отчет прибыльности товара">-->
+<!--                        </div>-->
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('get_wb_sales_realization_api')}}"
                                    class="w-100 btn btn-primary btn-lg" type="submit"

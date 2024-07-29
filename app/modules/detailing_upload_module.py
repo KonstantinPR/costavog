@@ -221,7 +221,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['При выдачи от'] + df['При выдачи в'] + df[
         'Склады удержали']
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
-
+    # df.to_excel("Viruchka.xlsx")
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
@@ -245,26 +245,26 @@ def merge_stock(df, testing_mode, is_get_stock, is_delete_shushary=False):
 
 
 def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shushary=False):
-    if is_get_storage:
-        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
-                                                     is_delete_shushary=is_delete_shushary)
-        df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
-        # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
-        df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
-        # df.to_excel("merged_storage.xlsx")
-        df = df.fillna(0)
-
-        df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
-        df['shareCost'] = df['Хранение'] / df['Хранение'].sum()
-        df['Хранение'] = df['shareCost'] * storage_cost
-
-        df['Хранение'] = df['Хранение'].fillna(0)
-        print(f"df['Хранение'] {df['Хранение'].sum()}")
-        # print(f"df['shareCost'] {df['shareCost']}")
-        # df.to_excel("df.xlsx")
-        df['Хранение'].to_excel("storage.xlsx")
-        df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
+    if not is_get_storage:
         return df
+
+    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
+                                                 is_delete_shushary=is_delete_shushary)
+    df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
+    # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
+    df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
+    # df.to_excel("merged_storage.xlsx")
+    df = df.fillna(0)
+
+    df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
+    df['shareCost'] = df['Хранение'] / df['Хранение'].sum()
+    df['Хранение'] = df['shareCost'] * storage_cost
+
+    df['Хранение'] = df['Хранение'].fillna(0)
+    print(f"df['Хранение'] {df['Хранение'].sum()}")
+    # df.to_excel("storage.xlsx")
+    df['Хранение.ед'] = df['Хранение'] / df['quantityFull + Продажа, шт.']
+    return df
 
 
 def merge_net_cost(df, is_net_cost):
@@ -282,6 +282,7 @@ def merge_net_cost(df, is_net_cost):
 
 def profit_count(df):
     df = df.fillna(0)
+    df.to_excel("profit_count.xlsx")
     df['Маржа'] = df['Выручка-Логистика'] - df['Хранение'].astype(float)
     df['Маржа-себест.'] = df['Маржа'] - df['net_cost'] * df['Ч. Продажа шт.']
     df = df.fillna(0)
@@ -323,6 +324,12 @@ def get_storage_cost(df):
 def pivot_expanse(df, type_name, sum_name, agg_col_name='Артикул поставщика', type_col_name='Обоснование для оплаты',
                   col_name=None):
     df_type = df[df[type_col_name] == type_name]
+    if sum_name not in df_type.columns:
+        df[sum_name] = 0
+        if col_name:
+            df[col_name] = 0
+        return df
+
     df = df_type.groupby(agg_col_name)[sum_name].sum().reset_index()
     if col_name:
         df = df.rename(columns={sum_name: f'{str(col_name)}'})

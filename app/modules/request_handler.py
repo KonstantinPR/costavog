@@ -1,3 +1,4 @@
+import datetime
 import os
 import logging
 from app import app
@@ -5,6 +6,8 @@ import pandas as pd
 from flask import flash
 from werkzeug.datastructures import FileStorage
 
+
+DATE_FORMAT = "%Y-%m-%d"
 
 def to_df(request, html_text_input_name='text_input', html_file_input_name='file', input_column='vendorCode'):
     """To get request and take from it text_input and make from it df, or take file and make df"""
@@ -77,3 +80,31 @@ def is_checkbox_true(request=None, request_name=None):
             print(f"request_name in request.form")
             return True
     return False
+
+
+def request_date_from(request, date_format=DATE_FORMAT, delta=app.config['DAYS_STEP_DEFAULT']):
+    if request.form.get('date_from'):
+        date_from = request.form.get('date_from')
+    else:
+        date_from = datetime.datetime.today() - datetime.timedelta(
+            days=delta) - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
+        date_from = date_from.strftime(date_format)
+    return date_from
+
+
+def request_date_end(request, date_format=DATE_FORMAT):
+    if request.form.get('date_end'):
+        date_end = request.form.get('date_end')
+    else:
+        date_end = datetime.datetime.today() - datetime.timedelta(app.config['DAYS_DELAY_REPORT'])
+        date_end = date_end.strftime(date_format)
+        # date_end = time.strftime(date_format)- datetime.timedelta(3)
+    return date_end
+
+
+def request_days_step(request):
+    if request.form.get('days_step'):
+        days_step = request.form.get('days_step')
+    else:
+        days_step = app.config['DAYS_STEP_DEFAULT']
+    return days_step
