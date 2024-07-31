@@ -50,13 +50,11 @@ def count_norma_revenue(df):
     clear_sells = df['Ч. Продажа'].sum() + df['Удержания_plus'].sum()
     revenue = clear_sells - expenses
 
-    if expenses <= 0:
-        expenses = 0
-
-    k_norma_revenue = 1 + (expenses / revenue) + k
+    # k_norma_revenue = 1 + (expenses / revenue) + k
+    k_norma_revenue = (clear_sells / revenue) * (1 + k)
 
     if revenue <= 0:
-        k_norma_revenue = 100
+        k_norma_revenue = 10
 
     df['k_norma_revenue'] = k_norma_revenue
 

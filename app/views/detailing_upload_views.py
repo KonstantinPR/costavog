@@ -1,16 +1,11 @@
-import logging
 from app import app
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module, API_WB
 from app.modules import sales_funnel_module, implementation_report, request_handler
-from app.modules import detailing_api_module
 import numpy as np
-import re
-import pdfplumber
-import io
-from datetime import datetime
+
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 
@@ -18,7 +13,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 @app.route('/extract_financial_data_from_pdf', methods=['POST', 'GET'])
 @login_required
 def extract_financial_data_from_pdf():
-    """Extract financial data from uploaded PDF files weekly_implementation_report.pdf"""
+    """Extract financial data from uploaded PDF files weekly_implementation_report.pdf. Income - pdf files, outcome -
+    zip file with 3 files. First - outcome by each week, second  - by each quarter, third - total"""
 
     if request.method != 'POST':
         return render_template('upload_weekly_implementation_report.html',
