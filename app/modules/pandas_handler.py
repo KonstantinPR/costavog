@@ -122,14 +122,16 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_co
     return df
 
 
-def upper_case(df, name_columns):
+def upper_case(df_list, name_columns):
     if not isinstance(name_columns, list): name_columns = [name_columns]
-    for name_column in name_columns:
-        if name_column in df:
-            df[name_column] = [str(s).upper() if isinstance(s, str) else s for s in df[name_column]]
-        else:
-            print(f"Column {name_column} not found in the {df} dictionary.")
-    return df
+    if not isinstance(df_list, list): df_list = [df_list]
+    for d in df_list:
+        for name_column in name_columns:
+            if name_column in d:
+                d[name_column] = [str(s).upper() if isinstance(s, str) else s for s in d[name_column]]
+            else:
+                print(f"Column {name_column} not found in the {d} dictionary.")
+    return df_list
 
 
 def first_letter_up(df, name_columns):

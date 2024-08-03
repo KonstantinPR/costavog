@@ -1,11 +1,12 @@
 import logging
 from app import app
+from flask import send_file
 import zipfile
 import pandas as pd
 import numpy as np
 import io
 from datetime import datetime
-from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
+from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module, io_output
 from datetime import timedelta
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -239,7 +240,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
 def merge_stock(df, df_stock, testing_mode, is_get_stock, is_delete_shushary=False):
     if is_get_stock:
-        df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')
+        df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')[0]
         df = df_stock.merge(df, how='outer', left_on='nmId', right_on='Код номенклатуры')
         df = df.fillna(0)
         df = pandas_handler.fill_empty_val_by('Код номенклатуры', df, 'nmId')
@@ -252,7 +253,7 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shus
 
     df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
                                                  is_delete_shushary=is_delete_shushary)
-    df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')
+    df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')[0]
     # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
     df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
     # df.to_excel("merged_storage.xlsx")
@@ -272,7 +273,7 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shus
 def merge_net_cost(df, df_net_cost, is_net_cost):
     if is_net_cost:
         df_net_cost['net_cost'].replace(np.NaN, 0, inplace=True)
-        df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')
+        df_net_cost = pandas_handler.upper_case(df_net_cost, 'article')[0]
         df = pandas_handler.df_merge_drop(df, df_net_cost, 'nmId', 'nm_id', how="outer")
         # df.to_excel("net_cost_merged.xlsx")
     else:
@@ -368,7 +369,7 @@ def to_round_df(df_result):
 
 def zips_to_list(zip_downloaded):
     print(f"type of zip_downloaded {type(zip_downloaded)}")
-    df_list = []
+    dfs = []
 
     z = zipfile.ZipFile(zip_downloaded)
     for f in z.namelist():
@@ -378,8 +379,8 @@ def zips_to_list(zip_downloaded):
         for i in zip_file.namelist():
             excel_0 = zip_file.read(i)
             df = pd.read_excel(excel_0)
-            df_list.append(df)
-    return df_list
+            dfs.append(df)
+    return dfs
 
 
 def replace_incorrect_date(df, date_column='Дата продажи'):
@@ -526,9 +527,9 @@ def get_dynamic_sales(df,
 
 
 def concatenate_detailing_module(zip_downloaded, df_net_cost):
-    df_list = zips_to_list(zip_downloaded)
+    dfs = zips_to_list(zip_downloaded)
 
-    result = pd.concat(df_list)
+    result = pd.concat(dfs)
 
     # List of columns to treat as strings
     columns_to_convert = ['№', 'Баркод', 'ШК', 'Rid', 'Srid']
@@ -811,13 +812,13 @@ def add_k(df):
     return df
 
 
-def dfs_process(df_list, request, testing_mode=False, is_xyz=False):
+def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
+    # element 0 in list is always general df that was through all df_list
     INCLUDE_COLUMNS = list(INITIAL_COLUMNS_DICT.values())
     days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")
 
-    testing_mode = request.form.get('is_testing_mode')
     is_net_cost = request.form.get('is_net_cost')
     is_get_storage = request.form.get('is_get_storage')
     is_delete_shushary = request.form.get('is_delete_shushary')
@@ -841,10 +842,17 @@ def dfs_process(df_list, request, testing_mode=False, is_xyz=False):
     if is_funnel:
         df_funnel, funnel_file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
 
+    if not is_xyz:
+        dfs = pd.concat(dfs)
+        dfs = [dfs]
+
+    if is_xyz:
+        dfs = [pd.concat(dfs)] + dfs
+
     dfs_final_list = []
     dfs_names = []
 
-    for i, df in enumerate(df_list):
+    for i, df in enumerate(dfs):
         df = replace_incorrect_date(df)
         date_min = df["Дата продажи"].min()
         print(f"date_min {date_min}")
@@ -955,3 +963,10 @@ def get_third_part(x):
     except IndexError:
         # If the string doesn't contain the delimiter '-', return None or any other value as needed
         return ''
+
+
+def df_concatenate(df_list, is_xyz):
+    if not is_xyz: df_list = pd.concat(df_list)
+
+    # Check if concatenate parameter is passed
+    return df_list

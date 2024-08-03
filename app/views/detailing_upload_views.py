@@ -54,7 +54,7 @@ def upload_detailing():
 
     days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
-    print(f"days_by {days_by}")
+    # print(f"days_by {days_by}")
     uploaded_files = request.files.getlist("file")
     testing_mode = request.form.get('is_testing_mode')
     promo_file = request.files.get("promofile")
@@ -63,7 +63,7 @@ def upload_detailing():
     is_abc = request.form.get('is_abc')
     is_xyz = request.form.get('is_xyz')
     is_abc_xyz = request.form.get('is_abc_xyz')
-    print(f"is_discount_template {is_discount_template}")
+    # print(f"is_discount_template {is_discount_template}")
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
                                                     path_or_config=app.config['REPORT_DETAILING_UPLOAD'],
@@ -75,14 +75,17 @@ def upload_detailing():
 
     uploaded_file = detailing_upload_module.process_uploaded_files(uploaded_files)
     df_list = detailing_upload_module.zips_to_list(uploaded_file)
-    concatenated_dfs = pd.concat(df_list)
-    concatenated_dfs = pandas_handler.upper_case(concatenated_dfs, 'Артикул поставщика')
-    # Check if concatenate parameter is passed
+    df_list = pandas_handler.upper_case(df_list, 'Артикул поставщика')
+
     if is_just_concatenate == 'is_just_concatenate':
-        return send_file(io_output.io_output(concatenated_dfs), download_name=f'concat.xlsx', as_attachment=True)
-    dfs = [concatenated_dfs]
-    dfs, dfs_names = detailing_upload_module.dfs_process(dfs, request, testing_mode=testing_mode, is_xyz=is_xyz)
-    df = dfs[0]
+        return send_file(io_output.io_output(pd.concat(df_list)), download_name=f'concat.xlsx', as_attachment=True)
+
+    df_list, dfs_names = detailing_upload_module.dfs_process(df_list, request, testing_mode=testing_mode, is_xyz=is_xyz)
+    # main concatenated df
+    df = df_list[0]
+    if len(df_list > 1) and is_xyz:
+        df_xyz = df_list[1:]
+
     # file, name = pandas_handler.files_to_zip(dfs, dfs_names)
     # return send_file(file, download_name=name, as_attachment=True)
 
