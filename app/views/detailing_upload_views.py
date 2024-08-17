@@ -83,7 +83,7 @@ def upload_detailing():
     df_list, dfs_names = detailing_upload_module.dfs_process(df_list, request, testing_mode=testing_mode, is_xyz=is_xyz)
     # main concatenated df
     df = df_list[0]
-    if len(df_list > 1) and is_xyz:
+    if len(df_list) > 1 and is_xyz:
         df_xyz = df_list[1:]
 
     # file, name = pandas_handler.files_to_zip(dfs, dfs_names)

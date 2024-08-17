@@ -117,10 +117,11 @@ def discount(df, k_delta=1, k_norma_revenue=2.5):
     # df.loc[(df['stock'] > 0) | (df['outcome-net'] != 0), 'k_discount'] = weighted_sum / total_weight
     df['k_discount'] = weighted_sum / total_weight
 
-    df['n_discount'] = [n_discount(price_disc, k_discount, price) for price_disc, k_discount, price in
+    df['n_discount'] = [n_discount(price_disc, k_discount, price, k_delta=k_delta) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
     df.loc[(df['n_discount'] == 0), 'n_discount'] = df['discount']
-    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
+    # df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
+    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days'])
     # df['n_discount'] = df['discount']
     df['n_discount'] = round(df['discount'] - df['n_delta'])
     df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = df['discount']
@@ -185,17 +186,17 @@ def k_is_sell(pure_sells_qt, net_cost):
     k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
 
     if pure_sells_qt > 50 * k_net_cost:
-        return 0.70
+        return 0.50
     if pure_sells_qt > 20 * k_net_cost:
-        return 0.80
+        return 0.60
     if pure_sells_qt > 10 * k_net_cost:
-        return 0.90
+        return 0.70
     if pure_sells_qt > 5 * k_net_cost:
-        return 0.92
+        return 0.80
     if pure_sells_qt > 3 * k_net_cost:
-        return 0.94
+        return 0.90
     if pure_sells_qt > 2 * k_net_cost:
-        return 0.96
+        return 0.95
     if pure_sells_qt > 1 * k_net_cost:
         return 0.98
     if pure_sells_qt >= 1:
@@ -211,27 +212,27 @@ def k_qt_full(qt, volume):
     if volume_all < 1:
         return 0.96
     if volume_all < 1 * k_volume:
-        return 0.97
+        return 0.95
     if volume_all <= 1 * k_volume:
-        return 0.975
+        return 0.96
     if volume_all <= 2 * k_volume:
-        return 0.98
+        return 0.97
     if volume_all <= 3 * k_volume:
-        return 0.99
+        return 0.98
     if volume_all <= 5 * k_volume:
-        return 0.995
+        return 0.99
     if volume_all <= 10 * k_volume:
         return 1
     if 10 * k_volume < volume_all <= 20 * k_volume:
         return 1.01
     if 20 * k_volume < volume_all <= 50 * k_volume:
-        return 1.02
-    if 50 * k_volume < volume_all <= 70 * k_volume:
         return 1.03
+    if 50 * k_volume < volume_all <= 70 * k_volume:
+        return 1.06
     if 70 * k_volume < volume_all <= 100 * k_volume:
-        return 1.04
+        return 1.09
     if volume_all > 100 * k_volume:
-        return 1.05
+        return 1.12
     return k
 
 
@@ -258,9 +259,9 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
 
     if to_rub == 0:
         if log_rub >= net_cost * 2:
-            return 0.95
+            return 0.90
         if log_rub >= net_cost:
-            return 0.96
+            return 0.95
         if log_rub >= net_cost / 2:
             return 0.97
         if log_rub >= net_cost / 4:
@@ -268,9 +269,9 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
 
     if to_rub > 0:
         if log_rub > 0.50 * to_rub:
-            return 0.96
+            return 0.90
         if log_rub > 0.25 * to_rub:
-            return 0.98
+            return 0.95
 
     if log_rub > k_net_cost * net_cost and to_rub == 0:
         return 0.99
@@ -288,33 +289,33 @@ def k_pure_value(pure_value, price_disc, k_norma_revenue):
         k_pure_value = 1
 
     if price_disc <= pure_value / 4:
-        return 0.80
+        return 0.50
     if price_disc <= pure_value / 2:
-        return 0.83
+        return 0.60
     if price_disc <= pure_value:
-        return 0.86
+        return 0.70
     if price_disc <= pure_value * k_pure_value:
-        return 0.90
+        return 0.80
     if price_disc <= pure_value * ((0.50 * k_norma_revenue) * k_pure_value):
-        return 0.92
+        return 0.85
     if price_disc <= pure_value * ((0.60 * k_norma_revenue) * k_pure_value):
-        return 0.93
+        return 0.89
     if price_disc <= pure_value * ((0.70 * k_norma_revenue) * k_pure_value):
-        return 0.94
+        return 0.92
     if price_disc <= pure_value * ((0.80 * k_norma_revenue) * k_pure_value):
-        return 0.95
+        return 0.93
     if price_disc <= pure_value * ((0.90 * k_norma_revenue) * k_pure_value):
-        return 0.96
+        return 0.94
     if price_disc <= pure_value * ((0.92 * k_norma_revenue) * k_pure_value):
-        return 0.97
+        return 0.95
     if price_disc <= pure_value * ((0.96 * k_norma_revenue) * k_pure_value):
-        return 0.98
+        return 0.96
     if price_disc <= pure_value * ((0.97 * k_norma_revenue) * k_pure_value):
-        return 0.985
+        return 0.97
     if price_disc <= pure_value * ((0.98 * k_norma_revenue) * k_pure_value):
-        return 0.99
+        return 0.98
     if price_disc <= pure_value * ((0.99 * k_norma_revenue) * k_pure_value):
-        return 0.995
+        return 0.99
     if price_disc >= pure_value * ((5 * k_norma_revenue) * k_pure_value):
         return 1.20
     if price_disc >= pure_value * ((2.5 * k_norma_revenue) * k_pure_value):
@@ -474,11 +475,11 @@ def k_rating(rating):
     return 1
 
 
-def n_discount(price_disc, k_discount, price, k=5):
+def n_discount(price_disc, k_discount, price, k_delta=5):
     if price == 0 or np.isnan(price_disc) or np.isnan(k_discount):
         return np.nan  # Return NaN if any of the values are NaN or if price is zero
     else:
-        n_discount = (1 - (price_disc / (price * (k_discount ** k)))) * 100
+        n_discount = (1 - (price_disc / (price * (k_discount ** k_delta)))) * 100
         if n_discount < 0:
             return 0
         return int(round(n_discount))

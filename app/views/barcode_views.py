@@ -19,8 +19,6 @@ from flask import make_response
 @app.route('/testbarcodegpt', methods=['GET', 'POST'])
 @login_required
 def testbarcodegpt():
-
-
     # Your list of strings
     data = ["string1", "string2", "string3"]
 
@@ -81,6 +79,10 @@ def barcode():
             flash("Тип баркода который будем печатать")
             return render_template('upload_barcode.html')
 
+        if not request.form['format']:
+            flash("Формат сохранения не задан")
+            return render_template('upload_barcode.html')
+
         type_barcode = request.form['type-barcode']
         print(f'type_barcode {type_barcode}')
 
@@ -134,15 +136,19 @@ def barcode():
             for i, line in enumerate(lines):
                 print(line)
                 count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
-                line_name = f'bar_{count_i}.png'
+                line_name = f"bar_{count_i}.{request.form['format']}"
                 datamatrix = treepoem.generate_barcode(
                     barcode_type='datamatrix',  # One of the supported codes.
                     data=line,
+                    options={"format": request.form['format']}  # Specify SVG format
+
                 )
                 padded_image = Image.new(mode="RGB", size=(datamatrix.width + 10, datamatrix.height + 100),
                                          color=(255, 255, 255, 0))
                 padded_image.paste(datamatrix, (5, 30))  # Offset the pasting by 20 pixels to add padding
                 draw = ImageDraw.Draw(padded_image)
+
+                # DRAW TEXT
                 draw.text((5, 0), "ЧЕСТНЫЙ ЗНАК", font=ImageFont.truetype("arial.ttf", 18),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
                 draw = ImageDraw.Draw(padded_image)
@@ -154,7 +160,8 @@ def barcode():
                 draw = ImageDraw.Draw(padded_image)
                 draw.text((5, datamatrix.height + 70), line[32:38], font=ImageFont.truetype("arial.ttf", 14),
                           fill=(0, 0, 0))  # add count_i to top left corner of image
-                img = io_output.io_img_output(padded_image)
+                img = io_output.io_img_output(padded_image, dpi=(300, 300))
+
                 images_set.append((line_name, img))
             images_zipped = zip_handler.put_in_zip(images_set)
 
