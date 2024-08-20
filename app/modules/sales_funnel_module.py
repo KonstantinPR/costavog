@@ -20,7 +20,8 @@ DISCOUNT_COLUMNS = {
 }
 
 
-def calculate_discount(df, p_buy=1.3, p_qt=0.9, d_sum=100, n_net=8, smooth_days=1, discount_columns: dict = None):
+def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8, smooth_days=1,
+                       discount_columns: dict = None):
     """
     make k_discount to be around 1 by sigmoid
     n_net: how hard price/netcost affect the discount changing

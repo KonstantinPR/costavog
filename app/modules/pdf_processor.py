@@ -68,7 +68,16 @@ def _add_text_to_pdf(pdf, art_col_name, art_set, df, size_col_name, qt_col_name,
 def _add_notes_and_info(pdf, step, no_photo_list, qt_sum):
     pdf.set_font('arial', 'B', 12)
     pdf.set_text_color(0, 0, 0)
-    pdf.set_xy(x=step, y=pdf.get_y() + step * 2)
+
+    # Get the current Y position using the correct method
+    try:
+        current_y = pdf.get_y()
+    except AttributeError:
+        raise AttributeError("The 'pdf' object does not have 'get_y()' method. Ensure you're using the correct FPDF version.")
+
+    # Update Y position for the note
+    pdf.set_xy(x=step, y=current_y + step * 2)
+
     note = "* Can be produced more (* 1 - one more, * * 2 - two more ... etc)"
     pdf.cell(0, step * 2, note, border=0)
 
