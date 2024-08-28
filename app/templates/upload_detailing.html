@@ -204,6 +204,15 @@
                             </label>
                         </div>
 
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="reset_if_null"
+                                   name="reset_if_null"
+                                   id="reset_if_null" checked>
+                            <label class="reset_if_null" for="reset_if_null">
+                                Сбросить скидку до 0, если товар кончился (quantityFull = 0)?
+                            </label>
+                        </div>
+
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('upload_detailing')}}"

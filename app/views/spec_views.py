@@ -2,7 +2,7 @@ from app import app
 from flask import render_template, request, send_file
 import pandas as pd
 from app.modules import io_output, spec_modifiyer, yandex_disk_handler, API_WB, data_transforming_module, \
-    request_handler
+    request_handler, pandas_handler
 from flask_login import login_required
 import time
 
@@ -94,14 +94,30 @@ def data_to_spec_wb_transcript():
 @app.route('/data_to_spec_merging', methods=['GET', 'POST'])
 @login_required
 def data_to_spec_merging():
-    """Смержить 2 excel файла, порядок в алфавитном - в первом оставляем, если уже были"""
+    """Смержить 2 excel файла, порядок в алфавитном - в первом оставляем, если уже были.
+    Если галку поставили для заполнить новую спецификацию, заполняет первый файл вторым ровно в той последовательнисти
+    как в первом (затем ручками вставляем таблицу в новую спецпфикцию, к примеру как с 25.08.2024 header на третьей
+    строке, а ниже примечание, значит вставляем начиная с пятой строки на лист Товар"""
+
     if not request.method == 'POST':
-        return render_template('upload_specs.html')
+        return render_template('upload_specs.html', doc_string=data_to_spec_merging.__doc__)
+
+    fill_new_spec = request.form.get("fill_new_spec")
+
 
     uploaded_files = request.files.getlist("file")
     col_merge = request.form['col_merge']
     merge_option = request.form['merge_option']
     sheet_name = request.form['sheet_name']
+
+    if fill_new_spec:
+        df = spec_modifiyer.fill_new_spec(uploaded_files)
+        output_file = 'merged_data.xlsx'
+        df = io_output.io_output(df)
+
+        return send_file(df, as_attachment=True, download_name=output_file)
+
+
 
     if merge_option == "merge":
         # Initialize an empty DataFrame to store the merged data

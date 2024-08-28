@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from random import randrange
+from openpyxl import load_workbook
 
 # until 06/07/2024
 # COL_ART_NAME = "Артикул товара"
@@ -244,6 +245,9 @@ def col_adding(df_income, col_name="Артикул товара"):
     print("equil_category ...")
     if not 'Категория' in df_income.columns and 'Предмет' in df_income.columns:
         df_income['Категория'] = df_income['Предмет']
+    if not 'Категория продавца' in df_income.columns and 'Предмет' in df_income.columns:
+        df_income['Категория продавца'] = df_income['Предмет']
+
 
     # df_income.to_excel('df_income.xlsx')
     return df_income
@@ -263,3 +267,34 @@ def sizes_translate(df, spec_type):
     if spec_type.startswith("J"):
         df['Рос. размер'] = df['Размер'].map(JEANS_SIZES)
     return df
+
+
+def fill_new_spec(uploaded_files):
+    # File paths
+    file1 = uploaded_files[0]  # The Excel file with headers on the first row (to be filled)
+    file2 = uploaded_files[1]  # The Excel file containing data to merge
+
+    try:
+        # Load the data into pandas DataFrames, assuming headers are on the first row for both
+        df1 = pd.read_excel(file1, engine='openpyxl')  # Headers on the first row by default
+        df2 = pd.read_excel(file2, engine='openpyxl')  # Headers on the first row by default
+
+        # Find common columns between the two DataFrames
+        common_columns = df1.columns.intersection(df2.columns)
+
+        # Merge the data based on common columns
+        for column in common_columns:
+            df1[column] = df1[column].combine_first(df2[column])
+
+        # Load the workbook in write mode
+        with pd.ExcelWriter(file1, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+            df1.to_excel(writer, sheet_name='Sheet1',
+                         index=False)  # Replace 'Sheet1' with the actual sheet name if needed
+
+        print("Data has been successfully merged based on matching column names.")
+
+        return df1
+
+    except Exception as e:
+        print("An error occurred:", e)
+        return None

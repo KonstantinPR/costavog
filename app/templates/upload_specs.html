@@ -10,17 +10,19 @@
     <br>
 
 
-    <div class="text-left">
-        <div class="row p-2 bg-light">
-            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным через запятую. Спецификация - первая, заполненный произвольный лист эксель - второй
-            </div>
-        </div>
-    </div>
+<!--    <div class="text-left">-->
+<!--        <div class="row p-2 bg-light">-->
+<!--            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным через запятую.-->
+<!--                Спецификация - первая, заполненный произвольный лист эксель - второй-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
 
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" target="blank" enctype=multipart/form-data action="{{url_for('data_to_spec_merging')}}">
+                <form method="post" target="blank" enctype=multipart/form-data
+                      action="{{url_for('data_to_spec_merging')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>
@@ -32,10 +34,21 @@
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
-                            <input placeholder="Имя листа" class="form-control form-control-lg" type="text" name="sheet_name">
+                            <input placeholder="Имя листа" class="form-control form-control-lg" type="text"
+                                   name="sheet_name">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
-                            <input placeholder="По какому значению объединяем" value="Артикул товара" class="form-control form-control-lg" type="text" name="col_merge">
+                            <input placeholder="По какому значению объединяем" value="Артикул товара"
+                                   class="form-control form-control-lg" type="text" name="col_merge">
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="fill_new_spec"
+                                   name="fill_new_spec"
+                                   id="fill_new_spec"
+                                   checked>
+                            <label class="form-check-label" for="to_check_art_wb">
+                                Заполнить данными первую таблицу (оставляем без изменений)
+                            </label>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="w-100 btn btn-primary btn-lg" type="submit" value="Отправить">

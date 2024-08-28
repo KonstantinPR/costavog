@@ -63,13 +63,13 @@ def count_norma_revenue(df):
     return k_norma_revenue
 
 
-def discount(df, k_delta=1, k_norma_revenue=2.5):
+def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     col_map = detailing_upload_module.INITIAL_COLUMNS_DICT
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='key')
 
     # если не было продаж увеличиваем скидку
-    df['k_is_sell'] = [k_is_sell(x, y) for x, y in zip(df['pure_sells_qt'], df['net_cost'])]
+    df['k_is_sell'] = [k_is_sell(x, y, z) for x, y, z in zip(df['pure_sells_qt'], df['net_cost'], df['pure_value'])]
     # постоянно растет или падает прибыль, отрицательная или положительная
     # df['k_revenue'] = [k_revenue(w, x, y, z) for w, x, y, z in
     #                    zip(df['quantity_Продажа_sum'], df['Прибыль_sum'], df['Прибыль_mean'], df['Прибыль_last'])]
@@ -126,6 +126,8 @@ def discount(df, k_delta=1, k_norma_revenue=2.5):
     df['n_discount'] = round(df['discount'] - df['n_delta'])
     df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = df['discount']
     df.loc[df['n_discount'] < 0, 'n_discount'] = 0
+    if reset_if_null:
+        df.loc[df['stock'] <= 0, 'n_discount'] = 0
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='value')
 
@@ -180,10 +182,11 @@ def nice_price(plan_delta_discount: float, current_price: float) -> float:
     return nice_new_price
 
 
-def k_is_sell(pure_sells_qt, net_cost):
+def k_is_sell(pure_sells_qt, net_cost, pure_value):
     '''v 1.0'''
     if not net_cost: net_cost = DEFAULT_NET_COST
-    k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
+    if not pure_value: pure_value = DEFAULT_PURE_VALUE
+    k_net_cost = (((DEFAULT_NET_COST + DEFAULT_PURE_VALUE) * 0.5) / ((pure_value + net_cost) * 0.5)) ** 0.5
 
     if pure_sells_qt > 50 * k_net_cost:
         return 0.50
@@ -277,6 +280,7 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
         return 0.99
 
     return 1
+
 
 #
 # def k_pure_value(pure_value, price_disc, k_norma_revenue):
