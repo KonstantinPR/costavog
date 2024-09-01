@@ -78,8 +78,8 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     df['k_logistic'] = [k_logistic(w, x, y, z) for w, x, y, z in
                         zip(df['logistics'], df['sell'], df['back'], df['net_cost'])]
     # Защита от цены ниже себестоимости - тогда повышаем
-    df['k_net_cost'] = [k_net_cost(x, y, k_norma_revenue) for x, y in zip(df['net_cost'], df['price_disc'])]
-    df['k_pure_value'] = [k_net_cost(x, y, k_norma_revenue) for x, y in zip(df['pure_value'], df['price_disc'])]
+    df['k_net_cost'] = [k_cost(x, y, k_norma_revenue) for x, y in zip(df['net_cost'], df['price_disc'])]
+    df['k_pure_value'] = [k_cost(x, y, k_norma_revenue) for x, y in zip(df['pure_value'], df['price_disc'])]
     df['k_qt_full'] = [k_qt_full(qt, volume) for qt, volume in zip(df['stock'], df['volume'])]
     df['k_rating'] = [k_rating(x) for x in df['Rating']]
     # df['k_discount'] = (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df[
@@ -344,60 +344,60 @@ def k_logistic(log_rub, to_rub, from_rub, net_cost):
 #     return 1
 
 
-def k_net_cost(net_cost, price_disc, k_norma_revenue):
+def k_cost(cost, price_disc, k_norma_revenue, cost_power=0.5):
     """cost to buy and deliver good to wb"""
-    if net_cost == 0:
-        net_cost = DEFAULT_NET_COST
+    if cost == 0:
+        cost = DEFAULT_NET_COST
 
-    k_net_cost = (DEFAULT_NET_COST / net_cost) ** 0.5
-    if k_net_cost < 1:
-        k_net_cost = 1
+    k = (DEFAULT_NET_COST / cost) ** cost_power
+    if k < 1:
+        k = 1
 
-    if price_disc <= net_cost / 4:
+    if price_disc <= cost / 4:
         return 0.50
-    if price_disc <= net_cost / 2:
+    if price_disc <= cost / 2:
         return 0.60
-    if price_disc <= net_cost:
+    if price_disc <= cost:
         return 0.70
-    if price_disc <= net_cost * k_net_cost:
+    if price_disc <= cost * k:
         return 0.80
-    if price_disc <= net_cost * ((0.50 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.50 * k_norma_revenue) * k):
         return 0.85
-    if price_disc <= net_cost * ((0.60 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.60 * k_norma_revenue) * k):
         return 0.89
-    if price_disc <= net_cost * ((0.70 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.70 * k_norma_revenue) * k):
         return 0.91
-    if price_disc <= net_cost * ((0.80 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.80 * k_norma_revenue) * k):
         return 0.93
-    if price_disc <= net_cost * ((0.90 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.90 * k_norma_revenue) * k):
         return 0.95
-    if price_disc <= net_cost * ((0.92 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.92 * k_norma_revenue) * k):
         return 0.97
-    if price_disc <= net_cost * ((0.96 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.96 * k_norma_revenue) * k):
         return 0.98
-    if price_disc <= net_cost * ((0.97 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.97 * k_norma_revenue) * k):
         return 0.985
-    if price_disc <= net_cost * ((0.98 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.98 * k_norma_revenue) * k):
         return 0.99
-    if price_disc <= net_cost * ((0.99 * k_norma_revenue) * k_net_cost):
+    if price_disc <= cost * ((0.99 * k_norma_revenue) * k):
         return 0.995
-    if price_disc >= net_cost * ((5 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((5 * k_norma_revenue) * k):
         return 1.20
-    if price_disc >= net_cost * ((2.5 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((2.5 * k_norma_revenue) * k):
         return 1.10
-    if price_disc >= net_cost * ((2 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((2 * k_norma_revenue) * k):
         return 1.06
-    if price_disc >= net_cost * ((1.5 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((1.5 * k_norma_revenue) * k):
         return 1.05
-    if price_disc >= net_cost * ((1.25 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((1.25 * k_norma_revenue) * k):
         return 1.04
-    if price_disc >= net_cost * ((1.15 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((1.15 * k_norma_revenue) * k):
         return 1.03
-    if price_disc >= net_cost * ((1.1 * k_norma_revenue) * k_net_cost):
+    if price_disc >= cost * ((1.1 * k_norma_revenue) * k):
         return 1.02
-    if price_disc > net_cost * ((1.05 * k_norma_revenue) * k_net_cost):
+    if price_disc > cost * ((1.05 * k_norma_revenue) * k):
         return 1.01
-    if price_disc > net_cost * ((k_norma_revenue) * k_net_cost):
+    if price_disc > cost * ((k_norma_revenue) * k):
         return 1
     if price_disc == 0:
         return 1
