@@ -60,9 +60,7 @@ def upload_detailing():
     promo_file = request.files.get("promofile")
     is_just_concatenate = request.form.get('is_just_concatenate')
     is_discount_template = request.form.get('is_discount_template')
-    is_abc = request.form.get('is_abc')
-    is_xyz = request.form.get('is_xyz')
-    is_abc_xyz = request.form.get('is_abc_xyz')
+    is_dynamic = request.form.get('is_dynamic')
     # print(f"is_discount_template {is_discount_template}")
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
@@ -80,11 +78,11 @@ def upload_detailing():
     if is_just_concatenate == 'is_just_concatenate':
         return send_file(io_output.io_output(pd.concat(df_list)), download_name=f'concat.xlsx', as_attachment=True)
 
-    df_list, dfs_names = detailing_upload_module.dfs_process(df_list, request, testing_mode=testing_mode, is_xyz=is_xyz)
+    df_list, dfs_names = detailing_upload_module.dfs_process(df_list, request, testing_mode=testing_mode,
+                                                             is_dynamic=is_dynamic)
     # main concatenated df
     df = df_list[0]
-    if len(df_list) > 1 and is_xyz:
-        df_xyz = df_list[1:]
+    df_dynamic = detailing_upload_module.dfs_dynamic(df_list, is_dynamic=is_dynamic)
 
     # file, name = pandas_handler.files_to_zip(dfs, dfs_names)
     # return send_file(file, download_name=name, as_attachment=True)
@@ -98,11 +96,14 @@ def upload_detailing():
 
     promo_name = "promo.xlsx"
     template_name = "discount_template.xlsx"
+    df_dynamic_name = "df_dynamic.xlsx"
 
     # Define the filenames for the zip file
     df_template = pandas_handler.df_disc_template_create(df, df_promo, is_discount_template)
     # Create a zip file containing the DataFrames
-    file, name = pandas_handler.files_to_zip([df, df_promo, df_template], [detailing_name, promo_name, template_name])
+    dfs = [df, df_promo, df_template, df_dynamic]
+    dfs_names = [detailing_name, promo_name, template_name, df_dynamic_name]
+    file, name = pandas_handler.files_to_zip(dfs, dfs_names)
 
     # Flash message and return the zip file for download
     flash("Отчет успешно создан")

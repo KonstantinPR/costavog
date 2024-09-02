@@ -247,12 +247,13 @@ def merge_stock(df, df_stock, testing_mode, is_get_stock, is_delete_shushary=Fal
         return df
 
 
-def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shushary=False):
+def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shushary=False, df_storage=None):
     if not is_get_storage:
         return df
 
-    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode,
-                                                 is_delete_shushary=is_delete_shushary)
+    if df_storage is None or df_storage.empty:
+        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_delete_shushary=is_delete_shushary)
+
     df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')[0]
     # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
     df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
@@ -812,7 +813,10 @@ def add_k(df):
     return df
 
 
-def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
+def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
+    """dfs_process..."""
+    print("""dfs_process...""")
+
     # element 0 in list is always general df that was through all df_list
     INCLUDE_COLUMNS = list(INITIAL_COLUMNS_DICT.values())
     days_by = int(request.form.get('days_by'))
@@ -829,6 +833,7 @@ def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
     is_mix_discounts = request.form.get('is_mix_discounts')
     is_discount_template = request.form.get('is_discount_template')
     reset_if_null = request.form.get('reset_if_null')
+    is_first_df = request.form.get('is_first_df')
     print(f"is_discount_template {is_discount_template}")
     if not k_delta: k_delta = 1
     k_delta = int(k_delta)
@@ -843,15 +848,22 @@ def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
     if is_funnel:
         df_funnel, funnel_file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
 
-    if not is_xyz:
+    if not is_dynamic:
         dfs = pd.concat(dfs)
         dfs = [dfs]
 
-    if is_xyz:
-        dfs = [pd.concat(dfs)] + dfs
+    if is_dynamic:
+        print("is_dynamic...")
+        if is_first_df:
+            print("is_first_df...")
+            dfs = [dfs[0]] + dfs
+        else:
+            dfs = [pd.concat(dfs)] + dfs
 
     dfs_final_list = []
     dfs_names = []
+
+    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_delete_shushary=is_delete_shushary)
 
     for i, df in enumerate(dfs):
         df = replace_incorrect_date(df)
@@ -876,7 +888,7 @@ def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
         df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
 
         df = merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage,
-                           is_delete_shushary=is_delete_shushary)
+                           is_delete_shushary=is_delete_shushary, df_storage=df_storage)
         df = merge_net_cost(df, df_net_cost, is_net_cost)
         df = merge_price(df, df_price, testing_mode, is_get_price).drop_duplicates(
             subset='nmId')
@@ -938,7 +950,116 @@ def dfs_process(dfs, request, testing_mode=False, is_xyz=False):
         if 'new_discount' not in df.columns: df['new_discount'] = df['n_discount']
         dfs_final_list.append(df)
         dfs_names.append(f"df_{str(i)}.xlsx")
+
     return dfs_final_list, dfs_names
+
+
+def dfs_dynamic(df_list, is_dynamic=True):
+    """dfs_dynamic merges DataFrames on 'Артикул поставщика' and expands dynamic columns."""
+    print("dfs_dynamic...")
+
+    # List of dynamic columns to analyze
+    columns_dynamic = ["Маржа-себест.", "Маржа-себест./ шт.", "Ч. Продажа шт.", "quantityFull", "Логистика", "Хранение"]
+
+    if len(df_list) > 1 and is_dynamic:
+        # Start by initializing the first DataFrame
+        merged_df = df_list[1][['Артикул поставщика'] + columns_dynamic].copy()
+
+        # Iterate over the remaining DataFrames
+        for i, df in enumerate(df_list[2:], start=1):  # Start from 2 to correctly handle suffixes
+            # Merge with the next DataFrame on 'Артикул поставщика'
+            merged_df = pd.merge(
+                merged_df,
+                df[['Артикул поставщика'] + columns_dynamic],
+                on='Артикул поставщика',
+                how='outer',  # Use 'outer' to keep all articles
+                suffixes=('', f'_{i}')
+            )
+
+            # Drop duplicate rows based on 'Артикул поставщика' after each merge
+            merged_df = merged_df.drop_duplicates(subset='Артикул поставщика')
+
+        # Drop duplicate columns if any exist after merging
+        merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
+
+        # Extract the sorted column names, excluding 'Артикул поставщика'
+        sorted_columns = ['Артикул поставщика'] + sorted(
+            [col for col in merged_df.columns if col != 'Артикул поставщика']
+        )
+
+        # Reorder the DataFrame with the sorted column list
+        merged_df = merged_df[sorted_columns]
+
+        # Perform ABC and XYZ analysis
+        merged_df = abc_xyz(merged_df)
+
+        # Return the final DataFrame with ABC and XYZ categories
+        return merged_df
+
+    else:
+        # Return the list if not dynamic or only one DataFrame
+        return ""
+
+
+def abc_xyz(merged_df):
+    # Calculate total margin by summing all 'Маржа-себест.' columns
+    margin_columns = [col for col in merged_df.columns if 'Маржа-себест._' in col]
+    merged_df['Total_Margin'] = merged_df[margin_columns].sum(axis=1)
+
+    # Calculate total margin per article
+    total_margin_per_article = merged_df.groupby('Артикул поставщика')['Total_Margin'].sum().reset_index()
+
+    # Sort by total margin in descending order for ABC analysis
+    total_margin_per_article = total_margin_per_article.sort_values(by='Total_Margin', ascending=False)
+    total_margin_per_article['Cumulative_Margin'] = total_margin_per_article['Total_Margin'].cumsum()
+    total_margin_per_article['Cumulative_Percentage'] = (total_margin_per_article['Cumulative_Margin'] /
+                                                         total_margin_per_article['Total_Margin'].sum()) * 100
+
+    # Classify into ABC categories
+    def classify_abc(row):
+        if row['Cumulative_Percentage'] <= 20:
+            return 'A'
+        elif row['Cumulative_Percentage'] <= 80:
+            return 'B'
+        else:
+            return 'C'
+
+    total_margin_per_article['ABC_Category'] = total_margin_per_article.apply(classify_abc, axis=1)
+
+    # Add ABC categories to merged_df
+    merged_df = merged_df.merge(total_margin_per_article[['Артикул поставщика', 'ABC_Category']],
+                                on='Артикул поставщика', how='left')
+
+    # XYZ Analysis with Weighted CV
+    sales_quantity_columns = [col for col in merged_df.columns if col.startswith('Ч. Продажа шт.')]
+
+    # Define weights for sales periods
+    weights = np.linspace(1, 0.1, len(sales_quantity_columns))  # Adjust this based on your needs
+    weights = weights / weights.sum()  # Normalize weights
+
+    def calculate_weighted_cv(row):
+        quantities = row[sales_quantity_columns].values
+        weighted_mean = np.average(quantities, weights=weights)
+        weighted_std_dev = np.sqrt(np.average((quantities - weighted_mean) ** 2, weights=weights))
+        if weighted_mean == 0:
+            return float('inf')  # Handle division by zero if all quantities are zero
+        return weighted_std_dev / weighted_mean
+
+    merged_df['CV'] = merged_df.apply(calculate_weighted_cv, axis=1)
+
+    # Classify into XYZ Categories
+    def classify_xyz(row):
+        cv = row['CV']
+        if cv <= 1 and cv > 0:
+            return 'X'
+        elif cv <= 3 and cv > 0:
+            return 'Y'
+        else:
+            return 'Z'
+
+    merged_df['XYZ_Category'] = merged_df.apply(classify_xyz, axis=1)
+
+    return merged_df
 
 
 def starts_with_prefix(string, prefixes):

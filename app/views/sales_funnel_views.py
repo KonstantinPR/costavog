@@ -45,6 +45,7 @@ def sales_funnel_analyses():
 
         include_column = [col for col in column_first if col in df.columns]
         df = df[include_column + [col for col in df.columns if col not in column_first]]
+        df = df.drop_duplicates(subset='vendorCode')
 
         return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
     return render_template('upload_sales_funnel.html', doc_string=sales_funnel_analyses.__doc__)
