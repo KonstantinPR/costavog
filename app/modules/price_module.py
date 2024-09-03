@@ -119,15 +119,18 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
 
     df['n_discount'] = [n_discount(price_disc, k_discount, price, k_delta=k_delta) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
-    df.loc[(df['n_discount'] == 0), 'n_discount'] = df['discount']
+
+    default_changing = df['discount'] / 4
+
+    df.loc[(df['n_discount'] == 0), 'n_discount'] = default_changing
     # df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
     df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days'])
     # df['n_discount'] = df['discount']
     df['n_discount'] = round(df['discount'] - df['n_delta'])
-    df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = df['discount']
+    df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = default_changing
     df.loc[df['n_discount'] < 0, 'n_discount'] = 0
     if reset_if_null:
-        df.loc[df['stock'] <= 0, 'n_discount'] = 0
+        df.loc[df['stock'] <= 0, 'n_discount'] = default_changing
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='value')
 

@@ -959,14 +959,14 @@ def dfs_dynamic(df_list, is_dynamic=True):
     print("dfs_dynamic...")
 
     # List of dynamic columns to analyze
-    columns_dynamic = ["Маржа-себест.", "Маржа-себест./ шт.", "Ч. Продажа шт.", "quantityFull", "Логистика", "Хранение"]
+    columns_dynamic = ["Маржа-себест.", "Ч. Продажа шт.", "quantityFull", "Логистика", "Хранение"]
 
     if len(df_list) > 1 and is_dynamic:
         # Start by initializing the first DataFrame
         merged_df = df_list[1][['Артикул поставщика'] + columns_dynamic].copy()
 
         # Iterate over the remaining DataFrames
-        for i, df in enumerate(df_list[2:], start=1):  # Start from 2 to correctly handle suffixes
+        for i, df in enumerate(df_list[2:]):  # Start from 2 to correctly handle suffixes
             # Merge with the next DataFrame on 'Артикул поставщика'
             merged_df = pd.merge(
                 merged_df,
@@ -1003,7 +1003,7 @@ def dfs_dynamic(df_list, is_dynamic=True):
 
 def abc_xyz(merged_df):
     # Calculate total margin by summing all 'Маржа-себест.' columns
-    margin_columns = [col for col in merged_df.columns if 'Маржа-себест._' in col]
+    margin_columns = [col for col in merged_df.columns if 'Маржа-себест.' in col and "Маржа-себест./ шт" not in col]
     merged_df['Total_Margin'] = merged_df[margin_columns].sum(axis=1)
 
     # Calculate total margin per article
@@ -1017,12 +1017,14 @@ def abc_xyz(merged_df):
 
     # Classify into ABC categories
     def classify_abc(row):
-        if row['Cumulative_Percentage'] <= 20:
+        if row['Cumulative_Percentage'] <= 10 and row["Total_Margin"] > 0:
             return 'A'
-        elif row['Cumulative_Percentage'] <= 80:
+        elif row['Cumulative_Percentage'] <= 40 and row["Total_Margin"] >= 0:
             return 'B'
-        else:
+        elif row['Cumulative_Percentage'] <= 70 and row["Total_Margin"] <= 0:
             return 'C'
+        else:
+            return 'D'
 
     total_margin_per_article['ABC_Category'] = total_margin_per_article.apply(classify_abc, axis=1)
 
@@ -1034,7 +1036,7 @@ def abc_xyz(merged_df):
     sales_quantity_columns = [col for col in merged_df.columns if col.startswith('Ч. Продажа шт.')]
 
     # Define weights for sales periods
-    weights = np.linspace(1, 0.1, len(sales_quantity_columns))  # Adjust this based on your needs
+    weights = np.linspace(1, 0.5, len(sales_quantity_columns))  # Adjust this based on your needs
     weights = weights / weights.sum()  # Normalize weights
 
     def calculate_weighted_cv(row):
