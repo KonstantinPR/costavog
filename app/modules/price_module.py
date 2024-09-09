@@ -86,7 +86,7 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     #     'k_qt_full']) / 5
     df['k_discount'] = 1
 
-    # IMPORTANT !!! days on site was delete some 12/07/2023
+    # IMPORTANT !!! days on site was deleted some 12/07/2023
     # df.loc[(df['daysOnSite'] > MIN_DAYS_ON_SITE_TO_ANALIZE) & (df['quantity'] > 0), 'k_discount'] = \
     #     (df['k_is_sell'] + df['k_revenue'] + df['k_logistic'] + df['k_net_cost'] + df['k_qt_full'] + df['k_rating']) / 6
 
@@ -137,45 +137,45 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     return df
 
 
-def k_dynamic(df, days_by=1):
-    """Calculate k that is influenced by the dynamic of sales in different periods, with higher k for greater sales growth."""
-    if days_by <= 1:
-        return df
-
-    # Calculate the Simple Moving Average (SMA) for each row
-    sales_columns = [col for col in df.columns if 'Продажа_' in col]
-    window_size = min(len(sales_columns), days_by)  # Choose the smaller of the two for window size
-    k_dynamic_sales_name = 'k_dynamic'
-
-    # Convert selected columns to numeric type
-    df[sales_columns] = df[sales_columns].apply(pd.to_numeric, errors='coerce')
-
-    # Replace non-numeric values with 0
-    df[sales_columns] = df[sales_columns].fillna(0)
-
-    # Calculate rolling mean
-    df[k_dynamic_sales_name] = df[sales_columns].rolling(window=window_size, axis=1).mean().iloc[:, -1]
-
-    # Normalize the result around 1 based on the mean value and rate of change
-    mean_sma = df[k_dynamic_sales_name].mean()
-    df[k_dynamic_sales_name] = 1 + (mean_sma - df[k_dynamic_sales_name]) / mean_sma
-
-    # Apply the normalization function to the k_dynamic_sales_name column
-    df[k_dynamic_sales_name] = df[k_dynamic_sales_name].apply(normalize_around_one)
-
-    return df
+# def k_dynamic(df, days_by=1):
+#     """Calculate k that is influenced by the dynamic of sales in different periods, with higher k for greater sales growth."""
+#     if days_by <= 1:
+#         return df
+#
+#     # Calculate the Simple Moving Average (SMA) for each row
+#     sales_columns = [col for col in df.columns if 'Продажа_' in col]
+#     window_size = min(len(sales_columns), days_by)  # Choose the smaller of the two for window size
+#     k_dynamic_sales_name = 'k_dynamic'
+#
+#     # Convert selected columns to numeric type
+#     df[sales_columns] = df[sales_columns].apply(pd.to_numeric, errors='coerce')
+#
+#     # Replace non-numeric values with 0
+#     df[sales_columns] = df[sales_columns].fillna(0)
+#
+#     # Calculate rolling mean
+#     df[k_dynamic_sales_name] = df[sales_columns].rolling(window=window_size, axis=1).mean().iloc[:, -1]
+#
+#     # Normalize the result around 1 based on the mean value and rate of change
+#     mean_sma = df[k_dynamic_sales_name].mean()
+#     df[k_dynamic_sales_name] = 1 + (mean_sma - df[k_dynamic_sales_name]) / mean_sma
+#
+#     # Apply the normalization function to the k_dynamic_sales_name column
+#     df[k_dynamic_sales_name] = df[k_dynamic_sales_name].apply(normalize_around_one)
+#
+#     return df
 
 
 # Define the function to calculate exponential moving average
-def calculate_ema(row, alpha, sales_columns):
-    series = row[sales_columns]
-    ema = series.ewm(alpha=alpha, adjust=False).mean().iloc[-1]  # Calculate EMA for the last element only
-    return ema
+# def calculate_ema(row, alpha, sales_columns):
+#     series = row[sales_columns]
+#     ema = series.ewm(alpha=alpha, adjust=False).mean().iloc[-1]  # Calculate EMA for the last element only
+#     return ema
 
 
 # Define the normalization function
-def normalize_around_one(value):
-    return 1 + (1 - value) / 50
+# def normalize_around_one(value):
+#     return 1 + (1 - value) / 50
 
 
 def nice_price(plan_delta_discount: float, current_price: float) -> float:

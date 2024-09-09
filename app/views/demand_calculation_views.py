@@ -26,11 +26,12 @@ def demand_calculation_excel():
         min_stock = int(request.form['min_stock'])
         testing_mode = request.form.get('testing_mode')
         is_from_yadisk = request.form.get('is_from_yadisk')
+        qt_correct = request.form.get('qt_correct')
 
         df = demand_calculation_module.demand_calculation_to_df(df, search_string, min_stock=min_stock,
                                                                 testing_mode=testing_mode,
                                                                 is_from_yadisk=is_from_yadisk)
-        df_clear = demand_calculation_module.clear_demand(df)
+        df_clear = demand_calculation_module.clear_demand(df, qt_correct=qt_correct)
 
         file_name = f"demand_calculation_{str(datetime.date.today())}.xlsx"
         clear_name = f"clear_demand_{str(datetime.date.today())}.xlsx"
