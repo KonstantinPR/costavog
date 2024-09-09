@@ -61,6 +61,7 @@ def upload_detailing():
     is_just_concatenate = request.form.get('is_just_concatenate')
     is_discount_template = request.form.get('is_discount_template')
     is_dynamic = request.form.get('is_dynamic')
+    is_chosen_columns = request.form.get('is_chosen_columns')
     # print(f"is_discount_template {is_discount_template}")
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
@@ -94,13 +95,14 @@ def upload_detailing():
     yandex_disk_handler.upload_to_YandexDisk(file, file_name=detailing_name, path=app.config['REPORT_DETAILING_UPLOAD'],
                                              testing_mode=testing_mode)
 
+    if is_chosen_columns:
+        df = df[[col for col in detailing_upload_module.CHOSEN_COLUMNS if col in df]]
+
     promo_name = "promo.xlsx"
     template_name = "discount_template.xlsx"
     df_dynamic_name = "df_dynamic.xlsx"
 
-    # Define the filenames for the zip file
     df_template = pandas_handler.df_disc_template_create(df, df_promo, is_discount_template)
-    # Create a zip file containing the DataFrames
     dfs = [df, df_promo, df_template, df_dynamic]
     dfs_names = [detailing_name, promo_name, template_name, df_dynamic_name]
     file, name = pandas_handler.files_to_zip(dfs, dfs_names)
