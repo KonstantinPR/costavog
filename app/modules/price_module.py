@@ -31,7 +31,7 @@ def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
         return df
 
     sum_k_discount = k_func_disc + k_n_disc
-    df['new_discount'] = round((df['func_discount'] * k_func_disc + df['n_discount'] * k_n_disc) / sum_k_discount)
+    df['new_discount'] = (df['func_discount'] * k_func_disc + df['n_discount'] * k_n_disc) / sum_k_discount
 
     df['d_disc'] = round(df['discount'] - df['new_discount'])
 

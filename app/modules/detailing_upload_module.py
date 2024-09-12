@@ -185,7 +185,6 @@ CHOSEN_COLUMNS = [
     "ABC_discount",
     "CV_discount",
 
-
 ]
 
 
@@ -1167,7 +1166,7 @@ def abc_xyz(merged_df):
     return merged_df
 
 
-def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k_cv=2):
+def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
     dynamic_columns_names = DINAMIC_COLUMNS
     if df_dynamic.empty:
         return df
@@ -1184,10 +1183,25 @@ def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k_cv=2):
 
     # Calculate discounts based on Total_Margin and CV
     df["ABC_discount"] = medium_total_margin / default_margin  # Adjust this to scale as needed
-    df["new_discount"] = df["new_discount"] - df["ABC_discount"]
+    df["CV_discount"] = df["CV"]
+    df["new_discount"] = df["new_discount"] - k * df["ABC_discount"] / df["CV_discount"].apply(abs)
 
-    df["CV_discount"] = df["CV"] * k_cv
-    df["new_discount"] = df["new_discount"] - df["CV_discount"]
+    return df
+
+
+def in_positive_digit(df, decimal=0, col_names=None):
+    if col_names is None:  # Default empty check
+        return df
+    if isinstance(col_names, str):  # Handle single column name
+        col_names = [col_names]
+
+    for col in col_names:
+        if col not in df.columns:  # Ensure the column exists
+            continue
+        # Set negative values to 0
+        df[col] = df[col].apply(lambda x: max(0, x))
+        # Round the values
+        df[col] = df[col].round(decimal)
 
     return df
 
