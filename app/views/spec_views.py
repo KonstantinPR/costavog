@@ -104,20 +104,17 @@ def data_to_spec_merging():
 
     fill_new_spec = request.form.get("fill_new_spec")
 
-
     uploaded_files = request.files.getlist("file")
     col_merge = request.form['col_merge']
     merge_option = request.form['merge_option']
     sheet_name = request.form['sheet_name']
 
     if fill_new_spec:
-        df = spec_modifiyer.fill_new_spec(uploaded_files)
+        df = spec_modifiyer.fill_new_spec(uploaded_files, sheet_name=sheet_name)
         output_file = 'merged_data.xlsx'
         df = io_output.io_output(df)
 
         return send_file(df, as_attachment=True, download_name=output_file)
-
-
 
     if merge_option == "merge":
         # Initialize an empty DataFrame to store the merged data

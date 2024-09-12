@@ -105,6 +105,13 @@ INITIAL_COLUMNS_DICT = {
     'k_norma_revenue': 'k_norma_revenue',
 }
 
+DINAMIC_COLUMNS = [
+    "Total_Margin",
+    "ABC_Category",
+    "CV",
+    "XYZ_Category",
+]
+
 CHOSEN_COLUMNS = [
     "Бренд",
     "Предмет",
@@ -171,12 +178,19 @@ CHOSEN_COLUMNS = [
     "addToCartPercent",
     "cartToOrderPercent",
     "buyoutsPercent",
+    "Total_Margin",
+    "ABC_Category",
+    "CV",
+    "XYZ_Category",
+    "ABC_discount",
+    "CV_discount",
+
+
 ]
 
 
 def get_period_sales(df, date_min, date_max, default_amount_days=DEFAULT_AMOUNT_DAYS, days_fading=0.25):
     days_period = (date_max - date_min).days
-    # days_period = 7
 
     df['days_period'] = days_period
     df['smooth_days'] = (df['days_period'] / default_amount_days) ** days_fading
@@ -206,14 +220,7 @@ def rename_mapping(df, col_map, to='key'):
     return df
 
 
-def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
-    article_column_name = 'Артикул поставщика'
-    df = concatenated_dfs
-    # result.dropna(subset=["Артикул поставщика"], inplace=True)
-    # result.to_excel('result.xlsx')
-
-    df = pandas_handler.first_letter_up(df, 'Обоснование для оплаты')
-
+def _adding_missing_columns(df):
     if 'К перечислению за товар' not in df:
         df['К перечислению за товар'] = 0
 
@@ -226,6 +233,26 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
     df['К перечислению за товар ИТОГО'] = df['К перечислению за товар'] + df[
         'К перечислению Продавцу за реализованный Товар']
+
+    if 'Возмещение издержек по эквайрингу' not in df:
+        df['Возмещение издержек по эквайрингу'] = 0
+
+    if 'Эквайринг/Комиссии за организацию платежей' not in df:
+        df['Эквайринг/Комиссии за организацию платежей'] = 0
+
+    df['Возмещение издержек по эквайрингу'] = df['Возмещение издержек по эквайрингу'] + df[
+        'Эквайринг/Комиссии за организацию платежей']
+    return df
+
+
+def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
+    article_column_name = 'Артикул поставщика'
+    df = concatenated_dfs
+    # result.dropna(subset=["Артикул поставщика"], inplace=True)
+    # result.to_excel('result.xlsx')
+
+    df = pandas_handler.first_letter_up(df, 'Обоснование для оплаты')
+    df = _adding_missing_columns(df)
 
     sales_name = 'Продажа'
     type_wb_sales_col_name_all = 'Вайлдберриз реализовал Товар (Пр)'
@@ -813,7 +840,7 @@ def days_between(d1, d2):
 #     return df_result
 
 
-def promofiling(promo_file, df, allowed_delta_percent=10):
+def promofiling(promo_file, df, allowed_delta_percent=5):
     if not promo_file:
         return None
 
@@ -1129,7 +1156,40 @@ def abc_xyz(merged_df):
 
     merged_df['XYZ_Category'] = merged_df.apply(classify_xyz, axis=1)
 
+    # Ensure no empty values in Total_Margin and CV, fill them with 0
+    merged_df["Total_Margin"].replace(["", np.inf, -np.inf], 0, inplace=True)
+    merged_df["CV"].replace(["", np.inf, -np.inf], 0, inplace=True)
+
+    # In case we want to ensure CV has a minimum non-zero value for comparison
+    max_cv = merged_df["CV"].max()
+    merged_df["CV"] = merged_df["CV"].replace(0, max_cv)  # Replace 0 CV with the maximum CV value
+
     return merged_df
+
+
+def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k_cv=2):
+    dynamic_columns_names = DINAMIC_COLUMNS
+    if df_dynamic.empty:
+        return df
+
+    # Select relevant columns from df_dynamic
+    df_dynamic = df_dynamic[["Артикул поставщика"] + dynamic_columns_names]
+
+    # Merge df_dynamic into df
+    df = pandas_handler.df_merge_drop(df, df_dynamic, "Артикул поставщика", "Артикул поставщика")
+
+    # Calculate the number of periods to adjust Total_Margin for periodic sales
+    periods_count = len([x for x in df_dynamic.columns if "Ч. Продажа шт." in x])
+    medium_total_margin = df["Total_Margin"] / periods_count if periods_count > 0 else df["Total_Margin"]
+
+    # Calculate discounts based on Total_Margin and CV
+    df["ABC_discount"] = medium_total_margin / default_margin  # Adjust this to scale as needed
+    df["new_discount"] = df["new_discount"] - df["ABC_discount"]
+
+    df["CV_discount"] = df["CV"] * k_cv
+    df["new_discount"] = df["new_discount"] - df["CV_discount"]
+
+    return df
 
 
 def starts_with_prefix(string, prefixes):

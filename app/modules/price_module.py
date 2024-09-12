@@ -117,18 +117,15 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     # df.loc[(df['stock'] > 0) | (df['outcome-net'] != 0), 'k_discount'] = weighted_sum / total_weight
     df['k_discount'] = weighted_sum / total_weight
 
-    df['n_discount'] = [n_discount(price_disc, k_discount, price, k_delta=k_delta) for price_disc, k_discount, price in
+    df['n_discount'] = [n_discount(price_disc, k_discount, price, k_delta) for price_disc, k_discount, price in
                         zip(df['price_disc'], df['k_discount'], df['price'])]
 
     default_changing = df['discount'] / 4
 
-    df.loc[(df['n_discount'] == 0), 'n_discount'] = default_changing
-    # df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days']) * k_delta
-    df['n_delta'] = round((df['discount'] - df['n_discount']) / df['smooth_days'])
-    # df['n_discount'] = df['discount']
+    df.loc[(df['n_discount'] <= 0), 'n_discount'] = default_changing
+    df['n_delta'] = round(((df['discount'] - df['n_discount']) / df['smooth_days']))
     df['n_discount'] = round(df['discount'] - df['n_delta'])
-    df.loc[(df['n_delta'] < 0) & (df['stock'] == 0), 'n_discount'] = default_changing
-    df.loc[df['n_discount'] < 0, 'n_discount'] = 0
+    df.loc[df['n_discount'] <= 0, 'n_discount'] = 0
     if reset_if_null:
         df.loc[df['stock'] <= 0, 'n_discount'] = default_changing
 
@@ -422,11 +419,11 @@ def k_rating(rating):
     return 1
 
 
-def n_discount(price_disc, k_discount, price, k_delta=5):
+def n_discount(price_disc, k_discount, price, k_delta):
     if price == 0 or np.isnan(price_disc) or np.isnan(k_discount):
         return np.nan  # Return NaN if any of the values are NaN or if price is zero
     else:
-        n_discount = (1 - (price_disc / (price * (k_discount ** k_delta)))) * 100
+        n_discount = (1 - (price_disc / (price * k_discount ** k_delta))) * 100
         if n_discount < 0:
             return 0
         return int(round(n_discount))

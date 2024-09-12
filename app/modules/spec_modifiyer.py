@@ -8,7 +8,6 @@ from openpyxl import load_workbook
 
 COL_ART_NAME = "Артикул продавца"
 
-
 PRICE_MULTIPLIER = lambda x: 40 / x ** 0.3
 """40 / 10000**0.3 = 2.52"""
 """40 / 1000**0.3 = 5.03"""
@@ -248,7 +247,6 @@ def col_adding(df_income, col_name="Артикул товара"):
     if not 'Категория продавца' in df_income.columns and 'Предмет' in df_income.columns:
         df_income['Категория продавца'] = df_income['Предмет']
 
-
     # df_income.to_excel('df_income.xlsx')
     return df_income
 
@@ -269,7 +267,7 @@ def sizes_translate(df, spec_type):
     return df
 
 
-def fill_new_spec(uploaded_files):
+def fill_new_spec(uploaded_files, sheet_name="Лист1"):
     # File paths
     file1 = uploaded_files[0]  # The Excel file with headers on the first row (to be filled)
     file2 = uploaded_files[1]  # The Excel file containing data to merge

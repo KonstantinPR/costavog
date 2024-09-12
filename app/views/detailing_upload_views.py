@@ -84,6 +84,7 @@ def upload_detailing():
     # main concatenated df
     df = df_list[0]
     df_dynamic = detailing_upload_module.dfs_dynamic(df_list, is_dynamic=is_dynamic)
+    df = detailing_upload_module.influence_discount_by_dynamic(df, df_dynamic)
 
     # file, name = pandas_handler.files_to_zip(dfs, dfs_names)
     # return send_file(file, download_name=name, as_attachment=True)
