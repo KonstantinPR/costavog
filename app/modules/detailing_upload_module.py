@@ -7,6 +7,7 @@ import numpy as np
 import io
 from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module, io_output
+import math
 from datetime import timedelta
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -861,6 +862,12 @@ def check_discount(df, allowed_delta_percent):
     new_discount_col = "new_discount"
     promo_discount_name = "Загружаемая скидка для участия в акции"
 
+    promo_discount_name_actual = "Загружаемая скидка для участия в акции исправленная"
+    # to fix the wildberries count price percentage discount promo bug
+    df[promo_discount_name_actual] = (1 - df[plan_price_name] / df[current_price_name]) * 100
+    df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(pandas_handler.false_to_null)
+    df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(lambda x: math.ceil(x))
+
     # Calculate the discount price
     df["discount_price"] = df[current_price_name] * (1 - df[new_discount_col] / 100)
 
@@ -871,12 +878,12 @@ def check_discount(df, allowed_delta_percent):
     allowed_ratio = 1 - allowed_delta_percent / 100
 
     # Store original promo discounts
-    df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name]
+    df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name_actual]
     df["Allowed"] = "Yes"
 
     # Update promo discounts based on allowed delta percent
-    df.loc[df["price_difference"] >= allowed_ratio, promo_discount_name] = df[promo_discount_name]
-    df.loc[df["price_difference"] < allowed_ratio, promo_discount_name] = df[new_discount_col]
+    df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name_actual]
+    df.loc[df["price_difference"] < allowed_ratio, new_discount_col] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
 
     return df
@@ -1185,9 +1192,10 @@ def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
 
     # Calculate discounts based on Total_Margin and CV
     df["ABC_discount"] = medium_total_margin / default_margin  # Adjust this to scale as needed
-    df["CV_discount"] = df["CV"]
+    df["CV_discount"] = df["CV"].apply(pandas_handler.false_to_null)
     df['ABC_CV_discount'] = k * df["ABC_discount"] / df["CV_discount"].apply(abs)
     df['ABC_CV_discount'] = df['ABC_CV_discount'].apply(pandas_handler.false_to_null)
+    df['ABC_CV_discount'] = df['ABC_CV_discount'].apply(pandas_handler.inf_to_null)
     df["new_discount"] = df["new_discount"] - df['ABC_CV_discount']
 
     return df

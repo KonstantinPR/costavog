@@ -12,6 +12,9 @@ FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', 
 FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
+INF_LIST = [np.inf, -np.inf]
+inf_to_null = lambda x: 0 if x in INF_LIST else x
+
 def replace_false_values(df, columns, FALSE_LIST=None):
     """
     Replace values in specified columns that match FALSE_LIST or are strings with 0.
@@ -230,44 +233,11 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     # If promo DataFrame is provided, merge and update "Новая скидка"
     if df_promo is not None:
         df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB", how='outer')
-        df_disc_template["Новая скидка"] = df_disc_template["Загружаемая скидка для участия в акции"].fillna(
-            df_disc_template["Новая скидка"])
+        # df_disc_template["Новая скидка"] = df_disc_template["new_discount"].fillna(
+        #     df_disc_template["Новая скидка"])
 
     # Ensure "Новая скидка" is filled with default_discount where NaN
     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
 
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]
-
-# def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
-#     if not is_discount_template:
-#         return None
-#
-#     df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
-#     df_all_cards = df_all_cards["nmID"].unique()
-#
-#     # Define the columns for the discount template
-#     df_disc_template_columns = [
-#         "Бренд", "Категория", "Артикул WB", "Артикул продавца",
-#         "Последний баркод", "Остатки WB", "Остатки продавца",
-#         "Оборачиваемость", "Текущая цена", "Новая цена",
-#         "Текущая скидка", "Новая скидка"
-#     ]
-#
-#     # Create an empty DataFrame with the specified columns
-#     df_disc_template = pd.DataFrame(columns=df_disc_template_columns)
-#
-#     df_disc_template["Артикул WB"] = df_all_cards["nmId"]
-#
-#     df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId")
-#     df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
-#
-#     if df_promo is not None:
-#         df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB")
-#         df_disc_template["Новая скидка"] = df_disc_template["Загружаемая скидка для участия в акции"]
-#         return df_disc_template
-#
-#     df_disc_template = df_disc_template[df_disc_template_columns]
-#     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
-#
-#     return df_disc_template
