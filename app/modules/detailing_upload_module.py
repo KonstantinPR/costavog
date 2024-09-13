@@ -184,6 +184,7 @@ CHOSEN_COLUMNS = [
     "XYZ_Category",
     "ABC_discount",
     "CV_discount",
+    "ABC_CV_discount",
 
 ]
 
@@ -1098,6 +1099,7 @@ def dfs_dynamic(df_list, is_dynamic=True):
 def abc_xyz(merged_df):
     # Calculate total margin by summing all 'Маржа-себест.' columns
     margin_columns = [col for col in merged_df.columns if 'Маржа-себест.' in col and "Маржа-себест./ шт" not in col]
+    merged_df[margin_columns] = merged_df[margin_columns].applymap(pandas_handler.false_to_null)
     merged_df['Total_Margin'] = merged_df[margin_columns].sum(axis=1)
 
     # Calculate total margin per article
@@ -1184,7 +1186,9 @@ def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
     # Calculate discounts based on Total_Margin and CV
     df["ABC_discount"] = medium_total_margin / default_margin  # Adjust this to scale as needed
     df["CV_discount"] = df["CV"]
-    df["new_discount"] = df["new_discount"] - k * df["ABC_discount"] / df["CV_discount"].apply(abs)
+    df['ABC_CV_discount'] = k * df["ABC_discount"] / df["CV_discount"].apply(abs)
+    df['ABC_CV_discount'] = df['ABC_CV_discount'].apply(pandas_handler.false_to_null)
+    df["new_discount"] = df["new_discount"] - df['ABC_CV_discount']
 
     return df
 

@@ -1,12 +1,8 @@
 import datetime
-
 from flask_login import login_required
-from werkzeug.datastructures import FileStorage
-import logging
 from app import app
 from flask import render_template, request, send_file, flash
 from app.modules import io_output, demand_calculation_module, request_handler, pandas_handler
-import pandas as pd
 
 
 @app.route('/demand_calculation_excel', methods=['POST', 'GET'])

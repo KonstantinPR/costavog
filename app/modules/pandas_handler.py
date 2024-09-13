@@ -8,8 +8,9 @@ import io
 from app.modules import io_output, API_WB
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
-FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
 
+FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
+false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 def replace_false_values(df, columns, FALSE_LIST=None):
     """

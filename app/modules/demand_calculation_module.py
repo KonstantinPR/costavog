@@ -89,7 +89,7 @@ def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=
     # print(cols)
 
     df = df.drop_duplicates(subset=['vendorCode', 'techSize'])
-    df.to_excel('qt_to_order.xlsx')
+    # df.to_excel('qt_to_order.xlsx')
 
     if search_string_list:
         m = pd.concat([df[cols].agg("".join, axis=1).str.contains(s) for s in search_string_list], axis=1).all(1)
