@@ -67,13 +67,13 @@ def get_stock_wb():
     """
     Достает все остатки с WB через API, на яндекс диск сохранится без городов и размеров
     """
-    is_delete_shushary = request.form.get('is_delete_shushary')
+    is_shushary = request.form.get('is_shushary')
     testing_mode = request.form.get('testing_mode')
-    logging.warning(f"is_delete_shushary {is_delete_shushary}")
+    logging.warning(f"is_shushary {is_shushary}")
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
         logging.warning(f"request {request}")
-        df = API_WB.get_wb_stock_api(request=request, is_delete_shushary=is_delete_shushary, testing_mode=testing_mode)
+        df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode)
         df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
     return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)

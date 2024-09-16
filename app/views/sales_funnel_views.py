@@ -32,7 +32,7 @@ def sales_funnel_analyses():
         df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
         df = pandas_handler.df_merge_drop(df, df_net_cost, left_on='nmID', right_on='nm_id')
         stock_settings = {'no_city': 'no_city', 'no_sizes': 'no_sizes'}
-        df_stock = API_WB.get_wb_stock_api(request=stock_settings, testing_mode=testing_mode, is_delete_shushary=True)
+        df_stock = API_WB.get_wb_stock_api(request=stock_settings, testing_mode=testing_mode, is_shushary=True)
         df_stock = df_stock.drop_duplicates(subset='nmId')
         df = pandas_handler.df_merge_drop(df, df_stock, left_on='nmID', right_on='nmId')
         df_price, _ = API_WB.get_wb_price_api(request, testing_mode=testing_mode)

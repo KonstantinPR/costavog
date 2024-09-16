@@ -12,8 +12,8 @@ from app.modules import io_output
 from app.modules import yandex_disk_handler, pandas_handler, request_handler
 
 
-def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
-    df = get_storage_cost(testing_mode, is_delete_shushary)
+def get_average_storage_cost(testing_mode=False, is_shushary=None):
+    df = get_storage_cost(testing_mode, is_shushary)
 
     df = df.groupby('vendorCode').agg(
         {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
@@ -22,7 +22,7 @@ def get_average_storage_cost(testing_mode=False, is_delete_shushary=None):
     return df
 
 
-def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
+def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
                      days_delay=0,
                      upload_to_yadisk=True):
     print(f"get_storage_cost...")
@@ -96,7 +96,7 @@ def get_storage_cost(testing_mode=False, is_delete_shushary=None, number_last_da
         file_name = f'{storage_file_name}.xlsx'
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STORAGE_COST'])
 
-    if 'warehouse' in df.columns and is_delete_shushary:
+    if 'warehouse' in df.columns and is_shushary:
         logging.warning("Удаление сгоревших товаров Шушар...")
         df = df[df['warehouse'] != 'Санкт-Петербург Шушары']
 
@@ -188,39 +188,10 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     return df, file_name
 
 
-# def get_wb_price_api(testing_mode=None):
-#     """get_wb_price_api"""
-#     headers = {
-#         'accept': 'application/json',
-#         'Authorization': app.config['WB_API_TOKEN'],
-#     }
-#     response = requests.get('https://discounts-prices-api.wb.ru/api/v2/list/goods/filter', headers=headers)
-#     logging.warning(f"response {get_wb_price_api.__doc__}: {response.status_code}")
-#
-#     if response.status_code in {200, 201} and not testing_mode:
-#         print(f"Failed to fetch data from Wildberries API: {response.text}")
-#         data = response.json()
-#         if data:  # Check if the response contains data
-#             df = pd.DataFrame(data)
-#             # df = df.rename(columns={'nmId': 'nm_id'})
-#             # Upload data to Yandex Disk
-#             file_name = "wb_price_data.xlsx"
-#             io_df = io_output.io_output(df)
-#             file_name = f'{file_name}.xlsx'
-#             yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
-#             return df
-#         else:
-#             logging.warning("No data received from Wildberries API. Retrieving from Yandex Disk...")
-#             df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
-#             return df
-#     else:
-#         logging.warning(f"response text {get_wb_price_api.__doc__}: {response.text}")
-#         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
-#         return df
 
 
-def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
-                     is_upload_yandex=True, date_from: str = '2019-01-01'):
+def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_upload_yandex=True,
+                     date_from: str = '2019-01-01'):
     """
     get wb stock via api put in df
     :return: df
@@ -231,7 +202,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
     if testing_mode:
         logging.warning("testing mode, stock from yandex disk ...")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
-        if 'warehouseName' in df.columns and is_delete_shushary:
+        if 'warehouseName' in df.columns and is_shushary:
             logging.warning("Удаление сгоревших товаров Шушар из остатков ...")
             df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
         return df
@@ -247,7 +218,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_delete_shushary=True,
     df = pd.json_normalize(df)
     # df.to_excel("wb_stock.xlsx")
 
-    if 'warehouseName' in df.columns and is_delete_shushary:
+    if 'warehouseName' in df.columns and is_shushary:
         logging.warning("Удаление сгоревших товаров Шушар из остатков ...")
         df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
 
@@ -537,8 +508,11 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
         return None
 
 
-def get_wb_sales_funnel_api(request, testing_mode=False, is_erase_points=True, is_re_double=True, is_to_yadisk=True):
+def get_wb_sales_funnel_api(request, testing_mode=False, is_funnel=False, is_re_double=True, is_to_yadisk=True):
     """get_wb_sales_funnel_api"""
+
+    if not is_funnel:
+        return None, None
 
     date_from = request_handler.request_date_from(request)
     date_end = request_handler.request_date_end(request)

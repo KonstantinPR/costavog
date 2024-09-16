@@ -224,17 +224,14 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     # Populate "Артикул WB" with unique nmID values
     df_disc_template["Артикул WB"] = unique_nmID_values
 
-    # Merge with the main DataFrame to get relevant columns
-    df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
 
-    # Initialize "Новая скидка" with "new_discount" from the main DataFrame
-    df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
-
-    # If promo DataFrame is provided, merge and update "Новая скидка"
-    if df_promo is not None:
+    # If promo DataFrame is provided, merge and update "Новая скидка" by "new_discount" from df_promo
+    if df_promo is None:
+        df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
+    else:
         df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB", how='outer')
-        # df_disc_template["Новая скидка"] = df_disc_template["new_discount"].fillna(
-        #     df_disc_template["Новая скидка"])
+
+    df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
 
     # Ensure "Новая скидка" is filled with default_discount where NaN
     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)

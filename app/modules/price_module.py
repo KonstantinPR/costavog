@@ -1,10 +1,5 @@
-import requests
-# from bs4 import BeautifulSoup
-import pandas as pd
-import math
 import numpy as np
 import random
-
 from app.modules import detailing_upload_module
 
 DEFAULT_NET_COST = 250
@@ -15,7 +10,6 @@ DEFAULT_PURE_VALUE = DEFAULT_NET_COST * 1.2
 
 def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
     """
-
     :param df: DataFrame Pandas
     :param is_mix_discounts: new_discount is influenced by func_discount if True
     :param k_func_discount: influence coefficient of func_discount
@@ -36,7 +30,6 @@ def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
     df['d_disc'] = round(df['discount'] - df['new_discount'])
 
     return df
-
 
 def count_norma_revenue(df):
     # k_norma must count dynamicly every time as clear_sell/(clear_sell - (storage + logistic...)) + norma_revenue

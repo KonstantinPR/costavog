@@ -1,20 +1,13 @@
-import logging
 from app import app
-from flask import send_file
 import zipfile
 import pandas as pd
 import numpy as np
 import io
 from datetime import datetime
-from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module, io_output
+from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
 import math
-from datetime import timedelta
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
-
-# path = 'detailing/'
-# file_names = [f for f in listdir('detailing')]
-# print(file_names)
 
 DEFAULT_AMOUNT_DAYS = 7
 
@@ -305,12 +298,6 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     # dfs_names = [sales_name, logistic_name, backs_name, substituted_col_name]
     df = df.fillna(0)
 
-    # warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
-    # type_warehouse_operation_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
-    #
-    # storage_col_name = 'Хранение'
-    # penalty_col_name = 'Штраф'
-
     # df.to_excel("v2.xlsx")
     df['Ч. WB_реализовал'] = df['WB реализовал руб'] - df['WB вернули руб']
     df['Ч. Продажа'] = df['Продажа'] - df['Возврат']
@@ -323,18 +310,16 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['При выдачи от'] + df['При выдачи в'] + df[
         'Склады удержали']
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
-    # df.to_excel("Viruchka.xlsx")
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
     df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
 
     if drop_duplicates_in:
         df.drop_duplicates(subset=drop_duplicates_in)
-    # df.to_excel('V2.xlsx')
 
     return df
 
 
-def merge_stock(df, df_stock, testing_mode, is_get_stock, is_delete_shushary=False):
+def merge_stock(df, df_stock, is_get_stock=False):
     if is_get_stock:
         df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')[0]
         df = df_stock.merge(df, how='outer', left_on='nmId', right_on='Код номенклатуры')
@@ -343,12 +328,12 @@ def merge_stock(df, df_stock, testing_mode, is_get_stock, is_delete_shushary=Fal
         return df
 
 
-def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_delete_shushary=False, df_storage=None):
+def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=False, df_storage=None):
     if not is_get_storage:
         return df
 
     if df_storage is None or df_storage.empty:
-        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_delete_shushary=is_delete_shushary)
+        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
 
     df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')[0]
     # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
@@ -401,7 +386,7 @@ def profit_count(df):
     return df
 
 
-def merge_price(df, df_price, testing_mode, is_get_price):
+def merge_price(df, df_price, is_get_price):
     if is_get_price:
         # df = df.merge(df_price, how='outer', left_on='nmId', right_on='nmID')
         df = pandas_handler.df_merge_drop(df, df_price, 'nmId', 'nmID', how="outer")
@@ -499,53 +484,6 @@ def replace_incorrect_date(df, date_column='Дата продажи'):
     return df
 
 
-# def get_dynamic_sales_old(df,
-#                       type_column='Тип документа',
-#                       type_name='Продажа',
-#                       article_column='Артикул поставщика',
-#                       sales_column='К перечислению Продавцу за реализованный Товар',
-#                       date_column='Дата продажи'):
-#     """
-#     Calculate dynamic sales based on the midpoint of the date range.
-#
-#     Parameters:
-#         df (DataFrame): Input DataFrame containing sales data.
-#         article_column (str): Name of the column containing article identifiers.
-#         sales_column (str): Name of the column containing sales data.
-#         date_column (str): Name of the column containing date data.
-#
-#     Returns:
-#         DataFrame: DataFrame with dynamic sales information appended as new columns.
-#     """
-#     # Convert date_column to datetime format only for rows where Продажи != 0
-#     df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
-#     df.loc[df[sales_column] == 0, date_column] = pd.NaT  # Set dates to NaT for zero sales
-#
-#     # Find the minimum and maximum dates after replacements
-#     min_date = df[date_column].min()
-#     max_date = df[date_column].max()
-#
-#     # Calculate the midpoint
-#     mid_date = min_date + (max_date - min_date) / 2
-#
-#     # Split DataFrame into two halves based on the midpoint date
-#     first_half = df[df[date_column] <= mid_date]
-#     second_half = df[df[date_column] > mid_date]
-#
-#     # Filter DataFrame to include only sales where 'Тип документа' is equal to 'Продажа'
-#     first_half_sales = first_half[first_half[type_column] == type_name]
-#     second_half_sales = second_half[second_half[type_column] == type_name]
-#
-#     # Calculate sum of sales_column for each article_column in each half
-#     sales1 = first_half_sales.groupby(article_column)[sales_column].sum().reset_index()
-#     sales2 = second_half_sales.groupby(article_column)[sales_column].sum().reset_index()
-#
-#     # Merge sums back into original DataFrame
-#     df = pd.merge(df, sales1, on=article_column, how='left', suffixes=('', '_1'))
-#     df = pd.merge(df, sales2, on=article_column, how='left', suffixes=('', '_2'))
-#
-#     return df
-
 
 def get_dynamic_sales(df,
                       days_by,
@@ -560,8 +498,6 @@ def get_dynamic_sales(df,
 
     Parameters:
         df (DataFrame): Input DataFrame containing sales data.
-        periods (int): Number of periods to divide the date range into.
-        article_column (str): Name of the column containing article identifiers.
         sales_column (str): Name of the column containing sales data.
         date_column (str): Name of the column containing date data.
 
@@ -644,203 +580,6 @@ def days_between(d1, d2):
     return None
 
 
-# def zip_detail(concatenated_dfs, df_net_cost):
-#     result = concatenated_dfs
-#     result.dropna(subset=["Артикул поставщика"], inplace=True)
-#     # result.to_excel('result.xlsx')
-#
-#     result = pandas_handler.first_letter_up(result, 'Обоснование для оплаты')
-#
-#     if 'К перечислению за товар' not in result:
-#         result['К перечислению за товар'] = 0
-#
-#     if 'К перечислению Продавцу за реализованный Товар' not in result:
-#         result['К перечислению Продавцу за реализованный Товар'] = 0
-#
-#     if 'Услуги по доставке товара покупателю' not in result:
-#         result['Услуги по доставке товара покупателю'] = 0
-#
-#     if 'Удержания' not in result:
-#         result['Удержания'] = 0
-#
-#     if 'Платная приемка' not in result:
-#         result['Платная приемка'] = 0
-#
-#     result['К перечислению Продавцу за реализованный Товар'].replace(np.NaN, 0, inplace=True)
-#     result['К перечислению за товар'].replace(np.NaN, 0, inplace=True)
-#
-#     result['К перечислению за товар ИТОГО'] = result['К перечислению за товар'] + result[
-#         'К перечислению Продавцу за реализованный Товар']
-#
-#     df_pivot = result.pivot_table(index=['Артикул поставщика'],
-#                                   columns='Обоснование для оплаты',
-#                                   values=['К перечислению за товар ИТОГО',
-#                                           'Вознаграждение Вайлдберриз (ВВ), без НДС',
-#                                           'Количество доставок',
-#                                           'Количество возврата',
-#                                           'Услуги по доставке товара покупателю',
-#                                           ],
-#                                   aggfunc={'К перечислению за товар ИТОГО': sum,
-#                                            'Вознаграждение Вайлдберриз (ВВ), без НДС': sum,
-#                                            'Количество доставок': 'count',
-#                                            'Количество возврата': 'count',
-#                                            'Услуги по доставке товара покупателю': 'count', },
-#                                   margins=False)
-#
-#     # Calculate the mean date for 'Дата заказа покупателем' and 'Дата продажи'
-#     mean_date_order = pd.to_datetime(result['Дата заказа покупателем']).mean()
-#     mean_date_sale = pd.to_datetime(result['Дата продажи']).mean()
-#
-#     # Fill empty cells in specific columns with default values
-#     default_values = {
-#         'Код номенклатуры': 0,
-#         'Предмет': 'None',
-#         'Бренд': 'None',
-#         'Услуги по доставке товара покупателю': 0,
-#         'Платная приемка': 0,
-#         'Цена розничная с учетом согласованной скидки': 0,
-#         'Дата заказа покупателем': mean_date_order.strftime(STRFORMAT_DEFAULT),
-#         'Дата продажи': mean_date_sale.strftime(STRFORMAT_DEFAULT),
-#     }
-#
-#     for col, default_value in default_values.items():
-#         result[col].fillna(default_value, inplace=True)
-#
-#     df_pivot.to_excel("df_pivot_revenue.xlsx")
-#
-#     df_pivot2 = result.pivot_table(index=['Артикул поставщика'],
-#                                    values=['Код номенклатуры',
-#                                            'Предмет',
-#                                            'Бренд',
-#                                            'Услуги по доставке товара покупателю',
-#                                            'Удержания',
-#                                            'Платная приемка',
-#                                            'Цена розничная с учетом согласованной скидки',
-#                                            'Дата заказа покупателем',
-#                                            'Дата продажи',
-#
-#                                            ],
-#                                    aggfunc={'Код номенклатуры': max,
-#                                             'Предмет': max,
-#                                             'Бренд': max,
-#                                             'Услуги по доставке товара покупателю': sum,
-#                                             'Удержания': sum,
-#                                             'Платная приемка': sum,
-#                                             'Цена розничная с учетом согласованной скидки': max,
-#                                             'Дата заказа покупателем': min,
-#                                             'Дата продажи': min,
-#
-#                                             },
-#                                    margins=False)
-#
-#     df_result = df_pivot.merge(df_pivot2, how='left', on='Артикул поставщика')
-#     df_result.to_excel("df_result.xlsx")
-#     if not isinstance(df_net_cost, bool):
-#         if not 'Артикул поставщика' in df_result:
-#             df_result['Артикул поставщика'] = ''
-#         df_result['Артикул поставщика'].fillna(df_result['supplierArticle'])
-#         df_result = df_result.merge(df_net_cost.rename(columns={'article': 'Артикул поставщика'}), how='outer',
-#                                     on='Артикул поставщика')
-#
-#     df_result.replace(np.NaN, 0, inplace=True)
-#
-#     if ('К перечислению за товар ИТОГО', 'Продажа') not in df_result:
-#         df_result[('К перечислению за товар ИТОГО', 'Продажа')] = 0
-#
-#     if ('К перечислению за товар ИТОГО', 'Возврат') not in df_result:
-#         df_result[('К перечислению за товар ИТОГО', 'Возврат')] = 0
-#
-#     df_result['Продажи'] = df_result[('К перечислению за товар ИТОГО', 'Продажа')]
-#
-#     df_result['Возвраты, руб.'] = df_result[('К перечислению за товар ИТОГО', 'Возврат')]
-#
-#     df_result['Маржа'] = df_result['Продажи'] - \
-#                          df_result["Услуги по доставке товара покупателю"] - \
-#                          df_result['Возвраты, руб.'] - \
-#                          df_result['Удержания'] - \
-#                          df_result['Платная приемка']
-#
-#     if 'net_cost' in df_result:
-#         df_result['net_cost'].replace(np.NaN, 0, inplace=True)
-#     else:
-#         df_result['net_cost'] = 0
-#
-#     df_result['Чист. покупок шт.'] = df_result[('Количество доставок', 'Продажа')] - df_result[
-#         ('Количество доставок', 'Возврат')]
-#
-#     df_result['Маржа / логистика'] = df_result['Маржа'] / df_result["Услуги по доставке товара покупателю"]
-#     df_result['Продажи к возвратам'] = df_result['Продажи'] / df_result['Возвраты, руб.']
-#     df_result['Маржа / доставковозвратам'] = df_result['Маржа'] / (
-#             df_result[('Количество доставок', 'Продажа')] -
-#             df_result[('Количество доставок', 'Возврат')])
-#
-#     df_result['Продаж'] = df_result[('Количество доставок', 'Продажа')]
-#     df_result['Возврат шт.'] = df_result[('Количество доставок', 'Возврат')]
-#     df_result['Логистика'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
-#     df_result['Доставки/Возвраты, руб.'] = df_result[('Количество доставок', 'Продажа')] / df_result[
-#         ('Количество доставок', 'Возврат')]
-#
-#     df_result['Маржа-себест.'] = df_result['Маржа'] - df_result['net_cost'] * df_result['Чист. покупок шт.']
-#     df_result['Себестоимость продаж'] = df_result['net_cost'] * df_result['Чист. покупок шт.']
-#     df_result['Покатали раз'] = df_result[('Услуги по доставке товара покупателю', 'Логистика')]
-#     df_result['Покатушка средне, руб.'] = df_result['Услуги по доставке товара покупателю'] / df_result[
-#         ('Услуги по доставке товара покупателю', 'Логистика')]
-#
-#     df_result.replace([np.inf, -np.inf], np.nan, inplace=True)
-#
-#     if 'Предмет_x' in df_result.columns and 'Предмет_y' in df_result.columns:
-#         df_result['Предмет_x'].fillna(df_result['Предмет_y'])
-#
-#     today = datetime.today()
-#     print(f'today {today}')
-#     df_result['Дней в продаже'] = [days_between(d1, today) for d1 in df_result['Дата заказа покупателем']]
-#
-#     # result.to_excel('result.xlsx')
-#
-#     # df_result = df_result[[
-#     #     'Бренд',
-#     #     'Предмет_x',
-#     #     'Артикул поставщика',
-#     #     'Код номенклатуры',
-#     #     'Маржа-себест.',
-#     #     'Маржа',
-#     #     'Чист. покупок шт.',
-#     #     'Продажа_1',
-#     #     'Продажа_2',
-#     #     'Продажи',
-#     #     'Возвраты, руб.',
-#     #     'Продаж',
-#     #     'Возврат шт.',
-#     #     'Услуги по доставке товара покупателю',
-#     #     'Покатушка средне, руб.',
-#     #     'Покатали раз',
-#     #     'net_cost',
-#     #     'company_id',
-#     #     'Маржа / логистика',
-#     #     'Продажи к возвратам',
-#     #     'Маржа / доставковозвратам',
-#     #     'Логистика',
-#     #     'Доставки/Возвраты, руб.',
-#     #     'Себестоимость продаж',
-#     #     'Поставщик',
-#     #     'Дата заказа покупателем',
-#     #     'Дата продажи',
-#     #     'Дней в продаже',
-#     #
-#     # ]]
-#
-#     df_result = df_result.reindex(df_result.columns, axis=1)
-#     df_result = df_result.round(decimals=0).sort_values(by=['Маржа-себест.'], ascending=False)
-#
-#     # Clean the "Дата заказа покупателем" column
-#     df_result["Дата заказа покупателем"] = df_result["Дата заказа покупателем"].replace({0: np.nan}).dropna()
-#
-#     # Convert the cleaned "Дата заказа покупателем" column to datetime
-#     df_result["Дата заказа покупателем"] = pd.to_datetime(df_result["Дата заказа покупателем"])
-#     df_result.to_excel('df_result.xlsx')
-#     return df_result
-
-
 def promofiling(promo_file, df, allowed_delta_percent=5):
     if not promo_file:
         return None
@@ -848,8 +587,6 @@ def promofiling(promo_file, df, allowed_delta_percent=5):
     # Read the promo file into a DataFrame
     df_promo = pd.read_excel(promo_file)
 
-    # Merge df_promo with df
-    # df_promo = df_promo.merge(df, how='left', left_on="Артикул WB", right_on="nmId")
     df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
     df_promo = check_discount(df_promo, allowed_delta_percent)
 
@@ -927,7 +664,7 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
 
     is_net_cost = request.form.get('is_net_cost')
     is_get_storage = request.form.get('is_get_storage')
-    is_delete_shushary = request.form.get('is_delete_shushary')
+    is_shushary = request.form.get('is_shushary')
     is_get_price = request.form.get('is_get_price')
     is_get_stock = request.form.get('is_get_stock')
     is_funnel = request.form.get('is_funnel')
@@ -945,27 +682,16 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
     df_price, _ = API_WB.get_wb_price_api(testing_mode=testing_mode)
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
     request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}
-    df_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request_dict,
-                                       is_delete_shushary=is_delete_shushary)
-    if is_funnel:
-        df_funnel, funnel_file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
+    df_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request_dict, is_shushary=is_shushary)
 
-    if not is_dynamic:
-        dfs = pd.concat(dfs)
-        dfs = [dfs]
+    df_funnel, funnel_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode, is_funnel=is_funnel)
 
-    if is_dynamic:
-        print("is_dynamic...")
-        if is_first_df:
-            print("is_first_df...")
-            dfs = [dfs[0]] + dfs
-        else:
-            dfs = [pd.concat(dfs)] + dfs
+    dfs = check_dynamic(dfs, is_dynamic=is_dynamic, is_first_df=is_first_df)
 
     dfs_final_list = []
     dfs_names = []
 
-    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_delete_shushary=is_delete_shushary)
+    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
 
     for i, df in enumerate(dfs):
         df = replace_incorrect_date(df)
@@ -982,17 +708,16 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
 
         df = zip_detail_V2(df, drop_duplicates_in="Артикул поставщика")
 
-        df = merge_stock(df, df_stock, testing_mode=testing_mode, is_get_stock=is_get_stock,
-                         is_delete_shushary=is_delete_shushary)
+        df = merge_stock(df, df_stock, is_get_stock=is_get_stock)
 
         if not 'quantityFull' in df.columns: df['quantityFull'] = 0
         df['quantityFull'].replace(np.NaN, 0, inplace=True)
         df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
 
         df = merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage,
-                           is_delete_shushary=is_delete_shushary, df_storage=df_storage)
+                           is_shushary=is_shushary, df_storage=df_storage)
         df = merge_net_cost(df, df_net_cost, is_net_cost)
-        df = merge_price(df, df_price, testing_mode, is_get_price).drop_duplicates(
+        df = merge_price(df, df_price, is_get_price).drop_duplicates(
             subset='nmId')
         df = profit_count(df)
         # df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
@@ -1018,11 +743,6 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
         k_norma_revenue = price_module.count_norma_revenue(df)
         df = price_module.discount(df, k_delta=k_delta, k_norma_revenue=k_norma_revenue, reset_if_null=reset_if_null)
         discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
-        # discount_columns['buyoutsCount'] = 'Ч. Продажа шт.'
-
-        # df = price_module.k_dynamic(df, days_by=days_by)
-        # 27/04/2024 - not yet prepared
-        # df[discount_columns['func_discount']] *= df['k_dynamic']
 
         # Reorder the columns
 
@@ -1054,6 +774,21 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
         dfs_names.append(f"df_{str(i)}.xlsx")
 
     return dfs_final_list, dfs_names
+
+
+def check_dynamic(dfs, is_dynamic=False, is_first_df=False):
+    if not is_dynamic:
+        dfs = pd.concat(dfs)
+        dfs = [dfs]
+
+    if is_dynamic:
+        print("is_dynamic...")
+        if is_first_df:
+            print("is_first_df...")
+            dfs = [dfs[0]] + dfs
+        else:
+            dfs = [pd.concat(dfs)] + dfs
+    return dfs
 
 
 def dfs_dynamic(df_list, is_dynamic=True):
