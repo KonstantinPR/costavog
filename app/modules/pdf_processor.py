@@ -4,7 +4,7 @@ import os
 
 
 def images_into_pdf(df, file_name="output_filename", art_col_name="Артикул товара", size_col_name="Размер",
-                    qt_col_name="Кол-во", rev='Прибыль_sum', qt_sum=0):
+                    qt_col_name="Кол-во", qt_sum=0):
     file_name = file_name.split('.')[0]
     path_pdf = f"folder_img/{file_name}.pdf"
 
@@ -73,7 +73,7 @@ def _add_notes_and_info(pdf, step, no_photo_list, qt_sum):
     try:
         current_y = pdf.get_y()
     except AttributeError:
-        raise AttributeError("The 'pdf' object does not have 'get_y()' method. Ensure you're using the correct FPDF version.")
+        raise AttributeError("The 'pdf' object does not have 'get_y()' method. Ensure you're using the correct FPDF.")
 
     # Update Y position for the note
     pdf.set_xy(x=step, y=current_y + step * 2)

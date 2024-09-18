@@ -30,9 +30,6 @@ def barcode():
         flash("Тип баркода который будем печатать")
         return render_template('upload_barcode.html')
 
-    if not request.form['format']:
-        flash("Формат сохранения не задан")
-        return render_template('upload_barcode.html')
 
     type_barcode = request.form['type-barcode']
     print(f'type_barcode {type_barcode}')

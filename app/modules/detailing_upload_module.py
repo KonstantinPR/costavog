@@ -479,7 +479,7 @@ def replace_incorrect_date(df, date_column='Дата продажи'):
     print(f"date_min {df[date_column].min()}")
 
     # Save the DataFrame to an Excel file
-    df.to_excel("df_date.xlsx", index=False)
+    # df.to_excel("df_date.xlsx", index=False)
 
     return df
 

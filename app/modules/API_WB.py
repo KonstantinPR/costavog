@@ -239,7 +239,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
     else:
         raise ValueError("Invalid request type. It should be either a 'requests' object or a dictionary.")
 
-    df.to_excel("df_stock.xlsx")
+    # df.to_excel("df_stock.xlsx")
 
     if no_city == 'no_city' and no_sizes == 'no_sizes':
         df = df.pivot_table(index=['nmId'],
