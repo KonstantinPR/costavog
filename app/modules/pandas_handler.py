@@ -127,7 +127,8 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_co
 
 
 def upper_case(df_list, name_columns):
-    if not isinstance(name_columns, list): name_columns = [name_columns]
+    if not isinstance(name_columns, list):
+        name_columns = [name_columns]
     if not isinstance(df_list, list): df_list = [df_list]
     for d in df_list:
         for name_column in name_columns:
@@ -235,6 +236,8 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     # Ensure "Новая скидка" is filled with default_discount where NaN
     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
+
+    df_disc_template = df_disc_template.drop_duplicates(subset=["Артикул WB"])
 
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]
