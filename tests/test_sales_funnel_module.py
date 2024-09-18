@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from app.modules.sales_funnel_module import calculate_discount
 
+
 @pytest.fixture
 def sample_data():
     data = {
@@ -15,9 +16,11 @@ def sample_data():
     }
     return pd.DataFrame(data)
 
+
 def test_calculate_discount_returns_dataframe(sample_data):
     result = calculate_discount(sample_data)
     assert isinstance(result, pd.DataFrame)
+
 
 def test_calculate_discount_columns(sample_data):
     result = calculate_discount(sample_data)

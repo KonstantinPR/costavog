@@ -239,6 +239,12 @@ def _adding_missing_columns(df):
     return df
 
 
+def add_col(df, col_name):
+    if col_name not in df:
+        df['Эквайринг/Комиссии за организацию платежей'] = 0
+    return col_name
+
+
 def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     article_column_name = 'Артикул поставщика'
     df = concatenated_dfs
@@ -257,18 +263,18 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     logistic_name = 'Логистика'
     type_delivery_service_col_name = 'Услуги по доставке товара покупателю'
 
-    substituted_col_name = 'Компенсация подмененного товара'
-    damages_col_name = 'Компенсация ущерба'
-    penalty_col_name = 'Штраф'
+    substituted_col_name = add_col(df, 'Компенсация подмененного товара')
+    damages_col_name = add_col(df, 'Компенсация ущерба')
+    penalty_col_name = add_col(df, 'Штраф')
     type_sales_col_name = 'К перечислению Продавцу за реализованный Товар'
     type_penalty_col_name = 'Общая сумма штрафов'
     type_acquiring_col_name = 'Возмещение издержек по эквайрингу'
     type_give_col_name = 'Возмещение за выдачу и возврат товаров на ПВЗ'
     type_store_moves_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
 
-    qt_col_name = 'Кол-во'
-    qt_logistic_to_col_name = 'Количество доставок'
-    qt_logistic_back_col_name = 'Количество возврата'
+    qt_col_name = add_col(df, 'Кол-во')
+    qt_logistic_to_col_name = add_col(df, 'Количество доставок')
+    qt_logistic_back_col_name = add_col(df, 'Количество возврата')
 
     df_wb_sales = pivot_expanse(df, sales_name, type_wb_sales_col_name_all, col_name="WB реализовал руб")
     df_wb_backs = pivot_expanse(df, backs_name, type_wb_sales_col_name_all, col_name="WB вернули руб")
@@ -484,7 +490,6 @@ def replace_incorrect_date(df, date_column='Дата продажи'):
     return df
 
 
-
 def get_dynamic_sales(df,
                       days_by,
                       INCLUDE_COLUMNS,
@@ -500,7 +505,7 @@ def get_dynamic_sales(df,
         df (DataFrame): Input DataFrame containing sales data.
         sales_column (str): Name of the column containing sales data.
         date_column (str): Name of the column containing date data.
-
+        days_by (int): days between period for dynamic
     Returns:
         DataFrame: DataFrame with dynamic sales information appended as new columns.
     """
