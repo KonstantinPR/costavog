@@ -20,7 +20,7 @@ def barcode():
 
     elif request.files['file']:
         file: FileStorage = request.files['file']
-        df = pd.read_table(file, delim_whitespace=False, header=None)
+        df = pd.read_table(file.stream, delim_whitespace=False, header=None)
 
     else:
         flash("Не приложен файл")
@@ -30,12 +30,10 @@ def barcode():
         flash("Тип баркода который будем печатать")
         return render_template('upload_barcode.html')
 
-
     type_barcode = request.form['type-barcode']
     print(f'type_barcode {type_barcode}')
 
     images_set = barcode_module.create_barcodes(df, type_barcode=type_barcode)
     images_zipped = zip_handler.put_in_zip(images_set)
-
 
     return send_file(images_zipped, download_name='zip.zip', as_attachment=True)

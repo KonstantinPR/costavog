@@ -68,7 +68,6 @@
 
 
 
-
     </style>
 </head>
 
@@ -143,7 +142,8 @@
                         Обработка данных
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCatalog">
-                        <a class="dropdown-item" href="{{url_for('extract_financial_data_from_pdf')}}">Вытащить данные из недельных отчетов вайлдберриз</a>
+                        <a class="dropdown-item" href="{{url_for('extract_financial_data_from_pdf')}}">Вытащить данные
+                            из недельных отчетов вайлдберриз</a>
                         <a class="dropdown-item" href="{{url_for('data_to_spec_merging')}}">Объединить данные</a>
                         <a class="dropdown-item" href="{{url_for('barcode')}}">Баркод</a>
                         <a class="dropdown-item" href="{{url_for('image_name_multiply')}}">Размножить имена</a>
@@ -222,6 +222,7 @@
 
     <br>
 
+
     {% for cat, msg in get_flashed_messages(True) %}
     <div class="flash {{cat}} alert alert-primary align-items-center" role="alert">{{msg}}</div>
     {% endfor %}
@@ -258,33 +259,6 @@
                 isTextShown = true;
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

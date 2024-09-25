@@ -2,9 +2,8 @@ from app import app
 from flask import flash, render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import pandas as pd
-from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, price_module, API_WB
+from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
 from app.modules import implementation_report, request_handler
-import numpy as np
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 

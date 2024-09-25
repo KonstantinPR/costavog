@@ -68,4 +68,5 @@ def create_barcodes(df, type_barcode='code128'):
         img = io_output.io_img_output(padded_image, dpi=(300, 300))
 
         images_set.append((line_name, img))
-        return images_zipped
+
+    return images_set

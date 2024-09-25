@@ -606,25 +606,27 @@ def check_discount(df, allowed_delta_percent):
 
     promo_discount_name_actual = "Загружаемая скидка для участия в акции исправленная"
     # to fix the wildberries count price percentage discount promo bug
-    df[promo_discount_name_actual] = (1 - df[plan_price_name] / df[current_price_name]) * 100
-    df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(pandas_handler.false_to_null)
-    df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(lambda x: math.ceil(x))
+    # df[promo_discount_name_actual] = (1 - df[plan_price_name] / df[current_price_name]) * 100
+    # df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(pandas_handler.false_to_null)
+    # df[promo_discount_name_actual] = df[promo_discount_name_actual].apply(lambda x: math.ceil(x))
 
     # Calculate the discount price
     df["discount_price"] = df[current_price_name] * (1 - df[new_discount_col] / 100)
 
     # Calculate the price difference
-    df["price_difference"] = df[plan_price_name] / df["discount_price"]
+    # df["price_difference"] = df[plan_price_name] / df["discount_price"]
+    df["action_price"] = df[current_price_name] * (1 - df[promo_discount_name] / 100)
+    df["price_difference"] = df["action_price"] / df["discount_price"]
 
     # Apply the discount condition
     allowed_ratio = 1 - allowed_delta_percent / 100
 
     # Store original promo discounts
-    df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name_actual]
+    df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name]
     df["Allowed"] = "Yes"
 
     # Update promo discounts based on allowed delta percent
-    df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name_actual]
+    df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name]
     df.loc[df["price_difference"] < allowed_ratio, new_discount_col] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
 
