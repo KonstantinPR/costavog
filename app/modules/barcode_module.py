@@ -56,14 +56,18 @@ def create_barcodes(df, type_barcode='code128'):
 
         # Draw text
         draw = ImageDraw.Draw(padded_image)
-        draw.text((14 * scale_factor, 6 * scale_factor), "ЧЕСТНЫЙ ЗНАК",
-                  font=ImageFont.truetype("arial.ttf", 22 * scale_factor), fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 42 * scale_factor), line[0:18],
-                  font=ImageFont.truetype("arial.ttf", 16 * scale_factor), fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 56 * scale_factor), line[18:31],
-                  font=ImageFont.truetype("arial.ttf", 16 * scale_factor), fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 72 * scale_factor), line[32:38],
-                  font=ImageFont.truetype("arial.ttf", 16 * scale_factor), fill=(0, 0, 0))
+        # In the barcode generation code
+
+        try:
+            font = ImageFont.truetype("arial.ttf", 22 * scale_factor)
+        except OSError:
+            font = ImageFont.load_default()
+
+        # Now use this font in the draw.text calls
+        draw.text((14 * scale_factor, 6 * scale_factor), "ЧЕСТНЫЙ ЗНАК", font=font, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 42 * scale_factor), line[0:18], font=font, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 56 * scale_factor), line[18:31], font=font, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 72 * scale_factor), line[32:38], font=font, fill=(0, 0, 0))
 
         img = io_output.io_img_output(padded_image, dpi=(300, 300))
 
