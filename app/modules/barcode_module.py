@@ -1,3 +1,4 @@
+import requests
 from PIL import ImageDraw, ImageFont, Image
 import os
 from app.modules import io_output
@@ -7,6 +8,11 @@ from barcode import Code128
 from pylibdmtx.pylibdmtx import encode
 from flask import current_app
 
+def download_font(url, font_path):
+    # Download the font file from the URL and save it locally
+    response = requests.get(url)
+    with open(font_path, 'wb') as f:
+        f.write(response.content)
 
 def create_barcodes(df, type_barcode='code128'):
     lines = df[0].to_list()
@@ -30,10 +36,30 @@ def create_barcodes(df, type_barcode='code128'):
 
         return images_set
 
+    scale_factor = 1
+    font_url = "https://fontsforyou.com/fonts/a/Arial.ttf"
+    font_path = os.path.join(current_app.static_folder, "Arial.ttf")
+
+    if not os.path.exists(font_path):
+        try:
+            # Download the font if it doesn't exist locally
+            download_font(font_url, font_path)
+            print(f"Font downloaded from {font_url} to {font_path}")
+        except Exception as e:
+            print(f"Failed to download font: {e}")
+            return []
+
+    try:
+        # Attempt to load the font from the downloaded file
+        font22 = ImageFont.truetype(font_path, 22 * scale_factor)
+        font16 = ImageFont.truetype(font_path, 16 * scale_factor)
+    except OSError:
+        print("Failed to load the font.")
+        return []
+
     for i, line in enumerate(lines):
         count_i = '{0:0>4}'.format(i + 1)
         line_name = f"bar_{count_i}.png"
-        scale_factor = 1
         encoded = encode(line.encode('utf8'))
         datamatrix_svg = Image.frombytes('RGB', size=(encoded.width, encoded.height), data=encoded.pixels)
         width, height = datamatrix_svg.width, datamatrix_svg.height
@@ -52,16 +78,6 @@ def create_barcodes(df, type_barcode='code128'):
 
         # Draw text
         draw = ImageDraw.Draw(padded_image)
-
-        try:
-            # Attempt to load the system arial.ttf
-            font22 = ImageFont.truetype("arial.ttf", 22 * scale_factor)
-            font16 = ImageFont.truetype("arial.ttf", 16 * scale_factor)
-        except OSError:
-            # If that fails, load Arial.ttf from the static folder
-            static_font_path = os.path.join(current_app.static_folder, "Arial.ttf")
-            font22 = ImageFont.truetype(static_font_path, 22 * scale_factor)
-            font16 = ImageFont.truetype(static_font_path, 16 * scale_factor)
 
         # Draw the text with the loaded font
         draw.text((14 * scale_factor, 6 * scale_factor), "ЧЕСТНЫЙ ЗНАК", font=font22, fill=(0, 0, 0))
