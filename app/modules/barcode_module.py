@@ -1,4 +1,5 @@
 from PIL import ImageDraw, ImageFont, Image
+import os
 from app.modules import io_output
 from barcode.writer import ImageWriter
 from io import BytesIO
@@ -58,7 +59,7 @@ def create_barcodes(df, type_barcode='code128'):
             font16 = ImageFont.truetype("arial.ttf", 16 * scale_factor)
         except OSError:
             # If that fails, load Arial.ttf from the static folder
-            static_font_path = current_app.static_folder + '/Arial.ttf'
+            static_font_path = os.path.join(current_app.static_folder, "Arial.ttf")
             font22 = ImageFont.truetype(static_font_path, 22 * scale_factor)
             font16 = ImageFont.truetype(static_font_path, 16 * scale_factor)
 

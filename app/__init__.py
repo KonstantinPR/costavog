@@ -48,19 +48,19 @@ logging.warning("Setting before set_config configuration...")
 
 def set_config():
     logging_config.setup_logging()
-    logging.warning(f"Setting config for current_user in set_config {current_user}")
-    start_time = time.time()
+    # logging.warning(f"Setting config for current_user in set_config {current_user}")
+    # start_time = time.time()
     company = Company.query.filter_by(id=current_user.company_id).first()
-    logging.warning(f"company {company}")
+    # logging.warning(f"company {company}")
     app.config['CURRENT_COMPANY_ID'] = company.id
     app.config['YANDEX_TOKEN'] = company.yandex_disk_token
     app.config['WB_API_TOKEN'] = company.wb_api_token
     app.config['WB_API_TOKEN2'] = company.wb_api_token2
-    end_time = time.time()
-    # Calculate the elapsed time in seconds
-    elapsed_time = end_time - start_time
-    logging.warning(f"For current_user {current_user} config is set")
-    logging.warning(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
+    # end_time = time.time()
+    # # Calculate the elapsed time in seconds
+    # elapsed_time = end_time - start_time
+    # logging.warning(f"For current_user {current_user} config is set")
+    # logging.warning(f"Time querys to database to set app.config is {elapsed_time:.9f} seconds.")
 
 
 # Log when the function is called
