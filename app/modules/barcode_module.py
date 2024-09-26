@@ -1,10 +1,10 @@
-from PIL import ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont, Image
 from app.modules import io_output
 from barcode.writer import ImageWriter
 from io import BytesIO
 from barcode import Code128
-from PIL import Image
 from pylibdmtx.pylibdmtx import encode
+from flask import current_app
 
 
 def create_barcodes(df, type_barcode='code128'):
@@ -12,12 +12,10 @@ def create_barcodes(df, type_barcode='code128'):
     lines = [str(x) for x in lines]
 
     i = 0
-    images_zipped = []
     images_set = []
 
     if len(lines[0]) > 100:
         type_barcode = 'Datamatrix'
-        # flash("Code128 can't contain more then 100 simbol so type_barcode is chenged on Datamatrix")
 
     if type_barcode == 'code128':
         for line in lines:
@@ -26,18 +24,15 @@ def create_barcodes(df, type_barcode='code128'):
 
             rv = BytesIO()
             Code128(str(line), writer=ImageWriter()).write(rv)
-            print(f'img {rv}')
-
             images_set.append((line_name, rv))
             i += 1
 
         return images_set
 
     for i, line in enumerate(lines):
-        # print(line)
-        count_i = '{0:0>4}'.format(i + 1)  # Change i to i + 1 to start counting from 1
+        count_i = '{0:0>4}'.format(i + 1)
         line_name = f"bar_{count_i}.png"
-        scale_factor = 1  # Scale factor for making the image bigger
+        scale_factor = 1
         encoded = encode(line.encode('utf8'))
         datamatrix_svg = Image.frombytes('RGB', size=(encoded.width, encoded.height), data=encoded.pixels)
         width, height = datamatrix_svg.width, datamatrix_svg.height
@@ -56,18 +51,22 @@ def create_barcodes(df, type_barcode='code128'):
 
         # Draw text
         draw = ImageDraw.Draw(padded_image)
-        # In the barcode generation code
 
         try:
-            font = ImageFont.truetype("arial.ttf", 22 * scale_factor)
+            # Attempt to load the system arial.ttf
+            font22 = ImageFont.truetype("arial.ttf", 22 * scale_factor)
+            font16 = ImageFont.truetype("arial.ttf", 16 * scale_factor)
         except OSError:
-            font = ImageFont.load_default()
+            # If that fails, load Arial.ttf from the static folder
+            static_font_path = current_app.static_folder + '/Arial.ttf'
+            font22 = ImageFont.truetype(static_font_path, 22 * scale_factor)
+            font16 = ImageFont.truetype(static_font_path, 16 * scale_factor)
 
-        # Now use this font in the draw.text calls
-        draw.text((14 * scale_factor, 6 * scale_factor), "ЧЕСТНЫЙ ЗНАК", font=font, fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 42 * scale_factor), line[0:18], font=font, fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 56 * scale_factor), line[18:31], font=font, fill=(0, 0, 0))
-        draw.text((14 * scale_factor, new_height + 72 * scale_factor), line[32:38], font=font, fill=(0, 0, 0))
+        # Draw the text with the loaded font
+        draw.text((14 * scale_factor, 6 * scale_factor), "ЧЕСТНЫЙ ЗНАК", font=font22, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 42 * scale_factor), line[0:18], font=font16, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 56 * scale_factor), line[18:31], font=font16, fill=(0, 0, 0))
+        draw.text((14 * scale_factor, new_height + 72 * scale_factor), line[32:38], font=font16, fill=(0, 0, 0))
 
         img = io_output.io_img_output(padded_image, dpi=(300, 300))
 
