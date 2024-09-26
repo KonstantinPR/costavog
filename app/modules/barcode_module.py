@@ -5,14 +5,16 @@ from app.modules import io_output
 from barcode.writer import ImageWriter
 from io import BytesIO
 from barcode import Code128
-from pylibdmtx.pylibdmtx import encode
+
 from flask import current_app
+
 
 def download_font(url, font_path):
     # Download the font file from the URL and save it locally
     response = requests.get(url)
     with open(font_path, 'wb') as f:
         f.write(response.content)
+
 
 def create_barcodes(df, type_barcode='code128'):
     lines = df[0].to_list()
@@ -35,6 +37,11 @@ def create_barcodes(df, type_barcode='code128'):
             i += 1
 
         return images_set
+
+    if os.getenv('ENABLE_DATAMATRIX') == "NO":
+        return images_set
+
+    from pylibdmtx.pylibdmtx import encode
 
     scale_factor = 1
     font_url = "https://fontsforyou.com/fonts/a/Arial.ttf"
