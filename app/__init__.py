@@ -1,10 +1,10 @@
+import os
 from app import logging_config
 from flask import Flask
 from flask_migrate import Migrate
 from os import environ
 from app.models import db, login, Company, UserModel
 from flask_login import LoginManager, current_user
-import time
 import logging
 from dotenv import load_dotenv
 
@@ -172,4 +172,5 @@ from app.views import ai_models_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
-from app.views import dumps_views
+if os.getenv('ENVIRONMENT') == "local":
+    from app.views import dumps_views
