@@ -188,8 +188,6 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     return df, file_name
 
 
-
-
 def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_upload_yandex=True,
                      date_from: str = '2019-01-01'):
     """
@@ -652,3 +650,27 @@ def _rename_double_columns(df, suffix):
     # Update the DataFrame with the new column names
     df.columns = new_columns
     return df
+
+
+def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL"):
+    url = "https://api-seller.ozon.ru/v2/analytics/stock_on_warehouses"
+
+    headers = {
+        'Client-Id': client_id,
+        'Api-Key': api_key,
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        "limit": limit,
+        "offset": offset,
+        "warehouse_type": warehouse_type
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
+        return None

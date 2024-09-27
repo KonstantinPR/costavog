@@ -15,6 +15,7 @@ false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 INF_LIST = [np.inf, -np.inf]
 inf_to_null = lambda x: 0 if x in INF_LIST else x
 
+
 def replace_false_values(df, columns, FALSE_LIST=None):
     """
     Replace values in specified columns that match FALSE_LIST or are strings with 0.
@@ -225,7 +226,6 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     # Populate "Артикул WB" with unique nmID values
     df_disc_template["Артикул WB"] = unique_nmID_values
 
-
     # If promo DataFrame is provided, merge and update "Новая скидка" by "new_discount" from df_promo
     if df_promo is None:
         df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
@@ -241,3 +241,23 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]
+
+
+def convert_to_dataframe(data, columns):
+    """
+    Convert the list of stock data (rows) from OZON API response to a Pandas DataFrame.
+
+    Args:
+        data (list): The 'rows' list from the OZON API response containing stock details.
+        columns (list): List of column names that you want to include in the DataFrame.
+
+    Returns:
+        pd.DataFrame: A DataFrame with the relevant stock data.
+    """
+    if not data:
+        return pd.DataFrame(columns=columns)  # Return an empty DataFrame with the specified columns
+
+    # Convert the list of dictionaries to a DataFrame using the provided columns
+    df = pd.DataFrame(data, columns=columns)
+
+    return df

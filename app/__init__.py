@@ -56,6 +56,8 @@ def set_config():
     app.config['YANDEX_TOKEN'] = company.yandex_disk_token
     app.config['WB_API_TOKEN'] = company.wb_api_token
     app.config['WB_API_TOKEN2'] = company.wb_api_token2
+    app.config['OZON_CLIENT_ID'] = company.ozon_client_id
+    app.config['OZON_API_TOKEN'] = company.ozon_api_token
     # end_time = time.time()
     # # Calculate the elapsed time in seconds
     # elapsed_time = end_time - start_time
@@ -172,5 +174,6 @@ from app.views import ai_models_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
+
 if os.getenv('ENVIRONMENT') == "local":
     from app.views import dumps_views

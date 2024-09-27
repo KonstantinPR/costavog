@@ -68,6 +68,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -180,6 +181,16 @@
                     </ul>
                 </li>
 
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkOZONAPI" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        OZON API
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkOZONAPI">
+                        <a class="dropdown-item" href="{{url_for('get_stock_ozon')}}">Остатки OZON</a>
+                    </ul>
+                </li>
+
                 {% if ENVIRONMENT == 'local' %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkDumps" role="button"
@@ -259,6 +270,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

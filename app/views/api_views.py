@@ -230,3 +230,41 @@ def get_wb_stock_api():
                          as_attachment=True)
 
     return render_template('upload_get_dynamic_sales.html')
+
+
+@app.route('/get_stock_ozon', methods=['POST', 'GET'])
+@login_required
+def get_stock_ozon():
+    """
+    Get stock report from OZON warehouses via API
+    """
+
+    if request.method == 'POST':
+        client_id = app.config['OZON_CLIENT_ID']
+        api_key = app.config['OZON_API_TOKEN']
+
+        limit = int(request.form.get('limit', 1000))
+        offset = int(request.form.get('offset', 0))
+        warehouse_type = request.form.get('warehouse_type', 'ALL')
+
+        # Call the helper function to get the stock report
+        stock_report = API_WB.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type)
+
+        if stock_report:
+            columns = [
+                'free_to_sell_amount',
+                'item_code',
+                'item_name',
+                'promised_amount',
+                'reserved_amount',
+                'sku',
+                'warehouse_name',
+                'idc'
+            ]
+            df_stock_report = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+            file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
+            return send_file(io_output.io_output(df_stock_report), download_name=file_name, as_attachment=True)
+        else:
+            return "Error fetching stock report from OZON", 500
+
+    return render_template('upload_stock_ozon.html', doc_string=get_stock_ozon.__doc__)

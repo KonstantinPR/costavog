@@ -172,6 +172,8 @@ def profile():
         yandex_disk_token = request.form['yandex_disk_token']
         wb_api_token = request.form['wb_api_token']
         wb_api_token2 = request.form['wb_api_token2']
+        ozon_client_id = request.form['ozon_client_id']
+        ozon_api_token = request.form['ozon_api_token']
 
         user = UserModel.query.filter_by(id=current_user.id).first()
         user.initial_sum = initial_sum
@@ -184,6 +186,8 @@ def profile():
         company.yandex_disk_token = yandex_disk_token
         company.wb_api_token = wb_api_token
         company.wb_api_token2 = wb_api_token2
+        company.ozon_client_id= ozon_client_id
+        company.ozon_api_token = ozon_api_token
 
         # установка в config паролей и токенов из базы данных
         # set_config()
@@ -200,6 +204,7 @@ def profile():
                                yandex_disk_token=company.yandex_disk_token,
                                wb_api_token=company.wb_api_token,
                                wb_api_token2=company.wb_api_token2,
+                               ozon_api_token=company.ozon_api_token,
                                current_role=role,
                                roles=app.config['ROLES']
                                )
@@ -217,6 +222,8 @@ def profile():
     yandex_disk_token = Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token
     wb_api_token = Company.query.filter_by(id=current_user.company_id).one().wb_api_token
     wb_api_token2 = Company.query.filter_by(id=current_user.company_id).one().wb_api_token2
+    ozon_client_id = Company.query.filter_by(id=current_user.company_id).one().ozon_client_id
+    ozon_api_token = Company.query.filter_by(id=current_user.company_id).one().ozon_api_token
     points = current_user.points
 
     return render_template('profile.html',
@@ -230,4 +237,6 @@ def profile():
                            yandex_disk_token=yandex_disk_token,
                            wb_api_token=wb_api_token,
                            wb_api_token2=wb_api_token2,
+                           ozon_client_id=ozon_client_id,
+                           ozon_api_token=ozon_api_token,
                            )
