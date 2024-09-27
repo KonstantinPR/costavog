@@ -69,6 +69,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -187,7 +188,9 @@
                         OZON API
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkOZONAPI">
+                        <a class="dropdown-item" href="{{url_for('get_cards_ozon')}}">Карточки OZON</a>
                         <a class="dropdown-item" href="{{url_for('get_stock_ozon')}}">Остатки OZON</a>
+                        <a class="dropdown-item" href="{{url_for('get_price_ozon')}}">Цены OZON</a>
                     </ul>
                 </li>
 
@@ -270,6 +273,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

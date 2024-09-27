@@ -1,4 +1,5 @@
 import logging
+import time
 
 import app.modules.request_handler
 from app import app
@@ -652,6 +653,87 @@ def _rename_double_columns(df, suffix):
     return df
 
 
+def create_cards_report_ozon(client_id, api_key, language="DEFAULT", offer_ids=[], search="", skus=[],
+                             visibility="ALL"):
+    url = "https://api-seller.ozon.ru/v1/report/products/create"
+
+    headers = {
+        'Client-Id': client_id,
+        'Api-Key': api_key,
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        "language": language,
+        "offer_id": offer_ids,
+        "search": search,
+        "sku": skus,
+        "visibility": visibility
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        return response.json()['result']['code']
+    else:
+        print(f"Error creating report: {response.status_code}, {response.text}")
+        return None
+
+
+def list_reports_ozon(client_id, api_key, report_type="ALL", page=1, page_size=100):
+    url = "https://api-seller.ozon.ru/v1/report/list"
+    headers = {
+        "Client-Id": client_id,
+        "Api-Key": api_key,
+        "Content-Type": "application/json"
+    }
+    body = {
+        "page": max(1, page),  # Ensure page is at least 1
+        "page_size": min(page_size, 1000),  # Limit page_size to 1000
+        "report_type": report_type
+    }
+
+    response = requests.post(url, headers=headers, json=body)
+
+    if response.status_code == 200:
+        return response.json().get("result", {}).get("reports", [])
+    else:
+        print(f"Error listing reports: {response.status_code}, {response.text}")
+        return None
+
+
+def download_report_file_ozon(report_file_url):
+    response = requests.get(report_file_url)
+
+    if response.status_code == 200:
+        return response.content  # CSV content
+    else:
+        print(f"Error downloading file: {response.status_code}, {response.text}")
+        return None
+
+
+def get_cards_report_ozon(client_id, api_key, report_code):
+    url = "https://api-seller.ozon.ru/v1/report/products/download"
+
+    headers = {
+        'Client-Id': client_id,
+        'Api-Key': api_key,
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        "code": report_code
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        return response.content  # Assuming the report is in binary format like CSV or Excel
+    else:
+        print(f"Error fetching report: {response.status_code}, {response.text}")
+        return None
+
+
 def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL"):
     url = "https://api-seller.ozon.ru/v2/analytics/stock_on_warehouses"
 
@@ -661,16 +743,78 @@ def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type=
         'Content-Type': 'application/json'
     }
 
-    data = {
-        "limit": limit,
-        "offset": offset,
-        "warehouse_type": warehouse_type
+    all_rows = []
+
+    while True:
+        data = {
+            "limit": limit,
+            "offset": offset,
+            "warehouse_type": warehouse_type
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code == 200:
+            result = response.json().get('result', {})
+            rows = result.get('rows', [])
+
+            if not rows:
+                break  # No more data to fetch, stop the loop
+
+            all_rows.extend(rows)  # Add the current batch of rows to the list
+
+            if len(rows) < limit:
+                break  # If less than the limit, we've fetched everything
+
+            offset += limit  # Update the offset for the next batch
+
+        else:
+            print(f"Error: {response.status_code}, {response.text}")
+            return None
+
+    return {'result': {'rows': all_rows}}
+
+
+def get_price_ozon_api(limit=1000, last_id='', client_id='', api_key=''):
+    url = "https://api-seller.ozon.ru/v4/product/info/prices"
+    headers = {
+        'Client-Id': client_id,
+        'Api-Key': api_key,
+        'Content-Type': 'application/json'
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    prices = []
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error: {response.status_code}, {response.text}")
-        return None
+    while True:
+        data = {
+            "filter": {
+                "offer_id": [],  # Populate based on your needs
+                "product_id": [],  # Populate based on your needs
+                "visibility": "ALL"
+            },
+            "last_id": last_id,  # Use the last_id for pagination
+            "limit": int(limit)
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+        print(f"response {response}")
+        response.raise_for_status()
+
+        result = response.json()
+        items = result.get('result', {}).get('items', [])
+
+        if not items:  # If no items are returned, break the loop
+            break
+
+        prices.extend(items)
+
+        # Update last_id for the next request
+        last_id = result.get('result', {}).get('last_id', None)  # Get the last_id from the response
+        print(f"last_id {last_id}")
+        if last_id is None:  # If no more items are available, break the loop
+            break
+
+        if len(prices) > 3000:
+            return prices
+
+    return prices

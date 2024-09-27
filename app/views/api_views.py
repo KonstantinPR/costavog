@@ -1,5 +1,7 @@
 import logging
 
+import pandas as pd
+
 import app.modules.request_handler
 from app import app
 from flask import render_template, request, redirect, send_file
@@ -232,6 +234,77 @@ def get_wb_stock_api():
     return render_template('upload_get_dynamic_sales.html')
 
 
+@app.route('/get_cards_ozon', methods=['POST', 'GET'])
+@login_required
+def get_cards_ozon():
+    client_id = app.config['OZON_CLIENT_ID']
+    api_key = app.config['OZON_API_TOKEN']
+
+    if not request.method == 'POST':
+        return render_template('upload_cards_ozon.html', doc_string=get_cards_ozon.__doc__)
+
+    # Step 1: Create the report
+    report_code = API_WB.create_cards_report_ozon(client_id, api_key)
+
+    if report_code:
+        max_retries = 3  # Number of retries
+        retry_interval = 5  # Wait 10 seconds between retries
+
+        # Step 2: Retry loop to check for report availability
+        for attempt in range(max_retries):
+            time.sleep(retry_interval)  # Sleep between retries
+
+            # Step 3: Get list of reports
+            reports = API_WB.list_reports_ozon(client_id, api_key, report_type="SELLER_PRODUCTS")
+
+            if reports:
+                # Step 4: Find the report with the matching report_code
+                for report in reports:
+                    if report['code'] == report_code:
+                        # Check if the report is ready
+                        if report['status'] == 'success':
+                            # Report is ready, download the file
+                            report_file_url = report['file']
+                            report_content = API_WB.download_report_file_ozon(report_file_url)
+
+                            if report_content:
+                                file_name = f'ozon_cards_report_{str(datetime.datetime.now())}.csv'
+                                return send_file(io_output.io_output(report_content), download_name=file_name,
+                                                 as_attachment=True)
+                            else:
+                                return "Error downloading the report file", 500
+                        elif report['status'] == 'waiting':
+                            continue  # Still processing, retry later
+                        else:
+                            return f"Report generation failed with status: {report['status']}", 500
+            else:
+                return "Error fetching report list", 500
+
+        # Report not found, check for previous reports
+        previous_reports = API_WB.list_reports_ozon(client_id, api_key, report_type="SELLER_PRODUCTS", page=1,
+                                                    page_size=100)
+
+        print(f"previous_reports {previous_reports}")
+        if previous_reports:
+
+            for report in previous_reports:
+                if 'REPORT_seller_products' in report['code'] and report['status'] == 'success':
+                    # Attempt to download the previous report
+                    report_file_url = report['file']
+                    report_content = API_WB.download_report_file_ozon(report_file_url)
+
+                    if report_content:
+                        file_name = f'ozon_cards_report_previous_{str(datetime.datetime.now())}.csv'
+                        return send_file(io_output.io_output(report_content), download_name=file_name,
+                                         as_attachment=True)
+                    else:
+                        return "Error downloading the previous report file", 500
+
+        return "Report not found or still processing after multiple attempts", 404
+    else:
+        return "Error creating the report", 500
+
+
 @app.route('/get_stock_ozon', methods=['POST', 'GET'])
 @login_required
 def get_stock_ozon():
@@ -239,32 +312,63 @@ def get_stock_ozon():
     Get stock report from OZON warehouses via API
     """
 
-    if request.method == 'POST':
-        client_id = app.config['OZON_CLIENT_ID']
-        api_key = app.config['OZON_API_TOKEN']
+    if not request.method == 'POST':
+        return render_template('upload_stock_ozon.html', doc_string=get_stock_ozon.__doc__)
 
-        limit = int(request.form.get('limit', 1000))
-        offset = int(request.form.get('offset', 0))
-        warehouse_type = request.form.get('warehouse_type', 'ALL')
+    client_id = app.config['OZON_CLIENT_ID']
+    api_key = app.config['OZON_API_TOKEN']
 
-        # Call the helper function to get the stock report
-        stock_report = API_WB.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type)
+    limit = int(request.form.get('limit', 1000))
+    offset = int(request.form.get('offset', 0))
+    warehouse_type = request.form.get('warehouse_type', 'ALL')
 
-        if stock_report:
-            columns = [
-                'free_to_sell_amount',
-                'item_code',
-                'item_name',
-                'promised_amount',
-                'reserved_amount',
-                'sku',
-                'warehouse_name',
-                'idc'
-            ]
-            df_stock_report = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
-            file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
-            return send_file(io_output.io_output(df_stock_report), download_name=file_name, as_attachment=True)
-        else:
-            return "Error fetching stock report from OZON", 500
+    # Call the helper function to get the stock report
+    stock_report = API_WB.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type)
 
-    return render_template('upload_stock_ozon.html', doc_string=get_stock_ozon.__doc__)
+    if stock_report:
+        columns = [
+            'free_to_sell_amount',
+            'item_code',
+            'item_name',
+            'promised_amount',
+            'reserved_amount',
+            'sku',
+            'warehouse_name',
+            'idc'
+        ]
+        df_stock_report = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+        file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
+        return send_file(io_output.io_output(df_stock_report), download_name=file_name, as_attachment=True)
+    else:
+        return "Error fetching stock report from OZON", 500
+
+
+@app.route('/get_price_ozon', methods=['POST', 'GET'])
+@login_required
+def get_price_ozon():
+    if request.method != 'POST':
+        return render_template('upload_price_ozon.html', doc_string=get_price_ozon.__doc__)
+
+    client_id = app.config['OZON_CLIENT_ID']
+    api_key = app.config['OZON_API_TOKEN']
+    limit = request.form.get('limit', 1000)
+
+    # Call the function to get prices from OZON API
+    prices = API_WB.get_price_ozon_api(limit, client_id=client_id, api_key=api_key)
+
+    # Flattening nested fields such as 'price', 'commissions', 'price_index'
+    df = pd.json_normalize(
+        prices,
+        sep='_',
+        record_prefix='',
+        meta=['product_id', 'offer_id'],  # Keys to keep as top-level columns
+        record_path=None,  # You can specify different paths if deeply nested
+        errors='ignore'
+    )
+
+    # Generate Excel file from DataFrame
+    file = io_output.io_output(df)
+    file_name = "prices.xlsx"
+
+    # Send the Excel file to the user
+    return send_file(file, as_attachment=True, download_name=file_name)
