@@ -680,6 +680,33 @@ def create_cards_report_ozon(client_id, api_key, language="DEFAULT", offer_ids=[
         return None
 
 
+def check_report_info_ozon(report_code, client_id, api_key):
+    url = "https://api-seller.ozon.ru/v1/report/info"
+    headers = {
+        'Client-Id': client_id,
+        'Api-Key': api_key,
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        "code": report_code
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()
+
+
+def download_report_file_ozon(report_file_url):
+    response = requests.get(report_file_url)
+
+    if response.status_code == 200:
+        return response.content  # CSV content
+    else:
+        print(f"Error downloading file: {response.status_code}, {response.text}")
+        return None
+
+
 def list_reports_ozon(client_id, api_key, report_type="ALL", page=1, page_size=100):
     url = "https://api-seller.ozon.ru/v1/report/list"
     headers = {
@@ -699,38 +726,6 @@ def list_reports_ozon(client_id, api_key, report_type="ALL", page=1, page_size=1
         return response.json().get("result", {}).get("reports", [])
     else:
         print(f"Error listing reports: {response.status_code}, {response.text}")
-        return None
-
-
-def download_report_file_ozon(report_file_url):
-    response = requests.get(report_file_url)
-
-    if response.status_code == 200:
-        return response.content  # CSV content
-    else:
-        print(f"Error downloading file: {response.status_code}, {response.text}")
-        return None
-
-
-def get_cards_report_ozon(client_id, api_key, report_code):
-    url = "https://api-seller.ozon.ru/v1/report/products/download"
-
-    headers = {
-        'Client-Id': client_id,
-        'Api-Key': api_key,
-        'Content-Type': 'application/json'
-    }
-
-    data = {
-        "code": report_code
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-
-    if response.status_code == 200:
-        return response.content  # Assuming the report is in binary format like CSV or Excel
-    else:
-        print(f"Error fetching report: {response.status_code}, {response.text}")
         return None
 
 

@@ -261,3 +261,13 @@ def convert_to_dataframe(data, columns):
     df = pd.DataFrame(data, columns=columns)
 
     return df
+
+
+def to_str(df, columns):
+    # Ensure the specified columns are treated as strings
+    for column in columns:
+        if column in df.columns:  # Check if the column exists in the DataFrame
+            df[column] = df[column].astype(str).str.lstrip("'")
+        else:
+            print(f"Warning: Column '{column}' not found in DataFrame.")
+    return df

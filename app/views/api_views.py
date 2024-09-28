@@ -8,6 +8,7 @@ from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
 import time
+import io
 from app.modules import API_WB, detailing_api_module
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 
@@ -240,68 +241,54 @@ def get_cards_ozon():
     client_id = app.config['OZON_CLIENT_ID']
     api_key = app.config['OZON_API_TOKEN']
 
-    if not request.method == 'POST':
+    if request.method != 'POST':
         return render_template('upload_cards_ozon.html', doc_string=get_cards_ozon.__doc__)
 
     # Step 1: Create the report
     report_code = API_WB.create_cards_report_ozon(client_id, api_key)
+    logging.info(f"Report code: {report_code}")
 
     if report_code:
-        max_retries = 3  # Number of retries
-        retry_interval = 5  # Wait 10 seconds between retries
+        max_retries = 20  # Number of retries
+        retry_interval = 20  # Wait seconds between retries
 
         # Step 2: Retry loop to check for report availability
         for attempt in range(max_retries):
-            time.sleep(retry_interval)  # Sleep between retries
+            time.sleep(retry_interval)
 
-            # Step 3: Get list of reports
-            reports = API_WB.list_reports_ozon(client_id, api_key, report_type="SELLER_PRODUCTS")
+            report_info = API_WB.check_report_info_ozon(report_code, client_id, api_key)
 
-            if reports:
-                # Step 4: Find the report with the matching report_code
-                for report in reports:
-                    if report['code'] == report_code:
-                        # Check if the report is ready
-                        if report['status'] == 'success':
-                            # Report is ready, download the file
-                            report_file_url = report['file']
-                            report_content = API_WB.download_report_file_ozon(report_file_url)
-
-                            if report_content:
-                                file_name = f'ozon_cards_report_{str(datetime.datetime.now())}.csv'
-                                return send_file(io_output.io_output(report_content), download_name=file_name,
-                                                 as_attachment=True)
-                            else:
-                                return "Error downloading the report file", 500
-                        elif report['status'] == 'waiting':
-                            continue  # Still processing, retry later
-                        else:
-                            return f"Report generation failed with status: {report['status']}", 500
-            else:
-                return "Error fetching report list", 500
-
-        # Report not found, check for previous reports
-        previous_reports = API_WB.list_reports_ozon(client_id, api_key, report_type="SELLER_PRODUCTS", page=1,
-                                                    page_size=100)
-
-        print(f"previous_reports {previous_reports}")
-        if previous_reports:
-
-            for report in previous_reports:
-                if 'REPORT_seller_products' in report['code'] and report['status'] == 'success':
-                    # Attempt to download the previous report
-                    report_file_url = report['file']
+            if report_info:
+                status = report_info['result']['status']
+                print(f"Status attempt {attempt}: {status}")
+                if status == 'success':
+                    # Report is ready, download the file
+                    report_file_url = report_info['result']['file']
                     report_content = API_WB.download_report_file_ozon(report_file_url)
 
                     if report_content:
-                        file_name = f'ozon_cards_report_previous_{str(datetime.datetime.now())}.csv'
-                        return send_file(io_output.io_output(report_content), download_name=file_name,
-                                         as_attachment=True)
-                    else:
-                        return "Error downloading the previous report file", 500
+                        # Convert CSV content to DataFrame
+                        df = pd.read_csv(io.BytesIO(report_content), sep=';')
+                        # Ensure the 'Артикул' column is treated as a string
+                        columns = ["Артикул", "Barcode"]
+                        df = pandas_handler.to_str(df, columns)
+                        file_name = f'ozon_cards_report_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.xlsx'
+                        return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
+
+                    logging.error("Error downloading the report file")
+                    return "Error downloading the report file", 500
+                elif status in ['processing', 'waiting']:
+                    continue  # Still processing, retry later
+                else:
+                    logging.error(f"Report generation failed with status: {status}")
+                    return f"Report generation failed with status: {status}", 500
+            else:
+                logging.error("Error checking report status")
+                return "Error checking report status", 500
 
         return "Report not found or still processing after multiple attempts", 404
     else:
+        logging.error("Error creating the report")
         return "Error creating the report", 500
 
 
