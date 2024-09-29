@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block add_style %}
+
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<main>
+    <br>
+    <div class="row text-left">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div>
+                <form method="post" enctype=multipart/form-data>
+                    <div class="row">
+                        <!-- Input for Visibility filter -->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="text" class="form-control form-control-lg" id="visibility" name="visibility"
+                                   placeholder="Фильтр по видимости товара (например, ALL, VISIBLE, INVISIBLE)"
+                                   value="ALL">
+                        </div>
+
+                        <!-- Input for SKU -->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="text" class="form-control form-control-lg" id="sku" name="sku"
+                                   placeholder="ID товара (например, 123456, 789012)"
+                                   value="">
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input formaction="{{url_for('get_cards_ozon')}}"
+                                   class="w-100 btn btn-primary btn-lg" type="submit"
+                                   value="Карточки OZON">
+                        </div>
+
+                        <!-- Checkbox for Testing Mode -->
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="testing_mode"
+                                   name="is_testing_mode"
+                                   id="is_testing_mode">
+                            <label class="form-check-label" for="is_testing_mode">
+                                Включить тестовый режим (данные будут с яндекс.диска)
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+{% endblock %}
