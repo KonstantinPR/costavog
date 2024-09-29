@@ -70,6 +70,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -191,20 +192,11 @@
                         <a class="dropdown-item" href="{{url_for('get_cards_ozon')}}">Карточки OZON</a>
                         <a class="dropdown-item" href="{{url_for('get_stock_ozon')}}">Остатки OZON</a>
                         <a class="dropdown-item" href="{{url_for('get_price_ozon')}}">Цены OZON</a>
+                        <a class="dropdown-item" href="{{url_for('get_realization_report_ozon')}}">Реализация OZON</a>
+                        <a class="dropdown-item" href="{{url_for('get_transaction_list_ozon')}}">Транзакции OZON</a>
                     </ul>
                 </li>
 
-                {% if ENVIRONMENT == 'local' %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkDumps" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Dumps DB
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkDumps">
-                        <a class="dropdown-item" href="{{url_for('get_neon_postgres_dump')}}">Neon Dump</a>
-                    </ul>
-                </li>
-                {% endif %}
 
                 <li class="nav-item">
                     <a class="nav-item nav-link" href="{{url_for('upload_products')}}">Загрузки </a>
@@ -273,6 +265,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

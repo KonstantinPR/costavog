@@ -174,6 +174,3 @@ from app.views import ai_models_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
-
-if os.getenv('ENVIRONMENT') == "local":
-    from app.views import dumps_views
