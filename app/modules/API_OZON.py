@@ -274,4 +274,34 @@ def flatten_nested_columns(df, columns, isNormalize=True):
             df = df_exploded.join(nested_df)
             # Drop the original nested column
             df = df.drop(columns=[column], errors='ignore')
+
+    # Drop duplicates based on 'operation_id'
+    df = df.drop_duplicates(subset='operation_id')
+
     return df
+
+
+def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = []) -> pd.DataFrame:
+    # Replace missing or empty values in the col_name column
+    df[col_name].replace('', 'Empty Article', inplace=True)
+    df[col_name].fillna('Empty Article', inplace=True)
+
+    # Create an empty dictionary to hold aggregation logic
+    agg_funcs = {}
+
+    # Loop through each column in the DataFrame
+    for column in df.columns:
+        if column == col_name:
+            continue  # Skip the grouping column itself
+
+        # Check if the column is numeric, if so, we'll sum it
+        if pd.api.types.is_numeric_dtype(df[column]) and column not in nonnumerical:
+            agg_funcs[column] = 'sum'
+        else:
+            # Otherwise, we'll take the first value (suitable for strings or non-numeric data)
+            agg_funcs[column] = 'first'
+
+    # Group by the specified column and apply the aggregation functions
+    df_grouped = df.groupby(col_name).agg(agg_funcs).reset_index()
+
+    return df_grouped

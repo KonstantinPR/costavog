@@ -71,6 +71,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -186,14 +187,15 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkOZONAPI" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
-                        OZON API
+                        OZON
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkOZONAPI">
-                        <a class="dropdown-item" href="{{url_for('get_cards_ozon')}}">Карточки OZON</a>
-                        <a class="dropdown-item" href="{{url_for('get_stock_ozon')}}">Остатки OZON</a>
-                        <a class="dropdown-item" href="{{url_for('get_price_ozon')}}">Цены OZON</a>
-                        <a class="dropdown-item" href="{{url_for('get_realization_report_ozon')}}">Реализация OZON</a>
-                        <a class="dropdown-item" href="{{url_for('get_transaction_list_ozon')}}">Транзакции OZON</a>
+                        <a class="dropdown-item" href="{{url_for('get_cards_ozon')}}">Карточки API</a>
+                        <a class="dropdown-item" href="{{url_for('get_stock_ozon')}}">Остатки API</a>
+                        <a class="dropdown-item" href="{{url_for('get_price_ozon')}}">Цены API</a>
+                        <a class="dropdown-item" href="{{url_for('get_realization_report_ozon')}}">Реализация API</a>
+                        <a class="dropdown-item" href="{{url_for('get_transaction_list_ozon')}}">Транзакции API</a>
+                        <a class="dropdown-item" href="{{url_for('analyze_transactions_ozon')}}">Анализ Транзакций</a>
                     </ul>
                 </li>
 
@@ -265,6 +267,7 @@
                 isTextShown = true;
             }
         }
+
 
 
 

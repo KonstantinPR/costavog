@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 import app.modules.request_handler
 from app import app
-from flask import render_template, request, redirect, send_file
+from flask import render_template, request, redirect, send_file, flash, url_for
 from flask_login import login_required, current_user
 import datetime
 import time
@@ -322,6 +322,11 @@ def get_transaction_list_ozon():
     if request.method != 'POST':
         return render_template('upload_get_transaction_list_ozon.html', doc_string=get_transaction_list_ozon.__doc__)
 
+    # Check if the checkbox is selected
+    group_by_items = 'group_by_items' in request.form
+    is_to_yadisk = 'is_to_yadisk' in request.form
+    testing_mode = 'testing_mode' in request.form
+
     client_id = app.config['OZON_CLIENT_ID']
     api_key = app.config['OZON_API_TOKEN']
 
@@ -329,11 +334,15 @@ def get_transaction_list_ozon():
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
 
-    # Set default dates if empty
+    # Set default dates if fields are empty
     if not date_from:
-        date_from = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        date_from = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
     if not date_to:
-        date_to = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        date_to = datetime.utcnow().strftime("%Y-%m-%d")
+
+    # Append time components to match the required format (ISO 8601)
+    date_from = f"{date_from}T00:00:00.000Z"
+    date_to = f"{date_to}T23:59:59.999Z"  # End of the day
 
     # Call the function to get the transaction list from OZON API
     json_response = API_OZON.get_transaction_list_ozon_api(client_id=client_id, api_key=api_key, date_from=date_from,
@@ -343,16 +352,54 @@ def get_transaction_list_ozon():
     operations = json_response.get('operations', [])
 
     # Normalize the main operations to a DataFrame
-    df_operations = pd.json_normalize(operations)
+    df = pd.json_normalize(operations)
 
     # Call the normalization function
     nested_columns = ['items', 'services']  # Add more nested column names as needed
-    df_operations = API_OZON.flatten_nested_columns(df_operations, columns=nested_columns, isNormalize=True)
+    df = API_OZON.flatten_nested_columns(df, columns=nested_columns, isNormalize=True)
 
+    # Fill empty items_sku with "Other"
+    df['items_sku'].fillna("Other", inplace=True)
+
+    if group_by_items:
+        # Group by items_sku and aggregate
+        nonnumerical = ["operation_id"]
+        df = API_OZON.aggregate_by(col_name="items_sku", df=df, nonnumerical=nonnumerical)
+
+    # Convert specific columns to string if needed
+    columns = ["posting.warehouse_id"]
+    df = pandas_handler.to_str(df, columns=columns)
+
+    file_name = f"transaction_list_ozon.xlsx"
+    if is_to_yadisk:
+        yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_TRANSACTION_OZON'])
+
+    file_name = f"transaction_list_ozon_{date_from[:10]}_{date_to[:10]}.xlsx"
     # Generate Excel file from normalized DataFrame
-    file = io_output.io_output(df_operations)
-    file_name = f"transaction_list_ozon_{date_from}_{date_to}.xlsx"
+    file = io_output.io_output(df)
 
     # Send the Excel file to the user
     return send_file(file, as_attachment=True, download_name=file_name)
 
+
+@app.route('/analyze_transactions_ozon', methods=['POST', 'GET'])
+@login_required
+def analyze_transactions_ozon():
+    if request.method != 'POST':
+        return render_template('upload_analyze_transactions_ozon.html')
+
+    # Get the file from the form
+    file = request.files.get('file')
+
+    # Read the uploaded Excel file into a DataFrame
+    df = pd.read_excel(file)
+
+    # Aggregate data by Артикул (including handling of empty values)
+    df_aggregated = API_OZON.aggregate_by(col_name="Артикул", df=df)
+
+    # Generate Excel output file
+    file_output = io_output.io_output(df_aggregated)
+    file_name = "analyze_transactions_ozon.xlsx"
+
+    # Send the file to the user as an Excel attachment
+    return send_file(file_output, as_attachment=True, download_name=file_name)

@@ -16,17 +16,44 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <label for="date_from">Start Date:</label>
-                            <input type="datetime-local" id="date_from" name="date_from" class="form-control form-control-lg">
+                            <input type="date" id="date_from" name="date_from" class="form-control form-control-lg">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <label for="date_to">End Date:</label>
-                            <input type="datetime-local" id="date_to" name="date_to" class="form-control form-control-lg">
+                            <input type="date" id="date_to" name="date_to" class="form-control form-control-lg">
                         </div>
+
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{ url_for('get_transaction_list_ozon') }}"
                                    class="w-100 btn btn-primary btn-lg" type="submit"
                                    value="Транзакции OZON">
                         </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="checkbox" id="group_by_items" name="group_by_items" class="form-check-input"
+                                   checked>
+                            <label for="group_by_items" class="form-check-label">Сгруппировать в итоговые
+                                значения</label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_to_yadisk"
+                                   name="is_to_yadisk"
+                                   id="is_to_yadisk" checked>
+                            <label class="form-check-label" for="is_to_yadisk">
+                                Загрузить отчет на Яндекс.Диск
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="testing_mode"
+                                   name="testing_mode"
+                                   id="testing_mode">
+                            <label class="testing_mode" for="testing_mode">
+                                Тестовый режим, отчет подгрузится с Яндекс.Диска
+                            </label>
+                        </div>
+
                     </div>
                 </form>
             </div>
