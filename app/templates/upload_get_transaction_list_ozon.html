@@ -8,7 +8,7 @@
 
 
 <main>
-    <br>
+     <br>
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
@@ -29,12 +29,35 @@
                                    value="Транзакции OZON">
                         </div>
 
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="checkbox" id="is_merge_cards" name="is_merge_cards" class="form-check-input">
+                            <label for="is_merge_cards" class="form-check-label">Подгрузить карточки ОЗОН</label>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="checkbox" id="is_merge_stock" name="is_merge_stock" class="form-check-input"
+                                   checked>
+                            <label for="is_merge_stock" class="form-check-label">Подгрузить остатки ОЗОН</label>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="checkbox" id="is_merge_price" name="is_merge_price" class="form-check-input"
+                                   checked>
+                            <label for="is_merge_price" class="form-check-label">Подгрузить цены ОЗОН</label>
+                        </div>
+
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input type="checkbox" id="group_by_items" name="group_by_items" class="form-check-input"
                                    checked>
                             <label for="group_by_items" class="form-check-label">Сгруппировать в итоговые
                                 значения</label>
                         </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input type="checkbox" id="is_count" name="is_count" class="form-check-input"
+                                   checked>
+                            <label for="is_count" class="form-check-label">Посчитать кол-во продаж и возвратов</label>
+                        </div>
+
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_to_yadisk"

@@ -8,7 +8,7 @@ import datetime
 import time
 import io
 import requests
-from app.modules import API_WB, API_OZON, detailing_api_module
+from app.modules import DF, API_WB, API_OZON, detailing_api_module
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 
 
@@ -177,61 +177,41 @@ def get_cards_ozon():
         return render_template('upload_cards_ozon.html', doc_string=get_cards_ozon.__doc__)
 
     is_to_yadisk = 'is_to_yadisk' in request.form
+    is_from_yadisk = 'is_from_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
 
-    # Step 1: Create the report
-    report_code = API_OZON.create_cards_report_ozon(client_id, api_key)
-    logging.info(f"Report code: {report_code}")
+    path = app.config['YANDEX_CARDS_OZON']
 
-    if report_code:
-        max_retries = 20  # Number of retries
-        retry_interval = 20  # Wait seconds between retries
-
-        # Step 2: Retry loop to check for report availability
-        for attempt in range(max_retries):
-            time.sleep(retry_interval)
-
-            report_info = API_OZON.check_report_info_ozon(report_code, client_id, api_key)
-
-            if report_info:
-                status = report_info['result']['status']
-                print(f"Status attempt {attempt}: {status}")
-                if status == 'success':
-                    # Report is ready, download the file
-                    report_file_url = report_info['result']['file']
-                    report_content = API_OZON.download_report_file_ozon(report_file_url)
-
-                    if report_content:
-                        # Convert CSV content to DataFrame
-                        df = pd.read_csv(io.BytesIO(report_content), sep=';')
-                        # Ensure the 'Артикул' column is treated as a string
-                        columns = ["Артикул", "Barcode"]
-
-                        df = pandas_handler.to_str(df, columns)
-
-                        file_name = f"cards_ozon.xlsx"
-                        if is_to_yadisk:
-                            yandex_disk_handler.upload_to_YandexDisk(df, file_name,
-                                                                     path=app.config['YANDEX_CARDS_OZON'])
-
-                        file_name = f'ozon_cards_report_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.xlsx'
-                        return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
-
-                    logging.error("Error downloading the report file")
-                    return "Error downloading the report file", 500
-                elif status in ['processing', 'waiting']:
-                    continue  # Still processing, retry later
-                else:
-                    logging.error(f"Report generation failed with status: {status}")
-                    return f"Report generation failed with status: {status}", 500
-            else:
-                logging.error("Error checking report status")
-                return "Error checking report status", 500
-
-        return "Report not found or still processing after multiple attempts", 404
+    if is_from_yadisk:
+        df, _ = yandex_disk_handler.download_from_YandexDisk(path)
     else:
-        logging.error("Error creating the report")
-        return "Error creating the report", 500
+        report_code = API_OZON.create_cards_report_ozon(client_id, api_key)
+        print(f"Report code: {report_code}")
+
+        # Process the report, fetching the content after retries
+        report_content = API_OZON.process_cards_report(report_code, client_id, api_key, max_retries=20,
+                                                       retry_interval=20)
+
+        # Convert CSV content to DataFrame
+        df = pandas_handler.csv_to_df(report_content)
+
+    # If DataFrame creation failed, log and return an appropriate error message
+    if df is None or df.empty:
+        logging.error("Failed to generate the DataFrame from the report content.")
+        return "Failed to generate the report or the report is empty. Please try again.", 500
+
+    columns = ['FBO OZON SKU ID', 'Barcode']
+    df = pandas_handler.to_str(df, columns=columns)
+    df = pandas_handler.replace_false_values(df, columns=columns)
+
+    df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, missing_col_name='FBO OZON SKU ID')
+
+    # Upload to YandexDisk if requested
+    yandex_disk_handler.upload_to_YandexDisk(df, f"cards_ozon.xlsx", path=path, is_upload_yadisk=is_to_yadisk)
+
+    # Send the Excel file to the user
+    file_name = f'ozon_cards_report_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.xlsx'
+    return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_stock_ozon', methods=['POST', 'GET'])
@@ -253,31 +233,11 @@ def get_stock_ozon():
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
 
-    # Call the helper function to get the stock report
-    stock_report = API_OZON.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type)
+    df = API_OZON.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type, is_to_yadisk=is_to_yadisk)
 
-    if stock_report:
-        columns = [
-            'free_to_sell_amount',
-            'item_code',
-            'item_name',
-            'promised_amount',
-            'reserved_amount',
-            'sku',
-            'warehouse_name',
-            'idc'
-        ]
-        df = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+    file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
 
-        file_name = f"stock_ozon.xlsx"
-        if is_to_yadisk:
-            yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_STOCK_OZON'])
-
-        file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
-
-        return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
-    else:
-        return "Error fetching stock report from OZON", 500
+    return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_price_ozon', methods=['POST', 'GET'])
@@ -348,6 +308,10 @@ def get_transaction_list_ozon():
 
     # Check if the checkbox is selected
     group_by_items = 'group_by_items' in request.form
+    is_count = 'is_count' in request.form
+    is_merge_cards = 'is_merge_cards' in request.form
+    is_merge_stock = 'is_merge_stock' in request.form
+    is_merge_price = 'is_merge_price' in request.form
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
 
@@ -385,18 +349,31 @@ def get_transaction_list_ozon():
     # Fill empty items_sku with "Other"
     df['items_sku'].fillna("Other", inplace=True)
 
-    if group_by_items:
-        # Group by items_sku and aggregate
-        nonnumerical = ["operation_id"]
-        df = API_OZON.aggregate_by(col_name="items_sku", df=df, nonnumerical=nonnumerical)
+    # Count positive and negative accruals for each items_sku
+    in_col = ["accruals_for_sale"]
+    df = API_OZON.count_items_by(df, col="items_sku", in_col=in_col, negative=True, is_count=is_count)
+
+    nonnumerical = ["operation_id"]
+    df = API_OZON.aggregate_by(col_name="items_sku", df=df, nonnumerical=nonnumerical, is_group=group_by_items)
 
     # Convert specific columns to string if needed
-    columns = ["posting.warehouse_id"]
+    columns = ["posting.warehouse_id", "items_sku"]
     df = pandas_handler.to_str(df, columns=columns)
 
+    if is_merge_cards:
+        path = app.config['YANDEX_CARDS_OZON']
+        left_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        df = pandas_handler.df_merge_drop(left_df=left_df, right_df=df, left_on="FBO OZON SKU ID", right_on="items_sku")
+
+    if is_merge_stock:
+        path = app.config['YANDEX_STOCK_OZON']
+        stock_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        df = pandas_handler.df_merge_drop(left_df=df, right_df=stock_df, left_on="items_sku", right_on="sku")
+
     file_name = f"transaction_list_ozon.xlsx"
-    if is_to_yadisk:
-        yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_TRANSACTION_OZON'])
+
+    path = app.config['YANDEX_TRANSACTION_OZON']
+    yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=path, is_upload_yadisk=is_to_yadisk)
 
     file_name = f"transaction_list_ozon_{date_from[:10]}_{date_to[:10]}.xlsx"
     # Generate Excel file from normalized DataFrame
@@ -410,7 +387,7 @@ def get_transaction_list_ozon():
 @login_required
 def analyze_transactions_ozon():
     if request.method != 'POST':
-        return render_template('upload_analyze_transactions_ozon.html')
+        return render_template('upload_analyze_transactions_ozon.html', doc_string=analyze_transactions_ozon.__doc__)
 
     # Get the file from the form
     file = request.files.get('file')
@@ -427,3 +404,49 @@ def analyze_transactions_ozon():
 
     # Send the file to the user as an Excel attachment
     return send_file(file_output, as_attachment=True, download_name=file_name)
+
+
+@app.route('/update_price_ozon', methods=['GET', 'POST'])
+@login_required
+def update_price_ozon():
+    if not request.method == 'POST':
+        return render_template('upload_update_price_ozon.html', doc_string=update_price_ozon.__doc__)
+
+    file = request.files['excel_file']
+
+    client_id = app.config['OZON_CLIENT_ID']
+    api_key = app.config['OZON_API_TOKEN']
+
+    if not file:
+        flash('No file uploaded.', 'danger')
+        return redirect(url_for('update_price_ozon'))
+
+    try:
+        # Read the Excel file into a DataFrame
+        excel_data = file.read()
+        df = pd.read_excel(io.BytesIO(excel_data))
+
+        # Assuming the DataFrame has the necessary columns for the API
+        prices_data = [
+            {
+                "auto_action_enabled": "UNKNOWN",
+                "currency_code": "RUB",
+                "min_price": str(row['min_price']),
+                "offer_id": str(row['offer_id']),
+                "old_price": str(row['old_price']),
+                "price": str(row['price']),
+                "price_strategy_enabled": "UNKNOWN",
+                "product_id": row['product_id'],
+            }
+            for index, row in df.iterrows()
+        ]
+
+        print(prices_data)
+
+        # Call batch update prices to handle more than 1000 items
+        API_OZON.batch_update_prices(prices_data, client_id=client_id, api_key=api_key)
+
+        return redirect(url_for('update_price_ozon'))
+    except Exception as e:
+        flash(f'Error updating prices: {str(e)}', 'danger')
+        return redirect(url_for('update_price_ozon'))

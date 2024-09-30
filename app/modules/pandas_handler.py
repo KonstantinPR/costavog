@@ -5,11 +5,11 @@ from typing import Union
 import logging
 import zipfile
 import io
-from app.modules import io_output, API_WB
+from app.modules import DF, io_output, API_WB
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
 
-FALSE_LIST_2 = [False, 0, 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
+FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 INF_LIST = [np.inf, -np.inf]
@@ -18,26 +18,26 @@ inf_to_null = lambda x: 0 if x in INF_LIST else x
 
 def replace_false_values(df, columns, FALSE_LIST=None):
     """
-    Replace values in specified columns that match FALSE_LIST or are strings with 0.
+    Replace values in specified columns that match FALSE_LIST or are strings with ''.
 
     Args:
     - df (DataFrame): The DataFrame containing the columns.
     - columns (list): List of column names to process.
-    - FALSE_LIST (list, optional): List of values to be considered as false. Defaults to None.
+    - FALSE_LIST (list, optional): List of values to be considered as false. Defaults to FALSE_LIST_2.
 
     Returns:
     - DataFrame: The modified DataFrame.
     """
 
     if FALSE_LIST is None:
-        FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
+        FALSE_LIST = FALSE_LIST_2  # Assuming FALSE_LIST_2 is defined globally
 
     for column in columns:
-        # Replace values from FALSE_LIST
-        df[column] = df[column].replace(FALSE_LIST, 0)
-        # Attempt to convert remaining string values to numeric type
-        print(f"column now is {column}")
-        # df[column] = pd.to_numeric(df[column], errors='coerce').fillna(0)
+        if column in df.columns:  # Check if the column exists in the DataFrame
+            df[column] = df[column].replace(FALSE_LIST, '')  # Replace values in the column
+        else:
+            print(f"Warning: Column '{column}' not found in DataFrame.")
+
     return df
 
 
@@ -59,7 +59,7 @@ def dc_adding_empty(dc, max_length_dc, sep=''):
 
 def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrange(10)}', DEFAULT_FALSE_LIST=None):
     if DEFAULT_FALSE_LIST is None:
-        DEFAULT_FALSE_LIST = FALSE_LIST
+        DEFAULT_FALSE_LIST = FALSE_LIST_2
     df = df.merge(df_from, on=col_name, how='left', suffixes=("", random_suffix))
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
@@ -73,26 +73,43 @@ def df_col_merging(df, df_from, col_name, random_suffix=f'_col_on_drop_{randrang
 
 
 def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
-    # Generate random suffixes
+    """Merge two DataFrames based on specified keys, handling type differences.
 
+    Args:
+        left_df (pd.DataFrame): The left DataFrame.
+        right_df (pd.DataFrame): The right DataFrame.
+        left_on (str): The column name in the left DataFrame to join on.
+        right_on (str): The column name in the right DataFrame to join on.
+        how (str): Type of merge to be performed (default is 'left').
+
+    Returns:
+        pd.DataFrame: The merged DataFrame.
+    """
+
+    # print(left_df.dtypes)
+    # print(right_df.dtypes)
+
+    # Convert both left and right keys to string to ensure matching even if types are different
+    left_df[left_on] = left_df[left_on].astype(str)
+    right_df[right_on] = right_df[right_on].astype(str)
+
+    # Generate random suffixes for columns that might collide
     left_suffix = f'_col_on_drop_x_{randrange(10)}'
     right_suffix = f'_col_on_drop_y_{randrange(10)}'
 
-    # Merge dataframes
+    # Merge DataFrames
     merged_df = pd.merge(left_df, right_df, how=how, left_on=left_on, right_on=right_on,
                          suffixes=(left_suffix, right_suffix))
 
-    # print(f"merged_df {merged_df}")
-
-    # Rename columns containing '_col_on_drop_x' by removing that part
+    # Rename columns to remove suffixes
     merged_df.rename(columns=lambda x: x.replace(left_suffix, ''), inplace=True)
 
     if how == 'outer':
-        # Update the left_on column with values from right_on where they are missing
-        condition = merged_df[left_on].isin(FALSE_LIST)
+        # Update the left_on column where values are missing
+        condition = merged_df[left_on].isin(FALSE_LIST)  # Ensure FALSE_LIST is defined
         merged_df.loc[condition, left_on] = merged_df[right_on]
 
-    # Drop columns with '_col_on_drop_y'
+    # Drop columns from the right DataFrame that have the suffix
     columns_to_drop = [col for col in merged_df.columns if right_suffix in col]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
@@ -119,10 +136,12 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_co
     # Iterate over each potential column name
     for nm_column in nm_columns:
         if nm_column in df.columns:
-            # Fill missing values in 'missing_col_name' with values from the current column
+            # Fill missing (NaN) values in 'missing_col_name' with values from the current column
             df[missing_col_name] = df[missing_col_name].fillna(df[nm_column])
-            # Replace zeros in 'missing_col_name' with values from the current column
-            df.loc[df[missing_col_name] == 0, missing_col_name] = df.loc[df[missing_col_name] == 0, nm_column]
+
+            # Replace values in 'missing_col_name' that are in FALSE_LIST_2
+            df.loc[df[missing_col_name].isin(FALSE_LIST_2), missing_col_name] = df.loc[
+                df[missing_col_name].isin(FALSE_LIST_2), nm_column]
 
     return df
 
@@ -263,11 +282,62 @@ def convert_to_dataframe(data, columns):
     return df
 
 
+import pandas as pd
+
+
 def to_str(df, columns):
-    # Ensure the specified columns are treated as strings
+    """
+    Convert specified columns to strings, remove leading apostrophes,
+    and remove '.0' from the end of the string if present.
+
+    Args:
+    - df (DataFrame): The DataFrame to process.
+    - columns (list or str): The columns to convert to string.
+
+    Returns:
+    - DataFrame: The modified DataFrame.
+    """
+    if not isinstance(columns, list):
+        columns = [columns]
+
     for column in columns:
         if column in df.columns:  # Check if the column exists in the DataFrame
-            df[column] = df[column].astype(str).str.lstrip("'")
+            try:
+                # Convert the column to string
+                df[column] = df[column].astype(str)
+
+                # Remove leading apostrophes
+                df[column] = df[column].str.lstrip("'")
+
+                # Remove '.0' only if it appears at the end of the string
+                df[column] = df[column].apply(lambda x: x[:-2] if x.endswith('.0') else x)
+
+                # Optionally handle NaN values (convert 'nan' back to an empty string)
+                df[column] = df[column].replace('nan', '')
+
+            except Exception as e:
+                print(f"Error processing column '{column}': {e}")
         else:
             print(f"Warning: Column '{column}' not found in DataFrame.")
+
+    return df
+
+
+def csv_to_df(report_content):
+    """
+    Converts CSV content to DataFrame and handles specific columns as strings.
+    :param report_content: Binary CSV content.
+    :return: DataFrame or None if there is an error.
+    """
+    df = None
+    try:
+        if report_content:
+            # Read the CSV content and treat specific columns as strings
+            df = to_str(pd.read_csv(io.BytesIO(report_content), sep=';'), ["Артикул", "Barcode"])
+            logging.info("DataFrame successfully created from report content.")
+        else:
+            logging.error("Report content is empty.")
+    except Exception as e:
+        logging.error(f"Error converting CSV content to DataFrame: {e}")
+
     return df

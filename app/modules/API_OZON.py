@@ -1,5 +1,8 @@
 import logging
+import math
 import time
+
+from flask import flash
 
 import app.modules.request_handler
 from app import app
@@ -39,6 +42,44 @@ def create_cards_report_ozon(client_id, api_key, language="DEFAULT", offer_ids=[
     else:
         print(f"Error creating report: {response.status_code}, {response.text}")
         return None
+
+
+def process_cards_report(report_code, client_id, api_key, max_retries=20, retry_interval=20):
+    """
+    Handles the report generation, status checking, and downloading for Ozon cards.
+    :param report_code: The report code received after creating the report.
+    :param client_id: Ozon API client ID.
+    :param api_key: Ozon API key.
+    :param max_retries: Maximum number of attempts to check the report status.
+    :param retry_interval: Time in seconds between retries.
+    :return: The report content if successful, or None if it fails.
+    """
+
+    if not report_code:
+        logging.error("Error creating or processing the report")
+        return None
+
+    for attempt in range(max_retries):
+        print(f"attempt {attempt}")
+        time.sleep(retry_interval)
+
+        # Check report status
+        report_info = check_report_info_ozon(report_code, client_id, api_key)
+        if report_info:
+            status = report_info['result']['status']
+            print(f"status {status}")
+            if status == 'success':
+                # Report is ready, download the file
+                report_file_url = report_info['result']['file']
+                return download_report_file_ozon(report_file_url)
+            elif status in ['processing', 'waiting']:
+                continue  # Still processing, retry later
+            else:
+                logging.error(f"Report failed with status: {status}")
+                return None
+
+    logging.error(f"Report still processing after {max_retries} attempts")
+    return None
 
 
 def check_report_info_ozon(report_code, client_id, api_key):
@@ -90,7 +131,7 @@ def list_reports_ozon(client_id, api_key, report_type="ALL", page=1, page_size=1
         return None
 
 
-def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL"):
+def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL", is_to_yadisk=True):
     url = "https://api-seller.ozon.ru/v2/analytics/stock_on_warehouses"
 
     headers = {
@@ -127,8 +168,27 @@ def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type=
         else:
             print(f"Error: {response.status_code}, {response.text}")
             return None
+    stock_report = {'result': {'rows': all_rows}}
 
-    return {'result': {'rows': all_rows}}
+    columns = [
+        'free_to_sell_amount',
+        'item_code',
+        'item_name',
+        'promised_amount',
+        'reserved_amount',
+        'sku',
+        'warehouse_name',
+        'idc'
+    ]
+
+    df = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+    df = pandas_handler.to_str(df=df, columns="sku")
+
+    if is_to_yadisk:
+        file_name = f"stock_ozon.xlsx"
+        yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_STOCK_OZON'])
+
+    return df
 
 
 def get_price_ozon_api(limit=1000, last_id='', client_id='', api_key='', normalize=True):
@@ -281,8 +341,10 @@ def flatten_nested_columns(df, columns, isNormalize=True):
     return df
 
 
-def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = []) -> pd.DataFrame:
+def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_group=True) -> pd.DataFrame:
     # Replace missing or empty values in the col_name column
+    if not is_group:
+        return df
     df[col_name].replace('', 'Empty Article', inplace=True)
     df[col_name].fillna('Empty Article', inplace=True)
 
@@ -305,3 +367,78 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = []) -> pd
     df_grouped = df.groupby(col_name).agg(agg_funcs).reset_index()
 
     return df_grouped
+
+
+def count_items_by(df, col="items_sku", in_col=None, negative=True, is_count=True):
+    """
+    Counts positive and negative values in 'in_col' for each unique 'col' (e.g., items_sku).
+    Positive values are assigned to 'delivery_to' and negative values are assigned to 'delivery_from'.
+
+    :param df: DataFrame with transaction data.
+    :param col: The column to group by (e.g., 'items_sku').
+    :param in_col: List of columns containing the values to count (e.g., ['accruals_for_sale', 'services_price']).
+    :param negative: Whether to count negative values (True by default).
+    :param is_count: Whether to perform the counting.
+    :return: DataFrame with 'delivery_to' and 'delivery_from' columns added.
+    """
+
+    if not is_count or not in_col:
+        return df
+
+    # Initialize columns for delivery_to and delivery_from
+    df['delivery_to'] = 0
+    df['delivery_from'] = 0
+
+    # Loop through each specified column
+    for column in in_col:
+        # Count positive values for delivery_to
+        df['delivery_to'] += df[column].gt(0).astype(int)
+        df['delivery_from'] += df[column].lt(0).astype(int)
+
+    return df
+
+
+def batch_update_prices(prices_data, client_id, api_key, batch_size=1000):
+    total_products = len(prices_data)
+    total_batches = math.ceil(total_products / batch_size)
+
+    for i in range(total_batches):
+        start_index = i * batch_size
+        end_index = min((i + 1) * batch_size, total_products)
+        batch = prices_data[start_index:end_index]
+
+        print(f"Processing batch {i + 1}/{total_batches} with {len(batch)} products")
+
+        # Ensure auto_action_enabled and min_price are properly set
+        for product in batch:
+            if product.get("auto_action_enabled") == "ENABLED" and product.get("min_price") == "0":
+                product["min_price"] = None  # Set to None or a valid minimum price
+                product["auto_action_enabled"] = "DISABLED"  # Disable automatic promotions if necessary
+
+        # Call the API for this batch
+        response = update_prices(batch, client_id=client_id, api_key=api_key)
+
+        if response.get('result'):
+            successful_updates = [r for r in response['result'] if r.get('updated')]
+            failed_updates = [r for r in response['result'] if not r.get('updated')]
+
+            if successful_updates:
+                flash(f'Successfully updated prices for {len(successful_updates)} products in batch {i + 1}.',
+                      'success')
+            if failed_updates:
+                flash(f'Failed to update prices for {len(failed_updates)} products in batch {i + 1}.', 'danger')
+        else:
+            flash(f'No valid response from API for batch {i + 1}.', 'danger')
+
+
+def update_prices(prices_data, client_id='', api_key=''):
+    url = 'https://api-seller.ozon.ru/v1/product/import/prices'  # Adjust the URL
+    headers = {
+        'Client-Id': client_id,  # Replace with actual Client ID
+        'Api-Key': api_key,  # Replace with actual API Key
+    }
+    payload = {"prices": prices_data}
+
+    response = requests.post(url, headers=headers, json=payload)
+    print(response)
+    return response.json()  # Return the response from the API

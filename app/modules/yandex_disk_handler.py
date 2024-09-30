@@ -56,6 +56,10 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
                          is_upload_yadisk=True, testing_mode=False):
     if testing_mode:
         return None
+
+    if not is_upload_yadisk:
+        return None
+
     if not isinstance(file, BytesIO):
         file = io_output.io_output(file)
 
@@ -67,7 +71,7 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
     return None
 
 
-def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH'):
+def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True):
     print(f"{path}")
     if not path.startswith("/"):
         path = app.config[path]
