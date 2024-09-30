@@ -6,7 +6,6 @@ from flask import render_template, request, redirect, send_file, flash, url_for
 from flask_login import login_required, current_user
 import datetime
 import time
-from datetime import datetime, timedelta
 import io
 import requests
 from app.modules import API_WB, API_OZON, detailing_api_module
@@ -177,6 +176,9 @@ def get_cards_ozon():
     if request.method != 'POST':
         return render_template('upload_cards_ozon.html', doc_string=get_cards_ozon.__doc__)
 
+    is_to_yadisk = 'is_to_yadisk' in request.form
+    testing_mode = 'testing_mode' in request.form
+
     # Step 1: Create the report
     report_code = API_OZON.create_cards_report_ozon(client_id, api_key)
     logging.info(f"Report code: {report_code}")
@@ -204,7 +206,14 @@ def get_cards_ozon():
                         df = pd.read_csv(io.BytesIO(report_content), sep=';')
                         # Ensure the 'Артикул' column is treated as a string
                         columns = ["Артикул", "Barcode"]
+
                         df = pandas_handler.to_str(df, columns)
+
+                        file_name = f"cards_ozon.xlsx"
+                        if is_to_yadisk:
+                            yandex_disk_handler.upload_to_YandexDisk(df, file_name,
+                                                                     path=app.config['YANDEX_CARDS_OZON'])
+
                         file_name = f'ozon_cards_report_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.xlsx'
                         return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
 
@@ -241,6 +250,8 @@ def get_stock_ozon():
     limit = int(request.form.get('limit', 1000))
     offset = int(request.form.get('offset', 0))
     warehouse_type = request.form.get('warehouse_type', 'ALL')
+    is_to_yadisk = 'is_to_yadisk' in request.form
+    testing_mode = 'testing_mode' in request.form
 
     # Call the helper function to get the stock report
     stock_report = API_OZON.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type)
@@ -256,9 +267,15 @@ def get_stock_ozon():
             'warehouse_name',
             'idc'
         ]
-        df_stock_report = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+        df = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
+
+        file_name = f"stock_ozon.xlsx"
+        if is_to_yadisk:
+            yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_STOCK_OZON'])
+
         file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
-        return send_file(io_output.io_output(df_stock_report), download_name=file_name, as_attachment=True)
+
+        return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
     else:
         return "Error fetching stock report from OZON", 500
 
@@ -273,8 +290,15 @@ def get_price_ozon():
     api_key = app.config['OZON_API_TOKEN']
     limit = request.form.get('limit', 1000)
 
+    is_to_yadisk = 'is_to_yadisk' in request.form
+    testing_mode = 'testing_mode' in request.form
+
     # Call the function to get prices from OZON API
     df = API_OZON.get_price_ozon_api(limit, client_id=client_id, api_key=api_key, normalize=True)
+
+    file_name = f"price_ozon.xlsx"
+    if is_to_yadisk:
+        yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_PRICE_OZON'])
 
     # Generate Excel file from DataFrame
     file = io_output.io_output(df)
@@ -336,9 +360,9 @@ def get_transaction_list_ozon():
 
     # Set default dates if fields are empty
     if not date_from:
-        date_from = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
+        date_from = (datetime.datetime.utcnow() - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
     if not date_to:
-        date_to = datetime.utcnow().strftime("%Y-%m-%d")
+        date_to = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
     # Append time components to match the required format (ISO 8601)
     date_from = f"{date_from}T00:00:00.000Z"
