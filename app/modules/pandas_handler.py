@@ -5,7 +5,7 @@ from typing import Union
 import logging
 import zipfile
 import io
-from app.modules import DF, io_output, API_WB
+from app.modules import io_output, API_WB
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
 
