@@ -9,7 +9,7 @@ from app.modules import DF, io_output, API_WB
 
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
 
-FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', None, '', 'Null', ' ', '\t', '\n']
+FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 INF_LIST = [np.inf, -np.inf]
@@ -90,8 +90,8 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
     # print(right_df.dtypes)
 
     # Convert both left and right keys to string to ensure matching even if types are different
-    left_df[left_on] = left_df[left_on].astype(str)
-    right_df[right_on] = right_df[right_on].astype(str)
+    left_df = to_str(left_df, left_on)
+    right_df = to_str(right_df, right_on)
 
     # Generate random suffixes for columns that might collide
     left_suffix = f'_col_on_drop_x_{randrange(10)}'

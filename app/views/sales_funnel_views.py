@@ -28,12 +28,8 @@ def sales_funnel_analyses():
                     'cancelCount', 'avgPriceRub', 'storagePricePerBarcode',
                     'net_cost', 'price', 'price_disc', 'disc_recommended', 'price_recommended']
 
-    df, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode)
-    print(f"df {df}")
-    print(f"file_name {file_name}")
-    return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
+    df, file_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode, is_funnel=True)
     df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode)
-
     df = pandas_handler.df_merge_drop(df, df_storage, left_on='nmID', right_on='nmId')
     df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     df = pandas_handler.df_merge_drop(df, df_net_cost, left_on='nmID', right_on='nm_id')

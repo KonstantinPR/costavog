@@ -598,7 +598,7 @@ def promofiling(promo_file, df, allowed_delta_percent=5):
     return df_promo
 
 
-def check_discount(df, allowed_delta_percent):
+def check_discount(df, allowed_delta_percent, default_discount=5):
     plan_price_name = "Плановая цена для акции"
     current_price_name = "Текущая розничная цена"
     new_discount_col = "new_discount"
@@ -615,6 +615,8 @@ def check_discount(df, allowed_delta_percent):
 
     # Calculate the price difference
     # df["price_difference"] = df[plan_price_name] / df["discount_price"]
+
+    df[promo_discount_name] = df[promo_discount_name].apply(lambda x: int(x) if len(str(x)) < 3 else default_discount)
     df["action_price"] = df[current_price_name] * (1 - df[promo_discount_name] / 100)
     df["price_difference"] = df["action_price"] / df["discount_price"]
 
