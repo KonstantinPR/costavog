@@ -10,8 +10,7 @@
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <div>
-                <form method="post" enctype=multipart/form-data action="{{url_for('upload_detailing')}}"
-                      onsubmit="collectCheckboxes()">
+                <form method="post" enctype=multipart/form-data action="{{url_for('upload_detailing')}}">
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <input class="form-control form-control-lg" type="file" name="file" multiple>
@@ -203,9 +202,6 @@
                                 Вывести к показу только важные столбцы (CHOSEN_COLUMNS)?
                             </label>
                         </div>
-
-                        <input type="hidden" name="checkbox_names" id="checkbox_names">
-
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input formaction="{{url_for('upload_detailing')}}"

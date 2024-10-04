@@ -507,7 +507,11 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
         return None
 
 
-def get_wb_sales_funnel_api(request, testing_mode=False, is_funnel=True, is_re_double=True, is_to_yadisk=True):
+def get_wb_sales_funnel_api(request,
+                            testing_mode=False,
+                            is_funnel=True,
+                            is_re_double=True,
+                            is_to_yadisk=True) -> (pd.DataFrame, str):
     """get_wb_sales_funnel_api"""
 
     if not is_funnel:

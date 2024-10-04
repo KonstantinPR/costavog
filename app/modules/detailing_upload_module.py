@@ -5,9 +5,10 @@ import numpy as np
 import io
 from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
-from dataclasses import dataclass
 from flask import request
 import math
+from types import SimpleNamespace
+from typing import Set, List, Union
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -663,144 +664,125 @@ def add_k(df):
     return df
 
 
-def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
+def dfs_process(df_list, request, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
     """dfs_process..."""
     print("""dfs_process...""")
 
     # element 0 in list is always general df that was through all df_list
-    INCLUDE_COLUMNS = list(INITIAL_COLUMNS_DICT.values())
-    days_by = int(request.form.get('days_by'))
-    if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
-    print(f"days_by {days_by}")
-
-    is_net_cost = 'is_net_cost' in request.form
-    is_get_storage = 'is_get_storage' in request.form
-    is_shushary = request.form.get('is_shushary')
-    is_get_price = request.form.get('is_get_price')
-    is_get_stock = request.form.get('is_get_stock')
-    is_funnel = request.form.get('is_funnel')
-    k_delta = request.form.get('k_delta')
-    is_mix_discounts = request.form.get('is_mix_discounts')
-    is_discount_template = request.form.get('is_discount_template')
-    reset_if_null = request.form.get('reset_if_null')
-    is_first_df = request.form.get('is_first_df')
-    print(f"is_discount_template {is_discount_template}")
-    if not k_delta: k_delta = 1
-    k_delta = int(k_delta)
+    incl_col = list(INITIAL_COLUMNS_DICT.values())
 
     # API and YANDEX_DISK getting data
-    df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
-    df_price, _ = API_WB.get_wb_price_api(testing_mode=testing_mode)
-    df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
-    request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}
-    df_stock = API_WB.get_wb_stock_api(testing_mode=testing_mode, request=request_dict, is_shushary=is_shushary)
+    d = SimpleNamespace()
+    d.df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
+    d.df_price, _ = API_WB.get_wb_price_api(testing_mode=r.testing_mode)
+    d.df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
+    d.request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}
+    d.df_stock = API_WB.get_wb_stock_api(testing_mode=r.testing_mode, request=d.request_dict, is_shushary=r.is_shushary)
+    d.df_funnel, d.funnel_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=r.testing_mode,
+                                                                is_funnel=r.is_funnel)
 
-    df_funnel, funnel_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode, is_funnel=is_funnel)
+    d.df_storage = API_WB.get_average_storage_cost(testing_mode=r.testing_mode, is_shushary=r.is_shushary)
 
-    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
+    # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
 
-    dfs = check_dynamic(dfs, is_dynamic=is_dynamic, is_first_df=is_first_df)
+    df = choose_df_by(df_list, is_first_df=r.is_first_df)
+    df = dfs_forming(df, d, r, include_columns=incl_col)
+    df_dynamic_list = chose_dynamic_df_list_by(df_list, is_dynamic=r.is_dynamic)
+    is_dynamic_possible = r.is_dynamic and len(df_dynamic_list) > 1
+    df_complete_dynamic_list = [dfs_forming(x, d, r, incl_col) for x in df_dynamic_list if is_dynamic_possible]
 
-    dfs_final_list = []
-    dfs_names = []
-
-    for i, df in enumerate(dfs):
-        df = replace_incorrect_date(df)
-        date_min = df["Дата продажи"].min()
-        print(f"date_min {date_min}")
-        # concatenated_dfs.to_excel('ex.xlsx')
-        date_max = df["Дата продажи"].max()
-
-        dfs_sales, INCLUDE_COLUMNS = get_dynamic_sales(df, days_by, INCLUDE_COLUMNS)
-
-        # concatenated_dfs = detailing.get_dynamic_sales(concatenated_dfs)
-
-        storage_cost = get_storage_cost(df)
-
-        df = zip_detail_V2(df, drop_duplicates_in="Артикул поставщика")
-
-        df = merge_stock(df, df_stock, is_get_stock=is_get_stock)
-
-        if not 'quantityFull' in df.columns: df['quantityFull'] = 0
-        df['quantityFull'].replace(np.NaN, 0, inplace=True)
-        df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
-
-        df = merge_storage(df, storage_cost, testing_mode, is_get_storage=is_get_storage,
-                           is_shushary=is_shushary, df_storage=df_storage)
-        df = merge_net_cost(df, df_net_cost, is_net_cost)
-        df = merge_price(df, df_price, is_get_price).drop_duplicates(
-            subset='nmId')
-        df = profit_count(df)
-        # df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
-        df = pandas_handler.df_merge_drop(df, df_rating, 'nmId', 'Артикул', how="outer")
-        # df.to_excel("rating_merged.xlsx")
-
-        df = pandas_handler.fill_empty_val_by(['article', 'vendorCode', 'supplierArticle'], df, 'Артикул поставщика')
-        df = pandas_handler.fill_empty_val_by(['brand'], df, 'Бренд')
-        df = df.rename(columns={'Предмет_x': 'Предмет'})
-        df = pandas_handler.fill_empty_val_by(['category'], df, 'Предмет')
-
-        if dfs_sales:
-            print(f"merging dfs_sales ...")
-            for d in dfs_sales:
-                df = pandas_handler.df_merge_drop(df, d, 'nmId', 'Код номенклатуры', how="outer")
-                # df = df.merge(d, how='left', left_on='nmId', right_on='Код номенклатуры')
-
-        # df.to_excel("sales_merged.xlsx")
-
-        # --- DICOUNT ---
-
-        df = get_period_sales(df, date_min, date_max)
-        k_norma_revenue = price_module.count_norma_revenue(df)
-        df = price_module.discount(df, k_delta=k_delta, k_norma_revenue=k_norma_revenue, reset_if_null=reset_if_null)
-        discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
-
-        # Reorder the columns
-
-        #  --- PATTERN SPLITTING ---
-        df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
-        df['prefix'] = df['Артикул поставщика'].astype(str).apply(lambda x: x.split("-")[0])
-        prefixes_dict = PREFIXES_ART_DICT
-        prefixes = list(prefixes_dict.keys())
-        df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
-        df['prefix'] = df['prefix'].apply(lambda x: prefixes_dict.get(x, x))
-        df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
-        df['material'] = df['Артикул поставщика'].apply(get_third_part)
-        df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]
-
-        if is_funnel and not df_funnel.empty:
-            # df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
-            df = pandas_handler.df_merge_drop(df, df_funnel, "nmId", "nmID")
-            df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
-            df = price_module.mix_discounts(df, is_mix_discounts)
-
-        df = add_k(df)
-
-        # print(INCLUDE_COLUMNS)
-        include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
-        df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
-        df = pandas_handler.round_df_if(df, half=10)
-        if 'new_discount' not in df.columns: df['new_discount'] = df['n_discount']
-        dfs_final_list.append(df)
-        dfs_names.append(f"df_{str(i)}.xlsx")
-
-    return dfs_final_list, dfs_names
+    return df, df_complete_dynamic_list
 
 
-def check_dynamic(dfs, is_dynamic=False, is_first_df=False):
-    if not is_dynamic:
-        dfs = pd.concat(dfs)
-        dfs = [dfs]
-        return dfs
+def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
+    df = replace_incorrect_date(df)
+    date_min = df["Дата продажи"].min()
+    print(f"date_min {date_min}")
+    # concatenated_dfs.to_excel('ex.xlsx')
+    date_max = df["Дата продажи"].max()
 
+    dfs_sales, INCLUDE_COLUMNS = get_dynamic_sales(df, r.days_by, include_columns)
+
+    # concatenated_dfs = detailing.get_dynamic_sales(concatenated_dfs)
+
+    storage_cost = get_storage_cost(df)
+
+    df = zip_detail_V2(df, drop_duplicates_in="Артикул поставщика")
+
+    df = merge_stock(df, d.df_stock, is_get_stock=r.is_get_stock)
+
+    if not 'quantityFull' in df.columns: df['quantityFull'] = 0
+    df['quantityFull'].replace(np.NaN, 0, inplace=True)
+    df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
+
+    df = merge_storage(df, storage_cost, r.testing_mode, is_get_storage=r.is_get_storage,
+                       is_shushary=r.is_shushary, df_storage=d.df_storage)
+    df = merge_net_cost(df, d.df_net_cost, r.is_net_cost)
+    df = merge_price(df, d.df_price, r.is_get_price).drop_duplicates(subset='nmId')
+    df = profit_count(df)
+    # df = df.merge(df_rating, how='outer', left_on='nmId', right_on="Артикул")
+    df = pandas_handler.df_merge_drop(df, d.df_rating, 'nmId', 'Артикул', how="outer")
+    # df.to_excel("rating_merged.xlsx")
+
+    df = pandas_handler.fill_empty_val_by(['article', 'vendorCode', 'supplierArticle'], df, 'Артикул поставщика')
+    df = pandas_handler.fill_empty_val_by(['brand'], df, 'Бренд')
+    df = df.rename(columns={'Предмет_x': 'Предмет'})
+    df = pandas_handler.fill_empty_val_by(['category'], df, 'Предмет')
+
+    if dfs_sales:
+        print(f"merging dfs_sales ...")
+        for df_sale in dfs_sales:
+            df = pandas_handler.df_merge_drop(df, df_sale, 'nmId', 'Код номенклатуры', how="outer")
+
+    # df.to_excel("sales_merged.xlsx")
+
+    # --- DICOUNT ---
+
+    df = get_period_sales(df, date_min, date_max)
+    k_norma_revenue = price_module.count_norma_revenue(df)
+    df = price_module.discount(df, k_delta=r.k_delta, k_norma_revenue=k_norma_revenue,
+                               reset_if_null=r.reset_if_null)
+    discount_columns = sales_funnel_module.DISCOUNT_COLUMNS
+
+    # Reorder the columns
+
+    #  --- PATTERN SPLITTING ---
+    df = df[~df['nmId'].isin(pandas_handler.FALSE_LIST)]
+    df['prefix'] = df['Артикул поставщика'].astype(str).apply(lambda x: x.split("-")[0])
+    prefixes_dict = PREFIXES_ART_DICT
+    prefixes = list(prefixes_dict.keys())
+    df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
+    df['prefix'] = df['prefix'].apply(lambda x: prefixes_dict.get(x, x))
+    df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
+    df['material'] = df['Артикул поставщика'].apply(get_third_part)
+    df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]
+
+    if r.is_funnel and not d.df_funnel.empty:
+        # df = df.merge(df_funnel, how='outer', left_on='nmId', right_on="nmID")
+        df = pandas_handler.df_merge_drop(df, d.df_funnel, "nmId", "nmID")
+        df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
+        df = price_module.mix_discounts(df, r.is_mix_discounts)
+
+    df = add_k(df)
+
+    # print(INCLUDE_COLUMNS)
+    include_column = [col for col in INCLUDE_COLUMNS if col in df.columns]
+    df = df[include_column + [col for col in df.columns if col not in INCLUDE_COLUMNS]]
+    df = pandas_handler.round_df_if(df, half=10)
+    if 'new_discount' not in df.columns: df['new_discount'] = df['n_discount']
+    return df
+
+
+def choose_df_by(df_list, is_first_df):
     if is_first_df:
-        print("is_first_df...")
-        dfs = [dfs[0]] + dfs
-        return dfs
+        return df_list[0]
+    return pd.concat(df_list)
 
-    dfs = [pd.concat(dfs)] + dfs
 
-    return dfs
+def chose_dynamic_df_list_by(df_list, is_dynamic=False):
+    if is_dynamic:
+        return df_list
+    return []
 
 
 def dfs_dynamic(df_dynamic_list, is_dynamic=True):
