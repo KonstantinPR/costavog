@@ -69,10 +69,25 @@
 
 
 
-
-
-
     </style>
+
+
+    <script>
+        function collectCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxNames = [];
+
+            checkboxes.forEach(checkbox => {
+                checkboxNames.push(checkbox.name);
+            });
+
+            console.log('Checkbox Names:', checkboxNames); // Debugging line
+            document.getElementById('checkbox_names').value = JSON.stringify(checkboxNames);
+        }
+
+    </script>
+
+
 </head>
 
 
@@ -268,6 +283,8 @@
                 isTextShown = true;
             }
         }
+
+
 
 
 

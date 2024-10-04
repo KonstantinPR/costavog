@@ -5,6 +5,8 @@ import numpy as np
 import io
 from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
+from dataclasses import dataclass
+from flask import request
 import math
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -671,8 +673,8 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
     print(f"days_by {days_by}")
 
-    is_net_cost = request.form.get('is_net_cost')
-    is_get_storage = request.form.get('is_get_storage')
+    is_net_cost = 'is_net_cost' in request.form
+    is_get_storage = 'is_get_storage' in request.form
     is_shushary = request.form.get('is_shushary')
     is_get_price = request.form.get('is_get_price')
     is_get_stock = request.form.get('is_get_stock')
@@ -695,12 +697,12 @@ def dfs_process(dfs, request, testing_mode=False, is_dynamic=False):
 
     df_funnel, funnel_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=testing_mode, is_funnel=is_funnel)
 
+    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
+
     dfs = check_dynamic(dfs, is_dynamic=is_dynamic, is_first_df=is_first_df)
 
     dfs_final_list = []
     dfs_names = []
-
-    df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
 
     for i, df in enumerate(dfs):
         df = replace_incorrect_date(df)
@@ -789,62 +791,64 @@ def check_dynamic(dfs, is_dynamic=False, is_first_df=False):
     if not is_dynamic:
         dfs = pd.concat(dfs)
         dfs = [dfs]
+        return dfs
 
-    if is_dynamic:
-        print("is_dynamic...")
-        if is_first_df:
-            print("is_first_df...")
-            dfs = [dfs[0]] + dfs
-        else:
-            dfs = [pd.concat(dfs)] + dfs
+    if is_first_df:
+        print("is_first_df...")
+        dfs = [dfs[0]] + dfs
+        return dfs
+
+    dfs = [pd.concat(dfs)] + dfs
+
     return dfs
 
 
-def dfs_dynamic(df_list, is_dynamic=True):
+def dfs_dynamic(df_dynamic_list, is_dynamic=True):
     """dfs_dynamic merges DataFrames on 'Артикул поставщика' and expands dynamic columns."""
     print("dfs_dynamic...")
+
+    if not is_dynamic:
+        return pd.DataFrame
+
+    if not df_dynamic_list:
+        return pd.DataFrame
 
     # List of dynamic columns to analyze
     columns_dynamic = ["Маржа-себест.", "Ч. Продажа шт.", "quantityFull", "Логистика", "Хранение"]
 
-    if len(df_list) > 1 and is_dynamic:
-        # Start by initializing the first DataFrame
-        merged_df = df_list[1][['Артикул поставщика'] + columns_dynamic].copy()
+    # Start by initializing the first DataFrame
+    merged_df = df_dynamic_list[1][['Артикул поставщика'] + columns_dynamic].copy()
 
-        # Iterate over the remaining DataFrames
-        for i, df in enumerate(df_list[2:]):  # Start from 2 to correctly handle suffixes
-            # Merge with the next DataFrame on 'Артикул поставщика'
-            merged_df = pd.merge(
-                merged_df,
-                df[['Артикул поставщика'] + columns_dynamic],
-                on='Артикул поставщика',
-                how='outer',  # Use 'outer' to keep all articles
-                suffixes=('', f'_{i}')
-            )
-
-            # Drop duplicate rows based on 'Артикул поставщика' after each merge
-            merged_df = merged_df.drop_duplicates(subset='Артикул поставщика')
-
-        # Drop duplicate columns if any exist after merging
-        merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
-
-        # Extract the sorted column names, excluding 'Артикул поставщика'
-        sorted_columns = ['Артикул поставщика'] + sorted(
-            [col for col in merged_df.columns if col != 'Артикул поставщика']
+    # Iterate over the remaining DataFrames
+    for i, df in enumerate(df_dynamic_list[2:]):  # Start from 2 to correctly handle suffixes
+        # Merge with the next DataFrame on 'Артикул поставщика'
+        merged_df = pd.merge(
+            merged_df,
+            df[['Артикул поставщика'] + columns_dynamic],
+            on='Артикул поставщика',
+            how='outer',  # Use 'outer' to keep all articles
+            suffixes=('', f'_{i}')
         )
 
-        # Reorder the DataFrame with the sorted column list
-        merged_df = merged_df[sorted_columns]
+        # Drop duplicate rows based on 'Артикул поставщика' after each merge
+        merged_df = merged_df.drop_duplicates(subset='Артикул поставщика')
 
-        # Perform ABC and XYZ analysis
-        merged_df = abc_xyz(merged_df)
+    # Drop duplicate columns if any exist after merging
+    merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
 
-        # Return the final DataFrame with ABC and XYZ categories
-        return merged_df
+    # Extract the sorted column names, excluding 'Артикул поставщика'
+    sorted_columns = ['Артикул поставщика'] + sorted(
+        [col for col in merged_df.columns if col != 'Артикул поставщика']
+    )
 
-    else:
-        # Return the list if not dynamic or only one DataFrame
-        return ""
+    # Reorder the DataFrame with the sorted column list
+    merged_df = merged_df[sorted_columns]
+
+    # Perform ABC and XYZ analysis
+    merged_df = abc_xyz(merged_df)
+
+    # Return the final DataFrame with ABC and XYZ categories
+    return merged_df
 
 
 def abc_xyz(merged_df):
@@ -920,9 +924,10 @@ def abc_xyz(merged_df):
 
 
 def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
-    dynamic_columns_names = DINAMIC_COLUMNS
     if df_dynamic.empty:
         return df
+
+    dynamic_columns_names = DINAMIC_COLUMNS
 
     # Select relevant columns from df_dynamic
     df_dynamic = df_dynamic[["Артикул поставщика"] + dynamic_columns_names]

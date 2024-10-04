@@ -8,7 +8,7 @@ import datetime
 import time
 import io
 import requests
-from app.modules import DF, API_WB, API_OZON, detailing_api_module
+from app.modules import API_WB, API_OZON, detailing_api_module
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 
 

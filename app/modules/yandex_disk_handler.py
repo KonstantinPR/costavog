@@ -13,13 +13,13 @@ import datetime
 
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
-                                input_name='is_archive', testing_mode=False):
+                                is_archive='is_archive', testing_mode=False):
     print(f"copy_file_to_archive_folder...")
 
     if testing_mode:
         return None
 
-    if not request_handler.is_checkbox_true(request, input_name):
+    if is_archive not in request.form:
         return None
 
     print(f"copy_file_to_archive_folder in Yandex Disk...")

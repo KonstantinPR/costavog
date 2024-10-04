@@ -53,6 +53,7 @@ def upload_detailing():
 
     days_by = int(request.form.get('days_by'))
     if not days_by: days_by = int(app.config['DAYS_PERIOD_DEFAULT'])
+
     # print(f"days_by {days_by}")
     uploaded_files = request.files.getlist("file")
     testing_mode = request.form.get('is_testing_mode')
@@ -62,6 +63,7 @@ def upload_detailing():
     is_dynamic = request.form.get('is_dynamic')
     is_chosen_columns = request.form.get('is_chosen_columns')
     # print(f"is_discount_template {is_discount_template}")
+
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
                                                     path_or_config=app.config['REPORT_DETAILING_UPLOAD'],
@@ -82,7 +84,8 @@ def upload_detailing():
                                                              is_dynamic=is_dynamic)
     # main concatenated df
     df = df_list[0]
-    df_dynamic = detailing_upload_module.dfs_dynamic(df_list, is_dynamic=is_dynamic)
+    df_dynamic_list = df_list[1:] if len(df_list) > 1 else None
+    df_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=is_dynamic)
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_dynamic)
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
 
@@ -104,9 +107,17 @@ def upload_detailing():
     df_dynamic_name = "df_dynamic.xlsx"
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, is_discount_template)
+
+    # Assuming you have your DataFrames and names
     dfs = [df, df_promo, df_template, df_dynamic]
     dfs_names = [detailing_name, promo_name, template_name, df_dynamic_name]
-    file, name = pandas_handler.files_to_zip(dfs, dfs_names)
+
+    # Use a list comprehension to filter out empty DataFrames and their names
+    filtered_dfs = [df for df in dfs if not df.empty]
+    filtered_dfs_names = [name for df, name in zip(dfs, dfs_names) if not df.empty]
+
+    # Now you can call files_to_zip with the filtered lists
+    file, name = pandas_handler.files_to_zip(filtered_dfs, filtered_dfs_names)
 
     # Flash message and return the zip file for download
     flash("Отчет успешно создан")

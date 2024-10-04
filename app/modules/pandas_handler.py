@@ -297,6 +297,9 @@ def to_str(df, columns):
     Returns:
     - DataFrame: The modified DataFrame.
     """
+    # Ensure we are working with a copy of the DataFrame if necessary
+    df = df.copy()  # This ensures you are working with a new DataFrame
+
     if not isinstance(columns, list):
         columns = [columns]
 
@@ -304,16 +307,14 @@ def to_str(df, columns):
         if column in df.columns:  # Check if the column exists in the DataFrame
             try:
                 # Convert the column to string
-                df[column] = df[column].astype(str)
-
-                # Remove leading apostrophes
-                df[column] = df[column].str.lstrip("'")
+                df.loc[:, column] = df[column].astype(str)
+                df.loc[:, column] = df[column].str.lstrip("'")
 
                 # Remove '.0' only if it appears at the end of the string
-                df[column] = df[column].apply(lambda x: x[:-2] if x.endswith('.0') else x)
+                df.loc[:, column] = df[column].apply(lambda x: x[:-2] if x.endswith('.0') else x)
 
                 # Optionally handle NaN values (convert 'nan' back to an empty string)
-                df[column] = df[column].replace('nan', '')
+                df.loc[:, column] = df[column].replace('nan', '')
 
             except Exception as e:
                 print(f"Error processing column '{column}': {e}")
@@ -321,6 +322,7 @@ def to_str(df, columns):
             print(f"Warning: Column '{column}' not found in DataFrame.")
 
     return df
+
 
 
 def csv_to_df(report_content):
