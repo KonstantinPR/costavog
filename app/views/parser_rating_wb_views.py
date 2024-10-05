@@ -1,4 +1,3 @@
-import logging
 import pandas as pd
 from app import app
 from flask import render_template, request, send_file
@@ -16,6 +15,7 @@ def parser_rating_wb():
         con_rating_name = 'Rating'
         con_feedbacks_name = 'Feedbacks'
         df = request_handler.to_df(request, input_column=col_name)
+        print(df)
 
         if not isinstance(df, pd.DataFrame):
             df = pd.DataFrame()
@@ -23,7 +23,7 @@ def parser_rating_wb():
         if df.empty:
             df = parser_rating_module.batched_get_rating()
         else:
-            df[col_name] = ''
+            # df[col_name] = ''
             df[con_rating_name] = ''
             df[con_feedbacks_name] = ''
             df = parser_rating_module.get_rating(df)

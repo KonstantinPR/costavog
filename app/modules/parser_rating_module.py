@@ -69,13 +69,14 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
             url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
             r = requests.get(url=url, headers=headers)
             if r.status_code == 200:
+                print(r.text)
                 print(f"Got it: {good_id}")
                 data = r.json().get('data')
                 if data and data.get('products'):
                     product = data['products'][0]
                     df.at[index, 'Rating'] = product.get('rating', '')
                     df.at[index, 'Feedbacks'] = product.get('feedbacks', '')
-                    logging.warning(f"Rating: {df.at[index, 'Rating']}, Feedbacks {df.at[index, 'Feedbacks']}")
+                    print(f"Rating: {df.at[index, 'Rating']}, Feedbacks {df.at[index, 'Feedbacks']}")
                 else:
                     logging.warning(f"No product data found for ID: {good_id}")
             else:
@@ -84,3 +85,5 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
             logging.exception(f"An error occurred while processing ID: {good_id}. Error: {e}")
 
     return df
+
+
