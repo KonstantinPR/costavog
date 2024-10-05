@@ -171,12 +171,13 @@ def first_letter_up(df, name_columns):
 
 def nmIDs_exclude(nmIDs, nmIDs_exclude):
     """exclude nmIDs_exclude from nmIDs"""
+    print("nmIDs_exclude ...")
 
     nmIDs = list([int(nmID) for nmID in nmIDs])
     nmIDs_exclude = list([int(nmID) for nmID in nmIDs_exclude])
     # Exclude nmIDs present in nmIDs_exclude list
     nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
-    logging.warning(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
+    print(f"Excluded list is got by. The number of elements is {len(nmIDs)}")
     return nmIDs
 
 
@@ -322,7 +323,6 @@ def to_str(df, columns):
             print(f"Warning: Column '{column}' not found in DataFrame.")
 
     return df
-
 
 
 def csv_to_df(report_content):

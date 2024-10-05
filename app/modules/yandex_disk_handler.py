@@ -14,7 +14,6 @@ import datetime
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
                                 is_archive='is_archive', testing_mode=False):
-    print(f"copy_file_to_archive_folder...")
 
     if testing_mode:
         return None
@@ -22,11 +21,11 @@ def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folde
     if is_archive not in request.form:
         return None
 
-    print(f"copy_file_to_archive_folder in Yandex Disk...")
-
     if not path_or_config:
         print("No file path provided.")
         return None
+
+    print(f"copy_file_to_archive_folder in {path_or_config}...")
 
     file_content, file_name = download_from_YandexDisk(path=path_or_config)
     file_name, file_extension = os.path.splitext(file_name)
@@ -65,25 +64,25 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
 
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_full_to = f"{path}/{file_name}"
-    print(f"path_full_to upload yandex disk {path_full_to}")
+    print(f"file upload to the yandex.disk in {path_full_to} ...")
     y.upload(file, path_full_to, overwrite=True)
 
     return None
 
 
 def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True):
-    print(f"{path}")
+
     if not path.startswith("/"):
         path = app.config[path]
 
-    print(f"{path}")
+    print(f"file downloaded from {path} ...")
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)
     file_content = pd.read_excel(bytes_io)
-    print(type(file_content))
+    # print(type(file_content))
 
     return file_content, file_name
 

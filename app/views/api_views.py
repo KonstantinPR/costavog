@@ -71,10 +71,8 @@ def get_stock_wb():
     """
     is_shushary = request.form.get('is_shushary')
     testing_mode = request.form.get('testing_mode')
-    logging.warning(f"is_shushary {is_shushary}")
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
     if request.method == 'POST':
-        logging.warning(f"request {request}")
         df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode)
         df = io_output.io_output(df)
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -100,11 +98,9 @@ def get_storage_wb():
 
         if request.form.get('is_mean'):
             df_all_cards = API_WB.get_average_storage_cost()
-            logging.warning(f"storage cost is received by API WB")
         else:
             df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0)
 
-        # logging.warning(f"df {df_all_cards}")
         df = io_output.io_output(df_all_cards)
         file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -131,40 +127,13 @@ def get_wb_price_api():
 def get_wb_stock_api():
     if not current_user.is_authenticated:
         return redirect('/company_register')
-    if request.method == 'POST':
-        if request.form.get('date_from'):
-            date_from = request.form.get('date_from')
-        else:
-            date_from = datetime.datetime.today() - datetime.timedelta(days=app.config['DAYS_STEP_DEFAULT'])
-            date_from = date_from.strftime("%Y-%m-%d")
+    if not request.method == 'POST':
+        return render_template('upload_get_dynamic_sales.html')
 
-        logging.warning(date_from)
-
-        if request.form.get('date_end'):
-            date_end = request.form.get('date_end')
-        else:
-            date_end = time.strftime("%Y-%m-%d")
-
-        logging.warning(date_end)
-
-        # if request.form.get('days_step'):
-        #     days_step = request.form.get('days_step')
-        # else:
-        #     days_step = app.config['DAYS_STEP_DEFAULT']
-
-        t = time.process_time()
-        logging.warning(time.process_time() - t)
-        # df_sales_wb_api = detailing.get_wb_sales_api(date_from, days_step)
-        # df_sales_wb_api = detailing.get_wb_sales_realization_api(date_from, date_end, days_step)
-        df_sales_wb_api = API_WB.get_wb_stock_api()
-        logging.warning(time.process_time() - t)
-        file = io_output.io_output(df_sales_wb_api)
-        logging.warning(time.process_time() - t)
-        return send_file(file,
-                         download_name='report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx",
-                         as_attachment=True)
-
-    return render_template('upload_get_dynamic_sales.html')
+    df_sales_wb_api = API_WB.get_wb_stock_api()
+    file = io_output.io_output(df_sales_wb_api)
+    file_name = 'report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx"
+    return send_file(file, download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_cards_ozon', methods=['POST', 'GET'])

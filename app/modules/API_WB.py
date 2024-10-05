@@ -29,7 +29,6 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
     print(f"get_storage_cost...")
 
     if testing_mode:
-        logging.warning(f"storage cost is receiving from Yandex Disk")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
 
@@ -50,8 +49,8 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
         'dateTo': date_to
     }
     response = requests.get(create_report_url, headers=headers, params=params)
-    logging.warning(f"status_code {response.status_code}")
-    logging.warning(f"status_code {response.text}")
+    print(f"get_storage_cost status_code {response.status_code}")
+    print(f"get_storage_cost status_code {response.text}")
     if response.status_code not in {200, 201}:  # Check for successful response (200 or 201)
         logging.warning("Failed to create report so file will be got from yadisk::", response.text)
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
@@ -90,7 +89,6 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
     # logging.warning(f"storage cost is receiving from API WB ...")
     # Step 4: Convert data to DataFrame
     df = pd.DataFrame(report_data)
-    # logging.warning(f"df {df}")
 
     if upload_to_yadisk and not df is None:
         io_df = io_output.io_output(df)
@@ -98,35 +96,21 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STORAGE_COST'])
 
     if 'warehouse' in df.columns and is_shushary:
-        logging.warning("Удаление сгоревших товаров Шушар...")
+        print("Удаление сгоревших товаров Шушар...")
         df = df[df['warehouse'] != 'Санкт-Петербург Шушары']
 
-    # logging.warning(f"df {df}")
     return df
-
-
-# def get_wb_price_api():
-#     headers = {
-#         'accept': 'application/json',
-#         'Authorization': app.config['WB_API_TOKEN'],
-#     }
-#     response = requests.get('https://suppliers-api.wildberries.ru/public/api/v1/info', headers=headers)
-#     data = response.json()
-#     df = pd.DataFrame(data)
-#     df = df.rename(columns={'nmId': 'nm_id'})
-#     return df
 
 
 def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     """
     Retrieve information price wb from the Wildberries API.
     """
-    logging.warning("get_wb_price_api ...")
+    print("get_wb_price_api ...")
 
     if request: is_from_yadisk = request.form.get('is_from_yadisk')
 
     if testing_mode or is_from_yadisk:
-        logging.warning("testing mode, ...")
         df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
         return df, filename
 
@@ -149,7 +133,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
         # Make the request to the API with pagination parameters
         params = {'limit': limit, 'offset': offset}
         response = requests.get(url, headers=headers, params=params)
-        logging.warning(f"Response status code: {response.status_code}")
+        print(f"Response status code: {response.status_code}")
 
         # Check if the request was successful
         if response.ok:
@@ -191,34 +175,28 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
 
 def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_upload_yandex=True,
                      date_from: str = '2019-01-01'):
-    """
-    get wb stock via api put in df
-    :return: df
-    """
+    """get wb stock via api put in df"""
 
-    logging.warning("get_wb_stock_api ...")
+    print("get_wb_stock_api ...")
 
     if testing_mode:
-        logging.warning("testing mode, stock from yandex disk ...")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STOCK_WB')
         if 'warehouseName' in df.columns and is_shushary:
-            logging.warning("Удаление сгоревших товаров Шушар из остатков ...")
+            print("Удаление сгоревших товаров Шушар из остатков ...")
             df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
         return df
 
-    logging.warning("stock from API WB ...")
+    print("stock from API WB ...")
     api_key = app.config['WB_API_TOKEN']
     url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
     headers = {'Authorization': api_key}
 
     response = requests.get(url, headers=headers)
-    # logging.warning(response)
     df = response.json()
     df = pd.json_normalize(df)
-    # df.to_excel("wb_stock.xlsx")
 
     if 'warehouseName' in df.columns and is_shushary:
-        logging.warning("Удаление сгоревших товаров Шушар из остатков ...")
+        print("Удаление сгоревших товаров Шушар из остатков ...")
         df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
 
     df = df.reset_index().rename_axis(None, axis=1)
@@ -238,7 +216,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
     else:
         raise ValueError("Invalid request type. It should be either a 'requests' object or a dictionary.")
 
-    # df.to_excel("df_stock.xlsx")
+    print("stock from API WB is gotten")
 
     if no_city == 'no_city' and no_sizes == 'no_sizes':
         df = df.pivot_table(index=['nmId'],
@@ -319,70 +297,15 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
     return df
 
 
-#
-# def get_all_cards_api_wb(textSearch: str = None):
-#     logging.warning("get_all_cards_api_wb ...")
-#     limit = 1000
-#     total = 1000
-#     updatedAt = None
-#     nmId = None
-#     dfs = []
-#
-#     while total >= limit:
-#         headers = {
-#             'accept': 'application/json',
-#             'Authorization': app.config['WB_API_TOKEN2'],
-#         }
-#
-#         data = {
-#             "sort": {
-#                 "cursor": {
-#                     "limit": limit,
-#                     "updatedAt": updatedAt,
-#                     "nmID": nmId,
-#                 },
-#                 "filter": {
-#                     "textSearch": textSearch,
-#                     "withPhoto": -1
-#                 }
-#             }
-#         }
-#
-#         # response = requests.post('https://suppliers-api.wildberries.ru/content/v3/cards/cursor/list',
-#         #                          data=json.dumps(data), headers=headers)
-#
-#         response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',
-#                                  data=json.dumps(data), headers=headers)
-#
-#         # logging.warning(f"{response}")
-#
-#         if response.status_code != 200:
-#             logging.warning(f"Error in API request: {response.status_code}")
-#             break
-#         df_json = response.json()
-#         logging.warning(df_json)
-#         total = df_json['data']['cursor']['total']
-#         updatedAt = df_json['data']['cursor']['updatedAt']
-#         nmId = df_json['data']['cursor']['nmID']
-#         dfs += df_json['data']['cards']
-#
-#     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID'])
-#
-#     return df
-
-
 def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=False, textSearch: str = None,
                          is_unique=False, limit_cards=None):
     """get_all_cards_api_wb"""
-
-    # print(f"testing_mode or is_from_yadisk {testing_mode} {is_from_yadisk}, {testing_mode or is_from_yadisk} ")
+    print("get_all_cards_api_wb ...")
 
     if testing_mode or is_from_yadisk:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_ALL_CARDS_WB')
-        logging.warning("all cards is from yandex disk ...")
         return df
 
-    logging.warning("get_all_cards_api_wb ...")
     limit = 100
     total = 100
     updatedAt = None
@@ -390,7 +313,7 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
     dfs = []
     count = 0
     while total >= limit:
-        logging.warning(f"{get_all_cards_api_wb.__name__} ... total {count}")
+        print(f"{get_all_cards_api_wb.__name__} ... total {count}")
         headers = {
             'accept': 'application/json',
             'Authorization': app.config['WB_API_TOKEN2'],
@@ -433,7 +356,6 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
         if limit_cards and count > int(limit_cards):
             break
 
-    logging.warning(f"{get_all_cards_api_wb.__name__} forming df ...")
     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions", "characteristics"],
                            errors='ignore')
 
@@ -445,26 +367,9 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
     return df
 
 
-# def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
-#     """get sales as api wb sales realization describe"""
-#     t = time.process_time()
-#     api_key = app.config['WB_API_TOKEN']
-#     headers = {'Authorization': api_key}
-#     # url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-#     url = "https://statistics-api.wildberries.ru/api/v2/supplier/reportDetailByPeriod?"
-#
-#     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
-#     response = requests.get(url_all, headers=headers)
-#     logging.warning(f"response {response}")
-#     df = response.json()
-#     df = pd.json_normalize(df)
-#
-#     return df
-
-
 def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
     """get sales as api wb sales realization describe"""
-
+    print("get_wb_sales_realization_api ...")
     api_key = app.config['WB_API_TOKEN2']
     headers = {'Authorization': api_key}
     url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
@@ -472,10 +377,10 @@ def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
 
     url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
     response = requests.get(url_all, headers=headers)
-    logging.warning(f"response {response}")
-    logging.warning(f"response.json() {response.json()}")
+    print(f"response {response}")
+    print(f"response.json() {response.json()}")
     df = response.json()
-    # logging.warning(df)
+
     df = pd.json_normalize(df)
 
     return df
@@ -486,20 +391,17 @@ def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int
 
     api_key = app.config['WB_API_TOKEN2']  # Assuming you have the API token configured in your app
     headers = {'Authorization': api_key}
-    # url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod"
     url = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
 
     url_params = {
         'dateFrom': date_from,
         'dateTo': date_to
     }
-    print(f"dateFrom {date_from}")
 
     response = requests.get(url, headers=headers, params=url_params)
-    logging.warning(f'response {response}')
+    print(f'response {response}')
     if response.status_code == 200:
         data = response.json()
-        logging.warning(f"data {data}")
         df = pd.json_normalize(data)
         return df
     else:
@@ -513,15 +415,14 @@ def get_wb_sales_funnel_api(request,
                             is_re_double=True,
                             is_to_yadisk=True) -> (pd.DataFrame, str):
     """get_wb_sales_funnel_api"""
-
+    print("get_wb_sales_funnel_api...")
     if not is_funnel:
-        return None, None
+        return pd.DataFrame, None
 
     date_from = request_handler.request_date_from(request)
     date_end = request_handler.request_date_end(request)
 
     if testing_mode:
-        logging.warning(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
         print(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
         df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_SALES_FUNNEL_WB')
         return df, filename
@@ -555,7 +456,7 @@ def get_wb_sales_funnel_api(request,
     date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
     date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    logging.warning(f" date_from {date_from}, date_end {date_end}")
+    print(f"gettin sales funnel by date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
 
@@ -569,11 +470,11 @@ def get_wb_sales_funnel_api(request,
     if is_to_yadisk and df is not None and not df.empty:
         io_df = io_output.io_output(df)
         file_name = f'wb_sales_funnel.xlsx'
-        logging.warning(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
+        print(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_SALES_FUNNEL_WB'])
 
     # Log a message indicating successful retrieval of sales funnel data
-    logging.warning("Sales funnel data retrieved successfully")
+    print("Sales funnel data retrieved successfully")
     file_name = f'wb_sales_funnel_{str(date_from)[:10]}_{str(date_end[:10])}.xlsx'
 
     return df, file_name
@@ -583,8 +484,8 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
     df = pd.DataFrame()
     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
     cards_count = chunk_size
+    print(f"getting sales_funnel via API {cards_count} qt ...")
     for chunk in chunks:
-        logging.warning(f"getting via get_wb_sales_funnel_api {cards_count} ...")
 
         payload = {
             "brandNames": [],
@@ -604,7 +505,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
         }
 
         response = requests.post(url, json=payload, headers=headers)
-        logging.warning(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
+        print(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
         if response.status_code != 200:
             logging.warning(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
             return None

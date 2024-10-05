@@ -10,8 +10,7 @@ from random import randint
 def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=True, batch_size=500):
     # Retrieve unique nmIDs from the API
     nmIDs = API_WB.get_all_cards_api_wb(testing_mode=testing_mode)['nmID'].unique()
-    # nmIDs = nmIDs[randint(0, 10):randint(10, 100)]
-    logging.warning(f"nmIDs is {len(nmIDs)} cards ...")
+
     print(f"nmIDs is {len(nmIDs)} cards ...")
 
     # Split nmIDs into batches
@@ -19,8 +18,9 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
 
     # Iterate through batches
     gotten_cards = batch_size
+    current_df = pd.DataFrame
     for nmID_batch in nmID_batches:
-        logging.warning(f"got ratings on {gotten_cards} cards ...")
+        print(f"getting ratings on {gotten_cards} cards ...")
 
         # Create a new DataFrame to store ratings
         rating_df = pd.DataFrame(columns=[col_name, 'Rating', 'Feedbacks'])
@@ -44,11 +44,6 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
         # Reset index to make 'key' a column again
         current_df.reset_index(inplace=True)
 
-        # merged_df = pandas_handler.df_col_merging(current_df, rating_df, col_name)
-
-        # Filter out columns with the '_DROP' suffix
-        # merged_df = merged_df.filter(regex='^(?!.*_DROP)')
-
         # Save the updated DataFrame to Yandex Disk
         io_df = io_output.io_output(current_df)
         file_name = f'rating.xlsx'
@@ -61,9 +56,10 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
 
 def get_rating(df, col_name='Артикул', is_to_yadisk=True):
     """Extract rating and number of feedbacks for each product ID."""
+    print(f"get_rating ...")
     for index, row in df.iterrows():
         good_id = row[col_name]
-        logging.warning(f"Getting: {good_id} ...")
+        print(f"Getting: {good_id} ...")
         try:
             headers = {
                 'Accept': '*/*',
@@ -87,11 +83,5 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
                 logging.error(f"Failed to retrieve data for ID: {good_id}. Status code: {r.status_code}")
         except Exception as e:
             logging.exception(f"An error occurred while processing ID: {good_id}. Error: {e}")
-
-    # if is_to_yadisk:
-    #     io_df = io_output.io_output(df)
-    #     file_name = f'rating.xlsx'
-    #     logging.warning(f'df as excel uploading to YandexDisk with name {file_name}')
-    #     yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
 
     return df
