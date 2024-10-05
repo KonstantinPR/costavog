@@ -86,25 +86,24 @@ def get_storage_wb():
     Get all storage cost for goods between two data, default last week
     """
 
-    if request.method == 'POST':
-        number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
+    if not request.method == 'POST':
+        return render_template('upload_storage_wb.html', doc_string=get_storage_wb.__doc__)
 
-        if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
-        logging.warning(f'number_last_days {number_last_days}')
-        logging.warning(f"{request.form.get('is_mean')}")
+    number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
 
-        path_by_config = app.config['YANDEX_KEY_STORAGE_COST']
-        yandex_disk_handler.copy_file_to_archive_folder(request=request, path_or_config=path_by_config)
+    if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
 
-        if request.form.get('is_mean'):
-            df_all_cards = API_WB.get_average_storage_cost()
-        else:
-            df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0)
+    path_by_config = app.config['YANDEX_KEY_STORAGE_COST']
+    yandex_disk_handler.copy_file_to_archive_folder(request=request, path_or_config=path_by_config)
 
-        df = io_output.io_output(df_all_cards)
-        file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
-        return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_storage_wb.html', doc_string=get_storage_wb.__doc__)
+    if request.form.get('is_mean'):
+        df_all_cards = API_WB.get_average_storage_cost()
+    else:
+        df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0)
+
+    df = io_output.io_output(df_all_cards)
+    file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'
+    return send_file(df, download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_wb_price_api', methods=['POST', 'GET'])
@@ -113,13 +112,14 @@ def get_wb_price_api():
     """getting prices amd discounts form api wildberries"""
     if not current_user.is_authenticated:
         return redirect('/company_register')
-    if request.method == 'POST':
-        df, file_name = API_WB.get_wb_price_api(request)
-        print(file_name)
-        df = io_output.io_output(df)
-        # print(df)
-        return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_prices_wb.html', doc_string=get_wb_price_api.__doc__)
+
+    if not request.method == 'POST':
+        return render_template('upload_prices_wb.html', doc_string=get_wb_price_api.__doc__)
+
+    df, file_name = API_WB.get_wb_price_api(request)
+    print(file_name)
+    df = io_output.io_output(df)
+    return send_file(df, download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_wb_stock_api', methods=['POST', 'GET'])

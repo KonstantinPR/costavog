@@ -47,7 +47,6 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
         # Save the updated DataFrame to Yandex Disk
         io_df = io_output.io_output(current_df)
         file_name = f'rating.xlsx'
-        logging.warning(f'Updated DataFrame uploaded to YandexDisk with name {file_name}')
         yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
         gotten_cards += len(nmID_batch)
 
@@ -70,7 +69,7 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
             url = f'https://card.wb.ru/cards/detail?spp=26&curr=rub&nm={good_id}'
             r = requests.get(url=url, headers=headers)
             if r.status_code == 200:
-                logging.warning(f"Got it: {good_id}")
+                print(f"Got it: {good_id}")
                 data = r.json().get('data')
                 if data and data.get('products'):
                     product = data['products'][0]
