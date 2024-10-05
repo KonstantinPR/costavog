@@ -86,7 +86,6 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     df['k_sell/stock'] = (((df['k1'] + df['k2']) * df['k3']) / (5 + df[quantityFull])) / k
     # Calculate new discount
     df['func_delta'] = df[discount] - (1 - ((df['price_disc'] * (1 + df['k_sell/stock'])) / df[price])) * 100
-    # df.to_excel("df.xlsx")
     df['func_delta'] = df['func_delta'].apply(pandas_handler.false_to_null)
     if 'smooth_days' not in df.columns: df['smooth_days'] = 1
     df['func_delta'] = round(df['func_delta'] / df['smooth_days'])

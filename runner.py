@@ -1,4 +1,4 @@
-from app import app, db, logging_config
+from app import app, db
 from app.models import UserModel, Company, Task, Transaction, Product, login
 
 
@@ -14,5 +14,4 @@ def load_user(id):
 
 
 if __name__ == '__main__':
-    logging_config.setup_logging()
     app.run(host="localhost", port=8001, debug=True)

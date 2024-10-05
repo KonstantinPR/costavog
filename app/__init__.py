@@ -1,5 +1,4 @@
 import os
-from app import logging_config
 from flask import Flask
 from flask_migrate import Migrate
 from os import environ
@@ -45,7 +44,6 @@ login.login_view = 'login'
 
 
 def set_config():
-    logging_config.setup_logging()
     company = Company.query.filter_by(id=current_user.company_id).first()
     app.config['CURRENT_COMPANY_ID'] = company.id
     app.config['YANDEX_TOKEN'] = company.yandex_disk_token
@@ -167,7 +165,6 @@ from app.views import images_foldering_views
 from app.views import barcode_views
 from app.views import data_transforming
 from app.views import warehouse_views
-from app.views import ai_models_views
 from app.views import api_views
 from app.views import sales_funnel_views
 from app.views import deliveries_goods_views
