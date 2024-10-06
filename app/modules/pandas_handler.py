@@ -226,7 +226,10 @@ def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
 
 def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
     if not is_discount_template:
-        return None
+        return pd.DataFrame
+
+    if df_promo.empty:
+        return pd.DataFrame
 
     # Fetch all cards and extract unique nmID values
     df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)

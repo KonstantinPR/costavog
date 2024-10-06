@@ -6,9 +6,10 @@ import io
 from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
 from flask import request
-import math
 from types import SimpleNamespace
-from typing import Set, List, Union
+from typing import List
+
+from app.modules.decorators import timing_decorator
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -429,6 +430,7 @@ def pivot_expanse(df, type_name, sum_name, agg_col_name='Артикул пост
     return df
 
 
+@timing_decorator
 def process_uploaded_files(uploaded_files):
     zip_buffer = io.BytesIO()
 
@@ -456,6 +458,7 @@ def to_round_df(df_result):
     return df_result
 
 
+@timing_decorator
 def zips_to_list(zip_downloaded):
     print(f"type of zip_downloaded {type(zip_downloaded)}")
     dfs = []
@@ -586,12 +589,13 @@ def days_between(d1, d2):
     return None
 
 
-def promofiling(promo_file, df, allowed_delta_percent=5):
-    if not promo_file:
-        return None
+@timing_decorator
+def promofiling(is_promo_file, df, allowed_delta_percent=5):
+    if not is_promo_file:
+        return pd.DataFrame
 
     # Read the promo file into a DataFrame
-    df_promo = pd.read_excel(promo_file)
+    df_promo = pd.read_excel(is_promo_file)
 
     df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
     df_promo = check_discount(df_promo, allowed_delta_percent)
@@ -675,6 +679,7 @@ def dfs_from_outside(r):
     return d
 
 
+@timing_decorator
 def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
     """dfs_process..."""
     print("""dfs_process...""")
@@ -781,6 +786,7 @@ def choose_dynamic_df_list_in(df_list, is_dynamic=False):
     return []
 
 
+@timing_decorator
 def dfs_dynamic(df_dynamic_list, is_dynamic=True):
     """dfs_dynamic merges DataFrames on 'Артикул поставщика' and expands dynamic columns."""
     print("dfs_dynamic...")
@@ -901,6 +907,7 @@ def abc_xyz(merged_df):
     return merged_df
 
 
+@timing_decorator
 def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
     if df_dynamic.empty:
         return df
@@ -977,12 +984,13 @@ def df_concatenate(df_list, is_xyz):
     return df_list
 
 
+@timing_decorator
 def get_data_from(request):
     r = SimpleNamespace()
     r.days_by = int(request.form.get('days_by', app.config['DAYS_PERIOD_DEFAULT']))
     r.uploaded_files = request.files.getlist("file")
     r.testing_mode = request.form.get('is_testing_mode')
-    r.promo_file = request.files.get("promofile")
+    r.is_promo_file = request.files.get("is_promo_file")
     r.is_just_concatenate = 'is_just_concatenate' in request.form
     r.is_discount_template = 'is_discount_template' in request.form
     r.is_dynamic = 'is_dynamic' in request.form

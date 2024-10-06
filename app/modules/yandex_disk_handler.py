@@ -10,11 +10,12 @@ import os
 from app.modules import io_output, request_handler
 from flask import flash
 import datetime
+from app.modules.decorators import timing_decorator
 
 
+@timing_decorator
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
                                 is_archive='is_archive', testing_mode=False):
-
     if testing_mode:
         return None
 
@@ -51,6 +52,7 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
     return file_content
 
 
+@timing_decorator
 def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH'],
                          is_upload_yadisk=True, testing_mode=False):
     if testing_mode:
@@ -71,7 +73,6 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
 
 
 def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True):
-
     if not path.startswith("/"):
         path = app.config[path]
 

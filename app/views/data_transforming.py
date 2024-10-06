@@ -6,6 +6,7 @@ from app import app
 from flask import flash, render_template, request, send_file
 from app.modules import text_handler, io_output, spec_modifiyer, yandex_disk_handler, base_module, \
     data_transforming_module, request_handler
+from app.modules.decorators import timing_decorator
 from flask_login import login_required
 import datetime
 from random import randrange
@@ -89,34 +90,9 @@ def vertical_sizes():
     return render_template('upload_vertical_sizes.html', doc_string=vertical_sizes.__doc__)
 
 
-# @app.route('/image_name_multiply', methods=['GET', 'POST'])
-# @login_required
-# def image_name_multiply():
-#     """Обработка файла txt - размножит названия артикулей с префиксом -1, -2 и т.д требуемое кол-во раз
-#     Будет обработана копипаста, если ее нет то txt файл, если и его нет - выдаст предупреждение, что все пусто"""
-#
-#     if request.method == 'POST':
-#         df = request_handler.to_df(request, col_art_name='Артикул')
-#
-#         if not request.form['multiply_number']:
-#             flash("Сколько фото делать то будем? Поле пустое")
-#             return render_template('upload_image_name_multiply.html')
-#
-#         if not request.form['start_from']:
-#             start_from = 1
-#         else:
-#             start_from = int(request.form['start_from'])
-#
-#         multiply = int(request.form['multiply_number'])
-#
-#         df_multilpy = text_handler.names_multiply(df, multiply, start_from)
-#         df_output = io_output.io_output_txt_csv(df_multilpy)
-#         return send_file(df_output, as_attachment=True, download_name='art.txt', mimetype='text/csv')
-#     return render_template('upload_image_name_multiply.html', doc_string=image_name_multiply.__doc__)
-
-
 @app.route('/image_name_multiply', methods=['GET', 'POST'])
 @login_required
+@timing_decorator
 def image_name_multiply():
     """Process a DataFrame column to multiply strings based on the given parameters."""
 
@@ -136,7 +112,7 @@ def image_name_multiply():
         multiply = int(request.form['multiply_number'])
 
         df_multiply = text_handler.names_multiply(df, multiply, input_column=input_column, start_from=start_from)
-        print(df_multiply)
+        # print(df_multiply)
         df_output = io_output.io_output_txt_csv(df_multiply)
         return send_file(df_output, as_attachment=True, download_name='art.txt', mimetype='text/csv')
     return render_template('upload_image_name_multiply.html', doc_string=image_name_multiply.__doc__)

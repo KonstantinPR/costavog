@@ -5,6 +5,7 @@ import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
 from app.modules import implementation_report, request_handler
 from types import SimpleNamespace
+from varname import nameof
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 
@@ -74,7 +75,7 @@ def upload_detailing():
     # file, name = pandas_handler.files_to_zip(dfs, dfs_names)
     # return send_file(file, download_name=name, as_attachment=True)
 
-    df_promo = detailing_upload_module.promofiling(r.promo_file, df[['nmId', 'new_discount']])
+    df_promo = detailing_upload_module.promofiling(r.is_promo_file, df[['nmId', 'new_discount']])
 
     n = detailing_upload_module.file_names()
 
@@ -86,13 +87,13 @@ def upload_detailing():
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)
 
-    # Assuming you have your DataFrames and names
+    # DataFrames to zip:
     dfs_list = [df, df_promo, df_template, df_merged_dynamic]
-    dfs_names_list = [n.detailing_name, n.promo_name, n.template_name, n.df_dynamic_name]
 
-    # Use a list comprehension to filter out empty DataFrames and their names
+    # Filter out the empty DataFrames and their names
     filtered_dfs = [df for df in dfs_list if not df.empty]
-    filtered_dfs_names = [name for df, name in zip(dfs_list, dfs_names_list) if not df.empty]
+    filtered_dfs_names = [f"{nameof(df)}.xlsx" for df in filtered_dfs]
+    print(filtered_dfs_names)
 
     # Now you can call files_to_zip with the filtered lists
     file, name = pandas_handler.files_to_zip(filtered_dfs, filtered_dfs_names)

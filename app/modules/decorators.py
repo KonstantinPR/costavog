@@ -11,6 +11,8 @@ import os
 from functools import wraps
 from flask import Response
 import time
+from datetime import datetime as dt
+
 
 
 def local_only(f):
@@ -89,3 +91,19 @@ def administrator_required(function):
         return function()
 
     return wrapper
+
+
+def timing_decorator(original_function):
+    @wraps(original_function)
+    def wrapper_function(*args, **kwargs):
+        print(f"Function '{original_function.__name__}' started at {dt.now().strftime('%d.%m.%Y %H:%M')}.")
+        start_time = time.time()
+        result = original_function(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Function '{original_function.__name__}' finished at {dt.now().strftime('%d.%m.%Y %H:%M')}.")
+        print(f"It took {execution_time:.2f} seconds to execute.")
+        return result
+    return wrapper_function
+
+
