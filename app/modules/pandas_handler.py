@@ -10,6 +10,7 @@ from app.modules import io_output, API_WB
 FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
 
 FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
+NAN_LIST = [np.nan, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 INF_LIST = [np.inf, -np.inf]
@@ -250,7 +251,7 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     df_disc_template["Артикул WB"] = unique_nmID_values
 
     # If promo DataFrame is provided, merge and update "Новая скидка" by "new_discount" from df_promo
-    if df_promo is None:
+    if df_promo.empty:
         df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
     else:
         df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB", how='outer')

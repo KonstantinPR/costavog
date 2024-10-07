@@ -87,16 +87,16 @@ def upload_detailing():
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)
 
-    # DataFrames to zip:
-    dfs_list = [df, df_promo, df_template, df_merged_dynamic]
+    dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic}
 
     # Filter out the empty DataFrames and their names
-    filtered_dfs = [df for df in dfs_list if not df.empty]
-    filtered_dfs_names = [f"{nameof(df)}.xlsx" for df in filtered_dfs]
-    print(filtered_dfs_names)
+    filtered_dfs_dict = {name: df for name, df in dfs_dict.items() if not df.empty}
+    filtered_dfs_names = [f"{name}.xlsx" for name in filtered_dfs_dict]
+
+    print(f"ready to zip {filtered_dfs_names}")
 
     # Now you can call files_to_zip with the filtered lists
-    file, name = pandas_handler.files_to_zip(filtered_dfs, filtered_dfs_names)
+    file, name = pandas_handler.files_to_zip(list(filtered_dfs_dict.values()), filtered_dfs_names)
 
     # Flash message and return the zip file for download
     flash("Отчет успешно создан")

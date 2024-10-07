@@ -590,12 +590,12 @@ def days_between(d1, d2):
 
 
 @timing_decorator
-def promofiling(is_promo_file, df, allowed_delta_percent=5):
-    if not is_promo_file:
+def promofiling(promo_file, df, allowed_delta_percent=5):
+    if not promo_file:
         return pd.DataFrame
 
     # Read the promo file into a DataFrame
-    df_promo = pd.read_excel(is_promo_file)
+    df_promo = pd.read_excel(promo_file)
 
     df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
     df_promo = check_discount(df_promo, allowed_delta_percent)
@@ -603,7 +603,7 @@ def promofiling(is_promo_file, df, allowed_delta_percent=5):
     return df_promo
 
 
-def check_discount(df, allowed_delta_percent, default_discount=5):
+def check_discount(df, allowed_delta_percent, default_disc=5):
     plan_price_name = "Плановая цена для акции"
     current_price_name = "Текущая розничная цена"
     new_discount_col = "new_discount"
@@ -620,8 +620,12 @@ def check_discount(df, allowed_delta_percent, default_discount=5):
 
     # Calculate the price difference
     # df["price_difference"] = df[plan_price_name] / df["discount_price"]
+    df.to_excel("df_promo.xlsx")
+    false_list = pandas_handler.NAN_LIST
 
-    df[promo_discount_name] = df[promo_discount_name].apply(lambda x: int(x) if len(str(x)) < 3 else default_discount)
+    df[promo_discount_name] = np.where(df[promo_discount_name].isin(false_list), df[new_discount_col],
+                                       df[promo_discount_name])
+
     df["action_price"] = df[current_price_name] * (1 - df[promo_discount_name] / 100)
     df["price_difference"] = df["action_price"] / df["discount_price"]
 
@@ -636,6 +640,7 @@ def check_discount(df, allowed_delta_percent, default_discount=5):
     df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name]
     df.loc[df["price_difference"] < allowed_ratio, new_discount_col] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
+    df.to_excel("df_promo2.xlsx")
 
     return df
 

@@ -17,13 +17,11 @@ def demand_calculation_df_to_pdf(df, file_name="output_file"):
 
 def _count_demand(qt, re_per_qt, re_per_qt_all, net):
     if re_per_qt >= net:
-        return qt + 2
-    if re_per_qt > net / 2:
         return qt + 1
-    if re_per_qt < 0 and re_per_qt_all < 0:
-        return qt
     if re_per_qt < -net / 2 and re_per_qt_all < 0:
-        return qt-1
+        return qt - 1
+    if qt < 1:
+        qt = 0
 
     return qt
 
@@ -32,10 +30,12 @@ def clear_demand(df, qt_correct=True):
     if qt_correct:
         df['Кол-во'] = [_count_demand(qt, re_per_qt, re_per_qt_all, net) for qt, re_per_qt, re_per_qt_all, net in
                         zip(df['Кол-во'], df['Маржа-себест./ шт.'], df['Маржа-себест./ шт._all'], df['net_cost'])]
+
     df = df[
         ['vendorCode', 'techSize', 'Кол-во', 'quantityFull', 'Маржа-себест./ шт.', 'Маржа-себест.', 'Маржа-себест._all',
          'Маржа-себест./ шт._all']]
-    # df = df[df['Кол-во'] > 0]
+
+    df.drop(df.loc[df['Кол-во'] <= 0].index, inplace=True)
 
     return df
 
