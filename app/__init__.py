@@ -30,6 +30,7 @@ migrate = Migrate(app, db)
 
 #  to solve problems connection with SQLAlchemy > 1.4 in heroku
 uri = environ.get('DATABASE_URL')
+# print(uri)
 
 if uri:
     if uri.startswith("postgres://"):
