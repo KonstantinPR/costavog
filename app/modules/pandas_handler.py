@@ -1,15 +1,16 @@
+from random import randrange
+
 import pandas as pd
 import numpy as np
-from random import randrange
-from typing import Union
 import logging
 import zipfile
 import io
 from app.modules import io_output, API_WB
+from typing import Union, Optional, List
 
-FALSE_LIST = [False, 0, 0.0, 'Nan', np.nan, pd.NA, None, '', 'Null', ' ', '\t', '\n']
-
+FALSE_LIST = [False, 0, '0', 0.0, 'Nan', 'NAN', 'nan', 'NaN', None, 'None', '', 'Null', ' ', '\t', '\n']
 FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
+
 NAN_LIST = [np.nan, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
@@ -17,29 +18,42 @@ INF_LIST = [np.inf, -np.inf]
 inf_to_null = lambda x: 0 if x in INF_LIST else x
 
 
-def replace_false_values(df, columns, FALSE_LIST=None):
+def replace_false_values(df: pd.DataFrame, columns: Union[List[str], str],
+                         false_list: Optional[List[Union[str, bool]]] = None) -> pd.DataFrame:
     """
     Replace values in specified columns that match FALSE_LIST or are strings with ''.
 
     Args:
-    - df (DataFrame): The DataFrame containing the columns.
-    - columns (list): List of column names to process.
-    - FALSE_LIST (list, optional): List of values to be considered as false. Defaults to FALSE_LIST_2.
+    - df (pd.DataFrame): The DataFrame containing the columns.
+    - columns (Union[List[str], str]): List of column names to process, or a single column name.
+    - false_list (Optional[List[Union[str, bool]]], optional): List of values to be considered as false. Defaults to FALSE_LIST_2.
 
     Returns:
-    - DataFrame: The modified DataFrame.
+    - pd.DataFrame: The modified DataFrame.
     """
 
-    if FALSE_LIST is None:
-        FALSE_LIST = FALSE_LIST_2  # Assuming FALSE_LIST_2 is defined globally
+    if not isinstance(columns, (list, str)):
+        raise ValueError("columns must be a list of strings or a single string")
 
-    for column in columns:
-        if column in df.columns:  # Check if the column exists in the DataFrame
-            df[column] = df[column].replace(FALSE_LIST, '')  # Replace values in the column
-        else:
-            print(f"Warning: Column '{column}' not found in DataFrame.")
+    if false_list is None:
+        false_list = FALSE_LIST_2  # Assuming FALSE_LIST_2 is defined globally
 
-    return df
+    if not isinstance(false_list, list):
+        raise ValueError("FALSE_LIST must be a list of values")
+
+    if isinstance(columns, str):
+        columns = [columns]
+
+    for col in columns:
+        if col not in df.columns:
+            logging.warning(f"Column '{col}' not found in DataFrame.")
+            continue
+
+    result_df = df.copy()
+    for i, col in enumerate(columns):
+        result_df[col] = result_df[col].apply(lambda x: '' if x in false_list else x)
+
+    return result_df
 
 
 def max_len_dc(dc, max_length: int = 0):
@@ -87,9 +101,6 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
         pd.DataFrame: The merged DataFrame.
     """
 
-    # print(left_df.dtypes)
-    # print(right_df.dtypes)
-
     # Convert both left and right keys to string to ensure matching even if types are different
     left_df = to_str(left_df, left_on)
     right_df = to_str(right_df, right_on)
@@ -98,12 +109,18 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
     left_suffix = f'_col_on_drop_x_{randrange(10)}'
     right_suffix = f'_col_on_drop_y_{randrange(10)}'
 
+    drop_suffix = left_suffix
+    suffix = right_suffix
+    if how == "left":
+        drop_suffix = right_suffix
+        suffix = left_suffix
+
     # Merge DataFrames
     merged_df = pd.merge(left_df, right_df, how=how, left_on=left_on, right_on=right_on,
                          suffixes=(left_suffix, right_suffix))
 
     # Rename columns to remove suffixes
-    merged_df.rename(columns=lambda x: x.replace(left_suffix, ''), inplace=True)
+    merged_df.rename(columns=lambda x: x.replace(suffix, ''), inplace=True)
 
     if how == 'outer':
         # Update the left_on column where values are missing
@@ -111,7 +128,7 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
         merged_df.loc[condition, left_on] = merged_df[right_on]
 
     # Drop columns from the right DataFrame that have the suffix
-    columns_to_drop = [col for col in merged_df.columns if right_suffix in col]
+    columns_to_drop = [col for col in merged_df.columns if drop_suffix in col]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
     return merged_df

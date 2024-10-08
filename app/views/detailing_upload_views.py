@@ -14,7 +14,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 @login_required
 def extract_financial_data_from_pdf():
     """Extract financial data from uploaded PDF files weekly_implementation_report.pdf. Income - pdf files, outcome -
-    zip file with 3 files. First - outcome by each week, second  - by each quarter, third - total"""
+    zip file with 3 files. First - outcome by each week, second  - by each quarter, third - total
+    C:\YandexDisk\СЕТЕВЫЕ МАГАЗИНЫ\WILDBERRIES\ВАЖНОЕ\ДЕТАЛИЗАЦИЯ С WB с 11.2018\УПД PDF ДЕТАЛИЗАЦИИ\РАСПАКОВАННЫЕ"""
 
     if request.method != 'POST':
         return render_template('upload_weekly_implementation_report.html',
@@ -71,9 +72,6 @@ def upload_detailing():
     df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=r.is_dynamic)
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
-
-    # file, name = pandas_handler.files_to_zip(dfs, dfs_names)
-    # return send_file(file, download_name=name, as_attachment=True)
 
     df_promo = detailing_upload_module.promofiling(r.is_promo_file, df[['nmId', 'new_discount']])
 
