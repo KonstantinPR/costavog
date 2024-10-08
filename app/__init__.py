@@ -53,11 +53,9 @@ def set_config():
     app.config['OZON_API_TOKEN'] = company.ozon_api_token
 
 
-
 # Log when the function is called
 print("Setting in configuration...")
 
-app.config['APP_PASSWORD'] = '19862814GVok'
 app.config['APP_NAME'] = 'TASKER'
 app.config['ALLOWED_EXTENSIONS'] = ['.jpg', '.jpeg', '.png', '.gif', '.zip']
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
