@@ -1,3 +1,5 @@
+from pandas import DataFrame
+
 from app import app
 import zipfile
 import pandas as pd
@@ -7,7 +9,8 @@ from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
 from flask import request
 from types import SimpleNamespace
-from typing import List
+from typing import List, Type
+from varname import nameof
 
 from app.modules.decorators import timing_decorator
 
@@ -792,7 +795,7 @@ def choose_dynamic_df_list_in(df_list, is_dynamic=False):
 
 
 @timing_decorator
-def dfs_dynamic(df_dynamic_list, is_dynamic=True):
+def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_yandex=True) -> Type[DataFrame]:
     """dfs_dynamic merges DataFrames on 'Артикул поставщика' and expands dynamic columns."""
     print("dfs_dynamic...")
 
@@ -834,10 +837,14 @@ def dfs_dynamic(df_dynamic_list, is_dynamic=True):
     merged_df = merged_df[sorted_columns]
 
     # Perform ABC and XYZ analysis
-    merged_df = abc_xyz(merged_df)
+    df_merged_dynamic = abc_xyz(merged_df)
+
+    if is_upload_yandex and not testing_mode:
+        yandex_disk_handler.upload_to_YandexDisk(merged_df, nameof(df_merged_dynamic),
+                                                 path=app.config['REPORT_DYNAMIC'])
 
     # Return the final DataFrame with ABC and XYZ categories
-    return merged_df
+    return df_merged_dynamic
 
 
 def abc_xyz(merged_df):
