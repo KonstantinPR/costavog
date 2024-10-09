@@ -134,7 +134,7 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
     return merged_df
 
 
-def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, col_name_with_missing: str) -> pd.DataFrame:
+def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, missing_col_name: str) -> pd.DataFrame:
     """
     Fill missing values in a DataFrame column with values from potential columns provided in nm_columns.
 
@@ -142,7 +142,7 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, col_name_w
         nm_columns (Union[list, str]): List of potential column names or a single column
         name to use for filling missing values.
         df (pd.DataFrame): DataFrame containing the data.
-        col_name_with_missing (str): Name of the column with missing values to be filled.
+        missing_col_name (str): Name of the column with missing values to be filled.
 
     Returns:
         pd.DataFrame: DataFrame with missing values filled.
@@ -155,11 +155,11 @@ def fill_empty_val_by(nm_columns: Union[list, str], df: pd.DataFrame, col_name_w
     for nm_column in nm_columns:
         if nm_column in df.columns:
             # Fill missing (NaN) values in 'missing_col_name' with values from the current column
-            df[col_name_with_missing] = df[col_name_with_missing].fillna(df[nm_column])
+            df[missing_col_name] = df[missing_col_name].fillna(df[nm_column])
 
             # Replace values in 'missing_col_name' that are in FALSE_LIST_2
-            df.loc[df[col_name_with_missing].isin(FALSE_LIST_2), col_name_with_missing] = df.loc[
-                df[col_name_with_missing].isin(FALSE_LIST_2), nm_column]
+            df.loc[df[missing_col_name].isin(FALSE_LIST_2), missing_col_name] = df.loc[
+                df[missing_col_name].isin(FALSE_LIST_2), nm_column]
 
     return df
 
@@ -304,6 +304,9 @@ def convert_to_dataframe(data, columns):
     return df
 
 
+import pandas as pd
+
+
 def to_str(df, columns):
     """
     Convert specified columns to strings, remove leading apostrophes,
@@ -317,7 +320,7 @@ def to_str(df, columns):
     - DataFrame: The modified DataFrame.
     """
     # Ensure we are working with a copy of the DataFrame if necessary
-    # df = df.copy()  # This ensures you are working with a new DataFrame
+    df = df.copy()  # This ensures you are working with a new DataFrame
 
     if not isinstance(columns, list):
         columns = [columns]
@@ -361,15 +364,3 @@ def csv_to_df(report_content):
         logging.error(f"Error converting CSV content to DataFrame: {e}")
 
     return df
-
-
-def keys_values_in_list_from_dict(dfs_dict, ext=''):
-    filtered_dfs_list = []
-    filtered_dfs_names_list = []
-
-    for name, df in dfs_dict.items():
-        if not df.empty:
-            filtered_dfs_list.append(df)
-            filtered_dfs_names_list.append(f"{name}{ext}")
-
-    return filtered_dfs_list, filtered_dfs_names_list

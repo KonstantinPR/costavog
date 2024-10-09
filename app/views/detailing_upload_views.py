@@ -89,13 +89,13 @@ def upload_detailing():
     dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic}
 
     # Filter out the empty DataFrames and their names
-    filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
+    filtered_dfs_dict = {name: df for name, df in dfs_dict.items() if not df.empty}
+    filtered_dfs_names = [f"{name}.xlsx" for name in filtered_dfs_dict]
 
-
-    print(f"ready to zip {filtered_dfs_names_list}")
+    print(f"ready to zip {filtered_dfs_names}")
 
     # Now you can call files_to_zip with the filtered lists
-    file, name = pandas_handler.files_to_zip(filtered_dfs_list, filtered_dfs_names_list)
+    file, name = pandas_handler.files_to_zip(list(filtered_dfs_dict.values()), filtered_dfs_names)
 
     # Flash message and return the zip file for download
     flash("Отчет успешно создан")
