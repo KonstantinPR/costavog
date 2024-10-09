@@ -997,7 +997,7 @@ def df_concatenate(df_list, is_xyz):
 
 
 @timing_decorator
-def get_data_from(request):
+def get_data_from(request) -> SimpleNamespace:
     r = SimpleNamespace()
     r.days_by = int(request.form.get('days_by', app.config['DAYS_PERIOD_DEFAULT']))
     r.uploaded_files = request.files.getlist("file")
@@ -1022,7 +1022,7 @@ def get_data_from(request):
     return r
 
 
-def file_names():
+def file_names() -> SimpleNamespace:
     n = SimpleNamespace()
     n.detailing_name = "report_detailing_upload.xlsx"
     n.promo_name = "promo.xlsx"
