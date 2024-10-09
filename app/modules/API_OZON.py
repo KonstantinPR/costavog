@@ -345,6 +345,9 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
     # Replace missing or empty values in the col_name column
     if not is_group:
         return df
+    if not col_name in df.columns:
+        print(f"no {col_name} in df of aggregate_by")
+        return df
     df[col_name].replace('', 'Empty Article', inplace=True)
     df[col_name].fillna('Empty Article', inplace=True)
 
@@ -444,27 +447,22 @@ def update_prices(prices_data, client_id='', api_key=''):
     return response.json()  # Return the response from the API
 
 
-def item_code_without_sizes(df, art_col_name=''):
-    """
-    Function to remove unwanted characters from a column.
+def item_code_without_sizes(df, art_col_name='Артикул', in_to_col='clear_sku'):
+    def process_art_code(art_code):
+        if pd.isna(art_code):
+            return art_code  # Return NaN as is
+        # Check if the art_code starts with 'j', 'ia', or 'ts'
+        if art_code.startswith(('j', 'ia', 'ts')):
+            # Find the last occurrence of "-"
+            last_dash_index = art_code.rfind('-')
+            if last_dash_index != -1:
+                return art_code[:last_dash_index]
+        # For other cases, remove the last '-' if it exists
+        last_dash_index = art_code.rfind('-')
+        if last_dash_index != -1:
+            return art_code[:last_dash_index]
+        return art_code  # Return the original art_code if no changes are needed
 
-    Parameters:
-    - df: DataFrame containing the data
-    - art_col_name (optional): Name of the column to process
-
-    Returns:
-    - DataFrame with the modified column
-    """
-    if art_col_name not in df.columns:
-        logging.warning(f"Column '{art_col_name}' not found in the DataFrame")
-        return pd.DataFrame()  # Create an empty DataFrame instead of returning None
-
-    mask = ((df[art_col_name].str.casefold().str.startswith('j')) |
-            (df[art_col_name].str.casefold().str.startswith('ia')) |
-            (df[art_col_name].str.casefold().str.startswith('ts')))
-
-    df.loc[mask, 'clear_sku'] = df.loc[mask, art_col_name].str.split('-').str[0].values
-    df.loc[mask, 'clear_sku'] = df.loc[mask, art_col_name].str[:-3].values
-
-    print(f"df {df}")
+    # Apply the function to the specified column and store the results in a new column
+    df[in_to_col] = df[art_col_name].apply(process_art_code)
     return df

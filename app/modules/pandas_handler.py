@@ -19,7 +19,7 @@ inf_to_null = lambda x: 0 if x in INF_LIST else x
 
 
 def replace_false_values(df: pd.DataFrame, columns: Union[List[str], str],
-                         false_list: Optional[List[Union[str, bool]]] = None) -> pd.DataFrame:
+                         false_list: Optional[List[Union[str, bool]]] = None, replace_to='') -> pd.DataFrame:
     """
     Replace values in specified columns that match FALSE_LIST or are strings with ''.
 
@@ -51,7 +51,7 @@ def replace_false_values(df: pd.DataFrame, columns: Union[List[str], str],
 
     result_df = df.copy()
     for i, col in enumerate(columns):
-        result_df[col] = result_df[col].apply(lambda x: '' if x in false_list else x)
+        result_df[col] = result_df[col].apply(lambda x: replace_to if x in false_list else x)
 
     return result_df
 

@@ -357,7 +357,12 @@ def get_transaction_list_ozon():
     income_outcome_columns = ['services_price', 'amount', 'sale_commission', 'accruals_for_sale']
     df_by_art_size['income'] = df_by_art_size[income_outcome_columns].sum(axis=1)
 
-    df_by_art = API_OZON.item_code_without_sizes(df_by_art_size, art_col_name='Артикул')
+    df_by_art = pandas_handler.replace_false_values(df=df_by_art_size, false_list=pandas_handler.NAN_LIST,
+                                                    columns='Артикул')
+
+    df_by_art = API_OZON.item_code_without_sizes(df_by_art, art_col_name='Артикул', in_to_col='clear_sku')
+    nonnumerical = ['items_sku', 'FBS OZON SKU ID', 'FBO OZON SKU ID', 'Barcode', ]
+    df_by_art = API_OZON.aggregate_by(col_name="clear_sku", df=df_by_art, nonnumerical=nonnumerical)
 
     dfs_dict = {'df_general': df_general,
                 'df_art_size': df_by_art_size,
