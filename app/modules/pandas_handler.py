@@ -317,7 +317,7 @@ def to_str(df, columns):
     - DataFrame: The modified DataFrame.
     """
     # Ensure we are working with a copy of the DataFrame if necessary
-    # df = df.copy()  # This ensures you are working with a new DataFrame
+    df = df.copy()  # This ensures you are working with a new DataFrame
 
     if not isinstance(columns, list):
         columns = [columns]
