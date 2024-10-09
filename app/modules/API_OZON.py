@@ -442,3 +442,29 @@ def update_prices(prices_data, client_id='', api_key=''):
     response = requests.post(url, headers=headers, json=payload)
     print(response)
     return response.json()  # Return the response from the API
+
+
+def item_code_without_sizes(df, art_col_name=''):
+    """
+    Function to remove unwanted characters from a column.
+
+    Parameters:
+    - df: DataFrame containing the data
+    - art_col_name (optional): Name of the column to process
+
+    Returns:
+    - DataFrame with the modified column
+    """
+    if art_col_name not in df.columns:
+        logging.warning(f"Column '{art_col_name}' not found in the DataFrame")
+        return pd.DataFrame()  # Create an empty DataFrame instead of returning None
+
+    mask = ((df[art_col_name].str.casefold().str.startswith('j')) |
+            (df[art_col_name].str.casefold().str.startswith('ia')) |
+            (df[art_col_name].str.casefold().str.startswith('ts')))
+
+    df.loc[mask, 'clear_sku'] = df.loc[mask, art_col_name].str.split('-').str[0].values
+    df.loc[mask, 'clear_sku'] = df.loc[mask, art_col_name].str[:-3].values
+
+    print(f"df {df}")
+    return df

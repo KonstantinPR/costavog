@@ -10,6 +10,7 @@ import io
 import requests
 from app.modules import API_WB, API_OZON, detailing_api_module
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
+from varname import nameof
 
 
 @app.route('/get_sales_funnel_wb', methods=['POST', 'GET'])
@@ -173,7 +174,7 @@ def get_cards_ozon():
     df = pandas_handler.to_str(df, columns=columns)
     df = pandas_handler.replace_false_values(df, columns=columns)
 
-    df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, missing_col_name='FBO OZON SKU ID')
+    df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, col_name_with_missing='FBO OZON SKU ID')
 
     # Upload to YandexDisk if requested
     yandex_disk_handler.upload_to_YandexDisk(df, f"cards_ozon.xlsx", path=path, is_upload_yadisk=is_to_yadisk)
@@ -293,13 +294,15 @@ def get_transaction_list_ozon():
 
     # Set default dates if fields are empty
     if not date_from:
-        date_from = (datetime.datetime.utcnow() - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        date_from = (datetime.datetime.utcnow() - datetime.timedelta(days=29)).strftime("%Y-%m-%d")
     if not date_to:
         date_to = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
     # Append time components to match the required format (ISO 8601)
     date_from = f"{date_from}T00:00:00.000Z"
     date_to = f"{date_to}T23:59:59.999Z"  # End of the day
+
+    print(f"dates {date_from} and {date_to}")
 
     # Call the function to get the transaction list from OZON API
     json_response = API_OZON.get_transaction_list_ozon_api(client_id=client_id, api_key=api_key, date_from=date_from,
@@ -309,47 +312,74 @@ def get_transaction_list_ozon():
     operations = json_response.get('operations', [])
 
     # Normalize the main operations to a DataFrame
-    df = pd.json_normalize(operations)
+    df_general = pd.json_normalize(operations)
 
     # Call the normalization function
     nested_columns = ['items', 'services']  # Add more nested column names as needed
-    df = API_OZON.flatten_nested_columns(df, columns=nested_columns, isNormalize=True)
+    df_general = API_OZON.flatten_nested_columns(df_general, columns=nested_columns, isNormalize=True)
 
     # Fill empty items_sku with "Other"
-    df['items_sku'].fillna("Other", inplace=True)
+    df_general['items_sku'].fillna("Other", inplace=True)
 
     # Count positive and negative accruals for each items_sku
     in_col = ["accruals_for_sale"]
-    df = API_OZON.count_items_by(df, col="items_sku", in_col=in_col, negative=True, is_count=is_count)
+    df_by_art_size = API_OZON.count_items_by(df_general, col="items_sku", in_col=in_col, negative=True,
+                                             is_count=is_count)
 
     nonnumerical = ["operation_id"]
-    df = API_OZON.aggregate_by(col_name="items_sku", df=df, nonnumerical=nonnumerical, is_group=group_by_items)
+    df_by_art_size = API_OZON.aggregate_by(col_name="items_sku", df=df_by_art_size, nonnumerical=nonnumerical,
+                                           is_group=group_by_items)
 
     # Convert specific columns to string if needed
     columns = ["posting.warehouse_id", "items_sku"]
-    df = pandas_handler.to_str(df, columns=columns)
+    df_by_art_size = pandas_handler.to_str(df_by_art_size, columns=columns)
+
+    df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
 
     if is_merge_cards:
         path = app.config['YANDEX_CARDS_OZON']
-        left_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
-        df = pandas_handler.df_merge_drop(left_df=left_df, right_df=df, left_on="FBO OZON SKU ID", right_on="items_sku")
+        card_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        df_by_art_size = pandas_handler.df_merge_drop(left_df=card_df, right_df=df_by_art_size,
+                                                      left_on="FBO OZON SKU ID",
+                                                      right_on="items_sku")
+
+    df_by_art_size = pandas_handler.fill_empty_val_by(nm_columns="FBO OZON SKU ID", df=df_by_art_size,
+                                                      col_name_with_missing='items_sku')
 
     if is_merge_stock:
         path = app.config['YANDEX_STOCK_OZON']
         stock_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
-        df = pandas_handler.df_merge_drop(left_df=df, right_df=stock_df, left_on="items_sku", right_on="sku")
+        df_by_art_size = pandas_handler.df_merge_drop(left_df=df_by_art_size, right_df=stock_df,
+                                                      left_on="items_sku",
+                                                      right_on="sku")
 
-    file_name = f"transaction_list_ozon.xlsx"
+    df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
+    income_outcome_columns = ['services_price', 'amount', 'sale_commission', 'accruals_for_sale']
+    df_by_art_size['income'] = df_by_art_size[income_outcome_columns].sum(axis=1)
+
+    df_by_art = API_OZON.item_code_without_sizes(df_by_art_size, art_col_name='Артикул')
+
+    dfs_dict = {'df_general': df_general,
+                'df_art_size': df_by_art_size,
+                'df_art': df_by_art,
+                }
+
+    # Filter out the empty DataFrames and their names
+    filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
+
+    # Now you can call files_to_zip with the filtered lists
 
     path = app.config['YANDEX_TRANSACTION_OZON']
-    yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=path, is_upload_yadisk=is_to_yadisk)
+    yandex_disk_handler.upload_to_YandexDisk(filtered_dfs_list[1], filtered_dfs_names_list[1], path=path,
+                                             testing_mode=testing_mode,
+                                             is_upload_yadisk=is_to_yadisk)
 
-    file_name = f"transaction_list_ozon_{date_from[:10]}_{date_to[:10]}.xlsx"
-    # Generate Excel file from normalized DataFrame
-    file = io_output.io_output(df)
+    print(f"ready to zip {filtered_dfs_names_list}")
+
+    file, name = pandas_handler.files_to_zip(filtered_dfs_list, filtered_dfs_names_list)
 
     # Send the Excel file to the user
-    return send_file(file, as_attachment=True, download_name=file_name)
+    return send_file(file, as_attachment=True, download_name=name)
 
 
 @app.route('/analyze_transactions_ozon', methods=['POST', 'GET'])
@@ -410,7 +440,7 @@ def update_price_ozon():
             for index, row in df.iterrows()
         ]
 
-        print(prices_data)
+        # print(prices_data)
 
         # Call batch update prices to handle more than 1000 items
         API_OZON.batch_update_prices(prices_data, client_id=client_id, api_key=api_key)
