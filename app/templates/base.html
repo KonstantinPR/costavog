@@ -69,6 +69,7 @@
 
 
 
+
     </style>
 
 
@@ -112,6 +113,7 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
                         <a class="dropdown-item" href="{{url_for('sales_funnel_analyses')}}">Аналитика воронки
                             продаж</a>
+                        <a class="dropdown-item" href="{{url_for('get_wb_sales_realization')}}">Продажи по реализации</a>
                         <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
                         <a class="dropdown-item" href="{{url_for('get_deliveries_goods')}}">Отправленные товары</a>
                         <a class="dropdown-item" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
@@ -273,6 +275,7 @@
 
 
 
+
 </script>
 <script>
     const toggleButton = document.getElementById('theme-toggle');
@@ -292,6 +295,7 @@
             localStorage.setItem('theme', 'dark');
         }
     });
+
 
 
 

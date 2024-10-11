@@ -372,25 +372,6 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
     return df
 
 
-def get_wb_sales_realization_api(date_from: str, date_end: str, days_step: int):
-    """get sales as api wb sales realization describe"""
-    print("get_wb_sales_realization_api ...")
-    api_key = app.config['WB_API_TOKEN2']
-    headers = {'Authorization': api_key}
-    url = "https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod?"
-    # url = "https://statistics-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod?"
-
-    url_all = f"{url}dateFrom={date_from}&rrdid=0&dateto={date_end}"
-    response = requests.get(url_all, headers=headers)
-    print(f"response {response}")
-    print(f"response.json() {response.json()}")
-    df = response.json()
-
-    df = pd.json_normalize(df)
-
-    return df
-
-
 def get_wb_sales_realization_api_v2(date_from: str, date_to: str, days_step: int = 7):
     """Get sales data from the Wildberries API v2"""
 
@@ -561,3 +542,65 @@ def _rename_double_columns(df, suffix):
     # Update the DataFrame with the new column names
     df.columns = new_columns
     return df
+
+
+def get_wb_sales_realization_api_v3(request, api_key='', date_from='', date_end='', rrdid=0, limit=100000):
+    # Example usage
+    if not api_key:
+        api_key = app.config['WB_API_TOKEN2']  # Replace with your actual API key
+
+    if not date_from or not date_end:
+        date_from = request_handler.request_date_from(request)
+        date_end = request_handler.request_date_end(request)
+
+    # Convert the input date strings to datetime objects
+    date_from = str(datetime.strptime(date_from, "%Y-%m-%d"))[0:10]
+    date_end = str(datetime.strptime(date_end, "%Y-%m-%d"))[0:10]
+    print(date_from, date_end)
+
+    url = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
+
+    # Set up the headers with your API key
+    headers = {
+        "Authorization": f"Bearer {api_key}"  # or however the API expects the token
+    }
+
+    # Set up the query parameters
+    params = {
+        "dateFrom": date_from,
+        "dateTo": date_end,
+        "rrdid": rrdid,
+        "limit": limit
+    }
+
+    try:
+        # Make the GET request
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()  # Raise an error for bad responses
+
+        # Parse the JSON response
+        data = response.json()
+        df = pd.DataFrame(data)
+
+        if 'is_archive':
+            yandex_disk_handler.copy_file_to_archive_folder(request=request,
+                                                            path_or_config=app.config['REPORT_SALES_REALIZATION'])
+
+        if 'is_to_yadisk' in request.form:
+            file_name = "report_sales_realization.xlsx"
+            yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['REPORT_SALES_REALIZATION'])
+
+        return df
+
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 401:
+            error_info = response.json()
+            print("Unauthorized Error:", error_info)
+            return pd.DataFrame()  # Return an empty DataFrame on error
+        else:
+            print(f"An error occurred: {e}")
+            return pd.DataFrame()  # Return an empty DataFrame on other errors
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on request exceptions

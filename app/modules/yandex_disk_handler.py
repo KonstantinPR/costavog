@@ -13,7 +13,6 @@ import datetime
 from app.modules.decorators import timing_decorator
 
 
-@timing_decorator
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
                                 is_archive='is_archive', testing_mode=False):
     if testing_mode:
@@ -23,12 +22,17 @@ def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folde
         return None
 
     if not path_or_config:
-        print("No file path provided.")
+        print("NO FILE path provided !!!")
         return None
 
     print(f"copy_file_to_archive_folder in {path_or_config}...")
 
     file_content, file_name = download_from_YandexDisk(path=path_or_config)
+
+    if not file_name:
+        print(f"NO FILE in {path_or_config} in yadisk !!!")
+        return None
+
     file_name, file_extension = os.path.splitext(file_name)
     file_name = f"{file_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}{file_extension}"
     file_path_archive = f"{path_or_config}/{archive_folder_name}"
@@ -64,7 +68,19 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
     if not isinstance(file, BytesIO):
         file = io_output.io_output(file)
 
+    if not file:
+        print(f"file {file} can't be uploaded to yadisk by path {path}")
+        return None
+
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+
+    print(f"y.is_dir(path) {y.is_dir(path)}")
+
+    if not y.is_dir(path):
+        print(f"y.is_dir(path) is {y.is_dir(path)} here {path}")
+        print(f"no {path} in yadisk. Creating dir ...")
+        y.mkdir(path)
+
     path_full_to = f"{path}/{file_name}"
     print(f"file upload to the yandex.disk in {path_full_to} ...")
     y.upload(file, path_full_to, overwrite=True)
@@ -80,6 +96,9 @@ def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True, 
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
     path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
+    if not y.is_file(f"{path}/{file_name}"):
+        print(f"NO FILE in {path} on yadisk")
+        return None, None
     bytes_io = BytesIO()
     y.download(path_yandex_file, bytes_io)
     file_content = pd.read_excel(bytes_io)

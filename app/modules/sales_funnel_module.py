@@ -4,7 +4,7 @@ from flask import render_template, request, redirect, send_file
 from flask_login import login_required, current_user
 import datetime
 import time
-from app.modules import API_WB, detailing_api_module
+from app.modules import API_WB
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 import math
 import numpy as np

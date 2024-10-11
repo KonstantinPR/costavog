@@ -74,6 +74,7 @@ app.config['YANDEX_KEY_STORAGE_COST'] = '/TASKER/KEY_FILES/STORAGE_COST'
 app.config['YANDEX_KEY_STOCK_WB'] = '/TASKER/KEY_FILES/STOCK_WB'
 app.config['YANDEX_KEY_PRICES'] = '/TASKER/KEY_FILES/PRICES'
 app.config['REPORT_DETAILING_UPLOAD'] = '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD'
+app.config['REPORT_SALES_REALIZATION'] = '/TASKER/KEY_FILES/REPORT_SALES_REALIZATION'
 app.config['REPORT_DETAILING_UPLOAD_ALL'] = '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD/ALL_LONG'
 app.config['REPORT_DYNAMIC'] = '/TASKER/KEY_FILES/DYNAMIC_REVENUE'
 app.config['YANDEX_ALL_CARDS_WB'] = "/TASKER/KEY_FILES/ALL_CARDS_WB"
@@ -158,7 +159,6 @@ from app.views import parser_rating_wb_views
 from app.views import products_views
 from app.views import yandex_disk_views
 from app.views import detailing_upload_views
-from app.views import detailing_api_views
 from app.views import spec_views
 from app.views import routes_getter_views
 from app.views import images_foldering_views

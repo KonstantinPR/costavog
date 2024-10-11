@@ -281,6 +281,12 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     df_disc_template = df_disc_template.drop_duplicates(subset=["Артикул WB"])
 
+    # Create a mask for values not in FALSE_LIST
+    mask = ~df_disc_template["Артикул WB"].isin(FALSE_LIST)
+
+    # Update the column for the rows that match the mask
+    df_disc_template.loc[mask, "Артикул WB"] = df_disc_template.loc[mask, "Артикул WB"]
+
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]
 

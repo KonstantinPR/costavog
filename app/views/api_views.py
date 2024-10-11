@@ -8,7 +8,7 @@ import datetime
 import time
 import io
 import requests
-from app.modules import API_WB, API_OZON, detailing_api_module
+from app.modules import API_WB, API_OZON
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 from varname import nameof
 
@@ -134,6 +134,22 @@ def get_wb_stock_api():
     df_sales_wb_api = API_WB.get_wb_stock_api()
     file = io_output.io_output(df_sales_wb_api)
     file_name = 'report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx"
+    return send_file(file, download_name=file_name, as_attachment=True)
+
+
+@app.route('/get_wb_sales_realization', methods=['POST', 'GET'])
+@login_required
+def get_wb_sales_realization():
+    """
+    get wb sales realization via API WB
+    """
+
+    if not request.method == 'POST':
+        return render_template('upload_wb_sales_realization_api.html', doc_string=get_wb_sales_realization.__doc__)
+
+    df = API_WB.get_wb_sales_realization_api_v3(request)
+    file = io_output.io_output(df)
+    file_name = 'sales_report' + str(datetime.date.today()) + str(datetime.time()) + ".xlsx"
     return send_file(file, download_name=file_name, as_attachment=True)
 
 

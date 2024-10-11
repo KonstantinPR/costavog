@@ -1,11 +1,8 @@
-import logging
 from app import app
-from flask import render_template, request, redirect, send_file
-from flask_login import login_required, current_user
-import datetime
-import time
-from app.modules import API_WB, detailing_api_module, sales_funnel_module
-from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
+from flask import render_template, request, send_file
+from flask_login import login_required
+from app.modules import API_WB, sales_funnel_module
+from app.modules import io_output, yandex_disk_handler, pandas_handler
 
 
 @app.route('/sales_funnel_analyses', methods=['POST', 'GET'])
