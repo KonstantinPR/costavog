@@ -131,7 +131,12 @@ def list_reports_ozon(client_id, api_key, report_type="ALL", page=1, page_size=1
         return None
 
 
-def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL", is_to_yadisk=True):
+def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type="ALL", is_to_yadisk=True,
+                       testing_mode=False, is_aggregate_stock=True):
+    if testing_mode:
+        df, _ = yandex_disk_handler.download_from_YandexDisk(path=app.config['YANDEX_STOCK_OZON'])
+        return df
+
     url = "https://api-seller.ozon.ru/v2/analytics/stock_on_warehouses"
 
     headers = {
@@ -183,6 +188,9 @@ def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type=
 
     df = pandas_handler.convert_to_dataframe(stock_report['result']['rows'], columns)
     df = pandas_handler.to_str(df=df, columns="sku")
+
+    if is_aggregate_stock:
+        df = aggregate_by('sku', df=df)
 
     if is_to_yadisk:
         file_name = f"stock_ozon.xlsx"
@@ -341,15 +349,16 @@ def flatten_nested_columns(df, columns, isNormalize=True):
     return df
 
 
-def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_group=True) -> pd.DataFrame:
+def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_group=True,
+                 replace_with='') -> pd.DataFrame:
     # Replace missing or empty values in the col_name column
     if not is_group:
         return df
     if not col_name in df.columns:
         print(f"no {col_name} in df of aggregate_by")
         return df
-    df[col_name].replace('', 'Empty Article', inplace=True)
-    df[col_name].fillna('Empty Article', inplace=True)
+    # df[col_name].replace(replace_with, 'Empty Article', inplace=True)
+    df[col_name].fillna(replace_with, inplace=True)
 
     # Create an empty dictionary to hold aggregation logic
     agg_funcs = {}

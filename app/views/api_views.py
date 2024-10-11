@@ -203,7 +203,8 @@ def get_stock_ozon():
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
 
-    df = API_OZON.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type, is_to_yadisk=is_to_yadisk)
+    df = API_OZON.get_stock_ozon_api(client_id, api_key, limit, offset, warehouse_type, is_to_yadisk=is_to_yadisk,
+                                     testing_mode=testing_mode)
 
     file_name = f'ozon_stock_report_{str(datetime.datetime.now())}.xlsx'
 
@@ -338,10 +339,11 @@ def get_transaction_list_ozon():
 
     if is_merge_cards:
         path = app.config['YANDEX_CARDS_OZON']
-        card_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        card_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path, testing_mode=testing_mode)
         df_by_art_size = pandas_handler.df_merge_drop(left_df=card_df, right_df=df_by_art_size,
                                                       left_on="FBO OZON SKU ID",
-                                                      right_on="items_sku")
+                                                      right_on="items_sku",
+                                                      how='outer')
 
     df_by_art_size = pandas_handler.fill_empty_val_by(nm_columns="FBO OZON SKU ID", df=df_by_art_size,
                                                       col_name_with_missing='items_sku')
@@ -349,9 +351,11 @@ def get_transaction_list_ozon():
     if is_merge_stock:
         path = app.config['YANDEX_STOCK_OZON']
         stock_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        stock_df = API_OZON.aggregate_by('sku', df=stock_df)
         df_by_art_size = pandas_handler.df_merge_drop(left_df=df_by_art_size, right_df=stock_df,
                                                       left_on="items_sku",
-                                                      right_on="sku")
+                                                      right_on="sku",
+                                                      how='outer')
 
     df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
     income_outcome_columns = ['services_price', 'amount', 'sale_commission', 'accruals_for_sale']

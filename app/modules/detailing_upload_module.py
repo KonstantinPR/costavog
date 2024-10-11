@@ -337,6 +337,7 @@ def merge_stock(df, df_stock, is_get_stock=False):
         df = df.fillna(0)
         df = pandas_handler.fill_empty_val_by('Код номенклатуры', df, 'nmId')
         return df
+    return df
 
 
 def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=False, df_storage=None):

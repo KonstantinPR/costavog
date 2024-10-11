@@ -237,8 +237,9 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      'brand': 'first',
                                      },
                             margins=False)
-        df['quantityFullAll'] = df['quantityFull']
-        df['quantityFull'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
+
+        # df['quantityFull'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
+        df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
 
         if is_upload_yandex and df is not None:
@@ -268,7 +269,9 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
+        df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
+
         return df
 
     if no_sizes == 'no_sizes':
@@ -291,7 +294,9 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
+        df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
+
         return df
 
     return df

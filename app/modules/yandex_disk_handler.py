@@ -72,7 +72,7 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
     return None
 
 
-def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True):
+def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True, testing_mode=False):
     if not path.startswith("/"):
         path = app.config[path]
 
