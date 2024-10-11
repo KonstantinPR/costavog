@@ -193,7 +193,7 @@ def get_cards_ozon():
     df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, col_name_with_missing='FBO OZON SKU ID')
 
     # Upload to YandexDisk if requested
-    yandex_disk_handler.upload_to_YandexDisk(df, f"cards_ozon.xlsx", path=path, is_upload_yadisk=is_to_yadisk)
+    yandex_disk_handler.upload_to_YandexDisk(df, f"cards_ozon.xlsx", path=path, is_to_yadisk=is_to_yadisk)
 
     # Send the Excel file to the user
     file_name = f'ozon_cards_report_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.xlsx'
@@ -397,7 +397,7 @@ def get_transaction_list_ozon():
     path = app.config['YANDEX_TRANSACTION_OZON']
     yandex_disk_handler.upload_to_YandexDisk(filtered_dfs_list[1], filtered_dfs_names_list[1], path=path,
                                              testing_mode=testing_mode,
-                                             is_upload_yadisk=is_to_yadisk)
+                                             is_to_yadisk=is_to_yadisk)
 
     print(f"ready to zip {filtered_dfs_names_list}")
 

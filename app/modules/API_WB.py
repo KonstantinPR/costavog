@@ -549,14 +549,8 @@ def get_wb_sales_realization_api_v3(request, api_key='', date_from='', date_end=
     if not api_key:
         api_key = app.config['WB_API_TOKEN2']  # Replace with your actual API key
 
-    if not date_from or not date_end:
-        date_from = request_handler.request_date_from(request)
-        date_end = request_handler.request_date_end(request)
-
-    # Convert the input date strings to datetime objects
-    date_from = str(datetime.strptime(date_from, "%Y-%m-%d"))[0:10]
-    date_end = str(datetime.strptime(date_end, "%Y-%m-%d"))[0:10]
-    print(date_from, date_end)
+    date_from, date_end = request_handler.date_handler(request=request, date_from=date_from, date_end=date_end,
+                                                       format_date="%Y-%m-%d")
 
     url = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
 
@@ -582,13 +576,11 @@ def get_wb_sales_realization_api_v3(request, api_key='', date_from='', date_end=
         data = response.json()
         df = pd.DataFrame(data)
 
-        if 'is_archive':
-            yandex_disk_handler.copy_file_to_archive_folder(request=request,
-                                                            path_or_config=app.config['REPORT_SALES_REALIZATION'])
+        yandex_disk_handler.copy_file_to_archive_folder(request=request,
+                                                        path_or_config=app.config['REPORT_SALES_REALIZATION'])
 
-        if 'is_to_yadisk' in request.form:
-            file_name = "report_sales_realization.xlsx"
-            yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['REPORT_SALES_REALIZATION'])
+        yandex_disk_handler.upload_to_YandexDisk(request=request, file=df, file_name="report_sales_realization.xlsx",
+                                                 path=app.config['REPORT_SALES_REALIZATION'])
 
         return df
 

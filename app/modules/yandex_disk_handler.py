@@ -1,4 +1,6 @@
 import zipfile
+
+import flask
 import pandas as pd
 import requests
 import yadisk
@@ -11,6 +13,9 @@ from app.modules import io_output, request_handler
 from flask import flash
 import datetime
 from app.modules.decorators import timing_decorator
+from typing import Optional
+from typing import Union
+from pathlib import Path
 
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
@@ -57,12 +62,19 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 
 
 @timing_decorator
-def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES_PATH'],
-                         is_upload_yadisk=True, testing_mode=False):
+def upload_to_YandexDisk(request: flask.Request = None,
+                         file: Union[pd.DataFrame, bytes] = pd.DataFrame,
+                         file_name: str = '',
+                         path: Path = app.config['YANDEX_KEY_FILES_PATH'], is_to_yadisk=True,
+                         testing_mode=False):
     if testing_mode:
         return None
 
-    if not is_upload_yadisk:
+    if request and 'is_to_yadisk' not in request.form:
+        if not is_to_yadisk:
+            return None
+
+    if not is_to_yadisk:
         return None
 
     if not isinstance(file, BytesIO):
@@ -74,7 +86,7 @@ def upload_to_YandexDisk(file, file_name: str, path=app.config['YANDEX_KEY_FILES
 
     y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
 
-    print(f"y.is_dir(path) {y.is_dir(path)}")
+    # print(f"y.is_dir(path) {y.is_dir(path)}")
 
     if not y.is_dir(path):
         print(f"y.is_dir(path) is {y.is_dir(path)} here {path}")

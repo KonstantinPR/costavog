@@ -144,3 +144,18 @@ def request_days_step(request):
     else:
         days_step = app.config['DAYS_STEP_DEFAULT']
     return days_step
+
+
+def date_handler(request, date_from, date_end, format_date):
+    if request:
+        if not date_from:
+            date_from = request_date_from(request)
+            print(f"date_from {date_from} created from request ...")
+        if not date_end:
+            date_end = request_date_end(request)
+            print(f"date_end {date_end} created from request ...")
+
+    # Convert the input date strings to datetime objects
+    date_from = datetime.datetime.strptime(date_from, format_date).strftime(format_date)
+    date_end = datetime.datetime.strptime(date_end, format_date).strftime(format_date)
+    return date_from, date_end
