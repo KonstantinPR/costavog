@@ -111,6 +111,7 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
 
     drop_suffix = left_suffix
     suffix = right_suffix
+
     if how == "left":
         drop_suffix = right_suffix
         suffix = left_suffix
@@ -128,9 +129,9 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
         condition = merged_df[left_on].isin(combined_list)  # Ensure FALSE_LIST is defined
         merged_df.loc[condition, left_on] = merged_df[right_on]
 
-        # Drop columns from the right DataFrame that have the suffix
-        columns_to_drop = [col for col in merged_df.columns if drop_suffix in col]
-        merged_df.drop(columns_to_drop, axis=1, inplace=True)
+    # Drop columns from the right DataFrame that have the suffix
+    columns_to_drop = [col for col in merged_df.columns if drop_suffix in col]
+    merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
     return merged_df
 

@@ -1,21 +1,16 @@
 import zipfile
-
 import flask
 import pandas as pd
 import requests
 import yadisk
 from flask_login import current_user
-import logging
 from app import app, Company
 from io import BytesIO
 import os
-from app.modules import io_output, request_handler
-from flask import flash
+from app.modules import io_output
 import datetime
 from app.modules.decorators import timing_decorator
-from typing import Optional
 from typing import Union
-from pathlib import Path
 
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
@@ -65,7 +60,7 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 def upload_to_YandexDisk(request: flask.Request = None,
                          file: Union[pd.DataFrame, bytes] = pd.DataFrame,
                          file_name: str = '',
-                         path: Path = app.config['YANDEX_KEY_FILES_PATH'], is_to_yadisk=True,
+                         path: str = app.config['YANDEX_KEY_FILES_PATH'], is_to_yadisk=True,
                          testing_mode=False):
     if testing_mode:
         return None
@@ -101,22 +96,24 @@ def upload_to_YandexDisk(request: flask.Request = None,
 
 
 def download_from_YandexDisk(path='YANDEX_KEY_FILES_PATH', is_from_yadisk=True, testing_mode=False):
-    if not path.startswith("/"):
-        path = app.config[path]
+    if is_from_yadisk or testing_mode:
 
-    print(f"file downloaded from {path} ...")
-    y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
-    path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
-    file_name = os.path.basename(os.path.normpath(path_yandex_file))
-    if not y.is_file(f"{path}/{file_name}"):
-        print(f"NO FILE in {path} on yadisk")
-        return None, None
-    bytes_io = BytesIO()
-    y.download(path_yandex_file, bytes_io)
-    file_content = pd.read_excel(bytes_io)
-    # print(type(file_content))
+        if not path.startswith("/"):
+            path = app.config[path]
 
-    return file_content, file_name
+        print(f"file downloaded from {path} ...")
+        y = yadisk.YaDisk(token=app.config['YANDEX_TOKEN'])
+        path_yandex_file = f"{list(y.listdir(path))[-1]['path']}".replace('disk:', '')
+        file_name = os.path.basename(os.path.normpath(path_yandex_file))
+        if not y.is_file(f"{path}/{file_name}"):
+            print(f"NO FILE in {path} on yadisk")
+            return None, None
+        bytes_io = BytesIO()
+        y.download(path_yandex_file, bytes_io)
+        file_content = pd.read_excel(bytes_io)
+        # print(type(file_content))
+        return file_content, file_name
+    return None, None
 
 
 list_path = []

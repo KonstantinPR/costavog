@@ -78,7 +78,8 @@ def upload_detailing():
 
     n = detailing_upload_module.file_names()
 
-    yandex_disk_handler.upload_to_YandexDisk(df, file_name=n.detailing_name, path=app.config['REPORT_DETAILING_UPLOAD'],
+    yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=n.detailing_name,
+                                             path=app.config['REPORT_DETAILING_UPLOAD'],
                                              testing_mode=r.testing_mode)
 
     if r.is_chosen_columns:
@@ -90,7 +91,6 @@ def upload_detailing():
 
     # Filter out the empty DataFrames and their names
     filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
-
 
     print(f"ready to zip {filtered_dfs_names_list}")
 

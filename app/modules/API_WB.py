@@ -91,9 +91,9 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
     df = pd.DataFrame(report_data)
 
     if upload_to_yadisk and not df is None:
-        io_df = io_output.io_output(df)
         file_name = f'{storage_file_name}.xlsx'
-        yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STORAGE_COST'])
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+                                                 path=app.config['YANDEX_KEY_STORAGE_COST'])
 
     if 'warehouse' in df.columns and is_shushary:
         print("Удаление сгоревших товаров Шушар...")
@@ -167,8 +167,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
 
     # Upload data to Yandex Disk
     file_name = "wb_price_data.xlsx"
-    io_df = io_output.io_output(df)
-    yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
+    yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
 
     return df, file_name
 
@@ -243,9 +242,9 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
         df = df.reset_index().rename_axis(None, axis=1)
 
         if is_upload_yandex and df is not None:
-            io_df = io_output.io_output(df)
             file_name = f'stock_wb.xlsx'
-            yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_KEY_STOCK_WB'])
+            yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+                                                     path=app.config['YANDEX_KEY_STOCK_WB'])
 
         return df
 
@@ -365,9 +364,8 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
                            errors='ignore')
 
     if is_to_yadisk:
-        io_df = io_output.io_output(df)
         file_name = f'all_cards_wb.xlsx'
-        yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_ALL_CARDS_WB'])
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name, path=app.config['YANDEX_ALL_CARDS_WB'])
 
     return df
 
@@ -454,10 +452,10 @@ def get_wb_sales_funnel_api(request,
         df = _rename_double_columns(df, "_re")
 
     if is_to_yadisk and df is not None and not df.empty:
-        io_df = io_output.io_output(df)
         file_name = f'wb_sales_funnel.xlsx'
         print(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
-        yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['YANDEX_SALES_FUNNEL_WB'])
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+                                                 path=app.config['YANDEX_SALES_FUNNEL_WB'])
 
     # Log a message indicating successful retrieval of sales funnel data
     print("Sales funnel data retrieved successfully")

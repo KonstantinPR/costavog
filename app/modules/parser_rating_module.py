@@ -45,9 +45,8 @@ def batched_get_rating(col_name='Артикул', testing_mode=True, is_update=T
         current_df.reset_index(inplace=True)
 
         # Save the updated DataFrame to Yandex Disk
-        io_df = io_output.io_output(current_df)
         file_name = f'rating.xlsx'
-        yandex_disk_handler.upload_to_YandexDisk(io_df, file_name=file_name, path=app.config['RATING'])
+        yandex_disk_handler.upload_to_YandexDisk(file=current_df, file_name=file_name, path=app.config['RATING'])
         gotten_cards += len(nmID_batch)
 
     return current_df
@@ -85,5 +84,3 @@ def get_rating(df, col_name='Артикул', is_to_yadisk=True):
             logging.exception(f"An error occurred while processing ID: {good_id}. Error: {e}")
 
     return df
-
-

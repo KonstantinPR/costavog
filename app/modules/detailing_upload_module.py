@@ -624,7 +624,7 @@ def check_discount(df, allowed_delta_percent, default_disc=5):
 
     # Calculate the price difference
     # df["price_difference"] = df[plan_price_name] / df["discount_price"]
-    df.to_excel("df_promo.xlsx")
+    # df.to_excel("df_promo.xlsx")
     false_list = pandas_handler.NAN_LIST
 
     df[promo_discount_name] = np.where(df[promo_discount_name].isin(false_list), df[new_discount_col],
@@ -644,7 +644,7 @@ def check_discount(df, allowed_delta_percent, default_disc=5):
     df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name]
     df.loc[df["price_difference"] < allowed_ratio, new_discount_col] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
-    df.to_excel("df_promo2.xlsx")
+    # df.to_excel("df_promo2.xlsx")
 
     return df
 
@@ -841,7 +841,7 @@ def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_
     df_merged_dynamic = abc_xyz(merged_df)
 
     if is_upload_yandex and not testing_mode:
-        yandex_disk_handler.upload_to_YandexDisk(merged_df, nameof(df_merged_dynamic),
+        yandex_disk_handler.upload_to_YandexDisk(file=merged_df, file_name=nameof(df_merged_dynamic),
                                                  path=app.config['REPORT_DYNAMIC'])
 
     # Return the final DataFrame with ABC and XYZ categories

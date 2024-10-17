@@ -194,7 +194,7 @@ def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type=
 
     if is_to_yadisk:
         file_name = f"stock_ozon.xlsx"
-        yandex_disk_handler.upload_to_YandexDisk(df, file_name, path=app.config['YANDEX_STOCK_OZON'])
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name, path=app.config['YANDEX_STOCK_OZON'])
 
     return df
 
