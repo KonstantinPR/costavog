@@ -45,13 +45,19 @@ login.login_view = 'login'
 
 
 def set_config():
-    company = Company.query.filter_by(id=current_user.company_id).first()
-    app.config['CURRENT_COMPANY_ID'] = company.id
-    app.config['YANDEX_TOKEN'] = company.yandex_disk_token
-    app.config['WB_API_TOKEN'] = company.wb_api_token
-    app.config['WB_API_TOKEN2'] = company.wb_api_token2
-    app.config['OZON_CLIENT_ID'] = company.ozon_client_id
-    app.config['OZON_API_TOKEN'] = company.ozon_api_token
+    if current_user.is_authenticated:
+        company = Company.query.filter_by(id=current_user.company_id).first()
+        if company:
+            app.config['CURRENT_COMPANY_ID'] = company.id
+            app.config['YANDEX_TOKEN'] = company.yandex_disk_token
+            app.config['WB_API_TOKEN'] = company.wb_api_token
+            app.config['WB_API_TOKEN2'] = company.wb_api_token2
+            app.config['OZON_CLIENT_ID'] = company.ozon_client_id
+            app.config['OZON_API_TOKEN'] = company.ozon_api_token
+        else:
+            app.logger.warning(f"Company not found for user ID: {current_user.id}")
+    else:
+        app.logger.warning('User is not authenticated.')
 
 
 # Log when the function is called
@@ -148,6 +154,13 @@ def load_user(user_id):
 @login.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
+
+
+@app.before_request
+def before_request():
+    logging.warning('Before request hook triggered.')
+    set_config()
+    return None
 
 
 from app.views import crop_images_views

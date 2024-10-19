@@ -151,13 +151,13 @@ def download_images_from_YandexDisk():
     y = yadisk.YaDisk(token=Company.query.filter_by(id=current_user.company_id).one().yandex_disk_token)
 
     subfolders, files = run_fast_scandir(y, app.config['YANDEX_FOLDER_IMAGE_YANDISK'], '.jpg')
-    print(subfolders)
-    print(files)
+    # print(subfolders)
+    # print(files)
     exit()
 
     path_yandex_file = f"{list(y.listdir(app.config['YANDEX_FOLDER_IMAGE_YANDISK']))[-1]['path']}".replace('disk:', '')
     file_name = os.path.basename(os.path.normpath(path_yandex_file))
-    print(file_name)
+    # print(file_name)
 
     return None
 

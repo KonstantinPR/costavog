@@ -189,8 +189,10 @@ def col_adding(df_income, col_name="Артикул товара"):
     # Наценку на закупочные цены с учетом малости цены себестоимости. Округляем результат красиво например 1990 или 790
     print("price_pick ...")
     if 'Цена' in df_income.columns:
-        df_income['Цена'] = [round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 for x in
-                             df_income['Цена']]
+        df_income['Цена'] = [
+            round(x * PRICE_MULTIPLIER(x), -(int(len(str(int(x)))) - 2)) - 10 if pd.notna(x) else x
+            for x in df_income['Цена']
+        ]
 
     # дополняем описание для светлых изделий - как возможно подходящие к свадебному наряду
     print("desc_white ...")

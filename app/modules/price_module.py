@@ -37,7 +37,7 @@ def count_norma_revenue(df):
     # for example 200 / (30 + 70) + 0.4 = 2.4 it means that we give wb 50% of sell price, and in that case
     # price (with disc) of goods must be (net_cost * 2.4)
 
-    bank_percentage = 0.18
+    bank_percentage = 0.22
     k_bank_leverage = 1.2
     # what k_revenue must be we want to sell on wb?
     k = 1 + bank_percentage * k_bank_leverage
@@ -87,7 +87,7 @@ def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
     weight_dict['k_is_sell'] = 2
     # weight_dict['k_revenue'] = 1
     weight_dict['k_logistic'] = 1
-    weight_dict['k_net_cost'] = 4
+    weight_dict['k_net_cost'] = 3
     weight_dict['k_pure_value'] = 1
     weight_dict['k_qt_full'] = 1
     weight_dict['k_rating'] = 1

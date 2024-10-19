@@ -237,7 +237,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
-        # df['quantityFull'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
+        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
         df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
 
@@ -268,6 +268,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
+        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
         df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
 
@@ -293,6 +294,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
+        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
         df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
 

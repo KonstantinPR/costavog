@@ -11,7 +11,7 @@ from typing import Union, Optional, List
 FALSE_LIST = [False, 0, '0', 0.0, 'Nan', 'NAN', 'nan', 'NaN', None, 'None', '', 'Null', ' ', '\t', '\n']
 FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 
-NAN_LIST = [np.nan, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
+NAN_LIST = [np.nan, 'Nan', 'NaN', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 INF_LIST = [np.inf, -np.inf]
