@@ -56,8 +56,9 @@ def get_cards_wb():
         is_to_yadisk = request.form.get('is_to_yadisk')
         is_from_yadisk = request.form.get('is_from_yadisk')
         limit_cards = request.form.get('limit_cards', 0)
+        is_unpack = request.form.get('is_unpack', 0)
         df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk, is_to_yadisk=is_to_yadisk,
-                                                   limit_cards=limit_cards)
+                                                   limit_cards=limit_cards, is_unpack=is_unpack)
         df = io_output.io_output(df_all_cards)
         file_name = f'wb_api_cards_{str(datetime.datetime.now())}.xlsx'
         return send_file(df, download_name=file_name, as_attachment=True)
@@ -70,14 +71,16 @@ def get_stock_wb():
     """
     Достает все остатки с WB через API, на яндекс диск сохранится без городов и размеров
     """
+
+    if not request.method == 'POST':
+        return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)
+
     is_shushary = request.form.get('is_shushary')
     testing_mode = request.form.get('testing_mode')
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
-    if request.method == 'POST':
-        df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode)
-        df = io_output.io_output(df)
-        return send_file(df, download_name=file_name, as_attachment=True)
-    return render_template('upload_stock_wb.html', doc_string=get_stock_wb.__doc__)
+    df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode)
+    df = io_output.io_output(df)
+    return send_file(df, download_name=file_name, as_attachment=True)
 
 
 @app.route('/get_storage_wb', methods=['POST', 'GET'])
@@ -91,16 +94,13 @@ def get_storage_wb():
         return render_template('upload_storage_wb.html', doc_string=get_storage_wb.__doc__)
 
     number_last_days = request_handler.request_last_days(request, input_name='number_last_days')
+    is_archive = "is_archive" in request.form
+    is_mean = "is_mean" in request.form
 
     if not number_last_days: number_last_days = app.config['LAST_DAYS_DEFAULT']
 
-    path_by_config = app.config['YANDEX_KEY_STORAGE_COST']
-    yandex_disk_handler.copy_file_to_archive_folder(request=request, path_or_config=path_by_config)
-
-    if request.form.get('is_mean'):
-        df_all_cards = API_WB.get_average_storage_cost()
-    else:
-        df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0)
+    df_all_cards = API_WB.get_storage_cost(number_last_days=number_last_days, days_delay=0, is_archive=is_archive,
+                                           is_mean=is_mean)
 
     df = io_output.io_output(df_all_cards)
     file_name = f'storage_data_{str(datetime.datetime.now())}.xlsx'

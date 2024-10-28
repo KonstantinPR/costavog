@@ -14,12 +14,16 @@ from typing import Union
 
 
 def copy_file_to_archive_folder(request=None, path_or_config=None, archive_folder_name='ARCHIVE',
-                                is_archive='is_archive', testing_mode=False):
+                                is_archive=True, testing_mode=False):
     if testing_mode:
         return None
 
-    if is_archive not in request.form:
+    if not is_archive:
         return None
+
+    if request:
+        if 'is_archive' not in request.form:
+            return None
 
     if not path_or_config:
         print("NO FILE path provided !!!")
@@ -59,9 +63,15 @@ def get_excel_file_from_ydisk(path: str, to_str=None) -> pd.DataFrame:
 @timing_decorator
 def upload_to_YandexDisk(request: flask.Request = None,
                          file: Union[pd.DataFrame, bytes] = pd.DataFrame,
-                         file_name: str = '',
+                         file_name: str = 'filename',
                          path: str = app.config['YANDEX_KEY_FILES_PATH'], is_to_yadisk=True,
-                         testing_mode=False):
+                         testing_mode=False,
+                         is_add_timestamp=False,
+                         is_upload=True
+                         ):
+    if not is_upload:
+        return None
+
     if testing_mode:
         return None
 
@@ -88,8 +98,14 @@ def upload_to_YandexDisk(request: flask.Request = None,
         print(f"no {path} in yadisk. Creating dir ...")
         y.mkdir(path)
 
+    if is_add_timestamp:
+        # Get the current time as a formatted string, e.g., "20241028_153000"
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"zip_file_{timestamp}.zip"  # Assuming zip_name should end with .zip
+
     path_full_to = f"{path}/{file_name}"
     print(f"file upload to the yandex.disk in {path_full_to} ...")
+
     y.upload(file, path_full_to, overwrite=True)
 
     return None

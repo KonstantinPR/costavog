@@ -1,6 +1,4 @@
 import logging
-import time
-
 import app.modules.request_handler
 from app import app
 import requests
@@ -9,23 +7,12 @@ import numpy as np
 import time
 import json
 from datetime import datetime, timedelta
-from app.modules import io_output
 from app.modules import yandex_disk_handler, pandas_handler, request_handler
-
-
-def get_average_storage_cost(testing_mode=False, is_shushary=None):
-    df = get_storage_cost(testing_mode, is_shushary)
-
-    df = df.groupby('vendorCode').agg(
-        {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
-    df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
-
-    return df
 
 
 def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
                      days_delay=0,
-                     upload_to_yadisk=True):
+                     upload_to_yadisk=True, is_mean=True, is_archive=True):
     print(f"get_storage_cost...")
 
     if testing_mode:
@@ -90,14 +77,21 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
     # Step 4: Convert data to DataFrame
     df = pd.DataFrame(report_data)
 
-    if upload_to_yadisk and not df is None:
-        file_name = f'{storage_file_name}.xlsx'
-        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
-                                                 path=app.config['YANDEX_KEY_STORAGE_COST'])
-
     if 'warehouse' in df.columns and is_shushary:
         print("Удаление сгоревших товаров Шушар...")
         df = df[df['warehouse'] != 'Санкт-Петербург Шушары']
+
+    if is_mean:
+        df = df.groupby('vendorCode').agg(
+            {'warehousePrice': 'mean', 'barcodesCount': 'mean', 'volume': 'mean', 'nmId': 'first'}).reset_index()
+        df['storagePricePerBarcode'] = df['warehousePrice'] / df['barcodesCount']
+
+    if upload_to_yadisk and not df is None:
+        file_name = f'{storage_file_name}.xlsx'
+        yandex_disk_handler.copy_file_to_archive_folder(path_or_config=app.config['YANDEX_KEY_STORAGE_COST'],
+                                                        is_archive=is_archive)
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+                                                 path=app.config['YANDEX_KEY_STORAGE_COST'])
 
     return df
 
@@ -173,7 +167,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
 
 
 def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_upload_yandex=True,
-                     date_from: str = '2019-01-01'):
+                     date_from: str = '2019-01-01', is_archive=True):
     """get wb stock via api put in df"""
 
     print("get_wb_stock_api ...")
@@ -241,6 +235,10 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
         df['quantityFull'] = df['quantityFullAll']
         df = df.reset_index().rename_axis(None, axis=1)
 
+        if is_archive:
+            yandex_disk_handler.copy_file_to_archive_folder(path_or_config=app.config['YANDEX_KEY_STOCK_WB'],
+                                                            is_archive=is_archive)
+
         if is_upload_yandex and df is not None:
             file_name = f'stock_wb.xlsx'
             yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
@@ -304,7 +302,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
 
 
 def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=False, textSearch: str = None,
-                         is_unique=False, limit_cards=None):
+                         is_unique=False, limit_cards=None, is_unpack=True):
     """get_all_cards_api_wb"""
     print("get_all_cards_api_wb ...")
 
@@ -364,6 +362,25 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 
     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions", "characteristics"],
                            errors='ignore')
+
+    if is_unpack:
+        # Unpack dimensions into individual columns
+        if 'dimensions' in df.columns:
+            dimensions_df = pd.json_normalize(df['dimensions'])
+            df = df.drop(columns=['dimensions']).join(dimensions_df)
+
+        # Handle characteristics by creating separate columns for each 'name'
+        characteristics_df = df['characteristics'].explode().apply(pd.Series)
+        characteristics_df['value'] = characteristics_df['value'].apply(
+            lambda x: ', '.join(x) if isinstance(x, list) else x)
+        characteristics_pivot = characteristics_df.pivot(columns='name', values='value')
+
+        # Join the pivoted characteristics back to the main dataframe
+        df = df.drop(columns=['characteristics'])  # drop the original characteristics column
+        df = df.join(characteristics_pivot)
+
+        # Handle 'skus' to remove brackets, turning it into a string
+        df['skus'] = df['skus'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
 
     if is_to_yadisk:
         file_name = f'all_cards_wb.xlsx'

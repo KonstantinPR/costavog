@@ -258,6 +258,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
     df = pandas_handler.first_letter_up(df, 'Обоснование для оплаты')
     df = _adding_missing_columns(df)
+    df = df.sort_values(by='Дата заказа покупателем', ascending=True)
 
     sales_name = 'Продажа'
     type_wb_sales_col_name_all = 'Вайлдберриз реализовал Товар (Пр)'
@@ -345,7 +346,7 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=Fa
         return df
 
     if df_storage is None or df_storage.empty:
-        df_storage = API_WB.get_average_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
+        df_storage = API_WB.get_storage_cost(testing_mode=testing_mode, is_shushary=is_shushary)
 
     df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')[0]
     # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
@@ -684,7 +685,7 @@ def dfs_from_outside(r):
     d.df_stock = API_WB.get_wb_stock_api(testing_mode=r.testing_mode, request=d.request_dict, is_shushary=r.is_shushary)
     d.df_funnel, d.funnel_name = API_WB.get_wb_sales_funnel_api(request, testing_mode=r.testing_mode,
                                                                 is_funnel=r.is_funnel)
-    d.df_storage = API_WB.get_average_storage_cost(testing_mode=r.testing_mode, is_shushary=r.is_shushary)
+    d.df_storage = API_WB.get_storage_cost(testing_mode=r.testing_mode, is_shushary=r.is_shushary)
     return d
 
 
@@ -702,7 +703,7 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
     # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
 
     df = choose_df_in(df_list, is_first_df=r.is_first_df)
-    df = dfs_forming(df, d, r, include_columns=incl_col)
+    df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
     df_dynamic_list = choose_dynamic_df_list_in(df_list, is_dynamic=r.is_dynamic)
     is_dynamic_possible = r.is_dynamic and len(df_dynamic_list) > 1
     df_completed_dynamic_list = [dfs_forming(x, d, r, incl_col) for x in df_dynamic_list if is_dynamic_possible]
@@ -744,7 +745,8 @@ def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
     df = merge_net_cost(df, d.df_net_cost, r.is_net_cost)
     df = merge_price(df, d.df_price, r.is_get_price).drop_duplicates(subset='nmId')
     df = profit_count(df)
-    df = pandas_handler.df_merge_drop(df, d.df_rating, 'nmId', 'Артикул', how="outer")
+    df = pandas_handler.df_merge_drop(df, d.df_rating, 'nmId', 'Артикул ВБ', how="outer")
+    df['Rating'] = [x.split(" ")[0] if isinstance(x, str) else x for x in df['Рейтинг отзывов']]
 
     df = pandas_handler.fill_empty_val_by(['article', 'vendorCode', 'supplierArticle'], df, 'Артикул поставщика')
     df = pandas_handler.fill_empty_val_by(['brand'], df, 'Бренд')
@@ -853,6 +855,8 @@ def abc_xyz(merged_df):
     margin_columns = [col for col in merged_df.columns if 'Маржа-себест.' in col and "Маржа-себест./ шт" not in col]
     merged_df[margin_columns] = merged_df[margin_columns].applymap(pandas_handler.false_to_null)
     merged_df['Total_Margin'] = merged_df[margin_columns].sum(axis=1)
+    most_total_marging = sum([x for x in merged_df['Total_Margin'] if x > 0]) / 2
+    most_total_marging_loss = sum([x for x in merged_df['Total_Margin'] if x < 0]) / 2
 
     # Calculate total margin per article
     total_margin_per_article = merged_df.groupby('Артикул поставщика')['Total_Margin'].sum().reset_index()
@@ -864,15 +868,18 @@ def abc_xyz(merged_df):
                                                          total_margin_per_article['Total_Margin'].sum()) * 100
 
     # Classify into ABC categories
+
     def classify_abc(row):
-        if row['Cumulative_Percentage'] <= 10 and row["Total_Margin"] > 0:
+        if row["Total_Margin"] > most_total_marging:
             return 'A'
-        elif row['Cumulative_Percentage'] <= 40 and row["Total_Margin"] >= 0:
+        if row["Total_Margin"] > 0:
             return 'B'
-        elif row['Cumulative_Percentage'] <= 70 and row["Total_Margin"] <= 0:
+        elif row["Total_Margin"] == 0:
             return 'C'
-        else:
+        elif row["Total_Margin"] < 0 and row["Total_Margin"] > most_total_marging_loss:
             return 'D'
+        else:
+            return 'E'
 
     total_margin_per_article['ABC_Category'] = total_margin_per_article.apply(classify_abc, axis=1)
 
@@ -888,8 +895,11 @@ def abc_xyz(merged_df):
     weights = weights / weights.sum()  # Normalize weights
 
     def calculate_weighted_cv(row):
-        quantities = row[sales_quantity_columns].values
-        weighted_mean = np.average(quantities, weights=weights)
+        quantities = row[sales_quantity_columns].replace('', 0).astype(
+            float).values  # Convert empty strings to NaN and then to float
+        if np.all(pd.isna(quantities)):  # Handle all NaN case
+            return float('inf')  # Handle division by zero if all quantities are NaN
+        weighted_mean = np.average(quantities, weights=weights, returned=False)
         weighted_std_dev = np.sqrt(np.average((quantities - weighted_mean) ** 2, weights=weights))
         if weighted_mean == 0:
             return float('inf')  # Handle division by zero if all quantities are zero
@@ -897,12 +907,22 @@ def abc_xyz(merged_df):
 
     merged_df['CV'] = merged_df.apply(calculate_weighted_cv, axis=1)
 
+    # Convert CV to numeric, coercing errors to NaN
+    merged_df['CV'] = pd.to_numeric(merged_df['CV'], errors='coerce')
+
+    # Create CV_mod column with absolute values, preserving NaN for non-numeric entries
+    merged_df['CV_mod'] = merged_df['CV'].apply(lambda x: abs(x) if pd.notna(x) else x)
+
     # Classify into XYZ Categories
+    periods = len(sales_quantity_columns)
+
     def classify_xyz(row):
         cv = row['CV']
-        if cv <= 1 and cv > 0:
+        if cv <= periods / 8 and cv > 0:
+            return 'W'
+        elif cv <= periods / 4 and cv > 0:
             return 'X'
-        elif cv <= 3 and cv > 0:
+        elif cv <= periods and cv > 0:
             return 'Y'
         else:
             return 'Z'
@@ -915,7 +935,10 @@ def abc_xyz(merged_df):
 
     # In case we want to ensure CV has a minimum non-zero value for comparison
     max_cv = merged_df["CV"].max()
-    merged_df["CV"] = merged_df["CV"].replace(0, max_cv)  # Replace 0 CV with the maximum CV value
+    merged_df["CV"].replace(0, max_cv, inplace=True)  # Replace 0 CV with the maximum CV value if necessary
+    first_columns = ["Артикул поставщика", "Total_Margin", "ABC_Category", "CV", "XYZ_Category"]
+    merged_df = merged_df.reindex(
+        columns=first_columns + [col for col in merged_df.columns if col not in first_columns])
 
     return merged_df
 

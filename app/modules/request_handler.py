@@ -13,25 +13,6 @@ from werkzeug.datastructures import FileStorage
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def gather_request_data(request: flask.Request) -> dict:
-    # Retrieve the checkbox names from the hidden input
-    checkbox_names = request.form.get('checkbox_names', '[]')
-    checkbox_names = json.loads(checkbox_names)
-
-    req_d = {}
-
-    # Collect values from checkboxes
-    for checkbox in checkbox_names:
-        req_d[checkbox] = checkbox in request.form
-
-    # Collect other form inputs
-    for key in request.form:
-        if key != 'checkbox_names':  # Skip the hidden input
-            req_d[key] = request.form[key]  # Collect value for other inputs
-
-    return req_d
-
-
 def get_files(request):
     # Check if the post request has the file part
     if 'file' not in request.files:

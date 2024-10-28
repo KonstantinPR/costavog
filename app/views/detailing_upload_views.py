@@ -94,9 +94,13 @@ def upload_detailing():
 
     print(f"ready to zip {filtered_dfs_names_list}")
 
-    # Now you can call files_to_zip with the filtered lists
-    file, name = pandas_handler.files_to_zip(filtered_dfs_list, filtered_dfs_names_list)
+    # Add the timestamp to the zip_name
+    zip_file, zip_name = pandas_handler.files_to_zip(filtered_dfs_list, filtered_dfs_names_list)
+
+    yandex_disk_handler.upload_to_YandexDisk(request=request, file=zip_file,
+                                             path=app.config['REPORT_WB_ZIPS'], testing_mode=r.testing_mode,
+                                             is_add_timestamp=True, is_upload=False)
 
     # Flash message and return the zip file for download
     flash("Отчет успешно создан")
-    return send_file(file, download_name=name, as_attachment=True)
+    return send_file(zip_file, download_name=zip_name, as_attachment=True)

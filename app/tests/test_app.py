@@ -1,5 +1,8 @@
 import unittest
+
 from app.modules.pandas_handler import FALSE_LIST, replace_false_values, max_len_dc, df_merge_drop
+from app.modules.detailing_upload_module import abc_xyz, zip_detail_V2
+
 import pandas as pd
 import logging
 
@@ -89,6 +92,53 @@ class TestDfMergeDrop(unittest.TestCase):
         right_df = pd.DataFrame({'key': [1, 2], 'other_value': ['u', 'v']})
         merged_df = df_merge_drop(left_df, right_df, 'key', 'key')
         self.assertEqual(merged_df.shape, (2, 2))
+
+
+class TestAbcXyz(unittest.TestCase):
+    def test_abc_xyz(self):
+        # Create a sample DataFrame
+        data = {
+            'Артикул поставщика': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            'Маржа-себест. 1': [-10000, -100, 300, '', 1000, 500, 1000],  # Including an empty string
+            'Маржа-себест. 2': [-100, '', -2500, 0, '', 200, 10000],
+            'Маржа-себест. 3': [-10, '', -500, 0, '', 20, 1000],
+            'Ч. Продажа шт. 1': [10, '', 30, 40, 50, 10, 200],
+            'Ч. Продажа шт. 2': [5, -1, 25, 35, 0, 2, 150],
+            'Ч. Продажа шт. 4': [1, -1, 2, 4, 0, 1, 100],
+        }
+
+        merged_df = pd.DataFrame(data)
+
+        # Call the function
+        result_df = abc_xyz(merged_df)
+
+        # Check the results
+
+        self.assertEqual(result_df['Total_Margin'].tolist(), [-10110, -100, -2700, 0, 1000, 720, 12000],
+                         "Total_Margin calculation is incorrect.")
+
+        # ABC Classification checks
+        self.assertEqual(result_df['ABC_Category'].tolist(), ['E', 'D', 'D', 'C', 'B', 'B', 'A'],
+                         "ABC classification is incorrect.")
+
+        # Check the CV calculation
+        # Replace with expected values based on your logic
+        expected_cv = [0.567, -0.894, 0.496, 0.47, 1.118, 0.786, 0.244]
+
+        self.assertEqual(result_df['CV'].round(3).tolist(), [round(x, 5) for x in expected_cv],
+                         "CV calculation is incorrect.")
+
+        # Check the CV_mod values
+        self.assertEqual(result_df['CV_mod'].round(3).tolist(), [0.567, 0.894, 0.496, 0.47, 1.118, 0.786, 0.244],
+                         "CV_mod calculation is incorrect.")
+
+        # Check XYZ Categories
+        self.assertEqual(result_df['XYZ_Category'].tolist(), ['X', 'Z', 'X', 'X', 'Y', 'Y', 'W'],
+                         "XYZ classification is incorrect.")
+
+
+# To run the tests, use the command:
+# pytest test_abc_xyz.py
 
 
 if __name__ == '__main__':

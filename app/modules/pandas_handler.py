@@ -1,5 +1,4 @@
 from random import randrange
-
 import pandas as pd
 import numpy as np
 import logging
@@ -26,7 +25,8 @@ def replace_false_values(df: pd.DataFrame, columns: Union[List[str], str],
     Args:
     - df (pd.DataFrame): The DataFrame containing the columns.
     - columns (Union[List[str], str]): List of column names to process, or a single column name.
-    - false_list (Optional[List[Union[str, bool]]], optional): List of values to be considered as false. Defaults to FALSE_LIST_2.
+    - false_list (Optional[List[Union[str, bool]]], optional): List of values to be considered as false. Defaults
+    to FALSE_LIST_2.
 
     Returns:
     - pd.DataFrame: The modified DataFrame.
@@ -287,6 +287,10 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     # Update the column for the rows that match the mask
     df_disc_template.loc[mask, "Артикул WB"] = df_disc_template.loc[mask, "Артикул WB"]
+
+    # After populating df_disc_template
+    df_disc_template = df_disc_template.loc[df_disc_template["Артикул WB"].str.strip() != ""]
+    df_disc_template = df_disc_template.dropna(subset=["Артикул WB"])
 
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]

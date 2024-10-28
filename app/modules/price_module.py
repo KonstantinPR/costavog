@@ -31,6 +31,7 @@ def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
 
     return df
 
+
 def count_norma_revenue(df):
     # k_norma must count dynamicly every time as clear_sell/(clear_sell - (storage + logistic...)) + norma_revenue
     # (bank_deposit * 2 = ~40%)
@@ -399,15 +400,19 @@ def k_cost(cost, price_disc, k_norma_revenue, cost_power=0.5):
 
 
 def k_rating(rating):
-    if rating == 5:
+    if rating == "-":
+        rating = 0
+    else:
+        rating = float(rating)
+    if rating >= 5:
         return 0.98
-    if rating == 4:
+    if rating >= 4:
         return 0.99
-    if rating == 3:
+    if rating >= 3:
         return 1
-    if rating == 2:
+    if rating >= 2:
         return 1.01
-    if rating == 1:
+    if rating >= 1:
         return 1.02
     return 1
 
