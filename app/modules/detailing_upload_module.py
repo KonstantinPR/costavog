@@ -9,8 +9,9 @@ from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module
 from flask import request
 from types import SimpleNamespace
-from typing import List, Type
+from typing import List, Type, Tuple
 from varname import nameof
+import multiprocessing
 
 from app.modules.decorators import timing_decorator
 
@@ -690,23 +691,36 @@ def dfs_from_outside(r):
 
 
 @timing_decorator
-def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
-    """dfs_process..."""
-    print("""dfs_process...""")
+def dfs_process(df_list: List[pd.DataFrame], r: SimpleNamespace) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
+    """Process a list of DataFrames, applying transformations with multiprocessing where applicable."""
+    print("dfs_process...")
 
-    # element 0 in list is always general df that was through all df_list
+    # Element 0 in the list is always the general DataFrame that goes through all processing
     incl_col = list(INITIAL_COLUMNS_DICT.values())
 
     # API and YANDEX_DISK getting data into namespace
     d = dfs_from_outside(r)
 
-    # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
-
+    # Choose the primary DataFrame to process
     df = choose_df_in(df_list, is_first_df=r.is_first_df)
     df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
+
+    # Prepare the list of DataFrames for dynamic processing
     df_dynamic_list = choose_dynamic_df_list_in(df_list, is_dynamic=r.is_dynamic)
     is_dynamic_possible = r.is_dynamic and len(df_dynamic_list) > 1
-    df_completed_dynamic_list = [dfs_forming(x, d, r, incl_col) for x in df_dynamic_list if is_dynamic_possible]
+
+    # Use multiprocessing to process `df_dynamic_list` concurrently
+    if is_dynamic_possible:
+        # Helper function to process each dynamic DataFrame
+        def process_dynamic_df(dynamic_df):
+            return dfs_forming(dynamic_df, d, r, incl_col)
+
+        # Create a multiprocessing pool to handle the DataFrame processing
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            df_completed_dynamic_list = pool.map(process_dynamic_df, df_dynamic_list)
+    else:
+        # If dynamic processing is not needed or possible, use an empty list
+        df_completed_dynamic_list = []
 
     return df, df_completed_dynamic_list
 

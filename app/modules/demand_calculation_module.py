@@ -51,6 +51,7 @@ def demand_calculation_to_df(df_input, search_string, min_stock=1, testing_mode=
     df_all_cards = API_WB.get_all_cards_api_wb(testing_mode=testing_mode, textSearch=search_string_first,
                                                is_from_yadisk=is_from_yadisk)
     df_report, file_name = yandex_disk_handler.download_from_YandexDisk('REPORT_DETAILING_UPLOAD')
+    # df_report.to_excel("df_report.xlsx")
     df_report_all, file_name_all = yandex_disk_handler.download_from_YandexDisk('REPORT_DETAILING_UPLOAD_ALL')
     # df_report.to_excel("df_report.xlsx")
     # print(file_name)

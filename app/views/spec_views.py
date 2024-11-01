@@ -59,7 +59,7 @@ def data_to_spec_wb_transcript():
     df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding, 'Лекало', 'Лекало')
     # df_pattern_merge = spec_modifiyer.merge_spec(df_spec_example, df_colors_adding)
     df_clear = spec_modifiyer.df_clear(df_pattern_merge, col_name=art_col_name)
-    df_clear.to_excel("df_clear.xlsx")
+    # df_clear.to_excel("df_clear.xlsx")
     df_added_some_col = spec_modifiyer.col_adding(df_clear, col_name=art_col_name)
     df = spec_modifiyer.col_str(df_added_some_col, ['Баркод товара'])
     df = spec_modifiyer.sizes_translate(df, spec_type)
