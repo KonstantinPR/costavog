@@ -69,6 +69,7 @@ def upload_detailing():
         return send_file(io_output.io_output(pd.concat(df_list)), download_name=f'concat.xlsx', as_attachment=True)
 
     df, df_dynamic_list = detailing_upload_module.dfs_process(df_list, r=r)
+
     df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=r.is_dynamic,
                                                             testing_mode=r.testing_mode)
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)

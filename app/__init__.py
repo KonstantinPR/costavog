@@ -1,4 +1,3 @@
-import os
 import logging
 from flask import Flask
 from flask_migrate import Migrate
@@ -20,10 +19,12 @@ login_manager.init_app(app)
 load_dotenv()
 app.config['ENVIRONMENT'] = environ.get('ENVIRONMENT')
 
+
 # Context processor to inject environment variable into templates
 @app.context_processor
 def inject_environment():
     return {'ENVIRONMENT': app.config['ENVIRONMENT']}
+
 
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
@@ -39,12 +40,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize the database
 db.init_app(app)
 
+
 # Set up logging
 @app.before_request
 def before_request():
     logging.warning('Before request hook triggered.')
     set_config()  # Set the configuration for the current user
     return None
+
 
 # Load user from request
 @login_manager.request_loader
@@ -55,10 +58,12 @@ def load_user_from_request(request):
         return UserModel.query.get(user_id)
     return None
 
+
 # Load user by ID
 @login_manager.user_loader
 def load_user(user_id):
     return UserModel.query.get(user_id)
+
 
 # Set up app configuration based on the current user
 def set_config():
@@ -78,20 +83,24 @@ def set_config():
     else:
         app.logger.warning('User is not authenticated.')
 
+
 @app.before_first_request
 def create_all():
     db.create_all()
+
 
 # Main block to configure app when run directly
 app_config_dict = {
     'APP_NAME': 'TASKER',
     'ALLOWED_EXTENSIONS': ['.jpg', '.jpeg', '.png', '.gif', '.zip'],
+    'SQLALCHEMY_DATABASE_URI': uri,
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'URL': 'https://cloud-api.yandex.net/v1/disk/resources',
     'ROLES': ['administrator', 'user', 'guest'],
     'ADMINISTRATOR_ROLE': 'administrator',
     'USER_ROLE': 'user',
     'NOBODY': 'nobody',
-    'YANDEX_FOLDER': "C:\\YandexDisk",
+    'YANDEX_FOLDER': "C:\YandexDisk",
     'TMP_IMG_FOLDER': "folder_img",
     'YANDEX_PATH': '',
     'YANDEX_KEY_FILES_PATH': '/TASKER/KEY_FILES',
@@ -100,19 +109,24 @@ app_config_dict = {
     'YANDEX_KEY_PRICES': '/TASKER/KEY_FILES/PRICES',
     'REPORT_DETAILING_UPLOAD': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD',
     'REPORT_SALES_REALIZATION': '/TASKER/KEY_FILES/REPORT_SALES_REALIZATION',
+    'REPORT_DETAILING_UPLOAD_ALL': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD/ALL_LONG',
+    'REPORT_DYNAMIC': '/TASKER/KEY_FILES/DYNAMIC_REVENUE',
+    'REPORT_WB_ZIPS': '/TASKER/KEY_FILES/ZIPS',
     'YANDEX_ALL_CARDS_WB': "/TASKER/KEY_FILES/ALL_CARDS_WB",
     'YANDEX_EXCLUDE_CARDS': "/TASKER/KEY_FILES/ALL_CARDS_WB/EXCLUDE_CARDS",
     'YANDEX_SALES_FUNNEL_WB': "/TASKER/KEY_FILES/SALES_FUNNEL",
-    'EXTENSION_EXCEL': ".xlsx",
-    'DAYS_STEP_DEFAULT': 7,
-    'DAYS_DELAY_REPORT': 1,
-    'DAYS_PERIOD_DEFAULT': 1,
-    'LAST_DAYS_DEFAULT': 7,  # Added comma
+    'YANDEX_FOLDER_IMAGE': "C:\YandexDisk\ФОТОГРАФИИ",
+    'YANDEX_FOLDER_IMAGE_YANDISK': "/ФОТОГРАФИИ",
+    'NET_COST_PRODUCTS': "/TASKER/KEY_FILES/NET_COST",
+    'DELIVERY_PRODUCTS': r'C:\YandexDisk\СЕТЕВЫЕ МАГАЗИНЫ\WILDBERRIES\ОТПРАВКИ',
+    'RATING': "/TASKER/KEY_FILES/RATING",
 
+    # OZON
     'YANDEX_CARDS_OZON': '/TASKER/OZON/CARDS',
     'YANDEX_STOCK_OZON': '/TASKER/OZON/STOCK',
     'YANDEX_PRICE_OZON': '/TASKER/OZON/PRICE',
     'YANDEX_TRANSACTION_OZON': '/TASKER/OZON/TRANSACTION',
+
     'CHARACTERS_PRODUCTS': "/TASKER/CHARACTERS",
     'COLORS': "/TASKER/CHARACTERS/COLORS",
     'ECO_FURS_WOMEN': "/TASKER/CHARACTERS/ECO_FURS_WOMEN",
@@ -122,14 +136,27 @@ app_config_dict = {
     'SHOES': "/TASKER/CHARACTERS/SHOES",
     'JEANS': "/TASKER/CHARACTERS/JEANS",
     'DEFAULT': "/TASKER/CHARACTERS/DEFAULT",
+
     'SPEC_EXAMPLE': "/TASKER/SPEC_EXAMPLE",
     'PARTNERS_FOLDER': "ПОСТАВЩИКИ/TEST",
     'ARRIVALS_FOLDER': "Приходы",
-    'ARRIVAL_FILE_NAMES': "Приход"
+    'ARRIVAL_FILE_NAMES': "Приход",
+    'EXTENSION_EXCEL': ".xlsx",
+    'DAYS_STEP_DEFAULT': 7,
+    'DAYS_DELAY_REPORT': 1,
+    'DAYS_PERIOD_DEFAULT': 1,
+    'LAST_DAYS_DEFAULT': 7,
+
 }
 
 # Update the app configuration
+
 app.config.update(app_config_dict)
+
+app_config_dict["FULL_PATH_ARRIVALS"] = \
+    f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/*/"
+app_config_dict["FULL_PATH_ARRIVALS_RECURSIVELY"] = \
+    f"{app.config['YANDEX_FOLDER']}/{app.config['PARTNERS_FOLDER']}/*/{app.config['ARRIVALS_FOLDER']}/**/"
 
 if __name__ == "__main__":
     print("Setting in configuration...")
