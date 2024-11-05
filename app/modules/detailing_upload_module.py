@@ -1,5 +1,4 @@
 from pandas import DataFrame
-
 from app import app
 import zipfile
 import pandas as pd
@@ -9,9 +8,8 @@ from datetime import datetime
 from app.modules import pandas_handler, API_WB, yandex_disk_handler, price_module, sales_funnel_module, delivery_module
 from flask import request
 from types import SimpleNamespace
-from typing import List, Type, Tuple
+from typing import List, Type
 from varname import nameof
-import multiprocessing
 
 from app.modules.decorators import timing_decorator
 
@@ -601,6 +599,7 @@ def promofiling(promo_file, df, allowed_delta_percent=5):
         return pd.DataFrame
 
     # Read the promo file into a DataFrame
+
     df_promo = pd.read_excel(promo_file)
 
     df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
@@ -609,8 +608,8 @@ def promofiling(promo_file, df, allowed_delta_percent=5):
     return df_promo
 
 
-def check_discount(df, allowed_delta_percent, default_disc=5):
-    plan_price_name = "Плановая цена для акции"
+def check_discount(df, allowed_delta_percent=5):
+    # plan_price_name = "Плановая цена для акции"
     current_price_name = "Текущая розничная цена"
     new_discount_col = "new_discount"
     promo_discount_name = "Загружаемая скидка для участия в акции"
@@ -1030,7 +1029,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.days_by = int(request.form.get('days_by', app.config['DAYS_PERIOD_DEFAULT']))
     r.uploaded_files = request.files.getlist("file")
     r.testing_mode = request.form.get('is_testing_mode')
-    r.is_promo_file = request.files.get("is_promo_file")
+    r.promo_file = request.files.get("promo_file")
     r.is_just_concatenate = 'is_just_concatenate' in request.form
     r.is_discount_template = 'is_discount_template' in request.form
     r.is_dynamic = 'is_dynamic' in request.form

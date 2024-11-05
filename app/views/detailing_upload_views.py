@@ -75,7 +75,7 @@ def upload_detailing():
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
 
-    df_promo = detailing_upload_module.promofiling(r.is_promo_file, df[['nmId', 'new_discount']])
+    df_promo = detailing_upload_module.promofiling(r.promo_file, df[['nmId', 'new_discount']])
 
     n = detailing_upload_module.file_names()
 

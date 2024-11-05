@@ -180,16 +180,19 @@ def k_is_sell(pure_sells_qt, net_cost, pure_value):
     '''v 1.0'''
     if not net_cost: net_cost = DEFAULT_NET_COST
     if not pure_value: pure_value = DEFAULT_PURE_VALUE
+
     k_net_cost = (((DEFAULT_NET_COST + DEFAULT_PURE_VALUE) * 0.5) / ((pure_value + net_cost) * 0.5)) ** 0.5
+    # (((250 + 270) * 0.5) / ((1700 + 1500) * 0.5)) ^ 0.5
+    # 0.403112887
 
     if pure_sells_qt > 50 * k_net_cost:
-        return 0.50
-    if pure_sells_qt > 20 * k_net_cost:
         return 0.60
-    if pure_sells_qt > 10 * k_net_cost:
+    if pure_sells_qt > 20 * k_net_cost:
         return 0.70
-    if pure_sells_qt > 5 * k_net_cost:
+    if pure_sells_qt > 10 * k_net_cost:
         return 0.80
+    if pure_sells_qt > 5 * k_net_cost:
+        return 0.85
     if pure_sells_qt > 3 * k_net_cost:
         return 0.90
     if pure_sells_qt > 2 * k_net_cost:
