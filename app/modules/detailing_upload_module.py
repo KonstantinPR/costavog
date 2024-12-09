@@ -51,6 +51,7 @@ INITIAL_COLUMNS_DICT = {
     'material': 'material',
     'article_supplier': 'Артикул поставщика',
     'nmId': 'nmId',
+    'new_price': 'new_price',
     'new_discount': 'new_discount',
     'd_disc': 'd_disc',
     'n_discount': 'n_discount',
@@ -118,6 +119,7 @@ CHOSEN_COLUMNS = [
     "material",
     "Артикул поставщика",
     "nmId",
+    "new_price",
     "new_discount",
     "d_disc",
     "n_discount",
@@ -340,7 +342,9 @@ def merge_stock(df, df_stock, is_get_stock=False):
     return df
 
 
-def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=False, df_storage=None):
+def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=False, df_storage=None,
+                  files_period_days=1):
+    default_period_days = 7
     if not is_get_storage:
         return df
 
@@ -352,8 +356,13 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=Fa
     df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
     # df.to_excel("merged_storage.xlsx")
     df = df.fillna(0)
+    if 'Days_between_First_Now' not in df.columns:
+        df['Days_between_First_Now'] = default_period_days
+    else:
+        df.loc[df['Days_between_First_Now'] > files_period_days, 'Days_between_First_Now'] = files_period_days
+        df.loc[df['Days_between_First_Now'] == 0, 'Days_between_First_Now'] = files_period_days
 
-    df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode']
+    df['Хранение'] = df['quantityFull + Продажа, шт.'] * df['storagePricePerBarcode'] * df['Days_between_First_Now']
     df['shareCost'] = df['Хранение'] / df['Хранение'].sum()
     df['Хранение'] = df['shareCost'] * storage_cost
 
@@ -481,16 +490,18 @@ def zips_to_list(zip_downloaded):
 
 def replace_incorrect_date(df, date_column='Дата продажи'):
     # Convert the 'Дата продажи' column to datetime format
+
     df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
 
     # Define the specific dates to remove
     specific_dates = ['2022-09-25', '2022-10-02']
 
     # Filter out rows with the specific dates and modify the original DataFrame in-place
+
     df = df[~df[date_column].isin(specific_dates)]
 
     # Print the minimum valid date after replacing dates
-    print(f"date_min {df[date_column].min()}")
+    # print(f"date_min {df[date_column].min()}")
 
     # Save the DataFrame to an Excel file
     # df.to_excel("df_date.xlsx", index=False)
@@ -704,9 +715,11 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
     # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
 
     df = choose_df_in(df_list, is_first_df=r.is_first_df)
-    df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
     df = pandas_handler.df_merge_drop(left_df=df, right_df=d.df_delivery, left_on='Артикул поставщика',
                                       right_on='Артикул')
+
+    df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
+
     df_dynamic_list = choose_dynamic_df_list_in(df_list, is_dynamic=r.is_dynamic)
     is_dynamic_possible = r.is_dynamic and len(df_dynamic_list) > 1
     df_completed_dynamic_list = [dfs_forming(x, d, r, incl_col) for x in df_dynamic_list if is_dynamic_possible]
@@ -727,6 +740,7 @@ def pattern_splitting(df, prefixes_dict):
 
 
 def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
+    # df.to_excel("df_delivery2.xlsx")
     df = replace_incorrect_date(df)
     date_min = df["Дата продажи"].min()
     date_max = df["Дата продажи"].max()
@@ -744,7 +758,7 @@ def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
     df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
 
     df = merge_storage(df, storage_cost, r.testing_mode, is_get_storage=r.is_get_storage,
-                       is_shushary=r.is_shushary, df_storage=d.df_storage)
+                       is_shushary=r.is_shushary, df_storage=d.df_storage, files_period_days=r.files_period_days)
     df = merge_net_cost(df, d.df_net_cost, r.is_net_cost)
     df = merge_price(df, d.df_price, r.is_get_price).drop_duplicates(subset='nmId')
     df = profit_count(df)
@@ -1028,6 +1042,7 @@ def get_data_from(request) -> SimpleNamespace:
     r = SimpleNamespace()
     r.days_by = int(request.form.get('days_by', app.config['DAYS_PERIOD_DEFAULT']))
     r.uploaded_files = request.files.getlist("file")
+    r.files_period_days = int(len(r.uploaded_files)) * 7
     r.testing_mode = request.form.get('is_testing_mode')
     r.promo_file = request.files.get("promo_file")
     r.is_just_concatenate = 'is_just_concatenate' in request.form

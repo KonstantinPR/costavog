@@ -2,7 +2,7 @@ import numpy as np
 import random
 from app.modules import detailing_upload_module
 
-DEFAULT_NET_COST = 250
+DEFAULT_NET_COST = 500
 DEFAULT_PURE_VALUE = DEFAULT_NET_COST * 1.2
 
 
@@ -26,8 +26,8 @@ def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
 
     sum_k_discount = k_func_disc + k_n_disc
     df['new_discount'] = (df['func_discount'] * k_func_disc + df['n_discount'] * k_n_disc) / sum_k_discount
-
     df['d_disc'] = round(df['discount'] - df['new_discount'])
+    df['new_price'] = round(df['price'] * (1 - df['new_discount'] / 100))
 
     return df
 
@@ -38,7 +38,7 @@ def count_norma_revenue(df):
     # for example 200 / (30 + 70) + 0.4 = 2.4 it means that we give wb 50% of sell price, and in that case
     # price (with disc) of goods must be (net_cost * 2.4)
 
-    bank_percentage = 0.22
+    bank_percentage = 0.25
     k_bank_leverage = 1.2
     # what k_revenue must be we want to sell on wb?
     k = 1 + bank_percentage * k_bank_leverage
@@ -50,14 +50,14 @@ def count_norma_revenue(df):
     k_norma_revenue = (clear_sells / revenue) * k
 
     if revenue <= 0:
-        k_norma_revenue = 10
+        k_norma_revenue = 3
 
     df['k_norma_revenue'] = k_norma_revenue
 
     return k_norma_revenue
 
 
-def discount(df, k_delta=1, k_norma_revenue=2.5, reset_if_null=True):
+def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
     col_map = detailing_upload_module.INITIAL_COLUMNS_DICT
 
     df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='key')

@@ -11,6 +11,9 @@ import time
 @login_required
 def data_to_spec_wb_transcript():
     """
+    08.12.2024 - После создания надо смержить через раздел data_to_spec_merging в первую таблицу со второй,
+     а затем вручную вставить в текущий шаблон вайлдберриз в 5ю строку.
+
     Не подтягивать по API артикулы c WB
     В спецификации должны быть товары одного вида - например только шубки или только обувь или только джинсы и т.д.
     Заполняется спецификация на основе справочников с яндекс.диска в TASKER.
@@ -66,6 +69,7 @@ def data_to_spec_wb_transcript():
 
     # to check if art is already in wb:
     to_check_art_wb = request.form.get('to_check_art_wb')
+
     if to_check_art_wb:
         all_cards_wb_df = API_WB.get_all_cards_api_wb()
         name_excel_all_cards_wb = "all_cards_wb.xlsx"
@@ -85,8 +89,14 @@ def data_to_spec_wb_transcript():
     if "Цена розничная" in df:
         df_output['Цена'] = df.loc[:, 'Цена розничная']
 
-    print('df_output.xlsx')
+    # to_fill_template_02 = request.form.get('to_fill_template_02')
+    # if to_fill_template_02:
+    #     template_02 = yandex_disk_handler.get_excel_file_from_ydisk(path=app.config['CLOTHES_TEMPLATE'])
+    #     # df_output = template_02.merge(df_output, how='left', on="Артикул поставщика")
 
+    # print('df_output.xlsx')
+
+    # df = io_output.io_output(df_output)
     df = io_output.io_output(df_output)
     return send_file(df, as_attachment=True, download_name='spec_created.xlsx', )
 
