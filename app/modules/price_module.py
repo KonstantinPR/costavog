@@ -1,5 +1,8 @@
 import numpy as np
 import random
+
+import app.modules.detailing_upload_dict_module
+import app.modules.pandas_handler
 from app.modules import detailing_upload_module
 
 DEFAULT_NET_COST = 500
@@ -38,8 +41,8 @@ def count_norma_revenue(df):
     # for example 200 / (30 + 70) + 0.4 = 2.4 it means that we give wb 50% of sell price, and in that case
     # price (with disc) of goods must be (net_cost * 2.4)
 
-    bank_percentage = 0.25
-    k_bank_leverage = 1.2
+    bank_percentage = 0.24
+    k_bank_leverage = 1.4
     # what k_revenue must be we want to sell on wb?
     k = 1 + bank_percentage * k_bank_leverage
     expenses = df['Хранение'].sum() + df['Логистика'].sum() + df['Удержания_minus'].sum() + df["WB_комиссия руб"].sum()
@@ -58,9 +61,9 @@ def count_norma_revenue(df):
 
 
 def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
-    col_map = detailing_upload_module.INITIAL_COLUMNS_DICT
+    col_map = app.modules.detailing_upload_dict_module.INITIAL_COLUMNS_DICT
 
-    df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='key')
+    df = app.modules.pandas_handler.rename_mapping(df, col_map=col_map, to='key')
 
     # если не было продаж увеличиваем скидку
     df['k_is_sell'] = [k_is_sell(x, y, z) for x, y, z in zip(df['pure_sells_qt'], df['net_cost'], df['pure_value'])]
@@ -123,7 +126,7 @@ def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
     if reset_if_null:
         df.loc[df['stock'] <= 0, 'n_discount'] = default_changing
 
-    df = detailing_upload_module.rename_mapping(df, col_map=col_map, to='value')
+    df = app.modules.pandas_handler.rename_mapping(df, col_map=col_map, to='value')
 
     return df
 

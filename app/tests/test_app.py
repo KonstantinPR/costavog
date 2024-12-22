@@ -1,7 +1,8 @@
 import unittest
 
 from app.modules.pandas_handler import FALSE_LIST, replace_false_values, max_len_dc, df_merge_drop
-from app.modules.detailing_upload_module import abc_xyz, zip_detail_V2
+from app.modules.dfs_dynamic_module import abc_xyz
+from app.modules.dfs_forming_module import zip_detail_V2
 
 import pandas as pd
 import logging

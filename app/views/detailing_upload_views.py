@@ -1,11 +1,10 @@
+import app.modules.detailing_upload_dict_module
 from app import app
-from flask import flash, render_template, request, redirect, send_file
-from flask_login import login_required, current_user
+from flask import flash, render_template, request, send_file
+from flask_login import login_required
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
 from app.modules import implementation_report, request_handler
-from types import SimpleNamespace
-from varname import nameof
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 
@@ -84,7 +83,7 @@ def upload_detailing():
                                              testing_mode=r.testing_mode)
 
     if r.is_chosen_columns:
-        df = df[[col for col in detailing_upload_module.CHOSEN_COLUMNS if col in df]]
+        df = df[[col for col in app.modules.detailing_upload_dict_module.CHOSEN_COLUMNS if col in df]]
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)
 

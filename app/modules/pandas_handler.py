@@ -7,6 +7,8 @@ import io
 from app.modules import io_output, API_WB
 from typing import Union, Optional, List
 
+from app.modules.detailing_upload_module import zips_to_list
+
 FALSE_LIST = [False, 0, '0', 0.0, 'Nan', 'NAN', 'nan', 'NaN', None, 'None', '', 'Null', ' ', '\t', '\n']
 FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
 
@@ -279,6 +281,7 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     # Ensure "Новая скидка" is filled with default_discount where NaN
     df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
+    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].replace([np.inf, -np.inf], 0)
 
     df_disc_template = df_disc_template.drop_duplicates(subset=["Артикул WB"])
 
@@ -385,3 +388,50 @@ def keys_values_in_list_from_dict(dfs_dict, ext=''):
             filtered_dfs_names_list.append(f"{name}{ext}")
 
     return filtered_dfs_list, filtered_dfs_names_list
+
+
+def rename_mapping(df, col_map, to='key'):
+    # Rename columns to keys from INITIAL_COLUMNS_DICT
+    rename_mapping = {}
+
+    for k, v in col_map.items():
+        if k != v:
+            if to == 'key':
+                if k in df.columns:
+                    print(f"Column '{v}' is already present in the DataFrame.")
+                else:
+                    rename_mapping[v] = k
+            elif to == 'value':
+                # Rename columns back to values from INITIAL_COLUMNS_DICT
+                if v in df.columns:
+                    print(f"Column '{k}' is already present in the DataFrame.")
+                else:
+                    rename_mapping[k] = v
+
+    df = df.rename(columns=rename_mapping)
+    return df
+
+
+def to_round_df(df_result):
+    df_result = df_result.round(decimals=0)
+    return df_result
+
+
+def concatenate_detailing_module(zip_downloaded, df_net_cost):
+    dfs = zips_to_list(zip_downloaded)
+
+    result = pd.concat(dfs)
+
+    # List of columns to treat as strings
+    columns_to_convert = ['№', 'Баркод', 'ШК', 'Rid', 'Srid']
+
+    # Ensure that specific columns are treated as strings
+    result[columns_to_convert] = result[columns_to_convert].astype(str)
+    return result
+
+
+def df_concatenate(df_list, is_xyz):
+    if not is_xyz: df_list = pd.concat(df_list)
+
+    # Check if concatenate parameter is passed
+    return df_list
