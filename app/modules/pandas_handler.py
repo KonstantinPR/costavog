@@ -6,7 +6,6 @@ import zipfile
 import io
 from app.modules import io_output, API_WB
 from typing import Union, Optional, List
-
 from app.modules.detailing_upload_module import zips_to_list
 
 FALSE_LIST = [False, 0, '0', 0.0, 'Nan', 'NAN', 'nan', 'NaN', None, 'None', '', 'Null', ' ', '\t', '\n']
@@ -17,6 +16,23 @@ false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 INF_LIST = [np.inf, -np.inf]
 inf_to_null = lambda x: 0 if x in INF_LIST else x
+
+
+def drop_duplicates(df=None, columns=None):
+    if df is None or df.empty:  # Check for None or empty DataFrame
+        return df
+
+    if columns is None:  # Handle None and set default to all columns
+        return df
+
+    if not isinstance(columns, list):  # Ensure columns is a list
+        columns = [columns]
+
+    # Drop duplicates and return the modified DataFrame
+    for col in columns:
+        df = df.drop_duplicates(subset=col)
+
+    return df
 
 
 def replace_false_values(df: pd.DataFrame, columns: Union[List[str], str],

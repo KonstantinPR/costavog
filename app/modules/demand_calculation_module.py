@@ -32,8 +32,11 @@ def clear_demand(df, qt_correct=True):
                         zip(df['Кол-во'], df['Маржа-себест./ шт.'], df['Маржа-себест./ шт._all'], df['net_cost'])]
 
     df = df[
-        ['vendorCode', 'techSize', 'Кол-во', 'quantityFull', 'Маржа-себест./ шт.', 'Маржа-себест.', 'Маржа-себест._all',
+        ['vendorCode', 'techSize', 'wbSize', 'Кол-во', 'quantityFull', 'Маржа-себест./ шт.', 'Маржа-себест.',
+         'Маржа-себест._all',
          'Маржа-себест./ шт._all']]
+
+    df.loc[df['techSize'] == 0, 'techSize'] = df['wbSize']
 
     df.drop(df.loc[df['Кол-во'] <= 0].index, inplace=True)
 

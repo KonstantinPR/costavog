@@ -41,10 +41,9 @@ def count_norma_revenue(df):
     # for example 200 / (30 + 70) + 0.4 = 2.4 it means that we give wb 50% of sell price, and in that case
     # price (with disc) of goods must be (net_cost * 2.4)
 
-    bank_percentage = 0.24
-    k_bank_leverage = 1.4
-    # what k_revenue must be we want to sell on wb?
-    k = 1 + bank_percentage * k_bank_leverage
+    # what k must be we want to sell on wb (must depend on bank deposit and inflation's etc.?
+    # buy for 1 sell for 1,736. Revenue = 0.736
+    k = 1.736
     expenses = df['Хранение'].sum() + df['Логистика'].sum() + df['Удержания_minus'].sum() + df["WB_комиссия руб"].sum()
     clear_sells = df['Ч. WB_реализовал'].sum() + df['Удержания_plus'].sum()
     revenue = clear_sells - expenses
