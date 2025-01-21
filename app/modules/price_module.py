@@ -1,9 +1,7 @@
 import numpy as np
 import random
-
 import app.modules.detailing_upload_dict_module
 import app.modules.pandas_handler
-from app.modules import detailing_upload_module
 
 DEFAULT_NET_COST = 500
 DEFAULT_PURE_VALUE = DEFAULT_NET_COST * 1.2

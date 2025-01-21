@@ -3,16 +3,15 @@ from app import app
 import zipfile
 import pandas as pd
 import io
-from app.modules import pandas_handler, yandex_disk_handler, dfs_process_module
+from app.modules import pandas_handler, yandex_disk_handler
 from types import SimpleNamespace
 from typing import List, Type
 from varname import nameof
 
 from app.modules.decorators import timing_decorator
-from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, \
-    DINAMIC_COLUMNS
+from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, DINAMIC_COLUMNS
 from app.modules.dfs_dynamic_module import abc_xyz
-from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in
+from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in, dfs_from_outside
 from app.modules.promofiling_module import check_discount
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -82,7 +81,7 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
     incl_col = list(INITIAL_COLUMNS_DICT.values())
 
     # API and YANDEX_DISK getting data into namespace
-    d = dfs_process_module.dfs_from_outside(r)
+    d = dfs_from_outside(r)
 
     # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
 
