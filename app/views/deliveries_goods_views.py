@@ -19,7 +19,7 @@ def get_deliveries_goods():
 
     # Define the path and date range
     folder_path = FOLDER_PATH
-
+    period_days = 0
     if request.form.get('period_days'):
         try:
             period_days = int(request.form.get('period_days'))
@@ -38,7 +38,8 @@ def get_deliveries_goods():
             logging.error(f"Error transforming dates: {e}")
             return "Error: Invalid date format"
 
-    dfs_dict = delivery_module.process_delivering(folder_path=folder_path, date_from=date_from, date_end=date_end)
+    dfs_dict = delivery_module.process_delivering(folder_path=folder_path, period=period_days, date_from=date_from,
+                                                  date_end=date_end)
 
     # Filter out the empty DataFrames and their names
     filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
