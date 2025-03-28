@@ -1,7 +1,7 @@
 import re
 import pdfplumber
 from datetime import datetime
-
+from app.modules import pandas_handler
 
 # Define default patterns
 default_pattern = r".*?(\d{1,9}(?:\.\d{2})*,\d{2})"
@@ -9,34 +9,74 @@ default_pattern = r".*?(\d{1,9}(?:\.\d{2})*,\d{2})"
 # Define patterns for extracting financial data
 patterns = {
     "total_product_value": r"Всего стоимость реализованного товара" + default_pattern,
+    "total_service_value": r"Всего стоимость реализованных услуг" + default_pattern,
     "total_deducted_value": r"Итого зачтено из стоимости реализованного товара" + default_pattern,
-    "wildberries_reward": r"Сумма вознаграждения Вайлдберриз" + default_pattern,
+    "wildberries_reward": r"Сумма вознаграждения Вайлдберриз за текущий период \(ВВ\), без НДС" + default_pattern,
     "vat": r"НДС с вознаграждения Вайлдберриз" + default_pattern,
     "international_shipping_cost": r"Стоимость услуг Вайлдберриз по организации международной перевозки" + default_pattern,
     "acquiring_costs": r"Возмещение издержек по эквайрингу" + default_pattern,
     "agent_expenses": r"Возмещение расходов поверенного" + default_pattern,
     "penalties": r"Штрафы" + default_pattern,
     "other_deductions": r"Прочие удержания" + default_pattern,
+    "third_party_deductions": r"Удержания в пользу третьих лиц" + default_pattern,
     "compensation_damage": r"Компенсация ущерба" + default_pattern,
     "other_payments": r"Прочие выплаты" + default_pattern,
-    "final_amount": r"Итого к перечислению Продавцу за текущий период" + default_pattern
+    "final_commission": "Итого Вознаграждение Вайлдберриз за объем реализованного Товара за текущий период с учетом возврата Товара" + default_pattern,
+    "final_amount": r"Итого к перечислению Продавцу за текущий период с учетом Вознаграждений и возвратов Товаров" + default_pattern
 }
 
 # Define the desired column names
 column_names = {
     "total_product_value": "Всего стоимость реализованного товара",
+    "total_service_value": "Всего стоимость реализованных услуг",
     "total_deducted_value": "Итого зачтено из стоимости реализованного товара",
-    "wildberries_reward": "Сумма вознаграждения Вайлдберриз",
+    "wildberries_reward": "Сумма вознаграждения Вайлдберриз за текущий период (ВВ), без НДС",
     "vat": "НДС с вознаграждения Вайлдберриз",
     "international_shipping_cost": "Стоимость услуг Вайлдберриз по организации международной перевозки",
     "acquiring_costs": "Возмещение издержек по эквайрингу",
     "agent_expenses": "Возмещение расходов поверенного",
     "penalties": "Штрафы",
     "other_deductions": "Прочие удержания",
+    "third_party_deductions": "Удержания в пользу третьих лиц",
     "compensation_damage": "Компенсация ущерба",
     "other_payments": "Прочие выплаты",
-    "final_amount": "Итого к перечислению Продавцу за текущий период"
+    "final_commission": "Итого Вознаграждение Вайлдберриз за объем реализованного Товара за текущий период с учетом возврата Товара",
+    "final_amount": "Итого к перечислению Продавцу за текущий период с учетом Вознаграждений и возвратов Товаров"
 }
+
+
+def calculate_financial_totals(extracted_data, text):
+    """Calculate additional financial totals."""
+
+    # Update the dictionary values using a dictionary comprehension
+    extracted_data = {key: 0 if value in pandas_handler.FALSE_LIST_2 else value for key, value in
+                      extracted_data.items()}
+
+    extracted_data["Добавить доход в бухгалтерию"] = extracted_data[column_names["total_product_value"]] + \
+                                                     extracted_data[column_names["compensation_damage"]] + \
+                                                     extracted_data[column_names["other_payments"]]
+
+    total_deducted_value = extracted_data.get("Итого зачтено из стоимости реализованного товара", 0) or 0
+    if not total_deducted_value:
+        total_deducted_value = extracted_data[column_names["final_commission"]]
+    penalties = extracted_data.get("Штрафы", 0) or 0
+    other_deductions = extracted_data.get("Прочие удержания", 0) or 0
+    compensation_damage = extracted_data.get("Компенсация ущерба", 0) or 0
+    # extracted_data["Добавить расход в бухгалтерию"] = total_deducted_value - penalties
+    extracted_data["Добавить расход в бухгалтерию"] = total_deducted_value
+
+    date_pattern = r"за период с (\d{4}-\d{2}-\d{2}) по (\d{4}-\d{2}-\d{2})"
+    date_match = re.search(date_pattern, text)
+    if date_match:
+        start_date_str = date_match.group(1)
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        quarter = (start_date.month - 1) // 3 + 1
+        extracted_data['Квартал'] = f'Q{quarter}'
+    else:
+        extracted_data['Квартал'] = None
+
+    return extracted_data
+
 
 def extract_text_from_pdf(pdf_file):
     """Extract text from a PDF file."""
@@ -46,6 +86,7 @@ def extract_text_from_pdf(pdf_file):
     except Exception as e:
         raise RuntimeError(f"Failed to process PDF file: {str(e)}")
     return text
+
 
 def extract_financial_data(text):
     """Extract financial data from text using regex patterns."""
@@ -58,6 +99,7 @@ def extract_financial_data(text):
         else:
             extracted_data[column_names[key]] = None
     return extracted_data
+
 
 def extract_additional_info(text, file_name):
     """Extract additional information like file name, document number, and period."""
@@ -79,39 +121,18 @@ def extract_additional_info(text, file_name):
 
     return extracted_data
 
-def calculate_financial_totals(extracted_data, text):
-    """Calculate additional financial totals."""
-    extracted_data["Добавить доход в бухгалтерию"] = extracted_data[column_names["total_product_value"]] - \
-                                                     extracted_data[column_names["final_amount"]] + \
-                                                     extracted_data[column_names["compensation_damage"]] + \
-                                                     extracted_data[column_names["other_payments"]]
-
-    total_deducted_value = extracted_data.get("Итого зачтено из стоимости реализованного товара", 0) or 0
-    penalties = extracted_data.get("Штрафы", 0) or 0
-    other_deductions = extracted_data.get("Прочие удержания", 0) or 0
-    compensation_damage = extracted_data.get("Компенсация ущерба", 0) or 0
-    extracted_data["Добавить расход в бухгалтерию"] = total_deducted_value - penalties
-
-    date_pattern = r"за период с (\d{4}-\d{2}-\d{2}) по (\d{4}-\d{2}-\d{2})"
-    date_match = re.search(date_pattern, text)
-    if date_match:
-        start_date_str = date_match.group(1)
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-        quarter = (start_date.month - 1) // 3 + 1
-        extracted_data['Квартал'] = f'Q{quarter}'
-    else:
-        extracted_data['Квартал'] = None
-
-    return extracted_data
 
 def process_pdf_file(pdf_file):
     """Process a single PDF file and return extracted data."""
+
     text = extract_text_from_pdf(pdf_file)
     extracted_data = extract_financial_data(text)
     additional_info = extract_additional_info(text, pdf_file.filename)
     extracted_data.update(additional_info)
     extracted_data = calculate_financial_totals(extracted_data, text)
+
     return extracted_data
+
 
 def pdf_files_process(pdf_files):
     all_data = []
@@ -124,11 +145,13 @@ def pdf_files_process(pdf_files):
             return f"Failed to process PDF file: {str(e)}", 500
     return all_data
 
+
 def totals_calculate(df):
     df.loc['Total'] = df.sum(numeric_only=True)
     df_totals = df.groupby('Квартал').sum(numeric_only=True).reset_index()
     df_totals['Квартал'] = df_totals['Квартал'].astype(str)
     return df_totals
+
 
 def grand_calculate(df):
     grand_totals = df.sum(numeric_only=True).to_frame().T

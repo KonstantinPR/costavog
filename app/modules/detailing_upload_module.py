@@ -144,7 +144,7 @@ def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_
     df_merged_dynamic = abc_xyz(merged_df)
 
     if is_upload_yandex and not testing_mode:
-        yandex_disk_handler.upload_to_YandexDisk(file=merged_df, file_name=nameof(df_merged_dynamic),
+        yandex_disk_handler.upload_to_YandexDisk(file=merged_df, file_name=nameof(df_merged_dynamic) + ".xlsx",
                                                  path=app.config['REPORT_DYNAMIC'])
 
     # Return the final DataFrame with ABC and XYZ categories
@@ -230,3 +230,30 @@ def file_names() -> SimpleNamespace:
     n.template_name = "discount_template.xlsx"
     n.df_dynamic_name = "df_dynamic.xlsx"
     return n
+
+
+@timing_decorator
+def mix_detailings(df):
+    """mix_detailings..."""
+    print("""mix_detailings...""")
+    # Fetch DataFrames from Yandex Disk
+    try:
+        df_ALL_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_ALL'])
+        df_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_LONG'])
+
+        # Merge the first DataFrame
+        df = df.merge(df_ALL_LONG[['Артикул поставщика', 'Маржа-себест.']],
+                      on='Артикул поставщика',
+                      how='left',
+                      suffixes=('', '_ALL_LONG'))
+
+        # Merge the second DataFrame
+        df = df.merge(df_LONG[['Артикул поставщика', 'Маржа-себест.']],
+                      on='Артикул поставщика',
+                      how='left',
+                      suffixes=('', '_LONG'))
+
+    except Exception as e:
+        print(f"An error occurred: {e}")  # Log the error instead of printing
+
+    return df  # Return the original df if an error occurs

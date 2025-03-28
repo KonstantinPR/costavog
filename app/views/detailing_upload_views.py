@@ -12,7 +12,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 @app.route('/extract_financial_data_from_pdf', methods=['POST', 'GET'])
 @login_required
 def extract_financial_data_from_pdf():
-    """Extract financial data from uploaded PDF files weekly_implementation_report.pdf. Income - pdf files, outcome -
+    """24.03.2025 is ok in folder for 2024 result. Extract financial data from uploaded PDF files weekly_implementation_
+    report.pdf or Отчет...pdf. Income - pdf files, outcome -
     zip file with 3 files. First - outcome by each week, second  - by each quarter, third - total
     C:\YandexDisk\СЕТЕВЫЕ МАГАЗИНЫ\WILDBERRIES\ВАЖНОЕ\ДЕТАЛИЗАЦИЯ С WB с 11.2018\УПД PDF ДЕТАЛИЗАЦИИ\РАСПАКОВАННЫЕ"""
 
@@ -27,6 +28,7 @@ def extract_financial_data_from_pdf():
     df = pd.DataFrame(all_data)
 
     # Calculate totals for each quarter
+    # df.to_excel("df_middle.xlsx")
     df_totals = implementation_report.totals_calculate(df)
 
     # Calculate grand totals
@@ -72,6 +74,7 @@ def upload_detailing():
     df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=r.is_dynamic,
                                                             testing_mode=r.testing_mode)
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
+    df = detailing_upload_module.mix_detailings(df)
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
 
     df_promo = detailing_upload_module.promofiling(r.promo_file, df[['nmId', 'new_discount']])
