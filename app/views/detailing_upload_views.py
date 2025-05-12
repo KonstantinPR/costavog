@@ -4,7 +4,7 @@ from flask import flash, render_template, request, send_file
 from flask_login import login_required
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
-from app.modules import implementation_report, request_handler
+from app.modules import implementation_report, request_handler, detailing_upload_dict_module
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 
@@ -69,28 +69,41 @@ def upload_detailing():
     if r.is_just_concatenate:
         return send_file(io_output.io_output(pd.concat(df_list)), download_name=f'concat.xlsx', as_attachment=True)
 
-    df, df_dynamic_list = detailing_upload_module.dfs_process(df_list, r=r)
+    df, df_dynamic_list, d = detailing_upload_module.dfs_process(df_list, r=r)
 
     df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=r.is_dynamic,
                                                             testing_mode=r.testing_mode)
+    # print(f"df_merged_dynamic {df_merged_dynamic}")
+    # print(f"df_merged_dynamic {df_merged_dynamic.empty}")
+    df_merged_dynamic_by_prefix = detailing_upload_module.merge_dynamic_by(df_merged_dynamic, by_col='prefix')
+
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
-    df = detailing_upload_module.mix_detailings(df)
+    df = detailing_upload_module.mix_detailings(df, is_compare_detailing=r.is_compare_detailing)
+
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
 
     df_promo = detailing_upload_module.promofiling(r.promo_file, df[['nmId', 'new_discount']])
 
     n = detailing_upload_module.file_names()
 
+    if r.is_chosen_columns:
+        df = df[[col for col in detailing_upload_dict_module.CHOSEN_COLUMNS if col in df]]
+
+    df = pandas_handler.fill_val_by_df(df_left=df, df_right=d.df_all_cards[['vendorCode', 'brand']],
+                                       left_on='Артикул поставщика', right_on='vendorCode', left_col='Бренд',
+                                       right_col='brand'
+                                       )
+
+    df = df.drop_duplicates(subset='Артикул поставщика')
+
     yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=n.detailing_name,
                                              path=app.config['REPORT_DETAILING_UPLOAD'],
-                                             testing_mode=r.testing_mode)
-
-    if r.is_chosen_columns:
-        df = df[[col for col in app.modules.detailing_upload_dict_module.CHOSEN_COLUMNS if col in df]]
+                                             testing_mode=r.testing_mode, is_upload=r.is_save_yadisk)
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)
 
-    dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic}
+    dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic,
+                'df_merged_dynamic_by_prefix': df_merged_dynamic_by_prefix}
 
     # Filter out the empty DataFrames and their names
     filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')

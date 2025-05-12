@@ -3,8 +3,7 @@ import numpy as np
 from app.modules import pandas_handler
 
 
-
-def abc_xyz(merged_df):
+def abc_xyz(merged_df, by_col="Артикул поставщика"):
     # Calculate total margin by summing all 'Маржа-себест.' columns
     margin_columns = [col for col in merged_df.columns if 'Маржа-себест.' in col and "Маржа-себест./ шт" not in col]
     merged_df[margin_columns] = merged_df[margin_columns].applymap(pandas_handler.false_to_null)
@@ -13,7 +12,7 @@ def abc_xyz(merged_df):
     most_total_marging_loss = sum([x for x in merged_df['Total_Margin'] if x < 0]) / 2
 
     # Calculate total margin per article
-    total_margin_per_article = merged_df.groupby('Артикул поставщика')['Total_Margin'].sum().reset_index()
+    total_margin_per_article = merged_df.groupby(by_col)['Total_Margin'].sum().reset_index()
 
     # Sort by total margin in descending order for ABC analysis
     total_margin_per_article = total_margin_per_article.sort_values(by='Total_Margin', ascending=False)
@@ -38,8 +37,8 @@ def abc_xyz(merged_df):
     total_margin_per_article['ABC_Category'] = total_margin_per_article.apply(classify_abc, axis=1)
 
     # Add ABC categories to merged_df
-    merged_df = merged_df.merge(total_margin_per_article[['Артикул поставщика', 'ABC_Category']],
-                                on='Артикул поставщика', how='left')
+    merged_df = merged_df.merge(total_margin_per_article[[by_col, 'ABC_Category']],
+                                on=by_col, how='left')
 
     # XYZ Analysis with Weighted CV
     sales_quantity_columns = [col for col in merged_df.columns if col.startswith('Ч. Продажа шт.')]
@@ -90,7 +89,7 @@ def abc_xyz(merged_df):
     # In case we want to ensure CV has a minimum non-zero value for comparison
     max_cv = merged_df["CV"].max()
     merged_df["CV"].replace(0, max_cv, inplace=True)  # Replace 0 CV with the maximum CV value if necessary
-    first_columns = ["Артикул поставщика", "Total_Margin", "ABC_Category", "CV", "XYZ_Category"]
+    first_columns = [by_col] + ["Total_Margin", "ABC_Category", "CV", "XYZ_Category"]
     merged_df = merged_df.reindex(
         columns=first_columns + [col for col in merged_df.columns if col not in first_columns])
 

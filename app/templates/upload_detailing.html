@@ -102,6 +102,14 @@
                                 Сохранить текущий файл в Архив на Яндекс диске?
                             </label>
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_save_yadisk"
+                                   name="is_save_yadisk"
+                                   id="is_save_yadisk" checked>
+                            <label class="form-check-label" for="is_save_yadisk">
+                                Сохранить файл на Яндекс диске?
+                            </label>
+                        </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_just_concatenate"
@@ -181,7 +189,7 @@
                                    name="is_first_df"
                                    id="is_first_df">
                             <label class="is_first_df" for="is_first_df">
-                                Скидку анализироавть на основе первой детализации?
+                                Скидку анализироавть на основе первых 2х детализаций?
                             </label>
                         </div>
 
@@ -205,10 +213,19 @@
 
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_chosen_columns"
-                                   name="reset_if_null"
+                                   name="is_chosen_columns"
                                    id="is_chosen_columns" checked>
                             <label class="is_chosen_columns" for="is_chosen_columns">
                                 Вывести к показу только важные столбцы (CHOSEN_COLUMNS)?
+                            </label>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_compare_detailing"
+                                   name="is_compare_detailing"
+                                   id="is_compare_detailing" checked>
+                            <label class="is_compare_detailing" for="is_compare_detailing">
+                                Добавить к отчету показатели Маржи общих отчетов LONG и ALL_LONG?
                             </label>
                         </div>
 

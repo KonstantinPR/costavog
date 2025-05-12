@@ -11,7 +11,8 @@ from varname import nameof
 from app.modules.decorators import timing_decorator
 from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, DINAMIC_COLUMNS
 from app.modules.dfs_dynamic_module import abc_xyz
-from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in, dfs_from_outside
+from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in, dfs_from_outside, \
+    concatenate_dfs
 from app.modules.promofiling_module import check_discount
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
@@ -73,7 +74,7 @@ def promofiling(promo_file, df, allowed_delta_percent=5):
 
 
 @timing_decorator
-def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
+def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List, SimpleNamespace]:
     """dfs_process..."""
     print("""dfs_process...""")
 
@@ -91,16 +92,18 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List]:
 
     df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
 
-    df_dynamic_list = choose_dynamic_df_list_in(df_list, is_dynamic=r.is_dynamic)
+    df_dynamic_list_initial = choose_dynamic_df_list_in(df_list, is_dynamic=r.is_dynamic)
+    df_dynamic_list = concatenate_dfs(df_dynamic_list_initial, per=2)
     is_dynamic_possible = r.is_dynamic and len(df_dynamic_list) > 1
     df_completed_dynamic_list = [dfs_forming(x, d, r, incl_col) for x in df_dynamic_list if is_dynamic_possible]
 
-    return df, df_completed_dynamic_list
+    return df, df_completed_dynamic_list, d
 
 
 @timing_decorator
-def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_yandex=True) -> Type[DataFrame]:
-    """dfs_dynamic merges DataFrames on 'Артикул поставщика' and expands dynamic columns."""
+def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_yandex=True,
+                by_col="Артикул поставщика"):
+    """dfs_dynamic merges DataFrames on by_col and expands dynamic columns."""
     print("dfs_dynamic...")
 
     if not is_dynamic:
@@ -109,45 +112,58 @@ def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_
     if not df_dynamic_list:
         return pd.DataFrame
 
+    # Some useful columns to add
+    additional_columns = ['prefix', 'quantityFull']
+
     # List of dynamic columns to analyze
-    columns_dynamic = ["Маржа-себест.", "Ч. Продажа шт.", "quantityFull", "Логистика", "Хранение"]
+    columns_dynamic = ["Маржа-себест.", "Маржа", "Ч. Продажа шт.", "Логистика", "Хранение"]
 
     # Start by initializing the first DataFrame
-    merged_df = df_dynamic_list[1][['Артикул поставщика'] + columns_dynamic].copy()
+    merged_df = df_dynamic_list[0][[by_col] + additional_columns + columns_dynamic].copy()
 
     # Iterate over the remaining DataFrames
-    for i, df in enumerate(df_dynamic_list[2:]):  # Start from 2 to correctly handle suffixes
-        # Merge with the next DataFrame on 'Артикул поставщика'
+    for i, df in enumerate(df_dynamic_list[1:]):  # Start from 1 to correctly handle suffixes
+        # Merge with the next DataFrame on by_col
+        zero = ""
+        if len(str(i)) <= 1: zero = 0
         merged_df = pd.merge(
             merged_df,
-            df[['Артикул поставщика'] + columns_dynamic],
-            on='Артикул поставщика',
+            df[[by_col] + columns_dynamic],
+            on=by_col,
             how='outer',  # Use 'outer' to keep all articles
-            suffixes=('', f'_{i}')
+            suffixes=('', f'_{zero}{i}')
         )
 
-        # Drop duplicate rows based on 'Артикул поставщика' after each merge
-        merged_df = merged_df.drop_duplicates(subset='Артикул поставщика')
+        # Drop duplicate rows based on by_col after each merge
+        merged_df = merged_df.drop_duplicates(subset=by_col)
 
     # Drop duplicate columns if any exist after merging
     merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
 
-    # Extract the sorted column names, excluding 'Артикул поставщика'
-    sorted_columns = ['Артикул поставщика'] + sorted(
-        [col for col in merged_df.columns if col != 'Артикул поставщика']
+    # Extract the sorted column names, excluding by_col
+    merged_df = merged_df.rename(columns={'Маржа': 'Маржа_0'})
+    sorted_columns = [by_col] + sorted(
+        [col for col in merged_df.columns if col != by_col]
     )
 
     # Reorder the DataFrame with the sorted column list
     merged_df = merged_df[sorted_columns]
 
     # Perform ABC and XYZ analysis
-    df_merged_dynamic = abc_xyz(merged_df)
+    df_merged_dynamic = abc_xyz(merged_df, by_col=by_col)
 
     if is_upload_yandex and not testing_mode:
         yandex_disk_handler.upload_to_YandexDisk(file=merged_df, file_name=nameof(df_merged_dynamic) + ".xlsx",
                                                  path=app.config['REPORT_DYNAMIC'])
 
     # Return the final DataFrame with ABC and XYZ categories
+    return df_merged_dynamic
+
+
+def merge_dynamic_by(df_merged_dynamic, by_col='prefix'):
+    if df_merged_dynamic.empty:
+        return pd.DataFrame
+    df_merged_dynamic = df_merged_dynamic.groupby(by_col).sum().reset_index()
     return df_merged_dynamic
 
 
@@ -213,11 +229,15 @@ def get_data_from(request) -> SimpleNamespace:
     r.is_shushary = request.form.get('is_shushary')
     r.is_get_price = request.form.get('is_get_price')
     r.is_get_stock = 'is_get_stock' in request.form
+    r.is_from_yadisk = 'is_from_yadisk' in request.form
+    r.is_archive = 'is_archive' in request.form
+    r.is_save_yadisk = 'is_save_yadisk' in request.form
     r.is_funnel = request.form.get('is_funnel')
     r.k_delta = request.form.get('k_delta', 1)
     r.is_mix_discounts = 'is_mix_discounts' in request.form
     r.reset_if_null = request.form.get('reset_if_null')
     r.is_first_df = request.form.get('is_first_df')
+    r.is_compare_detailing = request.form.get('is_compare_detailing')
     r.k_delta = int(r.k_delta)
 
     return r
@@ -233,9 +253,13 @@ def file_names() -> SimpleNamespace:
 
 
 @timing_decorator
-def mix_detailings(df):
+def mix_detailings(df, is_compare_detailing=""):
     """mix_detailings..."""
     print("""mix_detailings...""")
+
+    if not is_compare_detailing:
+        return df
+
     # Fetch DataFrames from Yandex Disk
     try:
         df_ALL_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_ALL'])
@@ -252,6 +276,7 @@ def mix_detailings(df):
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_LONG'))
+
 
     except Exception as e:
         print(f"An error occurred: {e}")  # Log the error instead of printing

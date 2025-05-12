@@ -16,10 +16,20 @@ PREFIXES_ART_DICT = {
     'MK': 'MIT',
     'TIE': 'TIE',
     'FATA': 'F',
+    'V': 'F',
     'GR': 'GR',
     'LQ3': 'LQ',
     'SOHOCOAT': 'SOHO',
-    'TG': 'TG'
+    'SOHO': 'SOHO',
+    'TG': 'TG',
+    'SEL': 'STL',
+    'KP': 'KR',
+    'MHSL': 'MHS',
+    'MHSE': 'MHS',
+    'MHSB': 'MHS',
+    'MHBB': 'MHS',
+    'BOL': 'BIJ',
+    'OM': 'BIJ',
 }
 STRFORMAT_DEFAULT = '%Y-%m-%d'
 INITIAL_COLUMNS_DICT = {

@@ -19,6 +19,7 @@ from app.modules.dfs_forming_module import get_dynamic_sales, get_storage_cost, 
 
 def dfs_from_outside(r):
     d = SimpleNamespace()
+    d.df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=r.is_from_yadisk)
     d.df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     d.df_delivery = delivery_module.process_delivering(app.config['DELIVERY_PRODUCTS'], period=365)['df_delivery_pivot']
     d.df_price, _ = API_WB.get_wb_price_api(testing_mode=r.testing_mode)
@@ -33,7 +34,30 @@ def dfs_from_outside(r):
 
 def choose_df_in(df_list, is_first_df):
     if is_first_df:
-        return df_list[0]
+        return pd.concat(df_list[:1])
+    return pd.concat(df_list)
+
+
+def concatenate_dfs(df_list, per=2):
+    concatenated_dfs = []
+
+    # Iterate through the list of DataFrames in steps of 2
+    for i in range(0, len(df_list), per):
+        # Check if there's a pair available
+        if i + 1 < len(df_list):
+            # Concatenate the current DataFrame with the next one
+            concatenated_df = pd.concat([df_list[i], df_list[i + 1]])
+            concatenated_dfs.append(concatenated_df)
+        else:
+            # If there's an odd number of DataFrames, the last one is left as is
+            # You might want to handle this case differently depending on your needs
+            concatenated_dfs.append(df_list[i])
+
+    return concatenated_dfs
+
+
+    if is_first_df:
+        return pd.concat(df_list[:1])
     return pd.concat(df_list)
 
 

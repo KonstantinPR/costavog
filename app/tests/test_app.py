@@ -2,6 +2,8 @@ import unittest
 
 from app.modules.pandas_handler import FALSE_LIST, replace_false_values, max_len_dc, df_merge_drop
 from app.modules.dfs_dynamic_module import abc_xyz
+from app.modules.dfs_process_module import concatenate_dfs
+from pandas.testing import assert_frame_equal
 from app.modules.dfs_forming_module import zip_detail_V2
 
 import pandas as pd
@@ -138,8 +140,107 @@ class TestAbcXyz(unittest.TestCase):
                          "XYZ classification is incorrect.")
 
 
+class TestConcatenateDfPairs(unittest.TestCase):
+
+    def test_even_number_of_dataframes(self):
+        """Tests concatenation with an even number of DataFrames."""
+        df1 = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+        df2 = pd.DataFrame({'A': [5, 6], 'B': [7, 8]})
+        df3 = pd.DataFrame({'A': [9, 10], 'B': [11, 12]})
+        df4 = pd.DataFrame({'A': [13, 14], 'B': [15, 16]})
+        df_list = [df1, df2, df3, df4]
+
+        expected_df1_2 = pd.DataFrame({'A': [1, 2, 5, 6], 'B': [3, 4, 7, 8]})
+        expected_df3_4 = pd.DataFrame({'A': [9, 10, 13, 14], 'B': [11, 12, 15, 16]})
+        expected_result = [expected_df1_2, expected_df3_4]
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(len(actual_result), len(expected_result), "Incorrect number of concatenated DataFrames")
+        for i in range(len(expected_result)):
+            assert_frame_equal(actual_result[i], expected_result[i], check_dtype=False)
+
+    def test_odd_number_of_dataframes(self):
+        """Tests concatenation with an odd number of DataFrames."""
+        df1 = pd.DataFrame({'X': ['a', 'b'], 'Y': ['c', 'd']})
+        df2 = pd.DataFrame({'X': ['e', 'f'], 'Y': ['g', 'h']})
+        df3 = pd.DataFrame({'X': ['i', 'j'], 'Y': ['k', 'l']})
+        df_list = [df1, df2, df3]
+
+        expected_df1_2 = pd.DataFrame({'X': ['a', 'b', 'e', 'f'], 'Y': ['c', 'd', 'g', 'h']})
+        expected_df3 = pd.DataFrame({'X': ['i', 'j'], 'Y': ['k', 'l']}) # The last one remains
+        expected_result = [expected_df1_2, expected_df3]
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(len(actual_result), len(expected_result), "Incorrect number of concatenated DataFrames")
+        for i in range(len(expected_result)):
+            assert_frame_equal(actual_result[i], expected_result[i], check_dtype=False)
+
+    def test_empty_list(self):
+        """Tests with an empty list of DataFrames."""
+        df_list = []
+        expected_result = []
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(actual_result, expected_result, "Should return an empty list for an empty input")
+
+    def test_single_dataframe(self):
+        """Tests with a single DataFrame (odd number)."""
+        df1 = pd.DataFrame({'P': [10], 'Q': [20]})
+        df_list = [df1]
+        expected_result = [df1] # Should return the single DataFrame as is
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(len(actual_result), len(expected_result), "Incorrect number of concatenated DataFrames")
+        assert_frame_equal(actual_result[0], expected_result[0], check_dtype=False)
+
+    def test_dataframes_with_different_columns(self):
+        """Tests concatenation with DataFrames having different columns."""
+        df1 = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+        df2 = pd.DataFrame({'C': [5, 6], 'D': [7, 8]})
+        df3 = pd.DataFrame({'A': [9, 10], 'B': [11, 12]})
+        df4 = pd.DataFrame({'E': [13, 14], 'F': [15, 16]})
+        df_list = [df1, df2, df3, df4]
+
+        # pd.concat handles different columns by default (filling with NaN)
+        expected_df1_2 = pd.DataFrame({'A': [1, 2, pd.NA, pd.NA],
+                                       'B': [3, 4, pd.NA, pd.NA],
+                                       'C': [pd.NA, pd.NA, 5, 6],
+                                       'D': [pd.NA, pd.NA, 7, 8]})
+        expected_df3_4 = pd.DataFrame({'A': [9, 10, pd.NA, pd.NA],
+                                       'B': [11, 12, pd.NA, pd.NA],
+                                       'E': [pd.NA, pd.NA, 13, 14],
+                                       'F': [pd.NA, pd.NA, 15, 16]})
+        expected_result = [expected_df1_2, expected_df3_4]
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(len(actual_result), len(expected_result), "Incorrect number of concatenated DataFrames")
+        for i in range(len(expected_result)):
+            assert_frame_equal(actual_result[i], expected_result[i], check_dtype=False, check_column_order=False) # Allow different column order
+
+    def test_dataframes_with_different_indices(self):
+        """Tests concatenation with DataFrames having different indices."""
+        df1 = pd.DataFrame({'A': [1, 2]}, index=['a', 'b'])
+        df2 = pd.DataFrame({'A': [3, 4]}, index=[10, 20])
+        df_list = [df1, df2]
+
+        expected_df1_2 = pd.DataFrame({'A': [1, 2, 3, 4]}, index=['a', 'b', 10, 20])
+        expected_result = [expected_df1_2]
+
+        actual_result = concatenate_dfs(df_list)
+
+        self.assertEqual(len(actual_result), len(expected_result), "Incorrect number of concatenated DataFrames")
+        assert_frame_equal(actual_result[0], expected_result[0], check_dtype=False)
+
 # To run the tests, use the command:
 # pytest test_abc_xyz.py
+
+
+
 
 
 if __name__ == '__main__':

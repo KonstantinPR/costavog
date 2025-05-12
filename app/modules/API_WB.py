@@ -109,7 +109,8 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
         return df, filename
 
     # API endpoint and headers
-    url = 'https://discounts-prices-api.wb.ru/api/v2/list/goods/filter'
+    # url = 'https://discounts-prices-api.wb.ru/api/v2/list/goods/filter'
+    url = 'https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter'
     headers = {
         'accept': 'application/json',
         'Authorization': app.config['WB_API_TOKEN'],
