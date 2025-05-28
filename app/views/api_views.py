@@ -386,13 +386,28 @@ def get_transaction_list_ozon():
                                                       how='outer')
 
     df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
-    income_outcome_columns = ['services_price', 'sale_commission', 'accruals_for_sale']
-    df_by_art_size['income'] = df_by_art_size[income_outcome_columns].sum(axis=1)
+    outcome_columns = ['services_price', 'sale_commission', 'accruals_for_sale']
+    df_by_art_size['income'] = df_by_art_size[outcome_columns].sum(axis=1)
 
     df_by_art = pandas_handler.replace_false_values(df=df_by_art_size, false_list=pandas_handler.NAN_LIST,
                                                     columns='Артикул')
 
-    nonnumerical = ['items_sku', 'FBS OZON SKU ID', 'FBO OZON SKU ID', 'Barcode', ]
+    nonnumerical = [
+        'items_sku',
+        'FBS OZON SKU ID',
+        'FBO OZON SKU ID',
+        'Barcode',
+        'idc',
+        'article',
+        'nm_id',
+        'net_cost',
+        'pure_value',
+        'qt',
+        'LAST_MOD_DATE',
+        'PREV_NETCOST',
+        'company_id',
+        'free_to_sell_amount'
+    ]
     df_by_art = API_OZON.aggregate_by(col_name="clear_sku", df=df_by_art, nonnumerical=nonnumerical)
 
     dfs_dict = {

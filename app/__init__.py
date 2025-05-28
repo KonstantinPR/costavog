@@ -94,6 +94,10 @@ def create_all():
 
 # Main block to configure app when run directly
 app_config_dict = {
+
+    'WB_DELIVERING': 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwNTIwdjEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc2NDAzNDM2NiwiaWQiOiIwMTk3MGNjYi1iNjdiLTdiNjAtOGU5ZC1lMjNjYjdiM2U0MWQiLCJpaWQiOjE2NDgwMDUwLCJvaWQiOjI5MDc3LCJzIjoxMDI0LCJzaWQiOiI1MTdiYzY5NC1kMzc1LTU4MTItOWEyZS0wNzk0ZDU5NmI2YTkiLCJ0IjpmYWxzZSwidWlkIjoxNjQ4MDA1MH0.CfPnsyDzhkpTYIoC3tiVKR_bzqrq1P9kQn7kNw_wv8dSjLPO-BKXMLuki8X0sCobJr34FuUIEXLQKN9kucklnQ',
+    'TELEGRAM_CHAT_ID': '1495209774',
+    'TELEGRAM_BOT_TOKEN': '8000171417:AAH1xX6puEuOftokCqWkCTuChv1wMpmKcSo',
     'APP_NAME': 'TASKER',
     'ALLOWED_EXTENSIONS': ['.jpg', '.jpeg', '.png', '.gif', '.zip'],
     'SQLALCHEMY_DATABASE_URI': uri,

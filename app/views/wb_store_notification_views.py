@@ -6,7 +6,6 @@ from app.modules.wb_telegram_store_notifications_module import process_and_notif
 
 
 @app.route('/wb_store_notification/<region>', methods=['GET', 'POST'])
-@login_required
 def wb_store_notification(region):
     # Now 'region' will contain 'south', 'center', etc.
     # You can define different inputs based on the region
