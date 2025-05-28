@@ -21,3 +21,9 @@ def get_third_part(x):
     except IndexError:
         # If the string doesn't contain the delimiter '-', return None or any other value as needed
         return ''
+
+
+def empty_for_not_found(string, prefixes):
+    if string not in prefixes:
+        return 'OTHER'
+    return string

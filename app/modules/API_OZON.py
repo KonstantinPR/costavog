@@ -328,23 +328,40 @@ def get_transaction_list_ozon_api(client_id='', api_key='', date_from='', date_t
         return {}  # Return an empty dictionary or handle it as needed
 
 
-def flatten_nested_columns(df, columns, isNormalize=True):
-    """Flatten specified nested columns in a DataFrame."""
-    for column in columns:
-        if column in df.columns:
-            # Explode the column if it contains lists
-            df_exploded = df.explode(column)
-            # Normalize the exploded column
-            nested_df = pd.json_normalize(df_exploded[column])
-            # Rename columns with the column name as a prefix
-            nested_df.columns = [f'{column}_{col}' for col in nested_df.columns]
-            # Join the normalized DataFrame back to the original
-            df = df_exploded.join(nested_df)
-            # Drop the original nested column
-            df = df.drop(columns=[column], errors='ignore')
+# Define the function (assuming it's already implemented)
+def flatten_columns(df, columns):
+    df['count_sku'] = df['items'].apply(lambda x: len(x) if isinstance(x, list) else 0)
 
-    # Drop duplicates based on 'operation_id'
-    df = df.drop_duplicates(subset='operation_id')
+    for col in columns:
+        if col in df.columns:
+            # Explode the column to have one dict per row
+            df = df.explode(col)
+
+            # Normalize the dictionaries in the column
+            normalized_df = pd.json_normalize(df[col])
+
+            # Rename columns to be more descriptive
+            normalized_df.columns = [f"{col}_{subcol}" for subcol in normalized_df.columns]
+
+            # Concatenate the normalized columns back to main DataFrame
+            df = pd.concat([df.reset_index(drop=True), normalized_df], axis=1)
+
+            # Drop the original nested column
+            df = df.drop(columns=[col])
+
+    df['services_price'] = df['services_price'].apply(lambda x: 0 if x in pandas_handler.FALSE_LIST_2 else x)
+    # Adjust 'services_price' based on 'count_sku' and 'services_price' value
+    df["services_price"] = df.apply(
+        lambda row: row["services_price"] / row["count_sku"] if row["count_sku"] != 0 else row["services_price"],
+        axis=1
+    )
+
+    # Apply the duplicate handling logic
+    df['dup_count'] = df.groupby('operation_id').cumcount()
+    df.loc[df['dup_count'] > 0, ['sale_commission', 'accruals_for_sale', 'amount']] = 0
+    df = df.drop(columns=['dup_count'])
+
+    df.loc[(df['sale_commission'] == 0) & (df['accruals_for_sale'] == 0) & (df['services_price'] != 0), 'amount'] = 0
 
     return df
 
@@ -354,11 +371,20 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
     # Replace missing or empty values in the col_name column
     if not is_group:
         return df
-    if not col_name in df.columns:
+    if col_name not in df.columns:
         print(f"no {col_name} in df of aggregate_by")
         return df
     # df[col_name].replace(replace_with, 'Empty Article', inplace=True)
     df[col_name].fillna(replace_with, inplace=True)
+
+    # List of columns to be aggregated with mean
+    avrgList_mean = [
+        'Текущая цена с учетом скидки, ₽',
+        'Цена до скидки (перечеркнутая цена), ₽',
+        'Цена Premium, ₽',
+        'Рыночная цена, ₽',
+        'Актуальная ссылка на рыночную цену'
+    ]
 
     # Create an empty dictionary to hold aggregation logic
     agg_funcs = {}
@@ -368,15 +394,23 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
         if column == col_name:
             continue  # Skip the grouping column itself
 
-        # Check if the column is numeric, if so, we'll sum it
+        # Check if the column is numeric, if so, we'll sum or mean it
         if pd.api.types.is_numeric_dtype(df[column]) and column not in nonnumerical:
-            agg_funcs[column] = 'sum'
+            if column in avrgList_mean:
+                agg_funcs[column] = 'mean'
+            else:
+                agg_funcs[column] = 'sum'
         else:
             # Otherwise, we'll take the first value (suitable for strings or non-numeric data)
             agg_funcs[column] = 'first'
 
     # Group by the specified column and apply the aggregation functions
+
     df_grouped = df.groupby(col_name).agg(agg_funcs).reset_index()
+
+    # Round the mean columns to 2 decimal places
+    existing_mean_cols = [col for col in avrgList_mean if col in df_grouped.columns]
+    df_grouped.update(df_grouped.loc[:, existing_mean_cols].round(0))
 
     return df_grouped
 
@@ -461,15 +495,13 @@ def item_code_without_sizes(df, art_col_name='Артикул', in_to_col='clear_
         if pd.isna(art_code):
             return art_code  # Return NaN as is
         # Check if the art_code starts with 'j', 'ia', or 'ts'
-        if art_code.startswith(('j', 'ia', 'ts')):
+        if art_code.startswith(('J', 'IA', 'TS')):
             # Find the last occurrence of "-"
             last_dash_index = art_code.rfind('-')
-            if last_dash_index != -1:
-                return art_code[:last_dash_index]
-        # For other cases, remove the last '-' if it exists
-        last_dash_index = art_code.rfind('-')
-        if last_dash_index != -1:
             return art_code[:last_dash_index]
+        # For other cases, remove the last '-' if it exists
+        if art_code[-1] == "-":
+            return art_code[:-1]
         return art_code  # Return the original art_code if no changes are needed
 
     # Apply the function to the specified column and store the results in a new column

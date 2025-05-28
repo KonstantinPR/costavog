@@ -113,12 +113,30 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAnalitics">
                         <a class="dropdown-item" href="{{url_for('sales_funnel_analyses')}}">Аналитика воронки
                             продаж</a>
-                        <a class="dropdown-item" href="{{url_for('get_wb_sales_realization')}}">Продажи по реализации</a>
+                        <a class="dropdown-item" href="{{url_for('get_wb_sales_realization')}}">Продажи по
+                            реализации</a>
                         <a class="dropdown-item" href="{{url_for('upload_detailing')}}">Аналитика детализаций</a>
                         <a class="dropdown-item" href="{{url_for('get_deliveries_goods')}}">Отправленные товары</a>
                         <a class="dropdown-item" href="{{url_for('parser_rating_wb')}}">Рейтинг товаров</a>
+                        <!-- Dropdown menu -->
+
                         <a class="dropdown-item" href="{{url_for('demand_calculation_with_image_catalog')}}">Рассчитать
                             потребность</a>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLinkNotificationsStore"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Уведомления
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkNotificationsStore">
+                        <!-- For "any" region, pass a specific string like 'any' or 'all' -->
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='any') }}">Склады WB
+                            любые</a>
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='center') }}">Склады
+                            WB Центр</a>
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='south') }}">Склады WB
+                            ЮГ</a>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -276,6 +294,13 @@
 
 
 
+
+
+
+
+
+
+
 </script>
 <script>
     const toggleButton = document.getElementById('theme-toggle');
@@ -295,6 +320,13 @@
             localStorage.setItem('theme', 'dark');
         }
     });
+
+
+
+
+
+
+
 
 
 

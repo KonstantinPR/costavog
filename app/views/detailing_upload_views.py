@@ -5,6 +5,7 @@ from flask_login import login_required
 import pandas as pd
 from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
 from app.modules import implementation_report, request_handler, detailing_upload_dict_module
+from app.modules.decorators import timing_decorator
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
 
@@ -46,6 +47,7 @@ def extract_financial_data_from_pdf():
 
 @app.route('/upload_detailing', methods=['POST', 'GET'])
 @login_required
+@timing_decorator
 def upload_detailing():
     """Analize detailing of excel that can be downloaded in wb portal in zips, you can put any number zips."""
 
@@ -59,7 +61,7 @@ def upload_detailing():
         return render_template('upload_detailing.html')
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
-                                                    path_or_config=app.config['REPORT_DETAILING_UPLOAD'],
+                                                    path_or_config=app.config[r.path_to_save],
                                                     testing_mode=r.testing_mode)
 
     uploaded_file = detailing_upload_module.process_uploaded_files(r.uploaded_files)
@@ -71,11 +73,10 @@ def upload_detailing():
 
     df, df_dynamic_list, d = detailing_upload_module.dfs_process(df_list, r=r)
 
-    df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, is_dynamic=r.is_dynamic,
-                                                            testing_mode=r.testing_mode)
+    df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, r=r, by_col="Артикул поставщика", )
     # print(f"df_merged_dynamic {df_merged_dynamic}")
     # print(f"df_merged_dynamic {df_merged_dynamic.empty}")
-    df_merged_dynamic_by_prefix = detailing_upload_module.merge_dynamic_by(df_merged_dynamic, by_col='prefix')
+    df_merged_dynamic_by_prefix = detailing_upload_module.merge_dynamic_by(df_merged_dynamic, by_col='prefix', r=r)
 
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
     df = detailing_upload_module.mix_detailings(df, is_compare_detailing=r.is_compare_detailing)
@@ -87,7 +88,8 @@ def upload_detailing():
     n = detailing_upload_module.file_names()
 
     if r.is_chosen_columns:
-        df = df[[col for col in detailing_upload_dict_module.CHOSEN_COLUMNS if col in df]]
+        columns = detailing_upload_dict_module.CHOSEN_COLUMNS + detailing_upload_dict_module.CHOSEN_COLUMNS
+        df = df[[col for col in columns if col in df]]
 
     df = pandas_handler.fill_val_by_df(df_left=df, df_right=d.df_all_cards[['vendorCode', 'brand']],
                                        left_on='Артикул поставщика', right_on='vendorCode', left_col='Бренд',
@@ -97,7 +99,7 @@ def upload_detailing():
     df = df.drop_duplicates(subset='Артикул поставщика')
 
     yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=n.detailing_name,
-                                             path=app.config['REPORT_DETAILING_UPLOAD'],
+                                             path=app.config[r.path_to_save],
                                              testing_mode=r.testing_mode, is_upload=r.is_save_yadisk)
 
     df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)

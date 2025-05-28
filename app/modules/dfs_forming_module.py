@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from app.modules import pandas_handler, API_WB
-from app.modules.pattern_splitting_module import starts_with_prefix, get_second_part, get_third_part
+from app.modules.pattern_splitting_module import starts_with_prefix, get_second_part, get_third_part, \
+    empty_for_not_found
 from app.modules.zip_detail_V2_module import adding_missing_columns, add_col, pivot_expanse, days_between
 from app.modules.detailing_upload_dict_module import DEFAULT_AMOUNT_DAYS, PREFIXES_ART_DICT, MATERIAL_DICT
 
@@ -327,6 +328,8 @@ def pattern_splitting(df, prefixes_dict):
     prefixes = list(prefixes_dict.keys())
     df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
     df['prefix'] = df['prefix'].apply(lambda x: prefixes_dict.get(x, x))
+
+    # df['prefix'] = df['prefix'].apply(lambda x: empty_for_not_found(x, prefixes))
     df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
     df['material'] = df['Артикул поставщика'].apply(get_third_part)
     df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]

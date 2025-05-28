@@ -6,6 +6,7 @@ MATERIAL_DICT = {
     'MUTON': 'MUTON',
 }
 PREFIXES_ART_DICT = {
+    'SHK': 'SH',
     'SH': 'SH',
     'SK': 'SK',
     'SN': 'SK',
@@ -19,17 +20,24 @@ PREFIXES_ART_DICT = {
     'V': 'F',
     'GR': 'GR',
     'LQ3': 'LQ',
+    'LQ': 'LQ',
+    'SOHO-FRNT': 'SOHO-FRNT',
     'SOHOCOAT': 'SOHO',
     'SOHO': 'SOHO',
     'TG': 'TG',
     'SEL': 'STL',
     'KP': 'KR',
+    'MHSORT': 'MHSORT',
     'MHSL': 'MHS',
     'MHSE': 'MHS',
     'MHSB': 'MHS',
     'MHBB': 'MHS',
+    'MHS': 'MHS',
     'BOL': 'BIJ',
     'OM': 'BIJ',
+    'Y00': 'Y00',
+    'PRS': 'PRS',
+    'IANCO': 'IANCO',
 }
 STRFORMAT_DEFAULT = '%Y-%m-%d'
 INITIAL_COLUMNS_DICT = {
@@ -175,4 +183,14 @@ CHOSEN_COLUMNS = [
     "CV_discount",
     "ABC_CV_discount",
 
+]
+
+DELIVERY_COLUMNS = [
+    "Total_delivery_qt",
+    "Number_delivers",
+    "First_date_delivery",
+    "Last_date_delivery",
+    "Days_between_First_Now",
+    "First_delivery_qt",
+    "Last_delivery_qt"
 ]

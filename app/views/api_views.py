@@ -299,6 +299,7 @@ def get_transaction_list_ozon():
     is_count = 'is_count' in request.form
     is_merge_cards = 'is_merge_cards' in request.form
     is_merge_stock = 'is_merge_stock' in request.form
+    is_merge_net_cost = 'is_merge_net_cost' in request.form
     is_merge_price = 'is_merge_price' in request.form
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
@@ -330,11 +331,11 @@ def get_transaction_list_ozon():
     operations = json_response.get('operations', [])
 
     # Normalize the main operations to a DataFrame
-    df_general = pd.json_normalize(operations)
+    df_general_start = pd.json_normalize(operations)
 
     # Call the normalization function
     nested_columns = ['items', 'services']  # Add more nested column names as needed
-    df_general = API_OZON.flatten_nested_columns(df_general, columns=nested_columns, isNormalize=True)
+    df_general = API_OZON.flatten_columns(df_general_start, columns=nested_columns)
 
     # Fill empty items_sku with "Other"
     df_general['items_sku'].fillna("Other", inplace=True)
@@ -365,6 +366,8 @@ def get_transaction_list_ozon():
     df_by_art_size = pandas_handler.fill_empty_val_by(nm_columns="FBO OZON SKU ID", df=df_by_art_size,
                                                       col_name_with_missing='items_sku')
 
+    df_by_art_size = API_OZON.item_code_without_sizes(df_by_art_size, art_col_name='Артикул', in_to_col='clear_sku')
+
     if is_merge_stock:
         path = app.config['YANDEX_STOCK_OZON']
         stock_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
@@ -374,21 +377,30 @@ def get_transaction_list_ozon():
                                                       right_on="sku",
                                                       how='outer')
 
+    if is_merge_net_cost:
+        path = app.config['NET_COST_PRODUCTS']
+        net_cost, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
+        df_by_art_size = pandas_handler.df_merge_drop(left_df=df_by_art_size, right_df=net_cost,
+                                                      left_on="clear_sku",
+                                                      right_on="article",
+                                                      how='outer')
+
     df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
-    income_outcome_columns = ['services_price', 'amount', 'sale_commission', 'accruals_for_sale']
+    income_outcome_columns = ['services_price', 'sale_commission', 'accruals_for_sale']
     df_by_art_size['income'] = df_by_art_size[income_outcome_columns].sum(axis=1)
 
     df_by_art = pandas_handler.replace_false_values(df=df_by_art_size, false_list=pandas_handler.NAN_LIST,
                                                     columns='Артикул')
 
-    df_by_art = API_OZON.item_code_without_sizes(df_by_art, art_col_name='Артикул', in_to_col='clear_sku')
     nonnumerical = ['items_sku', 'FBS OZON SKU ID', 'FBO OZON SKU ID', 'Barcode', ]
     df_by_art = API_OZON.aggregate_by(col_name="clear_sku", df=df_by_art, nonnumerical=nonnumerical)
 
-    dfs_dict = {'df_general': df_general,
-                'df_art_size': df_by_art_size,
-                'df_art': df_by_art,
-                }
+    dfs_dict = {
+        'df_general_start': df_general_start,
+        'df_general': df_general,
+        'df_art_size': df_by_art_size,
+        'df_art': df_by_art,
+    }
 
     # Filter out the empty DataFrames and their names
     filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')

@@ -76,7 +76,10 @@ def set_config():
                 'WB_API_TOKEN': company.wb_api_token,
                 'WB_API_TOKEN2': company.wb_api_token2,
                 'OZON_CLIENT_ID': company.ozon_client_id,
-                'OZON_API_TOKEN': company.ozon_api_token
+                'OZON_API_TOKEN': company.ozon_api_token,
+                'TELEGRAM_BOT_TOKEN': company.telegram_token,
+                'TELEGRAM_CHAT_ID': company.telegram_chat_id,
+                'WB_DELIVERING': company.wb_delivery_token,
             })
         else:
             app.logger.warning(f"Company not found for user ID: {current_user.id}")
@@ -107,10 +110,10 @@ app_config_dict = {
     'YANDEX_KEY_STORAGE_COST': '/TASKER/KEY_FILES/STORAGE_COST',
     'YANDEX_KEY_STOCK_WB': '/TASKER/KEY_FILES/STOCK_WB',
     'YANDEX_KEY_PRICES': '/TASKER/KEY_FILES/PRICES',
-    'REPORT_DETAILING_UPLOAD': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD',
     'REPORT_SALES_REALIZATION': '/TASKER/KEY_FILES/REPORT_SALES_REALIZATION',
-    'REPORT_DETAILING_UPLOAD_ALL': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD/ALL_LONG',
+    'REPORT_DETAILING_UPLOAD': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD',
     'REPORT_DETAILING_UPLOAD_LONG': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD/LONG',
+    'REPORT_DETAILING_UPLOAD_ALL': '/TASKER/KEY_FILES/REPORT_DETAILING_UPLOAD/ALL_LONG',
     'REPORT_DYNAMIC': '/TASKER/KEY_FILES/DYNAMIC_REVENUE',
     'REPORT_WB_ZIPS': '/TASKER/KEY_FILES/ZIPS',
     'YANDEX_ALL_CARDS_WB': "/TASKER/KEY_FILES/ALL_CARDS_WB",
@@ -182,5 +185,6 @@ from app.views import (
     warehouse_views,
     api_views,
     sales_funnel_views,
-    deliveries_goods_views
+    deliveries_goods_views,
+    wb_store_notification_views,
 )

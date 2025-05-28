@@ -61,7 +61,7 @@ def zips_to_list(zip_downloaded):
 @timing_decorator
 def promofiling(promo_file, df, allowed_delta_percent=5):
     if not promo_file:
-        return pd.DataFrame
+        return pd.DataFrame()
 
     # Read the promo file into a DataFrame
 
@@ -101,16 +101,18 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List, Simple
 
 
 @timing_decorator
-def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_yandex=True,
-                by_col="Артикул поставщика"):
+def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артикул поставщика"):
     """dfs_dynamic merges DataFrames on by_col and expands dynamic columns."""
     print("dfs_dynamic...")
 
-    if not is_dynamic:
-        return pd.DataFrame
+    if r is None:
+        r = SimpleNamespace(is_dynamic=False, is_upload_yandex=False, testing_mode=False)
+
+    if not r.is_dynamic:
+        return pd.DataFrame()
 
     if not df_dynamic_list:
-        return pd.DataFrame
+        return pd.DataFrame()
 
     # Some useful columns to add
     additional_columns = ['prefix', 'quantityFull']
@@ -118,53 +120,93 @@ def dfs_dynamic(df_dynamic_list, is_dynamic=True, testing_mode=False, is_upload_
     # List of dynamic columns to analyze
     columns_dynamic = ["Маржа-себест.", "Маржа", "Ч. Продажа шт.", "Логистика", "Хранение"]
 
-    # Start by initializing the first DataFrame
+    # Initialize the merged DataFrame with the first DataFrame in the list
     merged_df = df_dynamic_list[0][[by_col] + additional_columns + columns_dynamic].copy()
 
-    # Iterate over the remaining DataFrames
-    for i, df in enumerate(df_dynamic_list[1:]):  # Start from 1 to correctly handle suffixes
-        # Merge with the next DataFrame on by_col
-        zero = ""
-        if len(str(i)) <= 1: zero = 0
+    # Iterate over remaining DataFrames and merge
+    for i, df in enumerate(df_dynamic_list[1:]):
+        # Determine suffix
+        zero = '0' if len(str(i)) <= 1 else ''
+        suffix = f'_{zero}{i}'
+
+        # Merge on by_col with suffixes for columns
         merged_df = pd.merge(
             merged_df,
             df[[by_col] + columns_dynamic],
             on=by_col,
-            how='outer',  # Use 'outer' to keep all articles
-            suffixes=('', f'_{zero}{i}')
+            how='outer',  # keep all articles
+            suffixes=('', suffix)
         )
 
         # Drop duplicate rows based on by_col after each merge
         merged_df = merged_df.drop_duplicates(subset=by_col)
 
-    # Drop duplicate columns if any exist after merging
+    # Remove duplicated columns if any
     merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
 
-    # Extract the sorted column names, excluding by_col
-    merged_df = merged_df.rename(columns={'Маржа': 'Маржа_0'})
-    sorted_columns = [by_col] + sorted(
-        [col for col in merged_df.columns if col != by_col]
-    )
+    # Rename 'Маржа' to 'Маржа_0' if it exists
+    if 'Маржа' in merged_df.columns:
+        merged_df = merged_df.rename(columns={'Маржа': 'Маржа_0'})
 
-    # Reorder the DataFrame with the sorted column list
+    # Prepare sorted columns: by_col first, then others sorted
+    sorted_columns = [by_col] + sorted([col for col in merged_df.columns if col != by_col])
+
+    # Reorder columns
     merged_df = merged_df[sorted_columns]
 
     # Perform ABC and XYZ analysis
     df_merged_dynamic = abc_xyz(merged_df, by_col=by_col)
 
-    if is_upload_yandex and not testing_mode:
-        yandex_disk_handler.upload_to_YandexDisk(file=merged_df, file_name=nameof(df_merged_dynamic) + ".xlsx",
-                                                 path=app.config['REPORT_DYNAMIC'])
+    # Upload to Yandex Disk if needed
+    dynamic_path = r.path_to_save & "/" & 'DYNAMIC_PER_ART'
+    if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
+        yandex_disk_handler.upload_to_YandexDisk(
+            file=df_merged_dynamic,
+            file_name=nameof(df_merged_dynamic) + ".xlsx",
+            path=app.config[dynamic_path]
+        )
 
-    # Return the final DataFrame with ABC and XYZ categories
     return df_merged_dynamic
 
 
-def merge_dynamic_by(df_merged_dynamic, by_col='prefix'):
+def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = None):
+    # Ensure r is a SimpleNamespace with default attributes if not provided
+    if r is None:
+        r = SimpleNamespace(is_dynamic=False, is_upload_yandex=False, testing_mode=False)
+
+    # Return empty DataFrame if not dynamic
+    if not r.is_dynamic:
+        return pd.DataFrame()
+
+    # Return empty DataFrame if input DataFrame is empty
     if df_merged_dynamic.empty:
-        return pd.DataFrame
-    df_merged_dynamic = df_merged_dynamic.groupby(by_col).sum().reset_index()
-    return df_merged_dynamic
+        return pd.DataFrame()
+
+    # List of columns to average instead of sum
+    columns_to_mean = ['CV']
+
+    # Initialize aggregation dict: sum for all except specified columns
+    agg_dict = {col: 'sum' for col in df_merged_dynamic.columns if
+                col not in [by_col, "Артикул поставщика", "ABC_Category", "XYZ_Category"]}
+
+    # Override specific columns to 'mean'
+    for col in columns_to_mean:
+        if col in agg_dict:
+            agg_dict[col] = 'mean'
+
+    # Perform groupby with aggregation
+    df_merged_dynamic_by_col = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
+
+    # Upload to Yandex Disk if conditions are met
+    dynamic_path = r.path_to_save & "/" & 'DYNAMIC_PER_PRE'
+    if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
+        yandex_disk_handler.upload_to_YandexDisk(
+            file=df_merged_dynamic_by_col,
+            file_name=nameof(df_merged_dynamic_by_col) + ".xlsx",
+            path=app.config[dynamic_path]
+        )
+
+    return df_merged_dynamic_by_col
 
 
 @timing_decorator
@@ -220,6 +262,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.files_period_days = int(len(r.uploaded_files)) * 7
     r.testing_mode = request.form.get('is_testing_mode')
     r.promo_file = request.files.get("promo_file")
+    r.path_to_save = request.form.get("path_to_save")
     r.is_just_concatenate = 'is_just_concatenate' in request.form
     r.is_discount_template = 'is_discount_template' in request.form
     r.is_dynamic = 'is_dynamic' in request.form
@@ -232,6 +275,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.is_from_yadisk = 'is_from_yadisk' in request.form
     r.is_archive = 'is_archive' in request.form
     r.is_save_yadisk = 'is_save_yadisk' in request.form
+    r.is_upload_yandex = 'is_upload_yandex' in request.form
     r.is_funnel = request.form.get('is_funnel')
     r.k_delta = request.form.get('k_delta', 1)
     r.is_mix_discounts = 'is_mix_discounts' in request.form

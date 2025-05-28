@@ -338,8 +338,9 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
             }
         }
 
-        response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',
-                                 data=json.dumps(data), headers=headers)
+        # response = requests.post('https://suppliers-api.wildberries.ru/content/v2/get/cards/list',data=json.dumps(data), headers=headers)
+        response = requests.post('https://content-api.wildberries.ru/content/v2/get/cards/list', data=json.dumps(data),
+                                 headers=headers)
 
         if response.status_code != 200:
             logging.warning(f"Error in API request: {response.status_code}")
@@ -460,7 +461,7 @@ def get_wb_sales_funnel_api(request,
     date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
     date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    print(f"gettin sales funnel by date_from {date_from}, date_end {date_end}")
+    print(f"getting sales funnel by date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
 
@@ -484,7 +485,7 @@ def get_wb_sales_funnel_api(request,
     return df, file_name
 
 
-def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
+def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=4000):
     df = pd.DataFrame()
     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
     cards_count = chunk_size

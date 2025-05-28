@@ -38,6 +38,24 @@
                                    type="number"
                                    name="k_delta">
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <select
+                                    id="path_to_save"
+                                    class="form-control form-control-lg"
+                                    name="path_to_save"
+                                    aria-label="Выберите путь для сохранения">
+                                <option value="REPORT_DETAILING_UPLOAD" selected>
+                                    REPORT_DETAILING_UPLOAD
+                                </option>
+                                <option value="REPORT_DETAILING_UPLOAD_LONG">
+                                    REPORT_DETAILING_UPLOAD_LONG
+                                </option>
+                                <option value="REPORT_DETAILING_UPLOAD_ALL">
+                                    REPORT_DETAILING_UPLOAD_ALL
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">Куда сохраняем файл?</small>
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_get_stock" name="is_get_stock"
                                    id="is_get_stock" checked>
@@ -108,6 +126,14 @@
                                    id="is_save_yadisk" checked>
                             <label class="form-check-label" for="is_save_yadisk">
                                 Сохранить файл на Яндекс диске?
+                            </label>
+                        </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
+                            <input class="form-check-input" type="checkbox" value="is_upload_yandex"
+                                   name="is_upload_yandex"
+                                   id="is_upload_yandex" checked>
+                            <label class="form-check-label" for="is_upload_yandex">
+                                Сохранить динамику на Яндекс диске?
                             </label>
                         </div>
 

@@ -55,7 +55,6 @@ def concatenate_dfs(df_list, per=2):
 
     return concatenated_dfs
 
-
     if is_first_df:
         return pd.concat(df_list[:1])
     return pd.concat(df_list)

@@ -48,14 +48,17 @@ def abc_xyz(merged_df, by_col="Артикул поставщика"):
     weights = weights / weights.sum()  # Normalize weights
 
     def calculate_weighted_cv(row):
-        quantities = row[sales_quantity_columns].replace('', 0).astype(
-            float).values  # Convert empty strings to NaN and then to float
-        if np.all(pd.isna(quantities)):  # Handle all NaN case
-            return float('inf')  # Handle division by zero if all quantities are NaN
-        weighted_mean = np.average(quantities, weights=weights, returned=False)
-        weighted_std_dev = np.sqrt(np.average((quantities - weighted_mean) ** 2, weights=weights))
+        quantities = row[sales_quantity_columns].replace('', 0).astype(float).values
+        if np.sum(quantities) == 0:
+            return 0
+        if np.all(pd.isna(quantities)):
+            return 0
+        weighted_mean = np.average(quantities, weights=weights)
+        # Handling cases where weighted_mean is zero
         if weighted_mean == 0:
-            return float('inf')  # Handle division by zero if all quantities are zero
+            return float('inf')
+        weighted_variance = np.average((quantities - weighted_mean) ** 2, weights=weights)
+        weighted_std_dev = np.sqrt(weighted_variance)
         return weighted_std_dev / weighted_mean
 
     merged_df['CV'] = merged_df.apply(calculate_weighted_cv, axis=1)
