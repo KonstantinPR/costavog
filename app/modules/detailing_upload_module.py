@@ -158,12 +158,11 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
     df_merged_dynamic = abc_xyz(merged_df, by_col=by_col)
 
     # Upload to Yandex Disk if needed
-    dynamic_path = r.path_to_save & "/" & 'DYNAMIC_PER_ART'
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
         yandex_disk_handler.upload_to_YandexDisk(
             file=df_merged_dynamic,
             file_name=nameof(df_merged_dynamic) + ".xlsx",
-            path=app.config[dynamic_path]
+            path=app.config[r.path_to_save] + "/DYNAMIC_PER_ART"
         )
 
     return df_merged_dynamic

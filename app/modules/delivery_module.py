@@ -116,8 +116,9 @@ def _df_pivot_process(df, is_pivot=True):
 
     # Ensure 'Дата' is in datetime format
     df['Дата'] = pd.to_datetime(df['Дата'], format='%d.%m.%Y', errors='coerce')
-
+    print(df['Дата'].head())
     # Pivot the DataFrame
+    df.to_excel("df_delivery_conc.xlsx")
     result = (
         df.groupby('Артикул')
         .agg(
