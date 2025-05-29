@@ -70,6 +70,7 @@
 
 
 
+
     </style>
 
 
@@ -131,11 +132,13 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkNotificationsStore">
                         <!-- For "any" region, pass a specific string like 'any' or 'all' -->
-                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='any') }}">Склады WB
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification_19734628', region='any') }}">Склады WB
                             любые</a>
-                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='center') }}">Склады
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification_19734628', region='center') }}">Склады
                             WB Центр</a>
-                        <a class="dropdown-item" href="{{ url_for('wb_store_notification', region='south') }}">Склады WB
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification_19734628', region='center') }}">Склады
+                            WB Волга</a>
+                        <a class="dropdown-item" href="{{ url_for('wb_store_notification_19734628', region='south') }}">Склады WB
                             ЮГ</a>
                     </ul>
                 </li>
@@ -301,6 +304,7 @@
 
 
 
+
 </script>
 <script>
     const toggleButton = document.getElementById('theme-toggle');
@@ -320,6 +324,7 @@
             localStorage.setItem('theme', 'dark');
         }
     });
+
 
 
 

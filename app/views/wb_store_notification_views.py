@@ -5,8 +5,8 @@ from app.modules.wb_telegram_store_notifications_module import process_and_notif
     get_wildberries_acceptance_coefficients
 
 
-@app.route('/wb_store_notification/<region>', methods=['GET', 'POST'])
-def wb_store_notification(region):
+@app.route('/wb_store_notification_19734628/<region>', methods=['GET', 'POST'])
+def wb_store_notification_19734628(region):
     # Now 'region' will contain 'south', 'center', etc.
     # You can define different inputs based on the region
 
@@ -16,6 +16,8 @@ def wb_store_notification(region):
         selected_stores_input = "Рязань (Тюшевское)  Подольск 4  Сабурово  Владимир"
     elif region == 'south':
         selected_stores_input = "Волгоград  Невинномысск  Краснодар"
+    elif region == 'volga':
+        selected_stores_input = "Самара (Новосемейкино)  Сарапул  Казань"
     else:
         # default or error handling
         selected_stores_input = "Рязань (Тюшевское)  Подольск 4  Сабурово  Владимир  Волгоград  Невинномысск  Краснодар  Екатеринбург - Перспективный 12  Котовск  Тула"
