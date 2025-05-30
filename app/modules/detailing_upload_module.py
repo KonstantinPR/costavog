@@ -197,12 +197,11 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
     df_merged_dynamic_by_col = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
 
     # Upload to Yandex Disk if conditions are met
-    dynamic_path = r.path_to_save & "/" & 'DYNAMIC_PER_PRE'
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
         yandex_disk_handler.upload_to_YandexDisk(
             file=df_merged_dynamic_by_col,
             file_name=nameof(df_merged_dynamic_by_col) + ".xlsx",
-            path=app.config[dynamic_path]
+            path=app.config[r.path_to_save] + '/DYNAMIC_PER_PRE'
         )
 
     return df_merged_dynamic_by_col

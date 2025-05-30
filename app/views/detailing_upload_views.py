@@ -73,9 +73,8 @@ def upload_detailing():
 
     df, df_dynamic_list, d = detailing_upload_module.dfs_process(df_list, r=r)
 
-    df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, r=r, by_col="Артикул поставщика", )
-    # print(f"df_merged_dynamic {df_merged_dynamic}")
-    # print(f"df_merged_dynamic {df_merged_dynamic.empty}")
+    df_merged_dynamic = detailing_upload_module.dfs_dynamic(df_dynamic_list, r=r, by_col="Артикул поставщика")
+
     df_merged_dynamic_by_prefix = detailing_upload_module.merge_dynamic_by(df_merged_dynamic, by_col='prefix', r=r)
 
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
@@ -88,7 +87,7 @@ def upload_detailing():
     n = detailing_upload_module.file_names()
 
     if r.is_chosen_columns:
-        columns = detailing_upload_dict_module.CHOSEN_COLUMNS + detailing_upload_dict_module.CHOSEN_COLUMNS
+        columns = detailing_upload_dict_module.CHOSEN_COLUMNS + detailing_upload_dict_module.DELIVERY_COLUMNS
         df = df[[col for col in columns if col in df]]
 
     df = pandas_handler.fill_val_by_df(df_left=df, df_right=d.df_all_cards[['vendorCode', 'brand']],
