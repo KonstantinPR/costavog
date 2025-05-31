@@ -29,95 +29,109 @@
 
     <div class="row g-5">
 
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-left">
-            <h4 class="mb-3"></h4>
-            <form class="needs-validation" action="{{url_for('profile')}}" method="post" novalidate>
-                <div class="row">
-                    <div class="col-xs-12  col-sm-12 col-lg-12 p-2">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-left">
+        <h4 class="mb-3"></h4>
+        <form class="needs-validation" action="{{url_for('profile')}}" method="post" novalidate>
+            <div class="row">
+                <div class="col-xs-12  col-sm-12 col-lg-12 p-2">
 
+                    <!-- Role selection -->
 
-                        <label for="roles">Доступ пользователя:</label>
-                        <select id="roles" name="roles" class="form-select" aria-label="Доступ пользователя">
-                            {% for role in roles %}
+                    <select id="roles" name="roles" class="form-select" aria-label="Доступ пользователя">
+                        {% for role in roles %}
                             {% if role == current_role %}
-                            {% set is_selected = 'selected' %}
+                                {% set is_selected = 'selected' %}
                             {% else %}
-                            {% set is_selected = '' %}
+                                {% set is_selected = '' %}
                             {% endif %}
                             <option {{is_selected}} value="{{role}}">{{role}}</option>
-                            {% endfor %}
-                        </select>
-                        <br>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Доступ пользователя</small>
+                    <br>
 
+                    <!-- Initial sum -->
+                    <input autofocus type="number" class="form-control form-control-lg" id="initial_sum"
+                           name="initial_sum"
+                           placeholder="Баланс на начало периода, взятый из прошлой системы учета"
+                           value="{{initial_sum}}"
+                           required>
+                    <small class="form-text text-muted">Баланс на начало периода, взятый из прошлой системы учета</small>
+                    <br>
 
-                        <label for="initial_sum">Баланс на начало периода, взятый из прошлой системы учета:</label>
-                        <input autofocus type="number" class="form-control form-control-lg" id="initial_sum"
-                               name="initial_sum"
-                               placeholder="Баланс на начало периода, взятый из прошлой системы учета"
-                               value="{{initial_sum}}"
-                               required>
-                        <br>
-                        <label for="initial_file_path">Путь до файла excel по учету финансов с архивными
-                            проводками:</label>
-                        <input autofocus class="form-control form-control-lg" id="initial_file_path"
-                               name="initial_file_path"
-                               placeholder="Initial Excel file with old transactions" value="{{initial_file_path}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Valid first name is required.
-                        </div>
-                        <br>
-                        <label for="initial_file_path">Yandex token (токен от Яндекс.Диска)</label>
-                        <input autofocus class="form-control form-control-lg" id="yandex_disk_token"
-                               name="yandex_disk_token"
-                               placeholder="Yandex token (токен от Яндекс.Диска)" value="{{yandex_disk_token}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Введите токен яндекс.диска чтобы им пользоваться
-                        </div>
-                        <br>
-                        <label for="initial_file_path">WB api token</label>
-                        <input autofocus class="form-control form-control-lg" id="wb_api_token"
-                               name="wb_api_token"
-                               placeholder="API KEY WB (токен ключ от WB)" value="{{wb_api_token}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Введите api ключ от wildberries, чтобы использовать его статистику
-                        </div>
-                        <br>
-                        <label for="initial_file_path">WB api token2 (новый токен)</label>
-                        <input autofocus class="form-control form-control-lg" id="wb_api_token2"
-                               name="wb_api_token2"
-                               placeholder="API KEY WB (токен ключ от WB)" value="{{wb_api_token2}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Введите api ключ от wildberries, чтобы использовать его статистику
-                        </div>
-                        <br>
-                        <label for="initial_file_path">ozon_client_id</label>
-                        <input autofocus class="form-control form-control-lg" id="ozon_client_id"
-                               name="ozon_client_id"
-                               placeholder="ozon_client_id" value="{{ozon_client_id}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Введите ozon_client_id
-                        </div>
-                        <br>
-                        <label for="initial_file_path">OZON api token</label>
-                        <input autofocus class="form-control form-control-lg" id="ozon_api_token"
-                               name="ozon_api_token"
-                               placeholder="API KEY OZON (токен ключ от OZON)" value="{{ozon_api_token}}"
-                               required>
-                        <div class="invalid-feedback">
-                            Введите api ключ от OZON
-                        </div>
-                        <div class="my-4"></div>
-                        <button class="w-100 btn btn-primary btn-lg" type="submit">Изменить</button>
+                    <!-- Initial file path -->
+                    <input autofocus class="form-control form-control-lg" id="initial_file_path"
+                           name="initial_file_path"
+                           placeholder="Initial Excel file with old transactions" value="{{initial_file_path}}"
+                           required>
+                    <small class="form-text text-muted">Путь до файла excel по учету финансов с архивными проводками</small>
+                    <div class="invalid-feedback">
+                        Valid first name is required.
                     </div>
+                    <br>
+
+                    <!-- Yandex token -->
+                    <input autofocus class="form-control form-control-lg" id="yandex_disk_token"
+                           name="yandex_disk_token"
+                           placeholder="Yandex token (токен от Яндекс.Диска)" value="{{yandex_disk_token}}"
+                           required>
+                    <small class="form-text text-muted">Yandex token (токен от Яндекс.Диска)</small>
+                    <div class="invalid-feedback">
+                        Введите токен яндекс.диска чтобы им пользоваться
+                    </div>
+                    <br>
+
+                    <!-- WB api token -->
+                    <input autofocus class="form-control form-control-lg" id="wb_api_token"
+                           name="wb_api_token"
+                           placeholder="API KEY WB (токен ключ от WB)" value="{{wb_api_token}}"
+                           required>
+                    <small class="form-text text-muted">API ключ WB (токен ключ от WB)</small>
+                    <div class="invalid-feedback">
+                        Введите api ключ от wildberries, чтобы использовать его статистику
+                    </div>
+                    <br>
+
+                    <!-- WB api token2 -->
+                    <input autofocus class="form-control form-control-lg" id="wb_api_token2"
+                           name="wb_api_token2"
+                           placeholder="API KEY WB (токен ключ от WB)" value="{{wb_api_token2}}"
+                           required>
+                    <small class="form-text text-muted">API ключ WB (токен ключ от WB) — новый токен</small>
+                    <div class="invalid-feedback">
+                        Введите api ключ от wildberries, чтобы использовать его статистику
+                    </div>
+                    <br>
+
+                    <!-- ozon_client_id -->
+                    <input autofocus class="form-control form-control-lg" id="ozon_client_id"
+                           name="ozon_client_id"
+                           placeholder="ozon_client_id" value="{{ozon_client_id}}"
+                           required>
+                    <small class="form-text text-muted">ozon_client_id</small>
+                    <div class="invalid-feedback">
+                        Введите ozon_client_id
+                    </div>
+                    <br>
+
+                    <!-- OZON api token -->
+                    <input autofocus class="form-control form-control-lg" id="ozon_api_token"
+                           name="ozon_api_token"
+                           placeholder="API KEY OZON (токен ключ от OZON)" value="{{ozon_api_token}}"
+                           required>
+                    <small class="form-text text-muted">OZON api token</small>
+                    <div class="invalid-feedback">
+                        Введите api ключ от OZON
+                    </div>
+                    <div class="my-4"></div>
+
+                    <!-- Submit button -->
+                    <button class="w-100 btn btn-primary btn-lg" type="submit">Изменить</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+</div>
 
     {% endif %}
 

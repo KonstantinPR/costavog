@@ -199,8 +199,9 @@ def get_stock_ozon_api(client_id, api_key, limit=1000, offset=0, warehouse_type=
     return df
 
 
-def get_price_ozon_api(limit=1000, last_id='', client_id='', api_key='', normalize=True):
-    url = "https://api-seller.ozon.ru/v4/product/info/prices"
+def get_price_ozon_api(limit=1000, cursor='', filter_offer_id=None, filter_product_id=None, client_id='', api_key='',
+                       normalize=True):
+    url = "https://api-seller.ozon.ru/v5/product/info/prices"
     headers = {
         'Client-Id': client_id,
         'Api-Key': api_key,
@@ -211,13 +212,13 @@ def get_price_ozon_api(limit=1000, last_id='', client_id='', api_key='', normali
 
     while True:
         data = {
+            "cursor": cursor,
             "filter": {
-                "offer_id": [],  # Populate based on your needs
-                "product_id": [],  # Populate based on your needs
+                "offer_id": filter_offer_id if filter_offer_id is not None else [],
+                "product_id": filter_product_id if filter_product_id is not None else [],
                 "visibility": "ALL"
             },
-            "last_id": last_id,  # Use the last_id for pagination
-            "limit": int(limit)
+            "limit": limit
         }
 
         response = requests.post(url, headers=headers, json=data)
@@ -225,33 +226,28 @@ def get_price_ozon_api(limit=1000, last_id='', client_id='', api_key='', normali
         response.raise_for_status()
 
         result = response.json()
-        items = result.get('result', {}).get('items', [])
-
-        if not items:  # If no items are returned, break the loop
-            break
-
+        items = result.get('items', [])
         prices.extend(items)
 
-        # Update last_id for the next request
-        last_id = result.get('result', {}).get('last_id', None)  # Get the last_id from the response
-        print(f"last_id {last_id}")
-        if last_id is None:  # If no more items are available, break the loop
-            break
+        # Get the next cursor for pagination
+        cursor = result.get('cursor', None)
+        print(f"cursor {cursor}")
 
-        # if len(prices) > 3000:
-        #     break  # You can return prices or break here if 3000+ items are reached
+        if not cursor:
+            break  # No more pages
+
+        # Optional: add a condition to stop after certain number of items
 
     # Convert list of prices to DataFrame
     df = pd.DataFrame(prices)
 
-    # Normalize any nested fields like 'price', 'commissions', 'price_index'
+    # Normalize nested fields if needed
     if normalize:
         df = pd.json_normalize(
             prices,
             sep='_',
             record_prefix='',
-            meta=['product_id', 'offer_id'],  # Keys to keep as top-level columns
-            record_path=None,  # You can specify different paths if deeply nested
+            meta=['offer_id', 'product_id'],  # keep these top-level
             errors='ignore'
         )
 

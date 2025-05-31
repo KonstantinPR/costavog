@@ -8,7 +8,7 @@ import datetime
 import time
 import io
 import requests
-from app.modules import API_WB, API_OZON
+from app.modules import API_WB, API_OZON, OZON_module
 from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
 from varname import nameof
 
@@ -168,7 +168,7 @@ def get_cards_ozon():
 
     path = app.config['YANDEX_CARDS_OZON']
 
-    if is_from_yadisk:
+    if is_from_yadisk or testing_mode:
         df, _ = yandex_disk_handler.download_from_YandexDisk(path)
     else:
         report_code = API_OZON.create_cards_report_ozon(client_id, api_key)
@@ -186,11 +186,13 @@ def get_cards_ozon():
         logging.error("Failed to generate the DataFrame from the report content.")
         return "Failed to generate the report or the report is empty. Please try again.", 500
 
-    columns = ['FBO OZON SKU ID', 'Barcode']
+    # columns = ['FBO OZON SKU ID', 'Barcode']
+    columns = ['SKU', 'Barcode']
+
     df = pandas_handler.to_str(df, columns=columns)
     df = pandas_handler.replace_false_values(df, columns=columns)
 
-    df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, col_name_with_missing='FBO OZON SKU ID')
+    df = pandas_handler.fill_empty_val_by(nm_columns='Ozon Product ID', df=df, col_name_with_missing='SKU')
 
     # Upload to YandexDisk if requested
     yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=f"cards_ozon.xlsx", path=path,
@@ -213,7 +215,6 @@ def get_stock_ozon():
 
     client_id = app.config['OZON_CLIENT_ID']
     api_key = app.config['OZON_API_TOKEN']
-
     limit = int(request.form.get('limit', 1000))
     offset = int(request.form.get('offset', 0))
     warehouse_type = request.form.get('warehouse_type', 'ALL')
@@ -301,6 +302,8 @@ def get_transaction_list_ozon():
     is_merge_stock = 'is_merge_stock' in request.form
     is_merge_net_cost = 'is_merge_net_cost' in request.form
     is_merge_price = 'is_merge_price' in request.form
+    is_update_prices = 'is_update_prices' in request.form
+    is_merge_wb_report = 'is_merge_wb_report' in request.form
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
 
@@ -355,66 +358,45 @@ def get_transaction_list_ozon():
 
     df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
 
-    if is_merge_cards:
-        path = app.config['YANDEX_CARDS_OZON']
-        card_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path, testing_mode=testing_mode)
-        df_by_art_size = pandas_handler.df_merge_drop(left_df=card_df, right_df=df_by_art_size,
-                                                      left_on="FBO OZON SKU ID",
-                                                      right_on="items_sku",
-                                                      how='outer')
+    df_by_art_size = OZON_module.merge_cards(df=df_by_art_size, testing=testing_mode, is_merge_cards=is_merge_cards)
 
-    df_by_art_size = pandas_handler.fill_empty_val_by(nm_columns="FBO OZON SKU ID", df=df_by_art_size,
+    df_by_art_size = pandas_handler.fill_empty_val_by(nm_columns="SKU", df=df_by_art_size,
                                                       col_name_with_missing='items_sku')
 
     df_by_art_size = API_OZON.item_code_without_sizes(df_by_art_size, art_col_name='Артикул', in_to_col='clear_sku')
 
-    if is_merge_stock:
-        path = app.config['YANDEX_STOCK_OZON']
-        stock_df, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
-        stock_df = API_OZON.aggregate_by('sku', df=stock_df)
-        df_by_art_size = pandas_handler.df_merge_drop(left_df=df_by_art_size, right_df=stock_df,
-                                                      left_on="items_sku",
-                                                      right_on="sku",
-                                                      how='outer')
-
-    if is_merge_net_cost:
-        path = app.config['NET_COST_PRODUCTS']
-        net_cost, _ = yandex_disk_handler.download_from_YandexDisk(path=path)
-        df_by_art_size = pandas_handler.df_merge_drop(left_df=df_by_art_size, right_df=net_cost,
-                                                      left_on="clear_sku",
-                                                      right_on="article",
-                                                      how='outer')
+    df_by_art_size = OZON_module.merge_stock(df=df_by_art_size, testing=testing_mode, is_merge_cards=is_merge_stock)
+    df_by_art_size = OZON_module.merge_net_cost(df=df_by_art_size, testing=testing_mode,
+                                                is_merge_net_cost=is_merge_net_cost)
 
     df_by_art_size = df_by_art_size.drop_duplicates(subset="items_sku")
     outcome_columns = ['services_price', 'sale_commission', 'accruals_for_sale']
     df_by_art_size['income'] = df_by_art_size[outcome_columns].sum(axis=1)
 
-    df_by_art = pandas_handler.replace_false_values(df=df_by_art_size, false_list=pandas_handler.NAN_LIST,
-                                                    columns='Артикул')
+    df_by_art_size = pandas_handler.replace_false_values(df=df_by_art_size, false_list=pandas_handler.NAN_LIST,
+                                                         columns='Артикул')
 
-    nonnumerical = [
-        'items_sku',
-        'FBS OZON SKU ID',
-        'FBO OZON SKU ID',
-        'Barcode',
-        'idc',
-        'article',
-        'nm_id',
-        'net_cost',
-        'pure_value',
-        'qt',
-        'LAST_MOD_DATE',
-        'PREV_NETCOST',
-        'company_id',
-        'free_to_sell_amount'
-    ]
-    df_by_art = API_OZON.aggregate_by(col_name="clear_sku", df=df_by_art, nonnumerical=nonnumerical)
+    df_by_art = API_OZON.aggregate_by(col_name="clear_sku", df=df_by_art_size, nonnumerical=OZON_module.nonnumerical)
+
+    df_by_art = OZON_module.add_sales_and_margin(df=df_by_art)
+
+    df_by_art = OZON_module.get_wb_info(df_by_art, is_merge_wb_report=is_merge_wb_report)
+
+    df_by_art = OZON_module.analiz_wb_price(df_by_art, is_merge_wb_report=is_merge_wb_report)
+
+    df_for_update_prices = OZON_module.prepare_update(df_by_art, df_by_art_size, is_update_prices=is_update_prices)
+    df_for_update_prices = OZON_module.ruled_prices(df_for_update_prices, is_update_prices=is_update_prices)
+    df_updated_prices = OZON_module.update_ozon_prices(df_for_update_prices, is_update_prices=is_update_prices,
+                                                      testing_mode=testing_mode)
+
+    df_by_art = OZON_module.rearrange_columns(df_by_art, OZON_module.preferred_columns)
 
     dfs_dict = {
         'df_general_start': df_general_start,
         'df_general': df_general,
         'df_art_size': df_by_art_size,
         'df_art': df_by_art,
+        'df_updated_prices': df_updated_prices,
     }
 
     # Filter out the empty DataFrames and their names
