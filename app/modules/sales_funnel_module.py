@@ -27,7 +27,7 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     n_net: how hard price/netcost affect the discount changing
     """
 
-    default_price = 500
+    default_price = 2000
 
     if not discount_columns:
         discount_columns = DISCOUNT_COLUMNS
@@ -70,7 +70,15 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     # print(f'Types in buyoutsCount: {all_types_buyoutsCount}')
 
     df = df.reset_index(drop=True)
-    df[price] = df[price].apply(lambda x: default_price if x in pandas_handler.FALSE_LIST_2 else x)
+
+    if 'net_cost' in df.columns:
+        def check_price(main_price, net_cost):
+            if main_price in pandas_handler.FALSE_LIST_2:
+                main_price = round(net_cost ** 0.6 * 100)
+            return main_price
+
+        df['price'] = [check_price(main_price, net_cost) for main_price, net_cost in zip(df['price'], df['net_cost'])]
+    df['price'] = df['price'].apply(lambda x: default_price if x in pandas_handler.FALSE_LIST_2 else x)
 
     # function
     # df['k1'] = df[buyoutsCount] ** p_buy / df[quantityFull] ** p_qt

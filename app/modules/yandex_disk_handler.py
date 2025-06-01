@@ -83,7 +83,7 @@ def upload_to_YandexDisk(request: flask.Request = None,
         return None
 
     if not isinstance(file, BytesIO):
-        file = io_output.io_output(file)
+        file = io_output.io_output(df=file)
 
     if not file:
         print(f"file {file} can't be uploaded to yadisk by path {path}")

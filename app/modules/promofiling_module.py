@@ -2,8 +2,7 @@ import numpy as np
 from app.modules import pandas_handler
 
 
-
-def check_discount(df, allowed_delta_percent=5):
+def check_discount(df, allowed_delta_percent):
     # plan_price_name = "Плановая цена для акции"
     current_price_name = "Текущая розничная цена"
     new_discount_col = "new_discount"
@@ -30,7 +29,7 @@ def check_discount(df, allowed_delta_percent=5):
     df["price_difference"] = df["action_price"] / df["discount_price"]
 
     # Apply the discount condition
-    allowed_ratio = 1 - allowed_delta_percent / 100
+    allowed_ratio = 1 - int(allowed_delta_percent) / 100
 
     # Store original promo discounts
     df["Загружаемая скидка для участия в акции_old"] = df[promo_discount_name]

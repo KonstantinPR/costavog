@@ -5,12 +5,10 @@ from app import app
 from flask import render_template, request, redirect, send_file, flash, url_for
 from flask_login import login_required, current_user
 import datetime
-import time
 import io
-import requests
 from app.modules import API_WB, API_OZON, OZON_module
-from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler
-from varname import nameof
+from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler, OZON_actions_module
+from datetime import date, timedelta
 
 
 @app.route('/get_sales_funnel_wb', methods=['POST', 'GET'])
@@ -292,8 +290,16 @@ def get_realization_report_ozon():
 @app.route('/get_transaction_list_ozon', methods=['POST', 'GET'])
 @login_required
 def get_transaction_list_ozon():
+    """Analiz information from OZON and update the price via API. Relay on WB detailing than in TASKER detailing folder
+    yandex.Disk."""
     if request.method != 'POST':
-        return render_template('upload_get_transaction_list_ozon.html', doc_string=get_transaction_list_ozon.__doc__)
+        today = date.today()
+        last_month = today - timedelta(days=30)  # Approximate one month ago
+        # Format dates as YYYY-MM-DD
+        today_str = today.strftime('%Y-%m-%d')
+        last_month_str = last_month.strftime('%Y-%m-%d')
+        return render_template('upload_get_transaction_list_ozon.html', doc_string=get_transaction_list_ozon.__doc__,
+                               date_from=last_month_str, date_to=today_str)
 
     # Check if the checkbox is selected
     group_by_items = 'group_by_items' in request.form
@@ -345,8 +351,7 @@ def get_transaction_list_ozon():
 
     # Count positive and negative accruals for each items_sku
     in_col = ["accruals_for_sale"]
-    df_by_art_size = API_OZON.count_items_by(df_general, col="items_sku", in_col=in_col, negative=True,
-                                             is_count=is_count)
+    df_by_art_size = API_OZON.count_items_by(df_general, in_col=in_col, is_count=is_count)
 
     nonnumerical = ["operation_id"]
     df_by_art_size = API_OZON.aggregate_by(col_name="items_sku", df=df_by_art_size, nonnumerical=nonnumerical,
@@ -386,8 +391,10 @@ def get_transaction_list_ozon():
 
     df_for_update_prices = OZON_module.prepare_update(df_by_art, df_by_art_size, is_update_prices=is_update_prices)
     df_for_update_prices = OZON_module.ruled_prices(df_for_update_prices, is_update_prices=is_update_prices)
-    df_updated_prices = OZON_module.update_ozon_prices(df_for_update_prices, is_update_prices=is_update_prices,
-                                                      testing_mode=testing_mode)
+
+    df_actions = OZON_actions_module.api_get_actions()
+    df_for_update_prices = OZON_module.update_ozon_prices(df_for_update_prices, is_update_prices=is_update_prices,
+                                                          testing_mode=testing_mode)
 
     df_by_art = OZON_module.rearrange_columns(df_by_art, OZON_module.preferred_columns)
 
@@ -396,7 +403,7 @@ def get_transaction_list_ozon():
         'df_general': df_general,
         'df_art_size': df_by_art_size,
         'df_art': df_by_art,
-        'df_updated_prices': df_updated_prices,
+        'df_updated_prices': df_for_update_prices,
     }
 
     # Filter out the empty DataFrames and their names

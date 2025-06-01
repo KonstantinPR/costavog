@@ -1,11 +1,10 @@
-from pandas import DataFrame
 from app import app
 import zipfile
 import pandas as pd
 import io
 from app.modules import pandas_handler, yandex_disk_handler
 from types import SimpleNamespace
-from typing import List, Type
+from typing import List
 from varname import nameof
 
 from app.modules.decorators import timing_decorator
@@ -59,7 +58,7 @@ def zips_to_list(zip_downloaded):
 
 
 @timing_decorator
-def promofiling(promo_file, df, allowed_delta_percent=5):
+def promofiling(promo_file, df, allowed_delta_percent=7):
     if not promo_file:
         return pd.DataFrame()
 
@@ -276,6 +275,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.is_upload_yandex = 'is_upload_yandex' in request.form
     r.is_funnel = request.form.get('is_funnel')
     r.k_delta = request.form.get('k_delta', 1)
+    r.k_action_diff = request.form.get('k_action_diff', 7)
     r.is_mix_discounts = 'is_mix_discounts' in request.form
     r.reset_if_null = request.form.get('reset_if_null')
     r.is_first_df = request.form.get('is_first_df')

@@ -24,19 +24,29 @@
                             <small class="form-text text-muted">Файл с акцией вайлдберриз в формате excel (для проверки
                                 адекватности величины скидки)</small>
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                        <div class="col-xs-4 col-sm-4 col-lg-4 p-2">
                             <input placeholder="На сколько частей делим период" id="days_by"
                                    class="form-control form-control-lg"
                                    value=1
                                    type="number"
                                    name="days_by">
+                            <small class="form-text text-muted">Делим отчет на периоды</small>
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
-                            <input placeholder="k_delta изменений k_discount, по умолчанию степень = 3" id="k_delta"
+                        <div class="col-xs-4 col-sm-4 col-lg-4 p-2">
+                            <input placeholder="k_delta изменений k_discount, по умолчанию степень = 5" id="k_delta"
                                    class="form-control form-control-lg"
                                    value=5
                                    type="number"
                                    name="k_delta">
+                            <small class="form-text text-muted">Сила изменений = 5</small>
+                        </div>
+                        <div class="col-xs-4 col-sm-4 col-lg-4 p-2">
+                            <input placeholder="Позволительный процент разницы цены для акции = 7" id="k_action_diff"
+                                   class="form-control form-control-lg"
+                                   value=7
+                                   type="number"
+                                   name="k_action_diff">
+                            <small class="form-text text-muted">% позволение скидки = 7</small>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
                             <select

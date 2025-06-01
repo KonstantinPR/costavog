@@ -1,46 +1,41 @@
-from random import randrange
 import pandas as pd
+import numpy as np
+from app.modules import pandas_handler
 
-# Example data with various item codes
+# Sample data based on your dataset
 data = {
-    'Артикул': [
-        'TIE-12345-XYZ',  # starts with 'J', has hyphens
-        'TIEIA-67890-ABC-',  # starts with 'IA', has hyphens
-        'TS-54321',  # starts with 'TS', no second hyphen
-        'Product-9876',  # no special prefix, one hyphen
-        'Item-123',  # no special prefix, one hyphen
-        'J-98765',  # starts with 'J', no second hyphen
-        'OtherItem',  # no hyphen
-        None,  # NaN value
-        'TS-11111-XYZ-Extra',  # starts with 'TS', multiple hyphens
-        'RandomCode'  # no hyphen
-    ],
-    'Income': [1000, 2000, 1500, 3000, 2500, 1800, 2200, 2400, 1600, 2000]
+    'SKU': [317401841, 317433721],
+    'product_id': [121005263, 121005265],
+    'offer_id': ['J09-24', 'J09-25'],
+    'requested_price': [1826, 1826],
+    'auto_action_enabled': ['DISABLED', 'DISABLED'],
+    'auto_add_to_ozon_actions_list_enabled': ['DISABLED', 'DISABLED'],
+    'currency_code': ['RUB', 'RUB'],
+    'min_price': [np.nan, 0],  # missing or empty
+    'min_price_for_auto_actions_enabled': [np.nan, ''],
+    'net_cost': [np.nan, ''],
+    'old_price': [np.nan, ''],
+    'price': ['1826', '1826'],  # as strings
+    'price_strategy_enabled': ['DISABLED', 'DISABLED'],
+    'status': ['Failed', 'Failed'],
+    'response_message': [
+        '400 Client Error: Bad Request for url: https://api-seller.ozon.ru/v1/product/import/prices',
+        '400 Client Error: Bad Request for url: https://api-seller.ozon.ru/v1/product/import/prices'
+    ]
 }
 
-df_income = pd.DataFrame(data)
+# Create DataFrame
+df = pd.DataFrame(data)
+
+col_name_with_missing = ['new_ozon_price', 'price', 'net_cost', 'old_price', 'min_price']
+for col in col_name_with_missing:
+    if col not in df.columns:
+        df[col] = 0
+    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
 
-def item_code_without_sizes(df, art_col_name='Артикул', in_to_col='clear_sku'):
-    def process_art_code(art_code):
-        if pd.isna(art_code):
-            return art_code  # Return NaN as is
-        # Check if the art_code starts with 'j', 'ia', or 'ts'
-        if art_code.startswith(('J', 'IA', 'TS')):
-            # Find the last occurrence of "-"
-            last_dash_index = art_code.rfind('-')
-            return art_code[:last_dash_index]
-        # For other cases, remove the last '-' if it exists
-        if art_code[-1] == "-":
-            return art_code[:-1]
-        return art_code  # Return the original art_code if no changes are needed
-
-    # Apply the function to the specified column and store the results in a new column
-    df[in_to_col] = df[art_col_name].apply(process_art_code)
-    return df
 
 
-# Applying the function
-result_df = item_code_without_sizes(df_income, art_col_name='Артикул', in_to_col='clear_sku')
-
-print(result_df)
+# Print the resulting DataFrame
+df.to_excel("dftest.xlsx")
+print(df)

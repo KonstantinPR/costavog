@@ -10,6 +10,7 @@ from app.modules.detailing_upload_module import zips_to_list
 
 FALSE_LIST = [False, 0, '0', 0.0, 'Nan', 'NAN', 'nan', 'NaN', None, 'None', '', 'Null', ' ', '\t', '\n']
 FALSE_LIST_2 = [False, 0, '0', 0.0, 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n']
+FALSE_LIST_3 = [False, 0, '0', 0.0, 'nan', 'Nan', 'NAN', None, '', 'Null', ' ', '\t', '\n', np.nan]
 false_to_null = lambda x: 0 if pd.isna(x) or x in FALSE_LIST_2 else x
 
 NAN_LIST = [np.nan, 'Nan', 'NaN', 'NAN', None, '', 'Null', ' ', '\t', '\n']

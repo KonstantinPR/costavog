@@ -133,6 +133,8 @@ app_config_dict = {
     'YANDEX_STOCK_OZON': '/TASKER/OZON/STOCK',
     'YANDEX_PRICE_OZON': '/TASKER/OZON/PRICE',
     'YANDEX_TRANSACTION_OZON': '/TASKER/OZON/TRANSACTION',
+    'YANDEX_UPDATED_PRICES': '/TASKER/OZON/df_updated_prices',
+    'YANDEX_CANDIDATES_FOR_ACTION': '/TASKER/OZON/df_candidates_for_action',
 
     'CHARACTERS_PRODUCTS': "/TASKER/CHARACTERS",
     'COLORS': "/TASKER/CHARACTERS/COLORS",
@@ -190,4 +192,5 @@ from app.views import (
     sales_funnel_views,
     deliveries_goods_views,
     wb_store_notification_views,
+    api_actions_OZON_views,
 )

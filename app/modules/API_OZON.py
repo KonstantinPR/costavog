@@ -1,24 +1,23 @@
 import logging
 import math
-import time
-
 from flask import flash
-
 import app.modules.request_handler
 from app import app
 import requests
 import pandas as pd
-import numpy as np
 import time
-import json
-from datetime import datetime, timedelta
-from app.modules import io_output
-from app.modules import yandex_disk_handler, pandas_handler, request_handler
+from datetime import datetime
+from app.modules import yandex_disk_handler, pandas_handler
 import datetime
 
 
-def create_cards_report_ozon(client_id, api_key, language="DEFAULT", offer_ids=[], search="", skus=[],
+def create_cards_report_ozon(client_id, api_key, language="DEFAULT", offer_ids=None, search="", skus=None,
                              visibility="ALL"):
+    if offer_ids is None:
+        offer_ids = []
+    if skus is None:
+        skus = []
+    # rest of your function...
     url = "https://api-seller.ozon.ru/v1/report/products/create"
 
     headers = {
@@ -310,18 +309,22 @@ def get_transaction_list_ozon_api(client_id='', api_key='', date_from='', date_t
         "page_size": page_size
     }
 
+    response = None
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()  # Check for HTTP errors
         json_response = response.json().get('result', {})
         return json_response
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")  # Print the HTTP error
-        print(f"Response content: {response.content.decode('utf-8')}")  # Print the response content
-        return {}  # Return an empty dictionary or handle it as needed
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            print(f"Response content: {response.content.decode('utf-8')}")
+        else:
+            print("No response received.")
+        return {}
     except Exception as err:
-        print(f"Other error occurred: {err}")  # Print other errors
-        return {}  # Return an empty dictionary or handle it as needed
+        print(f"Other error occurred: {err}")
+        return {}
 
 
 # Define the function (assuming it's already implemented)
@@ -362,8 +365,10 @@ def flatten_columns(df, columns):
     return df
 
 
-def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_group=True,
+def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical=None, is_group=True,
                  replace_with='') -> pd.DataFrame:
+    if nonnumerical is None:
+        nonnumerical = []
     # Replace missing or empty values in the col_name column
     if not is_group:
         return df
@@ -374,7 +379,7 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
     df[col_name].fillna(replace_with, inplace=True)
 
     # List of columns to be aggregated with mean
-    avrgList_mean = [
+    avrg_list_mean = [
         'Текущая цена с учетом скидки, ₽',
         'Цена до скидки (перечеркнутая цена), ₽',
         'Цена Premium, ₽',
@@ -392,7 +397,7 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
 
         # Check if the column is numeric, if so, we'll sum or mean it
         if pd.api.types.is_numeric_dtype(df[column]) and column not in nonnumerical:
-            if column in avrgList_mean:
+            if column in avrg_list_mean:
                 agg_funcs[column] = 'mean'
             else:
                 agg_funcs[column] = 'sum'
@@ -405,13 +410,13 @@ def aggregate_by(col_name: str, df: pd.DataFrame, nonnumerical: list = [], is_gr
     df_grouped = df.groupby(col_name).agg(agg_funcs).reset_index()
 
     # Round the mean columns to 2 decimal places
-    existing_mean_cols = [col for col in avrgList_mean if col in df_grouped.columns]
+    existing_mean_cols = [col for col in avrg_list_mean if col in df_grouped.columns]
     df_grouped.update(df_grouped.loc[:, existing_mean_cols].round(0))
 
     return df_grouped
 
 
-def count_items_by(df, col="items_sku", in_col=None, negative=True, is_count=True):
+def count_items_by(df, in_col=None, is_count=True):
     """
     Counts positive and negative values in 'in_col' for each unique 'col' (e.g., items_sku).
     Positive values are assigned to 'delivery_to' and negative values are assigned to 'delivery_from'.
