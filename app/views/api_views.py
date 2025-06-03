@@ -307,11 +307,19 @@ def get_transaction_list_ozon():
     is_merge_cards = 'is_merge_cards' in request.form
     is_merge_stock = 'is_merge_stock' in request.form
     is_merge_net_cost = 'is_merge_net_cost' in request.form
-    is_merge_price = 'is_merge_price' in request.form
     is_update_prices = 'is_update_prices' in request.form
+    is_info_actions = 'is_info_actions' in request.form
+    is_out_actions = 'is_update_prices' in request.form
+    is_in_actions = 'is_update_prices' in request.form
     is_merge_wb_report = 'is_merge_wb_report' in request.form
     is_to_yadisk = 'is_to_yadisk' in request.form
     testing_mode = 'testing_mode' in request.form
+
+    headers = {
+        'Client-Id': app.config['OZON_CLIENT_ID'],
+        'Api-Key': app.config['OZON_API_TOKEN'],
+        'Content-Type': 'application/json'
+    }
 
     client_id = app.config['OZON_CLIENT_ID']
     api_key = app.config['OZON_API_TOKEN']
@@ -392,9 +400,22 @@ def get_transaction_list_ozon():
     df_for_update_prices = OZON_module.prepare_update(df_by_art, df_by_art_size, is_update_prices=is_update_prices)
     df_for_update_prices = OZON_module.ruled_prices(df_for_update_prices, is_update_prices=is_update_prices)
 
-    df_actions = OZON_actions_module.api_get_actions()
-    df_for_update_prices = OZON_module.update_ozon_prices(df_for_update_prices, is_update_prices=is_update_prices,
+    df_for_update_prices = OZON_module.update_ozon_prices(df_for_update_prices, headers=headers,
+                                                          is_update_prices=is_update_prices,
                                                           testing_mode=testing_mode)
+
+    df_actions = OZON_actions_module.api_get_actions(testing_mode=testing_mode, is_info_actions=is_info_actions)
+    df_actions_candidates = OZON_actions_module.get_candidates_for_action(df_actions=df_actions,
+                                                                          headers=headers,
+                                                                          testing_mode=testing_mode)
+    df_actions_merged = df_for_update_prices.merge(df_actions_candidates, left_on='product_id', right_on='id',
+                                                   how='left',
+                                                   suffixes=('', '_y'))
+    df_analyzed_actions = OZON_actions_module.analyze_availability_actions(df_actions_merged)
+    df_go_in_out_actions = OZON_actions_module.go_out_action(df_analyzed_actions, headers, testing_mode=testing_mode,
+                                                             is_out_actions=is_out_actions)
+    df_go_in_out_actions = OZON_actions_module.go_in_action(df_go_in_out_actions, headers, testing_mode=testing_mode,
+                                                            is_in_actions=is_in_actions)
 
     df_by_art = OZON_module.rearrange_columns(df_by_art, OZON_module.preferred_columns)
 
@@ -404,6 +425,7 @@ def get_transaction_list_ozon():
         'df_art_size': df_by_art_size,
         'df_art': df_by_art,
         'df_updated_prices': df_for_update_prices,
+        'df_go_in_out_actions': df_go_in_out_actions,
     }
 
     # Filter out the empty DataFrames and their names

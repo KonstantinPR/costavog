@@ -49,7 +49,7 @@ def extract_financial_data_from_pdf():
 @login_required
 @timing_decorator
 def upload_detailing():
-    """Analize detailing of excel that can be downloaded in wb portal in zips, you can put any number zips."""
+    """Analyze detailing of excel downloaded in wb portal in zips, you can put any number zips."""
 
     if not request.method == 'POST':
         return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)
