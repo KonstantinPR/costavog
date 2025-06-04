@@ -117,8 +117,8 @@ def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
     default_changing = df['discount'] / 4
 
     df.loc[(df['n_discount'] <= 0), 'n_discount'] = default_changing
-    df['n_delta'] = round(((df['discount'] - df['n_discount']) / df['smooth_days']))
-    df['n_discount'] = round(df['discount'] - df['n_delta'])
+    df['n_delta'] = round(((df['discount'] - df['n_discount']) / df['smooth_days']), 2)
+    df['n_discount'] = round(df['discount'] - df['n_delta'], 2)
     df.loc[df['n_discount'] <= 0, 'n_discount'] = 0
     if reset_if_null:
         df.loc[df['stock'] <= 0, 'n_discount'] = default_changing
@@ -427,7 +427,7 @@ def n_discount(price_disc, k_discount, price, k_delta):
         n_discount = (1 - (price_disc / (price * k_discount ** k_delta))) * 100
         if n_discount < 0:
             return 0
-        return int(round(n_discount))
+        return round(n_discount, 2)
 
 # def discount_old(df):
 #     col_map = detailing_upload_module.INITIAL_COLUMNS_DICT

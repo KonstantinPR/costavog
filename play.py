@@ -1,41 +1,59 @@
 import pandas as pd
 import numpy as np
-from app.modules import pandas_handler
-
-# Sample data based on your dataset
-data = {
-    'SKU': [317401841, 317433721],
-    'product_id': [121005263, 121005265],
-    'offer_id': ['J09-24', 'J09-25'],
-    'requested_price': [1826, 1826],
-    'auto_action_enabled': ['DISABLED', 'DISABLED'],
-    'auto_add_to_ozon_actions_list_enabled': ['DISABLED', 'DISABLED'],
-    'currency_code': ['RUB', 'RUB'],
-    'min_price': [np.nan, 0],  # missing or empty
-    'min_price_for_auto_actions_enabled': [np.nan, ''],
-    'net_cost': [np.nan, ''],
-    'old_price': [np.nan, ''],
-    'price': ['1826', '1826'],  # as strings
-    'price_strategy_enabled': ['DISABLED', 'DISABLED'],
-    'status': ['Failed', 'Failed'],
-    'response_message': [
-        '400 Client Error: Bad Request for url: https://api-seller.ozon.ru/v1/product/import/prices',
-        '400 Client Error: Bad Request for url: https://api-seller.ozon.ru/v1/product/import/prices'
-    ]
-}
-
-# Create DataFrame
-df = pd.DataFrame(data)
-
-col_name_with_missing = ['new_ozon_price', 'price', 'net_cost', 'old_price', 'min_price']
-for col in col_name_with_missing:
-    if col not in df.columns:
-        df[col] = 0
-    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+from scipy.stats import linregress
 
 
+def abc_xyz(df, prefix='Маржа-себест.', power=0.5, trend_name='ABC'):
+    margin_cols = sorted([col for col in df.columns if col.startswith(prefix)], reverse=True)
+    time_points = np.arange(1, len(margin_cols) + 1)
+
+    slopes = []
+    for idx, row in df.iterrows():
+        margins = row[margin_cols].dropna().values.astype(float)
+        if len(margins) == 0:
+            slope = 0
+        elif np.allclose(margins, margins[0]):
+            slope = 0
+        else:
+            # Optionally, print for debugging
+            print(f"Row {idx} margins: {margins}")
+            slope, intercept, r_value, p_value, std_err = linregress(time_points[:len(margins)], margins)
+        slopes.append(slope)
+
+    slopes = np.array(slopes)
+
+    max_abs_slope = np.max(np.abs(slopes))
+    if max_abs_slope == 0:
+        normalized_slopes = np.zeros_like(slopes)
+    else:
+        normalized_slopes = slopes / max_abs_slope
+
+    # Apply power transformation to exaggerate differences
+    transformed_slopes = np.sign(normalized_slopes) * (np.abs(normalized_slopes) ** power)
+
+    df[trend_name] = transformed_slopes
+
+    return df
 
 
-# Print the resulting DataFrame
-df.to_excel("dftest.xlsx")
-print(df)
+
+# Path to your Excel file in the root directory
+file_path = 'df_merged_dynamic.xlsx'
+
+# Load the Excel file into a DataFrame
+df = pd.read_excel(file_path)
+df = abc_xyz(df, prefix='Маржа-себест.', power=0.5, trend_name='ABC')
+
+
+# Run analysis with power transformation
+df = abc_xyz(df, prefix='Маржа-себест.', power=0.5, trend_name='ABC')
+# Show results
+print(df[['Артикул поставщика', 'ABC']])
+# Run analysis with power transformation
+df = abc_xyz(df, prefix='Ч. Продажа шт.', power=0.5, trend_name="XYZ")
+print(df[['Артикул поставщика', 'XYZ']])
+# Show results
+df['ABC_XYZ'] = (df['ABC'] + df['XYZ']) / 2
+print(df[['Артикул поставщика', 'ABC_XYZ']])
+
+df.to_excel('df.xlsx')

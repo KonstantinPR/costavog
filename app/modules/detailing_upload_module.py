@@ -152,9 +152,12 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
 
     # Reorder columns
     merged_df = merged_df[sorted_columns]
-
+    merged_df.to_excel('merged_df.xlsx')
     # Perform ABC and XYZ analysis
-    df_merged_dynamic = abc_xyz(merged_df, by_col=by_col)
+    df_merged_dynamic = abc_xyz(merged_df, prefix='Маржа-себест.', trend_name='ABC')
+    df_merged_dynamic = abc_xyz(df_merged_dynamic, prefix='Ч. Продажа шт.', trend_name='XYZ')
+    df_merged_dynamic['ABC_XYZ'] = (df_merged_dynamic['ABC'] + df_merged_dynamic['XYZ']) / 2
+    df_merged_dynamic.to_excel('df_merged_dynamic.xlsx')
 
     # Upload to Yandex Disk if needed
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
@@ -181,11 +184,11 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
         return pd.DataFrame()
 
     # List of columns to average instead of sum
-    columns_to_mean = ['CV']
+    columns_to_mean = ['ABC', 'XYZ', 'ABC_XYZ']
 
     # Initialize aggregation dict: sum for all except specified columns
-    agg_dict = {col: 'sum' for col in df_merged_dynamic.columns if
-                col not in [by_col, "Артикул поставщика", "ABC_Category", "XYZ_Category"]}
+    agg_dict = {col: 'mean' for col in df_merged_dynamic.columns if
+                col not in [by_col, "Артикул поставщика"]}
 
     # Override specific columns to 'mean'
     for col in columns_to_mean:
@@ -207,7 +210,7 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
 
 
 @timing_decorator
-def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
+def influence_discount_by_dynamic(df, df_dynamic, k_influence=2):
     if df_dynamic.empty:
         return df
 
@@ -220,16 +223,13 @@ def influence_discount_by_dynamic(df, df_dynamic, default_margin=1000, k=1):
     df = pandas_handler.df_merge_drop(df, df_dynamic, "Артикул поставщика", "Артикул поставщика")
 
     # Calculate the number of periods to adjust Total_Margin for periodic sales
-    periods_count = len([x for x in df_dynamic.columns if "Ч. Продажа шт." in x])
-    medium_total_margin = df["Total_Margin"] / periods_count if periods_count > 0 else df["Total_Margin"]
-
-    # Calculate discounts based on Total_Margin and CV
-    df["ABC_discount"] = medium_total_margin / default_margin  # Adjust this to scale as needed
-    df["CV_discount"] = df["CV"].apply(pandas_handler.false_to_null)
-    df['ABC_CV_discount'] = k * df["ABC_discount"] / df["CV_discount"].apply(abs)
-    df['ABC_CV_discount'] = df['ABC_CV_discount'].apply(pandas_handler.false_to_null)
-    df['ABC_CV_discount'] = df['ABC_CV_discount'].apply(pandas_handler.inf_to_null)
-    df["new_discount"] = df["new_discount"] - df['ABC_CV_discount']
+    # periods_count = len([x for x in df_dynamic.columns if "Ч. Продажа шт." in x])
+    # medium_total_margin = df["Total_Margin"] / periods_count if periods_count > 0 else df["Total_Margin"]
+    df["ABC_XYZ_delta"] = df["d_disc"] * df['ABC_XYZ'] / k_influence
+    df["ABC_XYZ_delta"] = df["ABC_XYZ_delta"].round(0)
+    df["new_discount"] = df["new_discount"] - df["ABC_XYZ_delta"]
+    df["new_discount"] = df["new_discount"].apply(lambda x: round(x, 0))
+    df['new_price'] = round(df['price'] * (1 - df['new_discount'] / 100))
 
     return df
 

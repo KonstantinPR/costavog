@@ -52,6 +52,7 @@ INITIAL_COLUMNS_DICT = {
     'new_discount': 'new_discount',
     'd_disc': 'd_disc',
     'n_discount': 'n_discount',
+    'ABC_XYZ': 'ABC_XYZ',
     'n_delta': 'n_delta',
     'func_discount': 'func_discount',
     'func_delta': 'func_delta',
@@ -101,10 +102,9 @@ INITIAL_COLUMNS_DICT = {
     'k_norma_revenue': 'k_norma_revenue',
 }
 DINAMIC_COLUMNS = [
-    "Total_Margin",
-    "ABC_Category",
-    "CV",
-    "XYZ_Category",
+    "ABC",
+    "XYZ",
+    "ABC_XYZ",
 ]
 CHOSEN_COLUMNS = [
     "Бренд",
@@ -116,6 +116,8 @@ CHOSEN_COLUMNS = [
     "nmId",
     "new_price",
     "new_discount",
+    "ABC_XYZ_delta",
+    "ABC_XYZ",
     "d_disc",
     "n_discount",
     "n_delta",
@@ -175,14 +177,6 @@ CHOSEN_COLUMNS = [
     "addToCartPercent",
     "cartToOrderPercent",
     "buyoutsPercent",
-    "Total_Margin",
-    "ABC_Category",
-    "CV",
-    "XYZ_Category",
-    "ABC_discount",
-    "CV_discount",
-    "ABC_CV_discount",
-
 ]
 
 DELIVERY_COLUMNS = [
