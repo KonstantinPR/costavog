@@ -329,7 +329,7 @@ def pattern_splitting(df, prefixes_dict):
     df['prefix'] = df['prefix'].apply(lambda x: starts_with_prefix(x, prefixes))
     df['prefix'] = df['prefix'].apply(lambda x: prefixes_dict.get(x, x))
 
-    # df['prefix'] = df['prefix'].apply(lambda x: empty_for_not_found(x, prefixes))
+    df['prefix'] = df['prefix'].apply(lambda x: empty_for_not_found(x, prefixes))
     df['pattern'] = df['Артикул поставщика'].apply(get_second_part)
     df['material'] = df['Артикул поставщика'].apply(get_third_part)
     df['material'] = [MATERIAL_DICT[x] if x in MATERIAL_DICT else y for x, y in zip(df['pattern'], df['material'])]

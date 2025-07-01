@@ -4,7 +4,7 @@ import numpy as np
 import logging
 import zipfile
 import io
-from app.modules import io_output, API_WB
+from app.modules import io_output
 from typing import Union, Optional, List
 from app.modules.detailing_upload_module import zips_to_list
 
@@ -261,59 +261,6 @@ def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
 
     zip_buffer.seek(0)
     return zip_buffer, zip_name
-
-
-def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
-    if not is_discount_template:
-        return pd.DataFrame
-
-    if df_promo.empty:
-        return pd.DataFrame
-
-    # Fetch all cards and extract unique nmID values
-    df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
-    unique_nmID_values = df_all_cards["nmID"].unique()
-
-    # Define the columns for the discount template
-    df_disc_template_columns = [
-        "Бренд", "Категория", "Артикул WB", "Артикул продавца",
-        "Последний баркод", "Остатки WB", "Остатки продавца",
-        "Оборачиваемость", "Текущая цена", "Новая цена",
-        "Текущая скидка", "Новая скидка"
-    ]
-
-    # Create an empty DataFrame with the specified columns
-    df_disc_template = pd.DataFrame(columns=df_disc_template_columns)
-
-    # Populate "Артикул WB" with unique nmID values
-    df_disc_template["Артикул WB"] = unique_nmID_values
-
-    # If promo DataFrame is provided, merge and update "Новая скидка" by "new_discount" from df_promo
-    if df_promo.empty:
-        df_disc_template = df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
-    else:
-        df_disc_template = df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB", how='outer')
-
-    df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
-
-    # Ensure "Новая скидка" is filled with default_discount where NaN
-    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
-    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].replace([np.inf, -np.inf], 0)
-
-    df_disc_template = df_disc_template.drop_duplicates(subset=["Артикул WB"])
-
-    # Create a mask for values not in FALSE_LIST
-    mask = ~df_disc_template["Артикул WB"].isin(FALSE_LIST)
-
-    # Update the column for the rows that match the mask
-    df_disc_template.loc[mask, "Артикул WB"] = df_disc_template.loc[mask, "Артикул WB"]
-
-    # After populating df_disc_template
-    df_disc_template = df_disc_template.loc[df_disc_template["Артикул WB"].str.strip() != ""]
-    df_disc_template = df_disc_template.dropna(subset=["Артикул WB"])
-
-    # Return the template DataFrame with the correct columns
-    return df_disc_template[df_disc_template_columns]
 
 
 def convert_to_dataframe(data, columns):

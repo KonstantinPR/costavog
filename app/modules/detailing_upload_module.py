@@ -1,8 +1,9 @@
+import numpy as np
 from app import app
 import zipfile
 import pandas as pd
 import io
-from app.modules import pandas_handler, yandex_disk_handler
+from app.modules import pandas_handler, yandex_disk_handler, API_WB, promofiling_module
 from types import SimpleNamespace
 from typing import List
 from varname import nameof
@@ -12,7 +13,6 @@ from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, DINAM
 from app.modules.dfs_dynamic_module import abc_xyz
 from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in, dfs_from_outside, \
     concatenate_dfs
-from app.modules.promofiling_module import check_discount
 
 '''Analize detaling WB reports, take all zip files from detailing WB and make one file EXCEL'''
 
@@ -57,6 +57,50 @@ def zips_to_list(zip_downloaded):
     return dfs
 
 
+def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная цена для применения скидки по автоакции",
+              col_price="net_cost"):
+    """Calculate and return a subset DataFrame with updated min prices, without modifying the original."""
+    # List of desired columns
+    columns = [
+        "Бренд", "Категория", "Артикул WB", "Артикул продавца", "Последний баркод",
+        "Остатки WB", "Остатки продавца", "Оборачиваемость", "Цена со скидкой",
+        "Текущая минимальная цена для применения скидки по автоакции",
+        "Новая минимальная цена для применения скидки по автоакции",
+        "Текущая блокировка применения скидки по автоакции",
+        "Новая блокировка применения скидки по автоакции"
+    ]
+
+    # Проверка существования колонок
+    if col_price not in df.columns:
+        raise KeyError(f"Column '{col_price}' not found in DataFrame.")
+
+    if 'nmId' not in df.columns:
+        raise KeyError("Column 'nmId' not found in DataFrame.")
+
+    # Обрабатываем нулевые цены
+    df[col_price] = df[col_price].replace(0, np.nan)
+
+    # Расчет минимальной цены
+    df[col_min] = (df[col_price] ** pow_k) * k
+    df[col_min] = df[col_min].round(0)
+
+    # Создаем DataFrame с Артикул WB
+    df_temp_min = pd.DataFrame({"Артикул WB": df["nmId"]})
+
+    # Мержим
+    df_temp_min = df_temp_min.merge(df, left_on="Артикул WB", right_on="nmId", how='left')
+
+    # Убедимся, что все нужные колонки есть, и заполняем отсутствующие пустыми строками
+    for col in columns:
+        if col not in df_temp_min.columns:
+            df_temp_min[col] = ''
+
+    # Выбираем только нужные колонки
+    df_temp_min = df_temp_min[columns]
+
+    return df_temp_min
+
+
 @timing_decorator
 def promofiling(promo_file, df, allowed_delta_percent=7):
     if not promo_file:
@@ -67,7 +111,7 @@ def promofiling(promo_file, df, allowed_delta_percent=7):
     df_promo = pd.read_excel(promo_file)
 
     df_promo = pandas_handler.df_merge_drop(df_promo, df, "Артикул WB", "nmId", how='outer')
-    df_promo = check_discount(df_promo, allowed_delta_percent)
+    df_promo = promofiling_module.check_discount(df_promo, allowed_delta_percent)
 
     return df_promo
 
@@ -114,7 +158,7 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
         return pd.DataFrame()
 
     # Some useful columns to add
-    additional_columns = ['prefix', 'quantityFull']
+    additional_columns = ['prefix', 'nmId', 'quantityFull']
 
     # List of dynamic columns to analyze
     columns_dynamic = ["Маржа-себест.", "Маржа", "Ч. Продажа шт.", "Логистика", "Хранение"]
@@ -152,11 +196,12 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
 
     # Reorder columns
     merged_df = merged_df[sorted_columns]
-    merged_df.to_excel('merged_df.xlsx')
+    # merged_df.to_excel('merged_df.xlsx')
     # Perform ABC and XYZ analysis
     df_merged_dynamic = abc_xyz(merged_df, prefix='Маржа-себест.', trend_name='ABC')
     df_merged_dynamic = abc_xyz(df_merged_dynamic, prefix='Ч. Продажа шт.', trend_name='XYZ')
     df_merged_dynamic['ABC_XYZ'] = (df_merged_dynamic['ABC'] + df_merged_dynamic['XYZ']) / 2
+    df_merged_dynamic['ABC_XYZ'] = df_merged_dynamic['ABC_XYZ'].round(4)
     df_merged_dynamic.to_excel('df_merged_dynamic.xlsx')
 
     # Upload to Yandex Disk if needed
@@ -173,7 +218,7 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
 def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = None):
     # Ensure r is a SimpleNamespace with default attributes if not provided
     if r is None:
-        r = SimpleNamespace(is_dynamic=False, is_upload_yandex=False, testing_mode=False)
+        r = SimpleNamespace(is_dynamic=False, is_upload_yandex=False, testing_mode=False, path_to_save='YOUR_PATH')
 
     # Return empty DataFrame if not dynamic
     if not r.is_dynamic:
@@ -183,27 +228,47 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
     if df_merged_dynamic.empty:
         return pd.DataFrame()
 
-    # List of columns to average instead of sum
-    columns_to_mean = ['ABC', 'XYZ', 'ABC_XYZ']
+    # Calculate total columns based on prefixes
+    sum_col = ['Маржа-себест.', 'Логистика', 'Маржа_', 'Ч. Продажа шт.', 'Хранение']
+    columns_to_sum = [col for col in df_merged_dynamic.columns if any(col.startswith(prefix) for prefix in sum_col)]
+    print(f"columns_to_sum {columns_to_sum}")
 
-    # Initialize aggregation dict: sum for all except specified columns
-    agg_dict = {col: 'mean' for col in df_merged_dynamic.columns if
-                col not in [by_col, "Артикул поставщика"]}
+    for total_col in sum_col:
+        if columns_to_sum:
+            df_merged_dynamic[f'{total_col}Total'] = df_merged_dynamic[
+                [col for col in columns_to_sum if col.startswith(total_col)]].sum(axis=1)
+        else:
+            # Optionally, handle case where no columns found
+            df_merged_dynamic[f'{total_col}Total'] = 0
 
-    # Override specific columns to 'mean'
-    for col in columns_to_mean:
+    # Initialize aggregation dict
+    agg_dict = {}
+    for col in df_merged_dynamic.columns:
+        if col in [by_col, 'Артикул поставщика', 'nmId', 'quantityFull']:
+            continue
+        # Default to 'mean'
+        agg_dict[col] = 'mean'
+
+    # Set total columns to sum
+    add_total_col = [f'{total_col}Total' for total_col in sum_col]
+    for col in columns_to_sum + add_total_col:
         if col in agg_dict:
-            agg_dict[col] = 'mean'
+            agg_dict[col] = 'sum'
 
     # Perform groupby with aggregation
     df_merged_dynamic_by_col = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
 
     # Upload to Yandex Disk if conditions are met
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
+        # Generate filename
+        filename = "merged_dynamic_" + pd.Timestamp.now().strftime("%Y%m%d_%H%M%S") + ".xlsx"
+        # Compose path
+        save_path = app.config[r.path_to_save] + '/DYNAMIC_PER_PRE'
+        # Upload
         yandex_disk_handler.upload_to_YandexDisk(
             file=df_merged_dynamic_by_col,
-            file_name=nameof(df_merged_dynamic_by_col) + ".xlsx",
-            path=app.config[r.path_to_save] + '/DYNAMIC_PER_PRE'
+            file_name=filename,
+            path=save_path
         )
 
     return df_merged_dynamic_by_col
@@ -216,8 +281,8 @@ def influence_discount_by_dynamic(df, df_dynamic, k_influence=2):
 
     dynamic_columns_names = DINAMIC_COLUMNS
 
-    # Select relevant columns from df_dynamic
-    df_dynamic = df_dynamic[["Артикул поставщика"] + dynamic_columns_names]
+    df_dynamic = df_dynamic[
+        ["Артикул поставщика"] + dynamic_columns_names + [col for col in df_dynamic.columns if 'Total' in col]]
 
     # Merge df_dynamic into df
     df = pandas_handler.df_merge_drop(df, df_dynamic, "Артикул поставщика", "Артикул поставщика")
@@ -226,7 +291,7 @@ def influence_discount_by_dynamic(df, df_dynamic, k_influence=2):
     # periods_count = len([x for x in df_dynamic.columns if "Ч. Продажа шт." in x])
     # medium_total_margin = df["Total_Margin"] / periods_count if periods_count > 0 else df["Total_Margin"]
     df["ABC_XYZ_delta"] = df["d_disc"] * df['ABC_XYZ'] / k_influence
-    df["ABC_XYZ_delta"] = df["ABC_XYZ_delta"].round(0)
+    df["ABC_XYZ_delta"] = df["ABC_XYZ_delta"].round(4)
     df["new_discount"] = df["new_discount"] - df["ABC_XYZ_delta"]
     df["new_discount"] = df["new_discount"].apply(lambda x: round(x, 0))
     df['new_price'] = round(df['price'] * (1 - df['new_discount'] / 100))
@@ -324,3 +389,57 @@ def mix_detailings(df, is_compare_detailing=""):
         print(f"An error occurred: {e}")  # Log the error instead of printing
 
     return df  # Return the original df if an error occurs
+
+
+def df_disc_template_create(df, df_promo, is_discount_template=False, default_discount=5, is_from_yadisk=True):
+    if not is_discount_template:
+        return pd.DataFrame
+
+    # if df_promo.empty:
+    #     return pd.DataFrame
+
+    # Fetch all cards and extract unique nmID values
+    df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=is_from_yadisk)
+    unique_nmID_values = df_all_cards["nmID"].unique()
+
+    # Define the columns for the discount template
+    df_disc_template_columns = [
+        "Бренд", "Категория", "Артикул WB", "Артикул продавца",
+        "Последний баркод", "Остатки WB", "Остатки продавца",
+        "Оборачиваемость", "Текущая цена", "Новая цена",
+        "Текущая скидка", "Новая скидка",
+    ]
+
+    # Create an empty DataFrame with the specified columns
+    df_disc_template = pd.DataFrame(columns=df_disc_template_columns)
+
+    # Populate "Артикул WB" with unique nmID values
+    df_disc_template["Артикул WB"] = unique_nmID_values
+
+    # If promo DataFrame is provided, merge and update "Новая скидка" by "new_discount" from df_promo
+    if df_promo.empty:
+        df_disc_template = pandas_handler.df_merge_drop(df_disc_template, df, "Артикул WB", "nmId", how='outer')
+    else:
+        df_disc_template = pandas_handler.df_merge_drop(df_disc_template, df_promo, "Артикул WB", "Артикул WB",
+                                                        how='outer')
+
+    df_disc_template["Новая скидка"] = df_disc_template["new_discount"]
+
+    # Ensure "Новая скидка" is filled with default_discount where NaN
+    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].fillna(default_discount)
+    df_disc_template["Новая скидка"] = df_disc_template["Новая скидка"].replace([np.inf, -np.inf], 0)
+
+    df_disc_template = df_disc_template.drop_duplicates(subset=["Артикул WB"])
+
+    # Create a mask for values not in FALSE_LIST
+    mask = ~df_disc_template["Артикул WB"].isin(pandas_handler.FALSE_LIST)
+
+    # Update the column for the rows that match the mask
+    df_disc_template.loc[mask, "Артикул WB"] = df_disc_template.loc[mask, "Артикул WB"]
+
+    # After populating df_disc_template
+    df_disc_template = df_disc_template.loc[df_disc_template["Артикул WB"].str.strip() != ""]
+    df_disc_template = df_disc_template.dropna(subset=["Артикул WB"])
+
+    # Return the template DataFrame with the correct columns
+    return df_disc_template[df_disc_template_columns]

@@ -177,6 +177,7 @@ CHOSEN_COLUMNS = [
     "addToCartPercent",
     "cartToOrderPercent",
     "buyoutsPercent",
+    "Новая минимальная цена для применения скидки по автоакции"
 ]
 
 DELIVERY_COLUMNS = [

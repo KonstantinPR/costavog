@@ -1,4 +1,5 @@
 import app.modules.detailing_upload_dict_module
+import app.modules.detailing_upload_module
 from app import app
 from flask import flash, render_template, request, send_file
 from flask_login import login_required
@@ -78,6 +79,7 @@ def upload_detailing():
     df_merged_dynamic_by_prefix = detailing_upload_module.merge_dynamic_by(df_merged_dynamic, by_col='prefix', r=r)
 
     df = detailing_upload_module.influence_discount_by_dynamic(df, df_merged_dynamic)
+
     df = detailing_upload_module.mix_detailings(df, is_compare_detailing=r.is_compare_detailing)
 
     df = detailing_upload_module.in_positive_digit(df, decimal=0, col_names='new_discount')
@@ -101,10 +103,11 @@ def upload_detailing():
                                              path=app.config[r.path_to_save],
                                              testing_mode=r.testing_mode, is_upload=r.is_save_yadisk)
 
-    df_template = pandas_handler.df_disc_template_create(df, df_promo, r.is_discount_template)
+    df_template = detailing_upload_module.df_disc_template_create(df, df_promo, r.is_discount_template)
+    df_min_priced = detailing_upload_module.min_price(df, pow_k=0.5, k=80)
 
     dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic,
-                'df_merged_dynamic_by_prefix': df_merged_dynamic_by_prefix}
+                'df_merged_dynamic_by_prefix': df_merged_dynamic_by_prefix, 'df_min_priced': df_min_priced}
 
     # Filter out the empty DataFrames and their names
     filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
