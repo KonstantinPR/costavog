@@ -100,6 +100,7 @@ INITIAL_COLUMNS_DICT = {
     'sell_date': 'Дата продажи',
     'raiting': 'Рейтинг',
     'k_norma_revenue': 'k_norma_revenue',
+
 }
 DINAMIC_COLUMNS = [
     "ABC",

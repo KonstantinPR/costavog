@@ -22,6 +22,7 @@ def dfs_from_outside(r):
     d.df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=r.is_from_yadisk)
     d.df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     d.df_delivery = delivery_module.process_delivering(app.config['DELIVERY_PRODUCTS'], period=365)['df_delivery_pivot']
+    d.df_delivery.to_excel("delivery.xlsx")
     d.df_price, _ = API_WB.get_wb_price_api(testing_mode=r.testing_mode)
     d.df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
     d.request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}
@@ -77,11 +78,16 @@ def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
     if not 'quantityFull' in df.columns: df['quantityFull'] = 0
     df['quantityFull'].replace(np.NaN, 0, inplace=True)
     df['quantityFull + Продажа, шт.'] = df['quantityFull'] + df['Продажа, шт.']
-
-    df = merge_storage(df, storage_cost, r.testing_mode, is_get_storage=r.is_get_storage,
-                       is_shushary=r.is_shushary, df_storage=d.df_storage, files_period_days=r.files_period_days)
     df = merge_net_cost(df, d.df_net_cost, r.is_net_cost)
     df = merge_price(df, d.df_price, r.is_get_price).drop_duplicates(subset='nmId')
+    # df.to_excel("delivery_merged_in.xlsx")
+    df = pandas_handler.fill_empty_val_by(['article', 'vendorCode', 'supplierArticle'], df, 'Артикул поставщика')
+    df = pandas_handler.df_merge_drop(left_df=df, right_df=d.df_delivery, left_on='Артикул поставщика',
+                                      right_on='Артикул', how='outer')
+    # df.to_excel("delivery_merged_out.xlsx")
+    df = merge_storage(df, storage_cost, r.testing_mode, is_get_storage=r.is_get_storage,
+                       is_shushary=r.is_shushary, df_storage=d.df_storage, files_period_days=r.files_period_days)
+
     df = profit_count(df)
     df = pandas_handler.df_merge_drop(df, d.df_rating, 'nmId', 'Артикул ВБ', how="outer")
     df['Rating'] = [x.split(" ")[0] if isinstance(x, str) else x for x in df['Рейтинг отзывов']]

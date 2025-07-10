@@ -75,7 +75,7 @@ def _process_folder(folder_info):
 def process_delivering(folder_path='', period=0, date_from='', date_end=''):
     """Delivering goods from our store to WB count"""
 
-    if not date_from or not date_from:
+    if not date_from:
         if not period:
             period = 365
         date_from = datetime.now() - timedelta(days=period)

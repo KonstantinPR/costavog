@@ -9,7 +9,7 @@ from typing import List
 from varname import nameof
 
 from app.modules.decorators import timing_decorator
-from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, DINAMIC_COLUMNS
+from app.modules.detailing_upload_dict_module import INITIAL_COLUMNS_DICT, DELIVERY_COLUMNS, DINAMIC_COLUMNS
 from app.modules.dfs_dynamic_module import abc_xyz
 from app.modules.dfs_process_module import choose_df_in, dfs_forming, choose_dynamic_df_list_in, dfs_from_outside, \
     concatenate_dfs
@@ -122,7 +122,7 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List, Simple
     print("""dfs_process...""")
 
     # element 0 in list is always general df that was through all df_list
-    incl_col = list(INITIAL_COLUMNS_DICT.values())
+    incl_col = list(INITIAL_COLUMNS_DICT.values()) + DELIVERY_COLUMNS
 
     # API and YANDEX_DISK getting data into namespace
     d = dfs_from_outside(r)
@@ -130,8 +130,6 @@ def dfs_process(df_list, r: SimpleNamespace) -> tuple[pd.DataFrame, List, Simple
     # must be refactored into def that gets DF class that contains df (first or combined) and dfs_list for dynamics:
 
     df = choose_df_in(df_list, is_first_df=r.is_first_df)
-    df = pandas_handler.df_merge_drop(left_df=df, right_df=d.df_delivery, left_on='Артикул поставщика',
-                                      right_on='Артикул')
 
     df = dfs_forming(df=df, d=d, r=r, include_columns=incl_col)
 

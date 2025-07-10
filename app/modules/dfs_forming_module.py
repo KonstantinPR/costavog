@@ -203,7 +203,8 @@ def merge_storage(df, storage_cost, testing_mode, is_get_storage, is_shushary=Fa
 
     df_storage = pandas_handler.upper_case(df_storage, 'vendorCode')[0]
     # df = df.merge(df_storage, how='outer', left_on='nmId', right_on='nmId')
-    df = pandas_handler.df_merge_drop(df, df_storage, 'nmId', 'nmId', how="outer")
+    df = pandas_handler.df_merge_drop(df, df_storage, left_on='nmId', right_on='nmId', how="outer")
+
     # df.to_excel("merged_storage.xlsx")
     df = df.fillna(0)
     if 'Days_between_First_Now' not in df.columns:

@@ -294,10 +294,10 @@ def get_transaction_list_ozon():
     yandex.Disk."""
     if request.method != 'POST':
         today = date.today()
-        last_month = today - timedelta(days=30)  # Approximate one month ago
+        delta_period = today - timedelta(days=14)  # days ago
         # Format dates as YYYY-MM-DD
         today_str = today.strftime('%Y-%m-%d')
-        last_month_str = last_month.strftime('%Y-%m-%d')
+        last_month_str = delta_period.strftime('%Y-%m-%d')
         return render_template('upload_get_transaction_list_ozon.html', doc_string=get_transaction_list_ozon.__doc__,
                                date_from=last_month_str, date_to=today_str)
 
