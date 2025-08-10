@@ -22,7 +22,7 @@ def dfs_from_outside(r):
     d.df_all_cards = API_WB.get_all_cards_api_wb(is_from_yadisk=r.is_from_yadisk)
     d.df_net_cost = yandex_disk_handler.get_excel_file_from_ydisk(app.config['NET_COST_PRODUCTS'])
     d.df_delivery = delivery_module.process_delivering(app.config['DELIVERY_PRODUCTS'], period=365)['df_delivery_pivot']
-    d.df_delivery.to_excel("delivery.xlsx")
+    # d.df_delivery.to_excel("delivery.xlsx")
     d.df_price, _ = API_WB.get_wb_price_api(testing_mode=r.testing_mode)
     d.df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
     d.request_dict = {'no_sizes': 'no_sizes', 'no_city': 'no_city'}

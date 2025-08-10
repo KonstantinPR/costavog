@@ -152,8 +152,13 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
            df_acquiring, df_give_to, df_give_back, df_store_moves, df_qt_sales, df_qt_backs, df_qt_logistic_to,
            df_qt_logistic_back, df_logistic_correction]
 
+    # for d in dfs:
+    #     df = pd.merge(df, d, how='outer', on=article_column_name)
+
     for d in dfs:
-        df = pd.merge(df, d, how='outer', on=article_column_name)
+        df = pandas_handler.df_merge_drop(df, d, article_column_name, article_column_name, how="left")
+
+
     # dfs_names = [sales_name, logistic_name, backs_name, substituted_col_name]
     df = df.fillna(0)
 
@@ -174,7 +179,16 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
-    df['Дней в продаже'] = [days_between(d1, datetime.today()) for d1 in df['Дата заказа покупателем']]
+
+    # Ensure the column exists
+    if 'Дата заказа покупателем' not in df.columns:
+        df['Дата заказа покупателем'] = ""
+
+    # Generate 'Дней в продаже'
+    df['Дней в продаже'] = [
+        days_between(d, datetime.today()) if pd.notnull(d) and d != "" else ""
+        for d in df['Дата заказа покупателем']
+    ]
 
     if drop_duplicates_in:
         df.drop_duplicates(subset=drop_duplicates_in)
@@ -185,6 +199,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 def merge_stock(df, df_stock, is_get_stock=False):
     if is_get_stock:
         df_stock = pandas_handler.upper_case(df_stock, 'supplierArticle')[0]
+        # df.to_excel("last_one.xlsx")
         df = df_stock.merge(df, how='outer', left_on='nmId', right_on='Код номенклатуры')
         df = df.fillna(0)
         df = pandas_handler.fill_empty_val_by('Код номенклатуры', df, 'nmId')

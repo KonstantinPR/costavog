@@ -80,7 +80,11 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
     # Обрабатываем нулевые цены
     df[col_price] = df[col_price].replace(0, np.nan)
 
-    # Расчет минимальной цены
+    # Расчет минимальной цены:
+    # 2000 3578
+    # 1000 2530
+    # 500 1789
+    # 100 800
     df[col_min] = (df[col_price] ** pow_k) * k
     df[col_min] = df[col_min].round(0)
 
@@ -97,6 +101,9 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
 
     # Выбираем только нужные колонки
     df_temp_min = df_temp_min[columns]
+    df_temp_min.replace('', np.nan, inplace=True)
+    df_temp_min = df_temp_min.dropna(how='all')
+    df_temp_min.replace(np.nan, '', inplace=True)
 
     return df_temp_min
 
@@ -200,7 +207,7 @@ def dfs_dynamic(df_dynamic_list, r: SimpleNamespace = None, by_col="Артику
     df_merged_dynamic = abc_xyz(df_merged_dynamic, prefix='Ч. Продажа шт.', trend_name='XYZ')
     df_merged_dynamic['ABC_XYZ'] = (df_merged_dynamic['ABC'] + df_merged_dynamic['XYZ']) / 2
     df_merged_dynamic['ABC_XYZ'] = df_merged_dynamic['ABC_XYZ'].round(4)
-    df_merged_dynamic.to_excel('df_merged_dynamic.xlsx')
+    # df_merged_dynamic.to_excel('df_merged_dynamic.xlsx')
 
     # Upload to Yandex Disk if needed
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
@@ -229,7 +236,7 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
     # Calculate total columns based on prefixes
     sum_col = ['Маржа-себест.', 'Логистика', 'Маржа_', 'Ч. Продажа шт.', 'Хранение']
     columns_to_sum = [col for col in df_merged_dynamic.columns if any(col.startswith(prefix) for prefix in sum_col)]
-    print(f"columns_to_sum {columns_to_sum}")
+    # print(f"columns_to_sum {columns_to_sum}")
 
     for total_col in sum_col:
         if columns_to_sum:
@@ -288,6 +295,8 @@ def influence_discount_by_dynamic(df, df_dynamic, k_influence=2):
     # Calculate the number of periods to adjust Total_Margin for periodic sales
     # periods_count = len([x for x in df_dynamic.columns if "Ч. Продажа шт." in x])
     # medium_total_margin = df["Total_Margin"] / periods_count if periods_count > 0 else df["Total_Margin"]
+    # df.to_excel("d_disc_no.xlsx")
+    if not "d_disc" in df.columns: df['d_disc'] = round(df['discount'])
     df["ABC_XYZ_delta"] = df["d_disc"] * df['ABC_XYZ'] / k_influence
     df["ABC_XYZ_delta"] = df["ABC_XYZ_delta"].round(4)
     df["new_discount"] = df["new_discount"] - df["ABC_XYZ_delta"]
@@ -368,19 +377,28 @@ def mix_detailings(df, is_compare_detailing=""):
     # Fetch DataFrames from Yandex Disk
     try:
         df_ALL_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_ALL'])
-        df_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_LONG'])
+        df_2025 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2025'])
+        df_2024 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2024'])
+        df_2023 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2023'])
 
         # Merge the first DataFrame
         df = df.merge(df_ALL_LONG[['Артикул поставщика', 'Маржа-себест.']],
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_ALL_LONG'))
-
         # Merge the second DataFrame
-        df = df.merge(df_LONG[['Артикул поставщика', 'Маржа-себест.']],
+        df = df.merge(df_2025[['Артикул поставщика', 'Маржа-себест.']],
                       on='Артикул поставщика',
                       how='left',
-                      suffixes=('', '_LONG'))
+                      suffixes=('', '_2025'))
+        df = df.merge(df_2024[['Артикул поставщика', 'Маржа-себест.']],
+                      on='Артикул поставщика',
+                      how='left',
+                      suffixes=('', '_2024'))
+        df = df.merge(df_2023[['Артикул поставщика', 'Маржа-себест.']],
+                      on='Артикул поставщика',
+                      how='left',
+                      suffixes=('', '_2023'))
 
 
     except Exception as e:
@@ -441,3 +459,39 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
 
     # Return the template DataFrame with the correct columns
     return df_disc_template[df_disc_template_columns]
+
+
+def create_excel_from_df_and_list(df, list_of_dfs, output_path="output.xlsx"):
+    """
+    Создает Excel-файл, где:
+      - Sheet1 содержит DataFrame df
+      - Остальные листы содержат DataFrame из list_of_dfs
+
+    Args:
+      df: pandas DataFrame, который будет записан на Sheet1.
+      list_of_dfs: Список pandas DataFrame, каждый из которых будет записан на отдельный лист.
+      output_path: Путь для сохранения Excel-файла. По умолчанию "output.xlsx".
+    """
+
+    with pd.ExcelWriter(output_path) as writer:
+        # Записываем основной DataFrame на Sheet1
+        df.to_excel(writer, sheet_name='Sheet1', index=False)  # index=False для исключения индекса из записи
+
+        # Записываем каждый DataFrame из списка на отдельные листы
+        for i, df_in_list in enumerate(list_of_dfs):
+            sheet_name = f'Sheet{i + 2}'  # Называем листы Sheet2, Sheet3 и т.д.
+            df_in_list.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+def remain_only_columns(cols, dfs):
+    # Convert cols to list if it's not already
+    columns_to_keep = list(cols)
+    dfs_out = []
+
+    # Filter each DataFrame
+    for df in dfs:
+        # Keep only columns that are in the columns_to_keep list
+        df_filtered = df.loc[:, df.columns.intersection(columns_to_keep)]
+        dfs_out.append(df_filtered)
+
+    return dfs_out

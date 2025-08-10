@@ -126,7 +126,8 @@ CHOSEN_COLUMNS = [
     "func_delta",
     "discount",
     "Маржа-себест.",
-    "Маржа-себест._LONG",
+    "Маржа-себест._2025",
+    "Маржа-себест._2024",
     "Маржа-себест._ALL_LONG",
     "Маржа-себест./ шт.",
     "Маржа",
@@ -178,6 +179,7 @@ CHOSEN_COLUMNS = [
     "addToCartPercent",
     "cartToOrderPercent",
     "buyoutsPercent",
+    "k_norma_revenue",
     "Новая минимальная цена для применения скидки по автоакции"
 ]
 

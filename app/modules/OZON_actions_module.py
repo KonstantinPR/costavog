@@ -114,15 +114,15 @@ def check_availability_actions(price, action_price, max_action_price, allowed_pe
     """
     suggested_price = max(action_price, max_action_price)
     if price <= suggested_price:
-        return (suggested_price, 1)
+        return suggested_price, 1
     else:
         # Calculate percentage difference
         difference = price - suggested_price
         percent_diff = (difference / price) * 100
         if percent_diff <= allowed_percent:
-            return (suggested_price, 1)
+            return suggested_price, 1
         else:
-            return (price, 0)
+            return price, 0
 
 
 def analyze_availability_actions(df, allowed_percent=10):

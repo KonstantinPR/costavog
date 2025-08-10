@@ -38,7 +38,7 @@ def sales_funnel_analyses():
     df_price = df_price.drop_duplicates(subset='nmID')
     df = pandas_handler.df_merge_drop(df, df_price, left_on='nmID', right_on='nmID')
     df_rating = yandex_disk_handler.get_excel_file_from_ydisk(app.config['RATING'])
-    df = pandas_handler.df_merge_drop(df, df_rating, left_on='nmID', right_on='Артикул')
+    df = pandas_handler.df_merge_drop(df, df_rating, left_on='nmID', right_on='Артикул ВБ')
     DISCOUNT_COLUMNS = sales_funnel_module.DISCOUNT_COLUMNS
     df = sales_funnel_module.calculate_discount(df, discount_columns=DISCOUNT_COLUMNS)
 

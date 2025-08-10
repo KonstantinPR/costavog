@@ -1,6 +1,4 @@
-import pandas as pd
 import numpy as np
-from app.modules import pandas_handler
 from scipy.stats import linregress
 
 

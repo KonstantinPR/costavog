@@ -99,7 +99,7 @@ def is_checkbox_true(request=None, request_name=None):
     return False
 
 
-def request_date_from(request, date_format=DATE_FORMAT, delta=app.config['DAYS_STEP_DEFAULT']):
+def request_date_from(request, date_format=DATE_FORMAT, delta=app.config['DAYS_PERIOD_FUNNEL']):
     if request.form.get('date_from'):
         date_from = request.form.get('date_from')
     else:

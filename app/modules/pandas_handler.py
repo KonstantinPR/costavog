@@ -212,7 +212,6 @@ def nmIDs_exclude(nmIDs, nmIDs_exclude):
     """exclude nmIDs_exclude from nmIDs"""
     print("nmIDs_exclude ...")
 
-    nmIDs = list([int(nmID) for nmID in nmIDs])
     nmIDs_exclude = list([int(nmID) for nmID in nmIDs_exclude])
     # Exclude nmIDs present in nmIDs_exclude list
     nmIDs = [id for id in nmIDs if id not in nmIDs_exclude]
@@ -243,24 +242,69 @@ def round_df_if(df, half=10):
 
 def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
     print(f"files_to_zip...")
+
     # Check if list_files has exactly one non-None element
     valid_files = [file for file in list_files if file is not None]
     if len(valid_files) == 1:
-        return io_output.io_output(valid_files[0]), list_names[0]  # Return the DataFrame directly
+        if isinstance(valid_files[0], list):  # If it's a list of DataFrames
+            # Create an in-memory Excel file with multiple sheets
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                for i, df in enumerate(valid_files[0]):
+                    df.to_excel(writer, sheet_name=f'Sheet{i+1}', index=False)
+            excel_buffer.seek(0)
+            return excel_buffer, list_names[0]  # Return the Excel file directly
+        else:
+            # Return the single DataFrame directly
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                valid_files[0].to_excel(writer, sheet_name='Sheet1', index=False)
+            excel_buffer.seek(0)
+            return excel_buffer, list_names[0]
 
     # Create an in-memory zip file
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
         for file, name in zip(list_files, list_names):
             if file is not None:
-                df_output = io.BytesIO()
-                with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
-                    file.to_excel(writer, index=False)
-                df_output.seek(0)
-                zip_file.writestr(name, df_output.getvalue())
+                if isinstance(file, list):  # If it's a list of DataFrames
+                    # Create an in-memory Excel file with multiple sheets
+                    df_output = io.BytesIO()
+                    with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
+                        for i, df in enumerate(file):
+                            df.to_excel(writer, sheet_name=f'Sheet{i+1}', index=False)
+                    df_output.seek(0)
+                    zip_file.writestr(name + ".xlsx", df_output.getvalue())  # Add .xlsx extension
+                else:
+                    df_output = io.BytesIO()
+                    with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
+                        file.to_excel(writer, index=False)
+                    df_output.seek(0)
+                    zip_file.writestr(name + ".xlsx", df_output.getvalue())  # Add .xlsx extension
 
     zip_buffer.seek(0)
     return zip_buffer, zip_name
+
+# def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
+#     print(f"files_to_zip...")
+#     # Check if list_files has exactly one non-None element
+#     valid_files = [file for file in list_files if file is not None]
+#     if len(valid_files) == 1:
+#         return io_output.io_output(valid_files[0]), list_names[0]  # Return the DataFrame directly
+#
+#     # Create an in-memory zip file
+#     zip_buffer = io.BytesIO()
+#     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+#         for file, name in zip(list_files, list_names):
+#             if file is not None:
+#                 df_output = io.BytesIO()
+#                 with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
+#                     file.to_excel(writer, index=False)
+#                 df_output.seek(0)
+#                 zip_file.writestr(name, df_output.getvalue())
+#
+#     zip_buffer.seek(0)
+#     return zip_buffer, zip_name
 
 
 def convert_to_dataframe(data, columns):
@@ -346,10 +390,20 @@ def keys_values_in_list_from_dict(dfs_dict, ext=''):
     filtered_dfs_list = []
     filtered_dfs_names_list = []
 
-    for name, df in dfs_dict.items():
-        if not df.empty:
-            filtered_dfs_list.append(df)
-            filtered_dfs_names_list.append(f"{name}{ext}")
+    for name, value in dfs_dict.items():  # Используем "value" вместо "df"
+        if isinstance(value, pd.DataFrame):
+            # Если это DataFrame
+            if not value.empty:
+                filtered_dfs_list.append(value)
+                filtered_dfs_names_list.append(f"{name}{ext}")
+        elif isinstance(value, list):
+            # Если это список (предположительно список DataFrame)
+            if value:  # Проверяем, что список не пуст
+                filtered_dfs_list.append(value)
+                filtered_dfs_names_list.append(f"{name}{ext}")
+        else:
+            # Если это что-то другое (например, None), игнорируем
+            print(f"Warning: Skipping '{name}' due to unsupported type: {type(value)}")
 
     return filtered_dfs_list, filtered_dfs_names_list
 

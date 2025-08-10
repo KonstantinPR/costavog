@@ -106,11 +106,15 @@ def upload_detailing():
     df_template = detailing_upload_module.df_disc_template_create(df, df_promo, r.is_discount_template)
     df_min_priced = detailing_upload_module.min_price(df, pow_k=0.5, k=80)
 
-    dfs_dict = {'df': df, 'df_promo': df_promo, 'df_template': df_template, 'df_merged_dynamic': df_merged_dynamic,
+    df_dynamic_list_out = detailing_upload_module.remain_only_columns(
+        cols=detailing_upload_dict_module.INITIAL_COLUMNS_DICT.values(), dfs=df_dynamic_list)
+
+    dfs_dict = {'dfs_sheets': df_dynamic_list_out, 'df': df, 'df_promo': df_promo, 'df_template': df_template,
+                'df_merged_dynamic': df_merged_dynamic,
                 'df_merged_dynamic_by_prefix': df_merged_dynamic_by_prefix, 'df_min_priced': df_min_priced}
 
     # Filter out the empty DataFrames and their names
-    filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='.xlsx')
+    filtered_dfs_list, filtered_dfs_names_list = pandas_handler.keys_values_in_list_from_dict(dfs_dict, ext='')
 
     print(f"ready to zip {filtered_dfs_names_list}")
 

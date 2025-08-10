@@ -159,6 +159,7 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     df = pd.json_normalize(all_goods, 'sizes', ["vendorCode", 'nmID'], errors='ignore')
     # df['discount'] = (1 - (df['discountedPrice'] / df['price'])) * 100
     df['discount'] = ((df['price'] - df['discountedPrice']) / df['price']) * 100
+    df['d_disc'] = round(df['discount'])
 
     # Upload data to Yandex Disk
     file_name = "wb_price_data.xlsx"
@@ -441,7 +442,7 @@ def get_wb_sales_funnel_api(request,
     df_nmIDs = get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk)
     if not 'nmID' in df_nmIDs.columns: logging.warning(f'column nmID in df_nmIDs is not found')
 
-    nmIDs = df_nmIDs['nmID'].unique()
+    nmIDs = [int(nmID) for nmID in df_nmIDs['nmID'].unique() if pd.notnull(nmID)]
     if is_exclude_nmIDs:
         nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
         nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
@@ -464,6 +465,7 @@ def get_wb_sales_funnel_api(request,
     print(f"getting sales funnel by date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
+    # df.to_excel("funnel.xlsx")
 
     # Rename columns (stay only last part before points, for example statistic.order.date to only date)
     if is_erase_points:
@@ -485,18 +487,21 @@ def get_wb_sales_funnel_api(request,
     return df, file_name
 
 
-def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=4000):
+def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
     df = pd.DataFrame()
     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
     cards_count = chunk_size
+    print(f"getting sales_funnel with nmIDs {len(nmIDs)} qt ...")
     print(f"getting sales_funnel via API {cards_count} qt ...")
+    page = 1
     for chunk in chunks:
+
 
         payload = {
             "brandNames": [],
             "objectIDs": [],
             "tagIDs": [],
-            "nmIDs": chunk,
+            "nmIDs": [],
             "timezone": "Europe/Moscow",
             "period": {
                 "begin": date_from,
@@ -506,7 +511,7 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
                 "field": "ordersSumRub",
                 "mode": "asc"
             },
-            "page": 1
+            "page": page
         }
 
         response = requests.post(url, json=payload, headers=headers)
@@ -516,22 +521,25 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
             return None
         else:
             try:
-                # Convert the response data from JSON to a Python dictionary
+                # Convert the response data from JSON to Python dict
                 response_dict = json.loads(response.text)
 
-                # Extract the 'cards' data from the response dictionary
+                # Extract the 'cards' data from the response dict
                 cards_data = response_dict['data']['cards']
 
-                # Flatten the nested dictionaries into separate columns using pd.json_normalize
+                # Flatten the nested dictionaries into separate columns
                 df_chunk = pd.json_normalize(cards_data, errors='ignore', record_prefix='')
-
 
             except Exception as e:
                 logging.warning(f'Error parsing response: {e}')
                 return None
 
         df = pd.concat([df, df_chunk], ignore_index=True)
+        print(f"getting funnel page {page} with already cards_count {cards_count} qt  ...")
         cards_count += len(chunk)
+        # df.to_excel(f"df{page}.xlsx")
+        page += 1
+        time.sleep(20)
 
     return df
 
