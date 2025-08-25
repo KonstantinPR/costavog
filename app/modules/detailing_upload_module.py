@@ -89,7 +89,10 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
     df[col_min] = df[col_min].round(0)
 
     # Создаем DataFrame с Артикул WB
-    df_temp_min = pd.DataFrame({"Артикул WB": df["nmId"]})
+    df_temp_min = pd.DataFrame({
+        "Артикул WB": df["nmId"],
+        "Артикул поставщика": df["Артикул продавца"]
+    })
 
     # Мержим
     df_temp_min = df_temp_min.merge(df, left_on="Артикул WB", right_on="nmId", how='left')

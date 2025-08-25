@@ -113,7 +113,7 @@ def check_availability_actions(price, action_price, max_action_price, allowed_pe
     Returns a tuple: (new_price, take_place_flag)
     """
     suggested_price = max(action_price, max_action_price)
-    if price <= suggested_price:
+    if price <= suggested_price or price == 0:
         return suggested_price, 1
     else:
         # Calculate percentage difference
@@ -250,7 +250,6 @@ def go_in_action(df, headers, testing_mode=False, is_in_actions=True):
         return df
 
     url = "https://api-seller.ozon.ru/v1/actions/products/activate"
-
     # Add new columns to the original DataFrame for response info
     df['add_to_action_status'] = ''
     df['response_info'] = ''

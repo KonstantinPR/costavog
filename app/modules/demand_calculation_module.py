@@ -33,6 +33,7 @@ def clear_demand(df, qt_correct=True):
 
     df = df[
         ['vendorCode', 'techSize', 'wbSize', 'Кол-во', 'quantityFull', 'Маржа-себест./ шт.', 'Маржа-себест.',
+         'Маржа-себест._2025',
          'Маржа-себест._all',
          'Маржа-себест./ шт._all']]
 

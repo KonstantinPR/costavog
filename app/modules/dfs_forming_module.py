@@ -284,10 +284,9 @@ def profit_count(df):
 
 def get_period_sales(df, date_min, date_max, default_amount_days=DEFAULT_AMOUNT_DAYS, days_fading=0.25):
     days_period = (date_max - date_min).days
-
     df['days_period'] = days_period
     df['smooth_days'] = (df['days_period'] / default_amount_days) ** days_fading
-    print(f"smooth_days {df['smooth_days'].mean()}")
+    # print(f"smooth_days {df['smooth_days'].mean()}")
     return df
 
 

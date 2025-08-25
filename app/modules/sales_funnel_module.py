@@ -46,6 +46,63 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     df[func_discount] = ''
 
     df = pandas_handler.replace_false_values(df, [buyoutsCount, quantityFull], FALSE_LIST)
+    df.loc[df[quantityFull].isin(FALSE_LIST), quantityFull] = 0.5
+    df.loc[df[buyoutsCount].isin(FALSE_LIST), buyoutsCount] = 0
+    df = df.reset_index(drop=True)
+
+    if 'net_cost' in df.columns:
+        def check_price(main_price, net_cost):
+            if main_price in pandas_handler.FALSE_LIST_2:
+                main_price = round(net_cost ** 0.6 * 100)
+            return main_price
+
+        df['price'] = [check_price(main_price, net_cost) for main_price, net_cost in zip(df['price'], df['net_cost'])]
+    df['price'] = df['price'].apply(lambda x: default_price if x in pandas_handler.FALSE_LIST_2 else x)
+
+    # disc	k	ord	y
+    # 32	4	1	29
+    # 32	4	2	28
+    # 32	4	4	27
+    # 32	4	10	26
+
+    k = 4
+    if 'smooth_days' not in df.columns: df['smooth_days'] = 1
+    df[func_discount] = (df[discount] * k + df[discount] / (1 + (df[ordersCount] / df['smooth_days']) ** 0.5)) / (k + 1)
+    df['func_delta'] = df[discount] - df[func_discount]
+    # df[func_discount] = df[func_discount].apply(lambda x: 1 if x < 0 else x)
+
+    df[func_discount] = round(df[func_discount])
+    df.loc[df[quantityFull] == 0.5, quantityFull] = 0
+
+    return df
+
+
+def calculate_discount_old(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8, smooth_days=1,
+                           discount_columns: dict = None):
+    """
+    make k_discount to be around 1 by sigmoid
+    n_net: how hard price/netcost affect the discount changing
+    """
+
+    default_price = 2000
+
+    if not discount_columns:
+        discount_columns = DISCOUNT_COLUMNS
+
+    buyoutsCount = discount_columns['buyoutsCount']
+    ordersCount = discount_columns['ordersCount']
+    quantityFull = discount_columns['quantityFull']
+    price = discount_columns['price']
+    func_discount = discount_columns['func_discount']
+    discount = discount_columns['discount']
+
+    FALSE_LIST = pandas_handler.FALSE_LIST_2
+    # FALSE_LIST = pandas_handler.FALSE_LIST
+    if 'price_disc' not in df.columns:
+        df['price_disc'] = df[price] * (1 - df[discount] / 100)
+    df[func_discount] = ''
+
+    df = pandas_handler.replace_false_values(df, [buyoutsCount, quantityFull], FALSE_LIST)
 
     # df[[buyoutsCount, quantityFull]] = df[[buyoutsCount, quantityFull]].fillna(0)
 
@@ -93,6 +150,7 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     k = 5
     df['k_sell/stock'] = (((df['k1'] + df['k2']) * df['k3']) / (5 + df[quantityFull])) / k
     # Calculate new discount
+    # 32
     df['func_delta'] = df[discount] - (1 - ((df['price_disc'] * (1 + df['k_sell/stock'])) / df[price])) * 100
     df['func_delta'] = df['func_delta'].apply(pandas_handler.false_to_null)
     if 'smooth_days' not in df.columns: df['smooth_days'] = 1
