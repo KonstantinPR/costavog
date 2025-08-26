@@ -257,16 +257,20 @@ def go_in_action(df, headers, testing_mode=False, is_in_actions=True):
     # Filter only products where take_place == 1
     df_prepared = df[df['take_place'] == 1][['action_id', 'product_id', 'allowed_price', 'stock']]
 
-    for action_id in df_prepared['action_id'].unique():
-        # Select products for current action_id
-        products_for_action = df_prepared[df_prepared['action_id'] == action_id]
+    # Remove rows with NaN action_id
+    df_prepared = df[df['take_place'] == 1].dropna(subset=['action_id'])
 
-        # Build products list with required fields
+    for action_id in df_prepared['action_id'].unique():
+        products_for_action = df_prepared[df_prepared['action_id'] == action_id]
+        # Ensure action_id is valid
+        if pd.isna(action_id):
+            continue
+
         products_list = [
             {
-                "action_price": row['allowed_price'],
+                "action_price": row['allowed_price'] if pd.notna(row['allowed_price']) else 0,
                 "product_id": row['product_id'],
-                "stock": row['stock']
+                "stock": row['stock'] if pd.notna(row['stock']) else 0
             }
             for _, row in products_for_action.iterrows()
         ]
@@ -275,7 +279,7 @@ def go_in_action(df, headers, testing_mode=False, is_in_actions=True):
             "action_id": action_id,
             "products": products_list
         }
-
+        print(payload)
         # Make the API request
         response = requests.post(url=url, json=payload, headers=headers)
 

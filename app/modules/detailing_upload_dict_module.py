@@ -165,6 +165,7 @@ CHOSEN_COLUMNS = [
     "k_pure_value",
     "k_qt_full",
     "k_rating",
+    "Rating",
     "k_discount",
     "openCardCount",
     "addToCartCount",
