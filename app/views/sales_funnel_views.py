@@ -20,7 +20,7 @@ def sales_funnel_analyses():
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
                                                     path_or_config=app.config['YANDEX_SALES_FUNNEL_WB'])
 
-    column_first = ['nmID', 'vendorCode', 'delta', 'func_discount', 'discount', 'buyoutsCount',
+    column_first = ['nmID', 'vendorCode', 'delta', 'func_discount', 'discount', 'buyoutCount',
                     'quantityFull', 'ordersCount',
                     'cancelCount', 'avgPriceRub', 'storagePricePerBarcode',
                     'net_cost', 'price', 'price_disc', 'disc_recommended', 'price_recommended']

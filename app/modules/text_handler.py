@@ -1,4 +1,5 @@
 import pandas as pd
+from collections import defaultdict
 
 
 def names_multiply_old(df, multiply, start_from=1):
@@ -43,43 +44,79 @@ def names_multiply_old(df, multiply, start_from=1):
 #     return df
 
 
+# def names_multiply(df, multiply, input_column="Артикул", start_from=1, step=1):
+#     """
+#     Multiply strings in a DataFrame column based on the given parameters.
+#
+#     Parameters:
+#     - df (pd.DataFrame): DataFrame containing the input column.
+#     - multiply (int): The multiplication factor for each string.
+#     - input_column (str): The name of the column containing strings and numbers.
+#     - start_from (int): The starting number for the multiplication.
+#     - step (int): The step size for incrementing numbers.
+#
+#     Returns:
+#     - pd.DataFrame: DataFrame with multiplied strings.
+#     """
+#     list_of_multy = []
+#
+#     if input_column not in df.columns:
+#         raise ValueError(f"Column '{input_column}' not found in DataFrame.")
+#
+#     for item in df[input_column]:
+#         # Extract the string and number
+#         parts = item.split('\t')
+#
+#         if len(parts) == 2:
+#             string, number = parts
+#             if number:
+#                 number = int(number)
+#             else:
+#                 # If the number is not provided, use the default multiplication factor
+#                 string, number = parts[0], multiply
+#         else:
+#             string, number = parts[0], multiply
+#
+#         # Create new strings by appending numbers from start_from to the given number with the specified step
+#         for n in range(start_from, number + start_from, step):
+#             list_of_multy.append(f'{string}-{n}.JPG')
+#
+#     df_result = pd.DataFrame(list_of_multy)
+#
+#     return df_result
+
+
 def names_multiply(df, multiply, input_column="Артикул", start_from=1, step=1):
     """
-    Multiply strings in a DataFrame column based on the given parameters.
+    Multiply strings in a DataFrame column, handling duplicates and continuing numbering.
 
     Parameters:
     - df (pd.DataFrame): DataFrame containing the input column.
-    - multiply (int): The multiplication factor for each string.
-    - input_column (str): The name of the column containing strings and numbers.
-    - start_from (int): The starting number for the multiplication.
+    - multiply (int): The multiplication factor (not directly used for duplicates).
+    - input_column (str): The name of the column containing strings.
+    - start_from (int): The starting number for the multiplication (initial value).
     - step (int): The step size for incrementing numbers.
 
     Returns:
-    - pd.DataFrame: DataFrame with multiplied strings.
+    - pd.DataFrame: DataFrame with multiplied strings, handling duplicates.
     """
     list_of_multy = []
-
     if input_column not in df.columns:
         raise ValueError(f"Column '{input_column}' not found in DataFrame.")
 
+    counts = defaultdict(int)  # Keep track of the last number used for each string.
+
     for item in df[input_column]:
-        # Extract the string and number
-        parts = item.split('\t')
+        # Extract the string (assuming no tab separation in your example)
+        string = str(item).strip()  # Ensure it's a string and remove leading/trailing whitespace
 
-        if len(parts) == 2:
-            string, number = parts
-            if number:
-                number = int(number)
-            else:
-                # If the number is not provided, use the default multiplication factor
-                string, number = parts[0], multiply
-        else:
-            string, number = parts[0], multiply
+        # Determine the starting number for this string
+        start_num = counts[string] + 1  # Use the next available number
 
-        # Create new strings by appending numbers from start_from to the given number with the specified step
-        for n in range(start_from, number + start_from, step):
+        # Generate the multiplied strings
+        for n in range(start_num, start_num + multiply):
             list_of_multy.append(f'{string}-{n}.JPG')
+            counts[string] = n  # Update last used number.
 
     df_result = pd.DataFrame(list_of_multy)
-
     return df_result

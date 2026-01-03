@@ -115,7 +115,8 @@ def dfs_forming(df, d, r, include_columns) -> pd.DataFrame:
     df = pattern_splitting(df, prefixes_dict=PREFIXES_ART_DICT)
 
     if r.is_funnel and not d.df_funnel.empty:
-        df = pandas_handler.df_merge_drop(df, d.df_funnel, "nmId", "nmID")
+        # df = pandas_handler.df_merge_drop(df, d.df_funnel, "nmId", "nmID")
+        df = pandas_handler.df_merge_drop(df, d.df_funnel, "nmId", "nmId")
         df = sales_funnel_module.calculate_discount(df, discount_columns=discount_columns)
         df = price_module.mix_discounts(df, r.is_mix_discounts)
 

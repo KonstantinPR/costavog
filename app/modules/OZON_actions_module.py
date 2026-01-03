@@ -279,7 +279,7 @@ def go_in_action(df, headers, testing_mode=False, is_in_actions=True):
             "action_id": action_id,
             "products": products_list
         }
-        print(payload)
+        # print(payload)
         # Make the API request
         response = requests.post(url=url, json=payload, headers=headers)
 

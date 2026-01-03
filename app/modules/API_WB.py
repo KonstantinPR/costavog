@@ -11,8 +11,7 @@ from app.modules import yandex_disk_handler, pandas_handler, request_handler
 
 
 def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
-                     days_delay=0,
-                     upload_to_yadisk=True, is_mean=True, is_archive=True):
+                     days_delay=0, upload_to_yadisk=True, is_mean=True, is_archive=True):
     print(f"get_storage_cost...")
 
     if testing_mode:
@@ -42,13 +41,15 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
         logging.warning("Failed to create report so file will be got from yadisk::", response.text)
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
-
+    print(response)
     task_id = response.json()['data']['taskId']
+    print(f" task_id {task_id}")
 
     # Step 2: Check report status
     status_url = f'https://seller-analytics-api.wildberries.ru/api/v1/paid_storage/tasks/{task_id}/status'
     while True:
         response = requests.get(status_url, headers=headers)
+        print(f"response.status_code {response.status_code}")
         if response.status_code not in {200, 201}:
             logging.warning("Failed to check report status so file will be got from yadisk:", response.text)
             df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
@@ -64,11 +65,18 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
         # Wait and try again after some time
         time.sleep(10)  # Adjust sleep duration as needed
 
-    # Step 3: Download report
+    # Step 3: Download report with simple fallback
     download_url = f'https://seller-analytics-api.wildberries.ru/api/v1/paid_storage/tasks/{task_id}/download'
-    response = requests.get(download_url, headers=headers)
-    if response.status_code not in {200, 201}:
-        logging.warning("Failed to download report so file will be got from yadisk::", response.text)
+
+    try:
+        response = requests.get(download_url, headers=headers, timeout=30)
+        if response.status_code not in {200, 201}:
+            raise Exception(f"Download failed with status {response.status_code}")
+
+        report_data = response.json()
+    except Exception as e:
+        print(f"Download failed with error: {str(e)}")
+        logging.warning("Failed to download report, using yadisk backup")
         df, _ = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_STORAGE_COST')
         return df
 
@@ -92,7 +100,7 @@ def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.
                                                         is_archive=is_archive)
         yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
                                                  path=app.config['YANDEX_KEY_STORAGE_COST'])
-
+    print(f"get_storage_cost completed ...")
     return df
 
 
@@ -233,8 +241,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
-        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
-        df['quantityFull'] = df['quantityFullAll']
+        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
         df = df.reset_index().rename_axis(None, axis=1)
 
         if is_archive:
@@ -268,8 +275,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
-        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
-        df['quantityFull'] = df['quantityFullAll']
+        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
         df = df.reset_index().rename_axis(None, axis=1)
 
         return df
@@ -294,8 +300,7 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
                                      },
                             margins=False)
 
-        df['quantityFullAll'] = df['quantityFull'] + df['inWayFromClient'] + df['inWayToClient']
-        df['quantityFull'] = df['quantityFullAll']
+        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
         df = df.reset_index().rename_axis(None, axis=1)
 
         return df
@@ -443,29 +448,30 @@ def get_wb_sales_funnel_api(request,
     if not 'nmID' in df_nmIDs.columns: logging.warning(f'column nmID in df_nmIDs is not found')
 
     nmIDs = [int(nmID) for nmID in df_nmIDs['nmID'].unique() if pd.notnull(nmID)]
+    print(f"len of len(nmIDs) is {len(nmIDs)}")
     if is_exclude_nmIDs:
         nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
         nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
 
-    api_key = app.config['WB_API_TOKEN2']
-    url = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
+    with app.app_context():
+        api_key = app.config['WB_API_TOKEN2']
+    url = "https://seller-analytics-api.wildberries.ru/api/analytics/v3/sales-funnel/products"
     headers = {
         "Authorization": api_key,
         "Content-Type": "application/json"
     }
 
     # Convert the input date strings to datetime objects
-    date_from = datetime.strptime(date_from, "%Y-%m-%d")
-    date_end = datetime.strptime(date_end, "%Y-%m-%d")
-
-    # Convert the datetime objects to the desired format strings
-    date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
-    date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
+    date_from = datetime.strptime(date_from, "%Y-%m-%d").strftime("%Y-%m-%d")
+    date_end = datetime.strptime(date_end, "%Y-%m-%d").strftime("%Y-%m-%d")
 
     print(f"getting sales funnel by date_from {date_from}, date_end {date_end}")
 
     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
-    # df.to_excel("funnel.xlsx")
+
+    if df is None:
+        print("Error: _sales_funnel_loop_request returned None.  Unable to proceed.")
+        return pd.DataFrame(), None  # Return an empty DataFrame and None
 
     # Rename columns (stay only last part before points, for example statistic.order.date to only date)
     if is_erase_points:
@@ -487,62 +493,218 @@ def get_wb_sales_funnel_api(request,
     return df, file_name
 
 
+# def get_wb_sales_funnel_api(request,
+#                             testing_mode=False,
+#                             is_funnel=True,
+#                             is_re_double=True,
+#                             is_to_yadisk=True) -> (pd.DataFrame, str):
+#     """get_wb_sales_funnel_api"""
+#     print("get_wb_sales_funnel_api...")
+#     if not is_funnel:
+#         return pd.DataFrame, None
+#
+#     date_from = request_handler.request_date_from(request)
+#     date_end = request_handler.request_date_end(request)
+#
+#     if testing_mode:
+#         print(f"df downloading in {get_wb_sales_funnel_api.__doc__} from YandexDisk")
+#         df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_SALES_FUNNEL_WB')
+#         return df, filename
+#
+#     is_from_yadisk = request.form.get('is_from_yadisk')
+#     testing_mode = request.form.get('testing_mode')
+#     is_erase_points = request.form.get('is_erase_points')
+#     is_exclude_nmIDs = request.form.get('is_exclude_nmIDs')
+#
+#     # Retrieve nmIDs from API and exclude cards from Yandex Disk
+#     df_nmIDs = get_all_cards_api_wb(testing_mode=testing_mode, is_from_yadisk=is_from_yadisk)
+#     if not 'nmID' in df_nmIDs.columns: logging.warning(f'column nmID in df_nmIDs is not found')
+#
+#     nmIDs = [int(nmID) for nmID in df_nmIDs['nmID'].unique() if pd.notnull(nmID)]
+#     if is_exclude_nmIDs:
+#         nmIDs_exclude = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_EXCLUDE_CARDS')[0]['nmID']
+#         nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
+#
+#     api_key = app.config['WB_API_TOKEN2']
+#     # url = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
+#     url = "https://seller-analytics-api.wildberries.ru/api/analytics/v3/sales-funnel/products"
+#     headers = {
+#         "Authorization": api_key,
+#         "Content-Type": "application/json"
+#     }
+#
+#     # Convert the input date strings to datetime objects
+#     date_from = datetime.strptime(date_from, "%Y-%m-%d")
+#     date_end = datetime.strptime(date_end, "%Y-%m-%d")
+#
+#     # Convert the datetime objects to the desired format strings
+#     date_from = date_from.strftime("%Y-%m-%d %H:%M:%S")
+#     date_end = date_end.strftime("%Y-%m-%d %H:%M:%S")
+#
+#     print(f"getting sales funnel by date_from {date_from}, date_end {date_end}")
+#
+#     df = _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers)
+#     # df.to_excel("funnel.xlsx")
+#
+#     # Rename columns (stay only last part before points, for example statistic.order.date to only date)
+#     if is_erase_points:
+#         df = df.rename(columns=lambda x: x.split('.')[-1])
+#
+#     if is_re_double:
+#         df = _rename_double_columns(df, "_re")
+#
+#     if is_to_yadisk and df is not None and not df.empty:
+#         file_name = f'wb_sales_funnel.xlsx'
+#         print(f'df uploading in {get_wb_sales_funnel_api.__doc__} to YandexDisk by name {file_name}')
+#         yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+#                                                  path=app.config['YANDEX_SALES_FUNNEL_WB'])
+#
+#     # Log a message indicating successful retrieval of sales funnel data
+#     print("Sales funnel data retrieved successfully")
+#     file_name = f'wb_sales_funnel_{str(date_from)[:10]}_{str(date_end[:10])}.xlsx'
+#
+#     return df, file_name
+
+
 def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
     df = pd.DataFrame()
-    chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
-    cards_count = chunk_size
-    print(f"getting sales_funnel with nmIDs {len(nmIDs)} qt ...")
-    print(f"getting sales_funnel via API {cards_count} qt ...")
-    page = 1
-    for chunk in chunks:
+    total_cards = len(nmIDs)
+    page = 0  # Offset counter
+    all_data_retrieved = False
 
+    print(f"Getting sales funnel data for {total_cards} nmIDs in chunks of {chunk_size}...")
 
+    while not all_data_retrieved:
         payload = {
-            "brandNames": [],
-            "objectIDs": [],
-            "tagIDs": [],
-            "nmIDs": [],
-            "timezone": "Europe/Moscow",
-            "period": {
-                "begin": date_from,
+            "selectedPeriod": {
+                "start": date_from,
                 "end": date_end
             },
+            "nmIds": [],  # Get all products (empty list means all)
+            "brandNames": [],
+            "subjectIds": [],
+            "tagIds": [],
+            "skipDeletedNm": False,
             "orderBy": {
-                "field": "ordersSumRub",
+                "field": "orderCount",
                 "mode": "asc"
             },
-            "page": page
+            "limit": chunk_size,
+            "offset": page * chunk_size
         }
 
-        response = requests.post(url, json=payload, headers=headers)
-        print(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
-        if response.status_code != 200:
-            logging.warning(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            response_dict = response.json()
+
+            if 'data' in response_dict and 'products' in response_dict['data']:
+                cards_data = response_dict['data']['products']
+                if not cards_data:  # If no data, we're done
+                    all_data_retrieved = True
+                    print("No more data to retrieve.")
+                    break
+
+                df_chunk = pd.json_normalize(cards_data, errors='ignore')
+                df = pd.concat([df, df_chunk], ignore_index=True)
+                num_cards = len(cards_data)
+                print(f"Processed page {page + 1}, cards: {num_cards} (Total {len(df)} cards)")
+
+                if num_cards < chunk_size:  # THIS MUST BE HERE IF NOT THE LOOP WILL BE INFINITE
+                    all_data_retrieved = True
+                    print("The end of page")
+
+            else:
+                logging.warning(f"No 'data' or 'products' found in response: {response_dict}")
+                print("No data found in this chunk.")
+                all_data_retrieved = True
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
+            print(f"Request failed: {e}")
+            if hasattr(response, 'json'):
+                print(f"Json: {response.json()}")
+            else:
+                print("No JSON response available")
             return None
-        else:
-            try:
-                # Convert the response data from JSON to Python dict
-                response_dict = json.loads(response.text)
 
-                # Extract the 'cards' data from the response dict
-                cards_data = response_dict['data']['cards']
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to decode response: {e}, Response text: {response.text}")
+            print(f"Failed to decode JSON response: {e}")
+            return None
 
-                # Flatten the nested dictionaries into separate columns
-                df_chunk = pd.json_normalize(cards_data, errors='ignore', record_prefix='')
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
+            print(f"An unexpected error occurred: {e}")
+            return None
 
-            except Exception as e:
-                logging.warning(f'Error parsing response: {e}')
-                return None
-
-        df = pd.concat([df, df_chunk], ignore_index=True)
-        print(f"getting funnel page {page} with already cards_count {cards_count} qt  ...")
-        cards_count += len(chunk)
-        # df.to_excel(f"df{page}.xlsx")
         page += 1
         time.sleep(20)
 
+    print("Sales funnel data retrieval complete.")
+    # df.to_excel("funnel_all.xlsx", index=False)  # Write to excel output AFTER the loop
     return df
 
+
+# def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
+#     df = pd.DataFrame()
+#     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
+#     cards_count = chunk_size
+#     print(f"getting sales_funnel with nmIDs {len(nmIDs)} qt ...")
+#     print(f"getting sales_funnel via API {cards_count} qt ...")
+#     page = 1
+#     for chunk in chunks:
+#
+#
+#         payload = {
+#             "brandNames": [],
+#             "objectIDs": [],
+#             "tagIDs": [],
+#             "nmIDs": [],
+#             "timezone": "Europe/Moscow",
+#             # "period": {
+#             #     "begin": date_from,
+#             #     "end": date_end
+#             # },
+#             "selectedPeriod": {
+#                 "begin": date_from,
+#                 "end": date_end
+#             },
+#             "orderBy": {
+#                 "field": "ordersSumRub",
+#                 "mode": "asc"
+#             },
+#             "page": page
+#         }
+#
+#         response = requests.post(url, json=payload, headers=headers)
+#         print(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
+#         if response.status_code != 200:
+#             logging.warning(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
+#             return None
+#         else:
+#             try:
+#                 # Convert the response data from JSON to Python dict
+#                 response_dict = json.loads(response.text)
+#
+#                 # Extract the 'cards' data from the response dict
+#                 cards_data = response_dict['data']['cards']
+#
+#                 # Flatten the nested dictionaries into separate columns
+#                 df_chunk = pd.json_normalize(cards_data, errors='ignore', record_prefix='')
+#
+#             except Exception as e:
+#                 logging.warning(f'Error parsing response: {e}')
+#                 return None
+#
+#         df = pd.concat([df, df_chunk], ignore_index=True)
+#         print(f"getting funnel page {page} with already cards_count {cards_count} qt  ...")
+#         cards_count += len(chunk)
+#         # df.to_excel(f"df{page}.xlsx")
+#         page += 1
+#         time.sleep(20)
+#
+#     return df
 
 def _rename_double_columns(df, suffix):
     # Get the list of column names

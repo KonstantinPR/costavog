@@ -5,6 +5,7 @@ MATERIAL_DICT = {
     'N1278': 'N1278',
     'MUTON': 'MUTON',
 }
+
 PREFIXES_ART_DICT = {
     'SHK': 'SH',
     'SH': 'SH',
@@ -12,6 +13,7 @@ PREFIXES_ART_DICT = {
     'SN': 'SK',
     'SF': 'SF',
     'J': 'J',
+    'JZ': 'J',
     'MIT': 'MIT',
     'AN': 'MIT',
     'MK': 'MIT',
@@ -39,6 +41,8 @@ PREFIXES_ART_DICT = {
     'PRS': 'PRS',
     'IANCO': 'IANCO',
 }
+
+
 STRFORMAT_DEFAULT = '%Y-%m-%d'
 INITIAL_COLUMNS_DICT = {
     'brand': 'Бренд',
@@ -171,15 +175,15 @@ CHOSEN_COLUMNS = [
     "addToCartCount",
     "ordersCount",
     "ordersSumRub",
-    "buyoutsCount",
-    "buyoutsSumRub",
+    "buyoutCount",
+    "buyoutSumRub",
     "cancelCount",
     "cancelSumRub",
     "avgOrdersCountPerDay",
     "avgPriceRub",
     "addToCartPercent",
     "cartToOrderPercent",
-    "buyoutsPercent",
+    "buyoutPercent",
     "k_norma_revenue",
     "Новая минимальная цена для применения скидки по автоакции"
 ]

@@ -10,13 +10,13 @@
     <br>
 
 
-<!--    <div class="text-left">-->
-<!--        <div class="row p-2 bg-light">-->
-<!--            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным через запятую.-->
-<!--                Спецификация - первая, заполненный произвольный лист эксель - второй-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
+    <!--    <div class="text-left">-->
+    <!--        <div class="row p-2 bg-light">-->
+    <!--            <div>Объединить в один данные из двух excel таблиц, сопоставление по значениям, перечисленным через запятую.-->
+    <!--                Спецификация - первая, заполненный произвольный лист эксель - второй-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--    </div>-->
 
     <div class="row text-left">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -29,12 +29,12 @@
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
                             <select class="form-control form-control-lg" name="merge_option">
-                                <option value="concatenate">Concatenate</option>
                                 <option value="merge">Merge</option>
+                                <option value="concatenate">Concatenate</option>
                             </select>
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
-                            <input placeholder="Лист1" class="form-control form-control-lg" type="text"
+                            <input placeholder="Лист1" class="form-control form-control-lg" type="text" value="Лист1"
                                    name="sheet_name">
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 p-2">
@@ -45,7 +45,7 @@
                             <input class="form-check-input" type="checkbox" value="fill_new_spec"
                                    name="fill_new_spec"
                                    id="fill_new_spec"
-                                   checked>
+                            >
                             <label class="form-check-label" for="fill_new_spec">
                                 Заполнить данными первую таблицу (оставляем без изменений)
                             </label>

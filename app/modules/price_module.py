@@ -29,12 +29,14 @@ def mix_discounts(df, is_mix_discounts=False, k_func_disc=1, k_n_disc=3):
     df['new_discount'] = (df['func_discount'] * k_func_disc + df['n_discount'] * k_n_disc) / sum_k_discount
     df['d_disc'] = round(df['discount'] - df['new_discount'])
     df['new_price'] = round(df['price'] * (1 - df['new_discount'] / 100))
+    df['new_price'] = df['new_price'].fillna(df['price'])
+    df.loc[df['new_price'].isin(app.modules.pandas_handler.FALSE_LIST_3), 'new_price'] = df['price']
 
     return df
 
 
 def count_norma_revenue(df):
-    # k_norma must count dynamicly every time as clear_sell/(clear_sell - (storage + logistic...)) + norma_revenue
+    # k_norma must count dynamically every time as clear_sell/(clear_sell - (storage + logistic...)) + norma_revenue
     # (bank_deposit * 2 = ~40%)
     # for example 200 / (30 + 70) + 0.4 = 2.4 it means that we give wb 50% of sell price, and in that case
     # price (with disc) of goods must be (net_cost * 2.4)

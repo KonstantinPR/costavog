@@ -58,7 +58,7 @@ def zips_to_list(zip_downloaded):
 
 
 def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная цена для применения скидки по автоакции",
-              col_price="net_cost"):
+              col_price="net_cost", new_price="new_price"):
     """Calculate and return a subset DataFrame with updated min prices, without modifying the original."""
     # List of desired columns
     columns = [
@@ -78,20 +78,28 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
         raise KeyError("Column 'nmId' not found in DataFrame.")
 
     # Обрабатываем нулевые цены
-    df[col_price] = df[col_price].replace(0, np.nan)
+    df_col_price = pd.to_numeric(df[col_price], errors='coerce').fillna(0)
+    df_new_price = pd.to_numeric(df[new_price], errors='coerce')
+    # Then, fill NaN values with corresponding values from df["price"]
+    df_new_price = df_new_price.fillna(df["price"])
+    df.loc[df['new_price'].isin(pandas_handler.FALSE_LIST_3), 'new_price'] = df['price']
 
     # Расчет минимальной цены:
-    # 2000 3578
+    # 2000 (3578 + 4900) / 2 = 4239
     # 1000 2530
     # 500 1789
     # 100 800
-    df[col_min] = (df[col_price] ** pow_k) * k
+
+    df[col_min] = ((df_col_price ** pow_k) * k)
+    # 2000 (3578 + 4900) / 2 = 4239
+    df[col_min] = (df[col_min] + df_new_price) / 2
     df[col_min] = df[col_min].round(0)
+    df.loc[df[col_min] > df['new_price'], col_min] = df['new_price']
 
     # Создаем DataFrame с Артикул WB
     df_temp_min = pd.DataFrame({
         "Артикул WB": df["nmId"],
-        "Артикул поставщика": df["Артикул продавца"]
+        # "Артикул поставщика": df["Артикул продавца"]
     })
 
     # Мержим
@@ -107,6 +115,7 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
     df_temp_min.replace('', np.nan, inplace=True)
     df_temp_min = df_temp_min.dropna(how='all')
     df_temp_min.replace(np.nan, '', inplace=True)
+    df_temp_min = df_temp_min[df_temp_min["Артикул WB"] != ""]
 
     return df_temp_min
 
@@ -264,22 +273,18 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
             agg_dict[col] = 'sum'
 
     # Perform groupby with aggregation
-    df_merged_dynamic_by_col = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
+    df_merged_dynamic = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
 
-    # Upload to Yandex Disk if conditions are met
+
+    # Upload to Yandex Disk if needed
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
-        # Generate filename
-        filename = "merged_dynamic_" + pd.Timestamp.now().strftime("%Y%m%d_%H%M%S") + ".xlsx"
-        # Compose path
-        save_path = app.config[r.path_to_save] + '/DYNAMIC_PER_PRE'
-        # Upload
         yandex_disk_handler.upload_to_YandexDisk(
-            file=df_merged_dynamic_by_col,
-            file_name=filename,
-            path=save_path
+            file=df_merged_dynamic,
+            file_name=nameof(df_merged_dynamic) + ".xlsx",
+            path=app.config[r.path_to_save] + "/DYNAMIC_PER_PRE"
         )
 
-    return df_merged_dynamic_by_col
+    return df_merged_dynamic
 
 
 @timing_decorator
@@ -305,6 +310,7 @@ def influence_discount_by_dynamic(df, df_dynamic, k_influence=2):
     df["new_discount"] = df["new_discount"] - df["ABC_XYZ_delta"]
     df["new_discount"] = df["new_discount"].apply(lambda x: round(x, 0))
     df['new_price'] = round(df['price'] * (1 - df['new_discount'] / 100))
+    df.loc[df['new_price'].isin(pandas_handler.FALSE_LIST_3), 'new_price'] = df['price']
 
     return df
 

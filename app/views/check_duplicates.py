@@ -2,6 +2,7 @@ import os
 from collections import defaultdict
 import chardet
 
+# DATAMARTIX CHECK DUPLICATES Кизы ищем дубликаты повторяющиеся коды
 def detect_file_encoding(file_path):
     with open(file_path, 'rb') as f:
         result = chardet.detect(f.read())

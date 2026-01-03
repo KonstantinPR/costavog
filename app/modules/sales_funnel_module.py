@@ -11,9 +11,10 @@ import numpy as np
 import pandas as pd
 
 DISCOUNT_COLUMNS = {
-    'buyoutsCount': 'buyoutsCount',
-    'ordersCount': 'ordersCount',
-    'quantityFull': 'stocksWb',
+    'buyoutCount': 'buyoutCount',
+    'orderCount': 'orderCount',
+    # 'quantityFull': 'stocksWb',
+    'quantityFull': 'quantityFull',
     'price': 'price',
     'func_discount': 'func_discount',
     'discount': 'discount',
@@ -32,8 +33,8 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
     if not discount_columns:
         discount_columns = DISCOUNT_COLUMNS
 
-    buyoutsCount = discount_columns['buyoutsCount']
-    ordersCount = discount_columns['ordersCount']
+    buyoutCount = discount_columns['buyoutCount']
+    orderCount = discount_columns['orderCount']
     quantityFull = discount_columns['quantityFull']
     price = discount_columns['price']
     func_discount = discount_columns['func_discount']
@@ -45,9 +46,9 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
         df['price_disc'] = df[price] * (1 - df[discount] / 100)
     df[func_discount] = ''
 
-    df = pandas_handler.replace_false_values(df, [buyoutsCount, quantityFull], FALSE_LIST)
+    df = pandas_handler.replace_false_values(df, [buyoutCount, quantityFull], FALSE_LIST)
     df.loc[df[quantityFull].isin(FALSE_LIST), quantityFull] = 0.5
-    df.loc[df[buyoutsCount].isin(FALSE_LIST), buyoutsCount] = 0
+    df.loc[df[buyoutCount].isin(FALSE_LIST), buyoutCount] = 0
     df = df.reset_index(drop=True)
 
     if 'net_cost' in df.columns:
@@ -67,7 +68,7 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
 
     k = 4
     if 'smooth_days' not in df.columns: df['smooth_days'] = 1
-    df[func_discount] = (df[discount] * k + df[discount] / (1 + (df[ordersCount] / df['smooth_days']) ** 0.5)) / (k + 1)
+    df[func_discount] = (df[discount] * k + df[discount] / (1 + (df[orderCount] / df['smooth_days']) ** 0.5)) / (k + 1)
     df['func_delta'] = df[discount] - df[func_discount]
     # df[func_discount] = df[func_discount].apply(lambda x: 1 if x < 0 else x)
 
@@ -89,7 +90,7 @@ def calculate_discount_old(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_ne
     if not discount_columns:
         discount_columns = DISCOUNT_COLUMNS
 
-    buyoutsCount = discount_columns['buyoutsCount']
+    buyoutCount = discount_columns['buyoutCount']
     ordersCount = discount_columns['ordersCount']
     quantityFull = discount_columns['quantityFull']
     price = discount_columns['price']
@@ -102,18 +103,18 @@ def calculate_discount_old(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_ne
         df['price_disc'] = df[price] * (1 - df[discount] / 100)
     df[func_discount] = ''
 
-    df = pandas_handler.replace_false_values(df, [buyoutsCount, quantityFull], FALSE_LIST)
+    df = pandas_handler.replace_false_values(df, [buyoutCount, quantityFull], FALSE_LIST)
 
-    # df[[buyoutsCount, quantityFull]] = df[[buyoutsCount, quantityFull]].fillna(0)
+    # df[[buyoutCount, quantityFull]] = df[[buyoutCount, quantityFull]].fillna(0)
 
-    # print(f"df[buyoutsCount] {df[buyoutsCount]}")
-    # print(f"buyoutsCount {buyoutsCount}")
+    # print(f"df[buyoutCount] {df[buyoutCount]}")
+    # print(f"buyoutCount {buyoutCount}")
 
     df.loc[df[quantityFull].isin(FALSE_LIST), quantityFull] = 0.5
 
-    df.loc[df[buyoutsCount].isin(FALSE_LIST), buyoutsCount] = 0
+    df.loc[df[buyoutCount].isin(FALSE_LIST), buyoutCount] = 0
 
-    # df.to_excel('buyoutsCount.xlsx')
+    # df.to_excel('buyoutCount.xlsx')
 
     # def is_numeric(value):
     #     return not np.isnan(pd.to_numeric(value, errors='coerce'))
@@ -122,9 +123,9 @@ def calculate_discount_old(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_ne
     # all_types_quantityFull = df[quantityFull].apply(lambda x: 'numeric' if is_numeric(x) else type(x)).unique()
     # print(f'Types in quantityFull: {all_types_quantityFull}')
     #
-    # # Check the types of values in the 'buyoutsCount' column
-    # all_types_buyoutsCount = df[buyoutsCount].apply(lambda x: 'numeric' if is_numeric(x) else type(x)).unique()
-    # print(f'Types in buyoutsCount: {all_types_buyoutsCount}')
+    # # Check the types of values in the 'buyoutCount' column
+    # all_types_buyoutCount = df[buyoutCount].apply(lambda x: 'numeric' if is_numeric(x) else type(x)).unique()
+    # print(f'Types in buyoutCount: {all_types_buyoutCount}')
 
     df = df.reset_index(drop=True)
 
@@ -138,13 +139,13 @@ def calculate_discount_old(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_ne
     df['price'] = df['price'].apply(lambda x: default_price if x in pandas_handler.FALSE_LIST_2 else x)
 
     # function
-    # df['k1'] = df[buyoutsCount] ** p_buy / df[quantityFull] ** p_qt
-    # df['k2'] = (df[buyoutsCount] + df[quantityFull])
-    k_buy_order = df[buyoutsCount].sum() / df[ordersCount].sum()
+    # df['k1'] = df[buyoutCount] ** p_buy / df[quantityFull] ** p_qt
+    # df['k2'] = (df[buyoutCount] + df[quantityFull])
+    k_buy_order = df[buyoutCount].sum() / df[ordersCount].sum()
     print(f"k_buy_order {k_buy_order}")
-    df['k1'] = df[buyoutsCount] ** p_buy / df[quantityFull] ** p_qt
+    df['k1'] = df[buyoutCount] ** p_buy / df[quantityFull] ** p_qt
     df['k2'] = (df[ordersCount] * k_buy_order) ** p_buy / df[quantityFull] ** p_qt
-    df['k3'] = (df[buyoutsCount] + df[ordersCount] * k_buy_order + df[quantityFull])
+    df['k3'] = (df[buyoutCount] + df[ordersCount] * k_buy_order + df[quantityFull])
 
     # function
     k = 5
