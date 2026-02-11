@@ -246,7 +246,7 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
         return pd.DataFrame()
 
     # Calculate total columns based on prefixes
-    sum_col = ['Маржа-себест.', 'Логистика', 'Маржа_', 'Ч. Продажа шт.', 'Хранение']
+    sum_col = ['Маржа-себест.', 'Логистика', 'Маржа_', 'Ч. Продажа шт.', 'Хранение', 'quantityFull']
     columns_to_sum = [col for col in df_merged_dynamic.columns if any(col.startswith(prefix) for prefix in sum_col)]
     # print(f"columns_to_sum {columns_to_sum}")
 
@@ -357,6 +357,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.is_funnel = request.form.get('is_funnel')
     r.k_delta = request.form.get('k_delta', 1)
     r.k_action_diff = request.form.get('k_action_diff', 7)
+    r.k_action_border = request.form.get('k_action_border', 35)
     r.is_mix_discounts = 'is_mix_discounts' in request.form
     r.reset_if_null = request.form.get('reset_if_null')
     r.is_first_df = request.form.get('is_first_df')
@@ -504,3 +505,144 @@ def remain_only_columns(cols, dfs):
         dfs_out.append(df_filtered)
 
     return dfs_out
+
+
+def promofile_limit(df_promo, k_action_border=35):
+    """
+    Регулирует участие товаров в акции, основываясь на целевом проценте, приоритетах,
+    и обновляет скидки, а также пересчитывает цены.
+    """
+
+    # Создаем копию DataFrame, чтобы не изменять исходный
+    df = df_promo.copy()
+
+    # Принудительно преобразуем k_action_border в число
+    k_action_border = float(k_action_border) if pd.notna(k_action_border) else 35.0
+
+    # Убедимся, что нужные столбцы имеют числовой тип
+    numeric_cols = [
+        'new_discount',
+        'Загружаемая скидка для участия в акции',
+        'Остаток товара на складах Wb (шт.)',
+        'Текущая розничная цена',
+        'Плановая цена для акции'
+    ]
+
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        else:
+            print(f"⚠️  Предупреждение: столбец '{col}' не найден в DataFrame")
+
+    # Преобразуем столбец 'Allowed' в булевы значения (только Yes/No)
+    if 'Allowed' in df.columns:
+        df['Allowed_bool'] = df['Allowed'].astype(str).str.strip().str.upper() == 'YES'
+    else:
+        # Если столбца нет, создаем его как False
+        df['Allowed_bool'] = False
+        df['Allowed'] = 'No'
+
+    # Фильтруем товары с ненулевым остатком на складах WB
+    df_with_stock = df[df['Остаток товара на складах Wb (шт.)'] > 0].copy()
+
+    if df_with_stock.empty:
+        print("⚠️  Нет товаров с ненулевым остатком на складах WB")
+        # Устанавливаем Allowed как No для всех
+        df['Allowed'] = 'No'
+        return df
+
+    # Фильтруем товары, которые еще не разрешены для участия в акции (и имеют остаток)
+    df_not_allowed_and_stock = df_with_stock[~df_with_stock['Allowed_bool']].copy()
+
+    # Вычисляем текущий процент разрешенных товаров с ненулевым остатком
+    total_with_stock = len(df_with_stock)
+    current_allowed_with_stock = df_with_stock['Allowed_bool'].sum()
+    current_percentage = (current_allowed_with_stock / total_with_stock * 100) if total_with_stock > 0 else 0.0
+
+    print(f"📊 Текущий процент: {current_percentage:.2f}%, Цель: {k_action_border}%")
+
+    # Определяем, сколько еще товаров нужно добавить
+    target_count_to_add = 0
+    needed_target_percentage = 0.0
+
+    if current_percentage < 0.3 * k_action_border:  # 30% от цели
+        needed_target_percentage = 0.3 * k_action_border
+        target_count_to_add = max(0, int(total_with_stock * (needed_target_percentage / 100.0)) - current_allowed_with_stock)
+    elif current_percentage < k_action_border:
+        needed_target_percentage = k_action_border
+        target_count_to_add = max(0, int(total_with_stock * (needed_target_percentage / 100.0)) - current_allowed_with_stock)
+
+    print(f"📈 Нужно добавить товаров: {target_count_to_add}")
+
+    # Если нужно добавить товары и есть такие, которые еще не разрешены
+    if target_count_to_add > 0 and not df_not_allowed_and_stock.empty:
+        # Рассчитываем разницу в скидках (используем абсолютную разницу)
+        df_not_allowed_and_stock['discount_difference'] = abs(
+            df_not_allowed_and_stock['Загружаемая скидка для участия в акции'].fillna(0) -
+            df_not_allowed_and_stock['new_discount'].fillna(0)
+        )
+
+        # Сортируем по разнице скидок (возрастание), затем по оборачиваемости (убывание)
+        df_not_allowed_sorted = df_not_allowed_and_stock.sort_values(
+            by=['discount_difference', 'Оборачиваемость'],
+            ascending=[True, False],
+            na_position='last'
+        )
+
+        # Выбираем первые 'target_count_to_add' товаров для включения в акцию
+        num_to_select = min(target_count_to_add, len(df_not_allowed_sorted))
+        items_to_allow = df_not_allowed_sorted.head(num_to_select)
+
+        if len(items_to_allow) > 0:
+            # Получаем nmId товаров, которые нужно разрешить
+            nmids_to_allow = items_to_allow['nmId'].tolist()
+
+            # Обновляем статус 'Allowed_bool' в исходном DataFrame
+            df.loc[df['nmId'].isin(nmids_to_allow), 'Allowed_bool'] = True
+
+            # Синхронизируем 'new_discount' для только что разрешенных товаров
+            discount_map = items_to_allow.set_index('nmId')['Загружаемая скидка для участия в акции']
+            df.loc[df['nmId'].isin(nmids_to_allow), 'new_discount'] = df['nmId'].map(discount_map)
+
+            print(f"✅ Добавлено товаров в акцию: {len(items_to_allow)}")
+
+    # Преобразуем обратно булев статус в 'Yes'/'No'
+    df['Allowed_border'] = df['Allowed_bool'].apply(lambda x: 'Yes' if x else 'No')
+
+    # --- Пересчет цен только для участвующих в акции ---
+    participating_mask = df['Allowed_border'] == 'Yes'
+    df_participating = df[participating_mask].copy()
+
+    if not df_participating.empty and 'Текущая розничная цена' in df.columns:
+        # Пересчитываем discount_price
+        retail_price_col = df_participating['Текущая розничная цена']
+        discount_col = df_participating['new_discount']
+
+        # Проверяем, что значения числовые
+        retail_price_col = pd.to_numeric(retail_price_col, errors='coerce')
+        discount_col = pd.to_numeric(discount_col, errors='coerce')
+
+        # Рассчитываем discount_price: Текущая цена * (1 - скидка%)
+        df_participating['discount_price'] = retail_price_col * (1 - discount_col / 100.0)
+
+        # action_price = Плановая цена для акции
+        if 'Плановая цена для акции' in df_participating.columns:
+            df_participating['action_price'] = pd.to_numeric(df_participating['Плановая цена для акции'], errors='coerce')
+        else:
+            df_participating['action_price'] = df_participating['discount_price']  # fallback
+
+        # price_difference в процентах
+        df_participating['price_difference'] = abs(
+            (df_participating['discount_price'] - df_participating['action_price']) /
+            df_participating['action_price']
+        ) * 100
+
+        # Обновляем основной DataFrame
+        for col in ['discount_price', 'action_price', 'price_difference']:
+            if col in df_participating.columns:
+                df.loc[participating_mask, col] = df_participating[col]
+
+    # Убираем временный булев столбец
+    df = df.drop(columns=['Allowed_bool'], errors='ignore')
+
+    return df

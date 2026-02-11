@@ -10,7 +10,6 @@ from functools import wraps
 from zipfile import ZipFile, ZIP_DEFLATED
 import logging
 
-
 SIZE_TRANSLATE_150 = {
     "m1": "150 x 100 см.",
     "m2": "150 x 200 см.",
@@ -33,9 +32,9 @@ SIZE_TRANSLATE_300 = {
 
 PREF_LIST = ['FUR', 'LNF', 'WLP', 'GL0']
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def create_zip_of_zips(large_zip_obj, max_size_mb=500):
     """
@@ -59,14 +58,13 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
             logging.info(f"Loaded original ZIP from file: {large_zip_obj}")
 
         original_size = len(original_data)
-        logging.info(f"Original ZIP size: {original_size / (1024*1024):.2f} MB")
+        logging.info(f"Original ZIP size: {original_size / (1024 * 1024):.2f} MB")
 
         if original_size <= MAX_SIZE_BYTES:
             logging.info("Original ZIP is small enough, returning it directly.")
             main_zip_buffer.write(original_data)
             main_zip_buffer.seek(0)
             return main_zip_buffer
-
 
         # Build folder tree (exactly as before)
         folder_tree = {}
@@ -102,7 +100,6 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
 
             return total_size
 
-
         # Group files by their root folders
         root_folders = {}
         for folder_path in folder_tree:
@@ -114,10 +111,11 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
                     'files': folder_tree[folder_path]['files'] if folder_path else []
                 }
 
-        logging.info(f"Found {len(root_folders)} root folder(s) with total size: {original_size / (1024*1024):.2f} MB")
+        logging.info(
+            f"Found {len(root_folders)} root folder(s) with total size: {original_size / (1024 * 1024):.2f} MB")
 
         # Create "zip of zips" preserving folder structure
-        with ZipFile(main_zip_buffer, 'w', ZIP_DEFLATED) as main_zip: # Add deflation
+        with ZipFile(main_zip_buffer, 'w', ZIP_DEFLATED) as main_zip:  # Add deflation
             part_number = 1
             current_part_size = 0
             part_buffer = io.BytesIO()
@@ -125,36 +123,36 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
             current_part_folders = []
 
             try:
-                part_zip = ZipFile(part_buffer, 'w', ZIP_DEFLATED) # Add deflation
+                part_zip = ZipFile(part_buffer, 'w', ZIP_DEFLATED)  # Add deflation
                 # Sort folders by size (largest first) to optimize packing
                 sorted_folders = sorted(root_folders.items(), key=lambda x: x[1]['size'], reverse=True)
 
                 for folder_path, folder_info in sorted_folders:
                     folder_size = folder_info['size']
-                    logging.info(f"Processing folder '{folder_path}' (size: {folder_size / (1024*1024):.2f} MB)")
+                    logging.info(f"Processing folder '{folder_path}' (size: {folder_size / (1024 * 1024):.2f} MB)")
 
                     # Check if folder would exceed part limit
                     if (current_part_size + folder_size > MAX_SIZE_BYTES and
-                        current_part_folders and
-                        current_part_size > 0):
-
+                            current_part_folders and
+                            current_part_size > 0):
                         # Finalize current part
-                        logging.info(f"Part {part_number} full ({current_part_size / (1024*1024):.2f} MB), creating new part.")
+                        logging.info(
+                            f"Part {part_number} full ({current_part_size / (1024 * 1024):.2f} MB), creating new part.")
                         part_zip.close()  # Ensure part_zip is closed before reading
                         part_buffer.seek(0)
                         part_size = len(part_buffer.getvalue())
                         part_filename = f'images_part_{part_number:03d}.zip'
                         main_zip.writestr(part_filename, part_buffer.getvalue())
 
-                        logging.info(f"Added part {part_number}: {part_size / (1024*1024):.2f} MB (contains {len(current_part_folders)} folders)")
+                        logging.info(
+                            f"Added part {part_number}: {part_size / (1024 * 1024):.2f} MB (contains {len(current_part_folders)} folders)")
 
                         # Reset for next part
                         current_part_folders = []
                         current_part_size = 0
                         part_number += 1
                         part_buffer = io.BytesIO()
-                        part_zip = ZipFile(part_buffer, 'w', ZIP_DEFLATED) # Add deflation
-
+                        part_zip = ZipFile(part_buffer, 'w', ZIP_DEFLATED)  # Add deflation
 
                     # Add entire folder to current part
                     logging.info(f"Adding folder '{folder_path}' to part {part_number}")
@@ -168,14 +166,14 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
                                 if filename != folder_path:  # Skip directory entry
                                     try:
                                         zip_target.writestr(filename, zip_source.read(filename))
-                                        logging.debug(f"Copied file '{filename}'") # Added debugging log
+                                        logging.debug(f"Copied file '{filename}'")  # Added debugging log
                                     except Exception as e:
                                         logging.error(f"Error copying file '{filename}': {e}")
 
                         # Find and copy subfolders
                         for potential_subfolder in folder_tree:
                             if (potential_subfolder.startswith(folder_path) and
-                                potential_subfolder.count('/') == folder_path.count('/') + 1):
+                                    potential_subfolder.count('/') == folder_path.count('/') + 1):
                                 # Copy files in subfolder
                                 if potential_subfolder in folder_tree:
                                     for filename, _ in folder_tree[potential_subfolder]['files']:
@@ -190,31 +188,30 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
                     current_part_folders.append(folder_path)
                     current_part_size += folder_size
 
-
                 # Add final part
                 if current_part_folders:
-
                     logging.info(f"Creating the last zip part {part_number}")
                     part_zip.close()  # Ensure part_zip is closed before reading
                     part_buffer.seek(0)
                     part_size = len(part_buffer.getvalue())
                     part_filename = f'images_part_{part_number:03d}.zip'
-                    main_zip.writestr(part_filename, part_buffer.getvalue())# Add file to main zip
+                    main_zip.writestr(part_filename, part_buffer.getvalue())  # Add file to main zip
 
-                    logging.info(f"Added final part {part_number}: {part_size / (1024*1024):.2f} MB (contains {len(current_part_folders)} folders)")
-
+                    logging.info(
+                        f"Added final part {part_number}: {part_size / (1024 * 1024):.2f} MB (contains {len(current_part_folders)} folders)")
 
                 # Add detailed README
                 readme_parts = []
                 for i, (folder_path, folder_info) in enumerate(sorted_folders, 1):
                     part_num = ((i - 1) // max(1, len(sorted_folders) // 3 + 1)) + 1  # Rough part assignment
-                    readme_parts.append(f"Folder '{folder_path}' ({folder_info['size'] / (1024*1024):.2f} MB) -> part_{part_num:03d}.zip")
+                    readme_parts.append(
+                        f"Folder '{folder_path}' ({folder_info['size'] / (1024 * 1024):.2f} MB) -> part_{part_num:03d}.zip")
 
                 info_content = f"""ZIP of ZIPs - Folder Structure Preserved
                                 ========================================
                             
                                 Total parts: {part_number}
-                                Original ZIP size: {original_size / (1024*1024):.2f} MB
+                                Original ZIP size: {original_size / (1024 * 1024):.2f} MB
                                 Each part < {max_size_mb} MB
                             
                                 FOLDER DISTRIBUTION:
@@ -231,29 +228,33 @@ def create_zip_of_zips(large_zip_obj, max_size_mb=500):
                 main_zip.writestr('README.txt', info_content)
 
             except Exception as e:
-             logging.error("Error during ZIP part creation:", exc_info=True) # Log full traceback
-             raise # Re-raise the error to stop further processing
+                logging.error("Error during ZIP part creation:", exc_info=True)  # Log full traceback
+                raise  # Re-raise the error to stop further processing
             finally:
-                if  part_zip:
-                    try:part_zip.close()
-                    except:pass
+                if part_zip:
+                    try:
+                        part_zip.close()
+                    except:
+                        pass
 
     except Exception as e:
-        logging.error("General error in create_zip_of_zips:", exc_info=True) # Log full traceback
+        logging.error("General error in create_zip_of_zips:", exc_info=True)  # Log full traceback
         raise  # Re-raise the error
     finally:
         if original_zip:
-            try: original_zip.close()
-            except: pass
+            try:
+                original_zip.close()
+            except:
+                pass
 
     main_zip_buffer.seek(0)
     main_size = len(main_zip_buffer.getvalue())
-    logging.info(f"Main 'zip of zips' size: {main_size / (1024*1024):.2f} MB")  # Changed print to logging
-
+    logging.info(f"Main 'zip of zips' size: {main_size / (1024 * 1024):.2f} MB")  # Changed print to logging
 
     # Flash message or similar notification
     total_folders = len(root_folders)
-    logging.info(f"Created 'zip of zips' with {part_number} parts (total: {main_size / (1024*1024):.2f} MB). Preserved {total_folders} complete folders.")
+    logging.info(
+        f"Created 'zip of zips' with {part_number} parts (total: {main_size / (1024 * 1024):.2f} MB). Preserved {total_folders} complete folders.")
     # flash(f"Created 'zip of zips' with {part_number} parts (total: {main_size / (1024*1024):.2f} MB). "
     #      f"Preserved {total_folders} complete folders. Extract and upload each part separately.", 'info')  #Commented this line
 

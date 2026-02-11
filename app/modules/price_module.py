@@ -42,8 +42,8 @@ def count_norma_revenue(df):
     # price (with disc) of goods must be (net_cost * 2.4)
 
     # what k must be we want to sell on wb (must depend on bank deposit and inflation's etc.?
-    # buy for 1 sell for 1,736. Revenue = 0.736
-    k = 1.736
+    # buy for 1 sell for 1,5. Revenue = 0.5
+    k = 1.5
     expenses = df['Хранение'].sum() + df['Логистика'].sum() + df['Удержания_minus'].sum() + df["WB_комиссия руб"].sum()
     clear_sells = df['Ч. WB_реализовал'].sum() + df['Удержания_plus'].sum()
     revenue = clear_sells - expenses
