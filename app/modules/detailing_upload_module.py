@@ -387,6 +387,7 @@ def mix_detailings(df, is_compare_detailing=""):
     # Fetch DataFrames from Yandex Disk
     try:
         df_ALL_LONG = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_ALL'])
+        df_2026 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2026'])
         df_2025 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2025'])
         df_2024 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2024'])
         df_2023 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2023'])
@@ -397,6 +398,10 @@ def mix_detailings(df, is_compare_detailing=""):
                       how='left',
                       suffixes=('', '_ALL_LONG'))
         # Merge the second DataFrame
+        df = df.merge(df_2026[['Артикул поставщика', 'Маржа-себест.']],
+                      on='Артикул поставщика',
+                      how='left',
+                      suffixes=('', '_2026'))
         df = df.merge(df_2025[['Артикул поставщика', 'Маржа-себест.']],
                       on='Артикул поставщика',
                       how='left',
@@ -507,7 +512,7 @@ def remain_only_columns(cols, dfs):
     return dfs_out
 
 
-def promofile_limit(df_promo, k_action_border=35):
+def promofile_limit(df_promo, k_action_border=36):
     """
     Регулирует участие товаров в акции, основываясь на целевом проценте, приоритетах,
     и обновляет скидки, а также пересчитывает цены.
@@ -517,7 +522,7 @@ def promofile_limit(df_promo, k_action_border=35):
     df = df_promo.copy()
 
     # Принудительно преобразуем k_action_border в число
-    k_action_border = float(k_action_border) if pd.notna(k_action_border) else 35.0
+    k_action_border = float(k_action_border) if pd.notna(k_action_border) else 36.0
 
     # Убедимся, что нужные столбцы имеют числовой тип
     numeric_cols = [
@@ -565,8 +570,8 @@ def promofile_limit(df_promo, k_action_border=35):
     target_count_to_add = 0
     needed_target_percentage = 0.0
 
-    if current_percentage < 0.3 * k_action_border:  # 30% от цели
-        needed_target_percentage = 0.3 * k_action_border
+    if current_percentage < 0.31 * k_action_border:  # ~30% от цели
+        needed_target_percentage = 0.31 * k_action_border
         target_count_to_add = max(0, int(total_with_stock * (needed_target_percentage / 100.0)) - current_allowed_with_stock)
     elif current_percentage < k_action_border:
         needed_target_percentage = k_action_border

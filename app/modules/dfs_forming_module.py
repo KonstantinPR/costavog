@@ -118,6 +118,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     type_sales_col_name = 'К перечислению Продавцу за реализованный Товар'
     type_penalty_col_name = 'Общая сумма штрафов'
     type_acquiring_col_name = 'Возмещение издержек по эквайрингу'
+    type_acquiring_col_name_2 = 'Эквайринг/Комиссии за организацию платежей'
     type_give_col_name = 'Возмещение за выдачу и возврат товаров на ПВЗ'
     type_store_moves_col_name = 'Возмещение издержек по перевозке/по складским операциям с товаром'
 
@@ -135,6 +136,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df_compensation_damages = pivot_expanse(df, damages_col_name, type_sales_col_name)
     df_penalty = pivot_expanse(df, penalty_col_name, type_penalty_col_name)
     df_acquiring = pivot_expanse(df, sales_name, type_acquiring_col_name, col_name="Эквайринг")
+    df_acquiring_2 = pivot_expanse(df, sales_name, type_acquiring_col_name_2, col_name="Эквайринг_2")
     df_give_to = pivot_expanse(df, sales_name, type_give_col_name, col_name="При выдачи от")
     df_give_back = pivot_expanse(df, backs_name, type_give_col_name, col_name="При выдачи в")
 
@@ -149,7 +151,8 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df = df.drop_duplicates(subset=[article_column_name])
     dfs = [df_wb_sales, df_wb_backs, df_sales, df_backs, df_logistic, df_compensation_substituted,
            df_compensation_damages, df_penalty,
-           df_acquiring, df_give_to, df_give_back, df_store_moves, df_qt_sales, df_qt_backs, df_qt_logistic_to,
+           df_acquiring, df_acquiring_2, df_give_to, df_give_back, df_store_moves, df_qt_sales, df_qt_backs,
+           df_qt_logistic_to,
            df_qt_logistic_back, df_logistic_correction]
 
     # for d in dfs:
@@ -157,7 +160,6 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
     for d in dfs:
         df = pandas_handler.df_merge_drop(df, d, article_column_name, article_column_name, how="left")
-
 
     # dfs_names = [sales_name, logistic_name, backs_name, substituted_col_name]
     df = df.fillna(0)
@@ -175,7 +177,8 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     #     'Склады удержали']
 
     # Похоже 'Склады удержали' не влияет на минус и удерживается неявно из комиссии вайлдберриз напрямую
-    df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['При выдачи от'] + df['При выдачи в']
+    df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['Эквайринг_2'] + df['При выдачи от'] + df[
+        'При выдачи в']
 
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]

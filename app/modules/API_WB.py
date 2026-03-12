@@ -332,6 +332,9 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 
         data = {
             "settings": {
+                "sort": {
+                    "ascending": True
+                },
                 "cursor": {
                     "limit": limit,
                     "updatedAt": updatedAt,
@@ -359,14 +362,18 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
             logging.warning(f"API Error: {df_json['errorText']}")
             break
 
-        total = df_json['cursor']['total']
-        updatedAt = df_json['cursor']['updatedAt']
-        nmId = df_json['cursor']['nmID']
+        total = df_json['cursor'].get('total', 0)
+        if total == 0:
+            break
+
+        updatedAt = df_json['cursor'].get('updatedAt', updatedAt)
+        nmId = df_json['cursor'].get('nmID', nmId)
         dfs += df_json['cards']
         count = count + total
 
         if limit_cards and count > int(limit_cards):
             break
+
 
     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions", "characteristics"],
                            errors='ignore')

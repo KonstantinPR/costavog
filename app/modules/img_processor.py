@@ -547,7 +547,57 @@ def create_zip_file(folder_path):
     return return_data
 
 
-def img_foldering(df, marketplace, is_replace, order_is):
+def add_leading_nulls(zip_bytes_io, is_leading_nulls=True):
+    if not is_leading_nulls:
+        return zip_bytes_io
+
+    # Read zip data from BytesIO
+    zip_bytes_io.seek(0)
+    with ZipFile(zip_bytes_io, 'r') as zip_ref:
+        # Extract to a temporary directory
+        extract_dir = 'temp_extracted'
+        os.makedirs(extract_dir, exist_ok=True)
+        zip_ref.extractall(extract_dir)
+
+    # Process only files in 'folder/' (or nested subfolders)
+    for root, dirs, files in os.walk(extract_dir):
+        for filename in files:
+            # Find the last '-' in the filename
+            last_dash_index = filename.rfind('-')
+            if last_dash_index != -1:
+                # Split into prefix and suffix (after last dash)
+                prefix = filename[:last_dash_index + 1]
+                suffix = filename[last_dash_index + 1:]
+                # Add leading nulls to the suffix if it's numeric
+                name, ext = os.path.splitext(suffix)
+                if name.isdigit():
+                    name_with_nulls = name.zfill(3)
+                    new_suffix = name_with_nulls + ext
+                else:
+                    new_suffix = suffix  # no change if not numeric
+                new_filename = prefix + new_suffix
+                os.rename(
+                    os.path.join(root, filename),
+                    os.path.join(root, new_filename)
+                )
+
+    # Repackage into a new zip in memory
+    output_io = io.BytesIO()
+    with ZipFile(output_io, 'w') as new_zip:
+        for root, dirs, files in os.walk(extract_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, extract_dir)
+                new_zip.write(file_path, arcname)
+
+    # Clean up extracted files
+    shutil.rmtree(extract_dir)
+
+    output_io.seek(0)
+    return output_io
+
+
+def img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls=True):
     images_folder = app.config["YANDEX_FOLDER_IMAGE"]
 
     # Create folder structure
@@ -564,7 +614,8 @@ def img_foldering(df, marketplace, is_replace, order_is):
 
     # Create zip file
     zip_file_data = create_zip_file(folder_path)
+    zip_file_data_leading_nulls = add_leading_nulls(zip_file_data, is_leading_nulls)
 
     shutil.rmtree(app.config['TMP_IMG_FOLDER'])
 
-    return zip_file_data
+    return zip_file_data_leading_nulls
