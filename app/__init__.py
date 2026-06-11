@@ -96,6 +96,7 @@ def create_all():
 app_config_dict = {
     'WB_DELIVERING': 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwNTIwdjEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc2NDAzNDM2NiwiaWQiOiIwMTk3MGNjYi1iNjdiLTdiNjAtOGU5ZC1lMjNjYjdiM2U0MWQiLCJpaWQiOjE2NDgwMDUwLCJvaWQiOjI5MDc3LCJzIjoxMDI0LCJzaWQiOiI1MTdiYzY5NC1kMzc1LTU4MTItOWEyZS0wNzk0ZDU5NmI2YTkiLCJ0IjpmYWxzZSwidWlkIjoxNjQ4MDA1MH0.CfPnsyDzhkpTYIoC3tiVKR_bzqrq1P9kQn7kNw_wv8dSjLPO-BKXMLuki8X0sCobJr34FuUIEXLQKN9kucklnQ',
     'TELEGRAM_CHAT_ID': '1495209774',
+    'APP_PASSWORD': '19862814',
     'TELEGRAM_BOT_TOKEN': '8000171417:AAH1xX6puEuOftokCqWkCTuChv1wMpmKcSo',
     'APP_NAME': 'TASKER',
     'ALLOWED_EXTENSIONS': ['.jpg', '.jpeg', '.png', '.gif', '.zip'],
@@ -129,7 +130,7 @@ app_config_dict = {
     'YANDEX_FOLDER_IMAGE': "C:\YandexDisk\ФОТОГРАФИИ",
     'YANDEX_FOLDER_IMAGE_YANDISK': "/ФОТОГРАФИИ",
     'NET_COST_PRODUCTS': "/TASKER/KEY_FILES/NET_COST",
-    'DELIVERY_PRODUCTS': r'C:\YandexDisk\СЕТЕВЫЕ МАГАЗИНЫ\WILDBERRIES\ОТПРАВКИ',
+    'DELIVERY_PRODUCTS': r'C:\YandexDisk\СЕТЕВЫЕ МАГАЗИНЫ\WILDBERRIES\ДЖОИНС\ОТПРАВКИ',
     'RATING': "/TASKER/KEY_FILES/RATING",
 
     # OZON
@@ -158,7 +159,7 @@ app_config_dict = {
     'EXTENSION_EXCEL': ".xlsx",
     'DAYS_STEP_DEFAULT': 7,
     'DAYS_DELAY_REPORT': 1,
-    'DAYS_PERIOD_FUNNEL': 28,
+    'DAYS_PERIOD_FUNNEL': 14,
     'DAYS_PERIOD_DEFAULT': 1,
     'LAST_DAYS_DEFAULT': 7,
 

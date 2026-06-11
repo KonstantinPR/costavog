@@ -1,13 +1,15 @@
-import logging
 import app.modules.request_handler
 from app import app
-import requests
-import pandas as pd
 import numpy as np
-import time
 import json
+from app.modules import yandex_disk_handler, pandas_handler, request_handler, sales_report_module
+import time
+import requests
+import logging
 from datetime import datetime, timedelta
-from app.modules import yandex_disk_handler, pandas_handler, request_handler
+import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def get_storage_cost(testing_mode=False, is_shushary=None, number_last_days=app.config['LAST_DAYS_DEFAULT'],
@@ -110,68 +112,118 @@ def get_wb_price_api(request=None, testing_mode=None, is_from_yadisk=None):
     """
     print("get_wb_price_api ...")
 
-    if request: is_from_yadisk = request.form.get('is_from_yadisk')
+    if request:
+        is_from_yadisk = request.form.get('is_from_yadisk')
 
     if testing_mode or is_from_yadisk:
         df, filename = yandex_disk_handler.download_from_YandexDisk(path='YANDEX_KEY_PRICES')
         return df, filename
 
-    # API endpoint and headers
-    # url = 'https://discounts-prices-api.wb.ru/api/v2/list/goods/filter'
     url = 'https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter'
     headers = {
         'accept': 'application/json',
         'Authorization': app.config['WB_API_TOKEN'],
     }
 
-    # Parameters for pagination
-    limit = 1000  # Maximum items per page
-    offset = 0  # Initial offset
-
-    # List to store data from all pages
+    limit = 1000
+    offset = 0
     all_goods = []
 
-    # Loop to retrieve data from all pages
+    # Создаем сессию без агрессивного retry
+    session = requests.Session()
+
     while True:
-        # Make the request to the API with pagination parameters
         params = {'limit': limit, 'offset': offset}
-        response = requests.get(url, headers=headers, params=params)
-        print(f"Response status code: {response.status_code}")
 
-        # Check if the request was successful
-        if response.ok:
-            data = response.json().get('data')
-            if data:
-                # Extract goods data from the response
-                list_goods = data.get('listGoods', [])
-                if list_goods:
-                    all_goods.extend(list_goods)
+        # ВАЖНО: задержка ДО каждого запроса (кроме первого)
+        if offset > 0:
+            wait_time = 0.7  # Увеличил с 0.6 до 0.7 секунды
+            print(f"Waiting {wait_time}s before next request...")
+            time.sleep(wait_time)
 
-                    # Check if there are more pages to retrieve
-                    if len(list_goods) < limit:
-                        break  # No more pages, exit the loop
+        try:
+            response = session.get(url, headers=headers, params=params, timeout=30)
+            print(f"Offset: {offset}, Status: {response.status_code}")
+
+            # Обработка 429 - ошибка слишком частых запросов
+            if response.status_code == 429:
+                wait_time = 15  # Ждем 15 секунд при блокировке
+                print(f"⚠️ Rate limit exceeded! Waiting {wait_time} seconds...")
+                time.sleep(wait_time)
+                # Не увеличиваем offset, пробуем тот же запрос снова
+                continue
+
+            if response.status_code == 401:
+                logging.error("Authorization failed! Check your API token")
+                break
+
+            if response.status_code == 403:
+                logging.error("Access denied! Check permissions")
+                break
+
+            if response.ok:
+                data = response.json().get('data')
+                if data:
+                    list_goods = data.get('listGoods', [])
+                    if list_goods:
+                        all_goods.extend(list_goods)
+                        print(f"✅ Fetched {len(list_goods)} goods, total: {len(all_goods)}")
+
+                        if len(list_goods) < limit:
+                            print("📦 Last page reached")
+                            break
+                        else:
+                            offset += limit
                     else:
-                        offset += limit  # Move to the next page
+                        print("ℹ️ No more goods data")
+                        break
                 else:
-                    logging.warning("No goods data received from Wildberries API.")
-                    break  # No more goods data available, exit the loop
+                    print("ℹ️ No data in response")
+                    break
             else:
-                logging.warning("No data received from Wildberries API.")
-                break  # No more data available, exit the loop
-        else:
-            logging.warning(f"Failed to fetch data from Wildberries API: {response.text}")
-            break  # API request failed, exit the loop
+                logging.error(f"API error: {response.status_code} - {response.text[:200]}")
+                break
 
-    # Convert all goods data to DataFrame
-    # df = pd.DataFrame(all_goods)
-    df = pd.json_normalize(all_goods, 'sizes', ["vendorCode", 'nmID'], errors='ignore')
-    # df['discount'] = (1 - (df['discountedPrice'] / df['price'])) * 100
-    df['discount'] = ((df['price'] - df['discountedPrice']) / df['price']) * 100
-    df['d_disc'] = round(df['discount'])
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
+            print(f"❌ Connection error, waiting 10 seconds...")
+            time.sleep(10)
+            # Не увеличиваем offset, пробуем снова
 
-    # Upload data to Yandex Disk
+    print(f"🏁 Finished fetching {len(all_goods)} goods")
+
+    if not all_goods:
+        logging.error("No goods fetched from API")
+        return pd.DataFrame(), None
+
+    # Нормализация данных
+    try:
+        df = pd.json_normalize(all_goods, 'sizes', ["vendorCode", 'nmID'], errors='ignore')
+
+        # Конвертируем цены в числа
+        df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
+        df['discountedPrice'] = pd.to_numeric(df['discountedPrice'], errors='coerce').fillna(0)
+
+        # Расчет скидки с защитой от деления на ноль
+        mask = df['price'] > 0
+        df['discount'] = 0.0
+        df.loc[mask, 'discount'] = ((df.loc[mask, 'price'] - df.loc[mask, 'discountedPrice']) / df.loc[
+            mask, 'price']) * 100
+        df['d_disc'] = round(df['discount']).astype(int)
+
+        print(f"📊 Processed {len(df)} rows")
+
+    except Exception as e:
+        logging.error(f"Error processing data: {e}")
+        return pd.DataFrame(), None
+
+    # Сохраняем на Яндекс.Диск
     file_name = "wb_price_data.xlsx"
-    yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
+    try:
+        yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name, path=app.config['YANDEX_KEY_PRICES'])
+        print(f"💾 Uploaded to Yandex Disk: {file_name}")
+    except Exception as e:
+        logging.error(f"Failed to upload to Yandex Disk: {e}")
 
     return df, file_name
 
@@ -221,8 +273,36 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
 
     print("stock from API WB is gotten")
 
+    # print (no_city)
+    # print (no_sizes)
+
     if no_city == 'no_city' and no_sizes == 'no_sizes':
         df = df.pivot_table(index=['nmId'],
+                            values=['quantityFull',
+                                    'inWayFromClient',
+                                    'inWayToClient',
+                                    'supplierArticle',
+                                    'category',
+                                    'subject',
+                                    'brand',
+                                    ],
+                            aggfunc={'quantityFull': sum,
+                                     'inWayFromClient': sum,
+                                     'inWayToClient': sum,
+                                     'supplierArticle': 'first',
+                                     'category': 'first',
+                                     'subject': 'first',
+                                     'brand': 'first',
+                                     },
+                            margins=False)
+
+        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
+        df = df.reset_index().rename_axis(None, axis=1)
+
+        return df
+
+    if no_city == 'no_city':
+        df = df.pivot_table(index=['nmId', 'techSize'],
                             values=['quantityFull',
                                     'inWayFromClient',
                                     'inWayToClient',
@@ -252,31 +332,6 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
             file_name = f'stock_wb.xlsx'
             yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
                                                      path=app.config['YANDEX_KEY_STOCK_WB'])
-
-        return df
-
-    if no_city == 'no_city':
-        df = df.pivot_table(index=['nmId', 'techSize'],
-                            values=['quantityFull',
-                                    'inWayFromClient',
-                                    'inWayToClient',
-                                    'supplierArticle',
-                                    'category',
-                                    'subject',
-                                    'brand',
-                                    ],
-                            aggfunc={'quantityFull': sum,
-                                     'inWayFromClient': sum,
-                                     'inWayToClient': sum,
-                                     'supplierArticle': 'first',
-                                     'category': 'first',
-                                     'subject': 'first',
-                                     'brand': 'first',
-                                     },
-                            margins=False)
-
-        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
-        df = df.reset_index().rename_axis(None, axis=1)
 
         return df
 
@@ -327,7 +382,7 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
         print(f"{get_all_cards_api_wb.__name__} ... total {count}")
         headers = {
             'accept': 'application/json',
-            'Authorization': app.config['WB_API_TOKEN2'],
+            'Authorization': app.config['WB_API_TOKEN'],
         }
 
         data = {
@@ -373,7 +428,6 @@ def get_all_cards_api_wb(testing_mode=False, is_from_yadisk=False, is_to_yadisk=
 
         if limit_cards and count > int(limit_cards):
             break
-
 
     df = pd.json_normalize(dfs, 'sizes', ["vendorCode", "colors", "brand", 'nmID', "dimensions", "characteristics"],
                            errors='ignore')
@@ -461,7 +515,7 @@ def get_wb_sales_funnel_api(request,
         nmIDs = pandas_handler.nmIDs_exclude(nmIDs, nmIDs_exclude)
 
     with app.app_context():
-        api_key = app.config['WB_API_TOKEN2']
+        api_key = app.config['WB_API_TOKEN']
     url = "https://seller-analytics-api.wildberries.ru/api/analytics/v3/sales-funnel/products"
     headers = {
         "Authorization": api_key,
@@ -653,66 +707,6 @@ def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_s
     return df
 
 
-# def _sales_funnel_loop_request(nmIDs, date_from, date_end, url, headers, chunk_size=1000):
-#     df = pd.DataFrame()
-#     chunks = [nmIDs[i:i + chunk_size] for i in range(0, len(nmIDs), chunk_size)]
-#     cards_count = chunk_size
-#     print(f"getting sales_funnel with nmIDs {len(nmIDs)} qt ...")
-#     print(f"getting sales_funnel via API {cards_count} qt ...")
-#     page = 1
-#     for chunk in chunks:
-#
-#
-#         payload = {
-#             "brandNames": [],
-#             "objectIDs": [],
-#             "tagIDs": [],
-#             "nmIDs": [],
-#             "timezone": "Europe/Moscow",
-#             # "period": {
-#             #     "begin": date_from,
-#             #     "end": date_end
-#             # },
-#             "selectedPeriod": {
-#                 "begin": date_from,
-#                 "end": date_end
-#             },
-#             "orderBy": {
-#                 "field": "ordersSumRub",
-#                 "mode": "asc"
-#             },
-#             "page": page
-#         }
-#
-#         response = requests.post(url, json=payload, headers=headers)
-#         print(f'response.status_code {get_wb_sales_funnel_api.__doc__}: {response.status_code}')
-#         if response.status_code != 200:
-#             logging.warning(f'Error in {get_wb_sales_funnel_api.__doc__}: {response.text}')
-#             return None
-#         else:
-#             try:
-#                 # Convert the response data from JSON to Python dict
-#                 response_dict = json.loads(response.text)
-#
-#                 # Extract the 'cards' data from the response dict
-#                 cards_data = response_dict['data']['cards']
-#
-#                 # Flatten the nested dictionaries into separate columns
-#                 df_chunk = pd.json_normalize(cards_data, errors='ignore', record_prefix='')
-#
-#             except Exception as e:
-#                 logging.warning(f'Error parsing response: {e}')
-#                 return None
-#
-#         df = pd.concat([df, df_chunk], ignore_index=True)
-#         print(f"getting funnel page {page} with already cards_count {cards_count} qt  ...")
-#         cards_count += len(chunk)
-#         # df.to_excel(f"df{page}.xlsx")
-#         page += 1
-#         time.sleep(20)
-#
-#     return df
-
 def _rename_double_columns(df, suffix):
     # Get the list of column names
     columns = df.columns
@@ -792,3 +786,130 @@ def get_wb_sales_realization_api_v3(request, api_key='', date_from='', date_end=
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         return pd.DataFrame()  # Return an empty DataFrame on request exceptions
+
+
+def get_wb_sales_report(request, do_mapping=True) -> tuple[pd.DataFrame, str]:
+    """
+    Process the request and return DataFrame and filename.
+    If dates are empty, automatically fetches last two weeks of data (14 DAYS).
+    """
+    try:
+        # Get form data
+        api_key = request.form.get('api_key')
+        if not api_key:
+            api_key = app.config.get('WB_API_TOKEN', '')
+            if not api_key:
+                raise ValueError("API ключ не найден ни в форме, ни в конфигурации")
+
+        date_from = request.form.get('date_from')
+        date_to = request.form.get('date_to')
+
+        # Auto-set dates to last two weeks if empty
+        if not date_from or not date_to:
+            today = datetime.now()
+            if not date_to:
+                date_to = today.strftime('%Y-%m-%d')
+                logger.info(f"Date_to not provided, using today: {date_to}")
+
+            if not date_from:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                date_from_obj = date_to_obj - timedelta(days=14)
+                date_from = date_from_obj.strftime('%Y-%m-%d')
+                logger.info(f"Date_from not provided, using two weeks before date_to: {date_from}")
+
+        period = request.form.get('period', 'weekly')
+        fields_str = request.form.get('fields', '')
+        get_all_pages = request.form.get('get_all_pages', 'false') == 'true'
+
+        # Check for testing mode
+        testing_mode = request.form.get('testing_mode') == 'testing_mode'
+
+        if testing_mode:
+            logger.info("Testing mode enabled - would use Yandex.Disk here")
+            df = pd.DataFrame({'Message': ['Тестовый режим - здесь будут данные с Яндекс.Диска']})
+            file_name = f"wb_sales_report_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            return df, file_name
+
+        # Parse fields
+        fields = None
+        if fields_str and fields_str.strip():
+            fields = [f.strip() for f in fields_str.split(',') if f.strip()]
+
+        logger.info(f"Getting WB sales report: {date_from} to {date_to}, period={period}")
+
+        # Fetch data
+        if get_all_pages:
+            data = sales_report_module.get_all_report_pages(
+                api_key=api_key,
+                date_from=date_from,
+                date_to=date_to,
+                period=period,
+                fields=fields
+            )
+        else:
+            data = sales_report_module.get_wb_sales_report_detailed(
+                api_key=api_key,
+                date_from=date_from,
+                date_to=date_to,
+                period=period,
+                fields=fields
+            )
+
+        # Convert to DataFrame
+        if data:
+            df = pd.DataFrame(data)
+
+            # Rename columns
+            df = sales_report_module.rename_columns_to_russian(df, do_mapping=do_mapping)
+            df = sales_report_module.ensure_expected_headers(df)  # Apply fixes
+
+            # OPTIONAL DEBUGGING - check mapping status
+            if do_mapping:
+                mapping_summary = sales_report_module.get_mapping_summary(df, do_mapping)
+                logger.info(f"Mapping summary: {mapping_summary}")
+
+            # Reorder columns to match old format priority
+            priority_columns = [
+                'Номер отчёта', 'Начало периода', 'Конец периода', 'Артикул WB',
+                'Бренд', 'Название товара', 'Кол-во', 'Вайлдберриз реализовал Товар (Пр)',
+                'К перечислению Продавцу за реализованный Товар', 'Дата продажи', 'Дата заказа покупателем'
+            ]
+
+            existing_priority = [col for col in priority_columns if col in df.columns]
+            other_columns = [col for col in df.columns if col not in existing_priority]
+
+            if existing_priority:
+                df = df[existing_priority + other_columns]
+
+            # Convert date columns and remove timezone
+            date_columns = ['Начало периода', 'Конец периода', 'Дата формирования', 'Дата операции']
+            datetime_columns = ['Дата заказа покупателем', 'Дата продажи']
+
+            for col in date_columns:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col], errors='coerce')
+                    if hasattr(df[col].dt, 'tz') and df[col].dt.tz is not None:
+                        df[col] = df[col].dt.tz_localize(None)
+
+            for col in datetime_columns:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col], errors='coerce')
+                    if hasattr(df[col].dt, 'tz') and df[col].dt.tz is not None:
+                        df[col] = df[col].dt.tz_localize(None)
+
+            # Generate filename
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            file_name = f"wb_sales_report_{date_from}_to_{date_to}_{timestamp}.xlsx"
+
+            logger.info(f"Created DataFrame with {len(df)} rows and {len(df.columns)} columns")
+        else:
+            df = pd.DataFrame({'Message': ['Нет данных за указанный период']})
+            file_name = f"wb_sales_report_no_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return df, file_name
+
+    except Exception as e:
+        logger.error(f"Error in get_wb_sales_report: {str(e)}")
+        error_df = pd.DataFrame({'Error': [str(e)]})
+        file_name = f"wb_sales_report_error_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        return error_df, file_name

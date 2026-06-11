@@ -57,7 +57,7 @@ def zips_to_list(zip_downloaded):
     return dfs
 
 
-def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная цена для применения скидки по автоакции",
+def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная цена для применения скидки по автоакции, RUB",
               col_price="net_cost", new_price="new_price"):
     """Calculate and return a subset DataFrame with updated min prices, without modifying the original."""
     # List of desired columns
@@ -65,7 +65,7 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
         "Бренд", "Категория", "Артикул WB", "Артикул продавца", "Последний баркод",
         "Остатки WB", "Остатки продавца", "Оборачиваемость", "Цена со скидкой",
         "Текущая минимальная цена для применения скидки по автоакции",
-        "Новая минимальная цена для применения скидки по автоакции",
+        "Новая минимальная цена для применения скидки по автоакции, RUB",
         "Текущая блокировка применения скидки по автоакции",
         "Новая блокировка применения скидки по автоакции"
     ]
@@ -121,7 +121,7 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
 
 
 @timing_decorator
-def promofiling(promo_file, df, allowed_delta_percent=7):
+def promofiling(promo_file, df, allowed_delta_percent=0):
     if not promo_file:
         return pd.DataFrame()
 
@@ -274,7 +274,6 @@ def merge_dynamic_by(df_merged_dynamic, by_col='prefix', r: SimpleNamespace = No
 
     # Perform groupby with aggregation
     df_merged_dynamic = df_merged_dynamic.groupby(by_col).agg(agg_dict).reset_index()
-
 
     # Upload to Yandex Disk if needed
     if hasattr(r, 'is_upload_yandex') and r.is_upload_yandex and not getattr(r, 'testing_mode', False):
@@ -437,7 +436,7 @@ def df_disc_template_create(df, df_promo, is_discount_template=False, default_di
     df_disc_template_columns = [
         "Бренд", "Категория", "Артикул WB", "Артикул продавца",
         "Последний баркод", "Остатки WB", "Остатки продавца",
-        "Оборачиваемость", "Текущая цена", "Новая цена",
+        "Оборачиваемость", "Текущая цена", "Новая цена, RUB",
         "Текущая скидка", "Новая скидка",
     ]
 
@@ -517,7 +516,8 @@ def promofile_limit(df_promo, k_action_border=36):
     Регулирует участие товаров в акции, основываясь на целевом проценте, приоритетах,
     и обновляет скидки, а также пересчитывает цены.
     """
-
+    if df_promo.empty:
+        return df_promo
     # Создаем копию DataFrame, чтобы не изменять исходный
     df = df_promo.copy()
 
@@ -572,10 +572,12 @@ def promofile_limit(df_promo, k_action_border=36):
 
     if current_percentage < 0.31 * k_action_border:  # ~30% от цели
         needed_target_percentage = 0.31 * k_action_border
-        target_count_to_add = max(0, int(total_with_stock * (needed_target_percentage / 100.0)) - current_allowed_with_stock)
+        target_count_to_add = max(0, int(total_with_stock * (
+                    needed_target_percentage / 100.0)) - current_allowed_with_stock)
     elif current_percentage < k_action_border:
         needed_target_percentage = k_action_border
-        target_count_to_add = max(0, int(total_with_stock * (needed_target_percentage / 100.0)) - current_allowed_with_stock)
+        target_count_to_add = max(0, int(total_with_stock * (
+                    needed_target_percentage / 100.0)) - current_allowed_with_stock)
 
     print(f"📈 Нужно добавить товаров: {target_count_to_add}")
 
@@ -607,7 +609,8 @@ def promofile_limit(df_promo, k_action_border=36):
 
             # Синхронизируем 'new_discount' для только что разрешенных товаров
             discount_map = items_to_allow.set_index('nmId')['Загружаемая скидка для участия в акции']
-            df.loc[df['nmId'].isin(nmids_to_allow), 'new_discount'] = df['nmId'].map(discount_map)
+            mask = df['nmId'].isin(nmids_to_allow)
+            df.loc[mask, 'new_discount'] = df.loc[mask, 'nmId'].map(discount_map)
 
             print(f"✅ Добавлено товаров в акцию: {len(items_to_allow)}")
 
@@ -632,7 +635,8 @@ def promofile_limit(df_promo, k_action_border=36):
 
         # action_price = Плановая цена для акции
         if 'Плановая цена для акции' in df_participating.columns:
-            df_participating['action_price'] = pd.to_numeric(df_participating['Плановая цена для акции'], errors='coerce')
+            df_participating['action_price'] = pd.to_numeric(df_participating['Плановая цена для акции'],
+                                                             errors='coerce')
         else:
             df_participating['action_price'] = df_participating['discount_price']  # fallback
 

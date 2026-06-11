@@ -60,15 +60,11 @@ def calculate_discount(df, p_buy=1.3, p_order=1.1, p_qt=0.9, d_sum=100, n_net=8,
         df['price'] = [check_price(main_price, net_cost) for main_price, net_cost in zip(df['price'], df['net_cost'])]
     df['price'] = df['price'].apply(lambda x: default_price if x in pandas_handler.FALSE_LIST_2 else x)
 
-    # disc	k	ord	y
-    # 32	4	1	29
-    # 32	4	2	28
-    # 32	4	4	27
-    # 32	4	10	26
-
-    k = 4
     if 'smooth_days' not in df.columns: df['smooth_days'] = 1
-    df[func_discount] = (df[discount] * k + df[discount] / (1 + (df[orderCount] / df['smooth_days']) ** 0.5)) / (k + 1)
+
+    # 30 / (1 + (9 / 1)) ^ 0.2 = 18
+    # 30 / (1 + (1 / 1)) ^ 0.2 = 26
+    df[func_discount] = df[discount] / (1 + (df[orderCount] / df['smooth_days'])) ** 0.2
     df['func_delta'] = df[discount] - df[func_discount]
     # df[func_discount] = df[func_discount].apply(lambda x: 1 if x < 0 else x)
 

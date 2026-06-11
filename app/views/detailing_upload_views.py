@@ -4,8 +4,8 @@ from app import app
 from flask import flash, render_template, request, send_file
 from flask_login import login_required
 import pandas as pd
-from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module
-from app.modules import implementation_report, request_handler, detailing_upload_dict_module
+from app.modules import io_output, yandex_disk_handler, pandas_handler, detailing_upload_module, API_WB
+from app.modules import implementation_report, request_handler, detailing_upload_dict_module, sales_report_module
 from app.modules.decorators import timing_decorator
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'xlsx'}
@@ -50,23 +50,27 @@ def extract_financial_data_from_pdf():
 @login_required
 @timing_decorator
 def upload_detailing():
-    """Analyze detailing of excel downloaded in wb portal in zips, you can put any number zips."""
+    """Analyze detailing of excel downloaded in wb portal in zips, you can put any number zips.
+    if no one zip put then data will get via API"""
 
     if not request.method == 'POST':
         return render_template('upload_detailing.html', doc_string=upload_detailing.__doc__)
 
     r = detailing_upload_module.get_data_from(request)
 
-    if not r.uploaded_files:
-        flash("Вы ничего не выбрали. Необходим zip архив с zip архивами, скаченными с сайта wb раздела детализаций")
-        return render_template('upload_detailing.html')
+    if not r.uploaded_files or r.uploaded_files[0].filename == '':
+        # No files uploaded - use API
+        df, _ = API_WB.get_wb_sales_report(request, do_mapping=True)
+        df = sales_report_module.convert_numeric_columns(df)
+        df_list = sales_report_module.weekly_chunked_list(df)
+    else:
+        uploaded_file = detailing_upload_module.process_uploaded_files(r.uploaded_files)
+        df_list = detailing_upload_module.zips_to_list(uploaded_file)
 
     yandex_disk_handler.copy_file_to_archive_folder(request=request,
                                                     path_or_config=app.config[r.path_to_save],
                                                     testing_mode=r.testing_mode)
 
-    uploaded_file = detailing_upload_module.process_uploaded_files(r.uploaded_files)
-    df_list = detailing_upload_module.zips_to_list(uploaded_file)
     df_list = pandas_handler.upper_case(df_list, 'Артикул поставщика')
 
     if r.is_just_concatenate:
@@ -86,6 +90,7 @@ def upload_detailing():
 
     df_promo = detailing_upload_module.promofiling(r.promo_file, df[['nmId', 'new_discount']], r.k_action_diff)
     df_promo = detailing_upload_module.promofile_limit(df_promo, r.k_action_border)
+    df = pandas_handler.df_merge_drop(df, df_promo, "nmId", "nmId")
 
     n = detailing_upload_module.file_names()
 

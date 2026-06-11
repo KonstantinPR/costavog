@@ -7,8 +7,12 @@ from flask_login import login_required, current_user
 import datetime
 import io
 from app.modules import API_WB, API_OZON, OZON_module
-from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler, OZON_actions_module
+from app.modules import io_output, yandex_disk_handler, request_handler, pandas_handler, OZON_actions_module, \
+    sales_report_module
 from datetime import date, timedelta
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 @app.route('/get_sales_funnel_wb', methods=['POST', 'GET'])
@@ -23,6 +27,35 @@ def get_sales_funnel_wb():
 
         return send_file(io_output.io_output(df), download_name=file_name, as_attachment=True)
     return render_template('upload_api_sales_funnel.html', doc_string=get_sales_funnel_wb.__doc__)
+
+
+@app.route('/get_sales_report_wb', methods=['POST', 'GET'])
+@login_required
+def get_sales_report_wb():
+    """
+    To get sales_report via API WB.
+    """
+    if request.method != 'POST':
+        return render_template('upload_api_sales_report.html',
+                               doc_string=get_sales_report_wb.__doc__)
+
+    try:
+        # Convert do_mapping to boolean (it will be 'do_mapping' string if checked, None if not)
+        do_mapping = request.form.get('do_mapping') == 'do_mapping'
+
+        df, file_name = API_WB.get_wb_sales_report(request, do_mapping=do_mapping)
+
+        return send_file(
+            io_output.io_output(df),
+            download_name=file_name,
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        logger.error(f"Error processing sales report request: {str(e)}")
+        flash(f"Error generating report: {str(e)}", 'error')
+        return render_template('upload_api_sales_report.html',
+                               doc_string=get_sales_report_wb.__doc__)
 
 
 @app.route('/get_sales_wb', methods=['POST', 'GET'])
@@ -75,8 +108,10 @@ def get_stock_wb():
 
     is_shushary = request.form.get('is_shushary')
     testing_mode = request.form.get('testing_mode')
+    is_upload_yandex = request.form.get('is_upload_yandex')
     file_name = f'wb_api_stock_{str(datetime.datetime.now())}.xlsx'
-    df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode)
+    df = API_WB.get_wb_stock_api(request=request, is_shushary=is_shushary, testing_mode=testing_mode,
+                                 is_upload_yandex=is_upload_yandex)
     df = io_output.io_output(df)
     return send_file(df, download_name=file_name, as_attachment=True)
 

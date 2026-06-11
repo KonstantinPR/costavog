@@ -91,10 +91,10 @@ def set_parameters_via_type_clothes(type_clothes_to_crop):
         K_HEIGHT_RIGHT_START = 0.70
         K_BOTTOM_LEFT_START = 0.20
         K_BOTTOM_RIGHT_START = 0.80
-        STEP_ITERATION = 25
+        STEP_ITERATION = 5
         STEP_ITERATION_BOTTOM = 20
         SENSIBILITY_COLOR = 210
-        COUNT_STEP_J = 10
+        COUNT_STEP_J = 2
         DELIMITER = 4
         NEW_HEIGHT_IM = 3000
         K_WIDTH_HEIGHT_IM = 0.75

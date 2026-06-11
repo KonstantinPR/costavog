@@ -104,6 +104,7 @@ def process_delivering(folder_path='', period=0, date_from='', date_end=''):
 
     df_delivery_pivot = _df_pivot_process(df_delivery_concat)
     dfs_dict = {'df_delivery_concat': df_delivery_concat, 'df_delivery_pivot': df_delivery_pivot}
+    # print(dfs_dict)
 
     return dfs_dict
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from app.modules import pandas_handler, API_WB
 from app.modules.pattern_splitting_module import starts_with_prefix, get_second_part, get_third_part, \
     empty_for_not_found
-from app.modules.zip_detail_V2_module import adding_missing_columns, add_col, pivot_expanse, days_between
+from app.modules.zip_detail_V2_module import adding_missing_columns, add_col, pivot_expanse, days_between, sum_exists
 from app.modules.detailing_upload_dict_module import DEFAULT_AMOUNT_DAYS, PREFIXES_ART_DICT, MATERIAL_DICT
 
 
@@ -112,9 +112,9 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     logistic_correction_name = 'Коррекция логистики'
     type_delivery_service_col_name = 'Услуги по доставке товара покупателю'
 
-    substituted_col_name = add_col(df, 'Компенсация подмененного товара')
-    damages_col_name = add_col(df, 'Компенсация ущерба')
-    penalty_col_name = add_col(df, 'Штраф')
+    substituted_col_name = 'Компенсация подмененного товара'
+    damages_col_name = 'Компенсация ущерба'
+    penalty_col_name = 'Штраф'
     type_sales_col_name = 'К перечислению Продавцу за реализованный Товар'
     type_penalty_col_name = 'Общая сумма штрафов'
     type_acquiring_col_name = 'Возмещение издержек по эквайрингу'
@@ -148,6 +148,8 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df_qt_logistic_to = pivot_expanse(df, logistic_name, qt_logistic_to_col_name, col_name='Логистика до, шт.')
     df_qt_logistic_back = pivot_expanse(df, logistic_name, qt_logistic_back_col_name, col_name='Логистика от, шт.')
 
+    df.to_excel('df_pivot_expanse.xlsx')
+
     df = df.drop_duplicates(subset=[article_column_name])
     dfs = [df_wb_sales, df_wb_backs, df_sales, df_backs, df_logistic, df_compensation_substituted,
            df_compensation_damages, df_penalty,
@@ -172,13 +174,9 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.']
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
     df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
-    df['Удержания_plus'] = df[damages_col_name] + df[substituted_col_name]
-    # df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['При выдачи от'] + df['При выдачи в'] + df[
-    #     'Склады удержали']
-
-    # Похоже 'Склады удержали' не влияет на минус и удерживается неявно из комиссии вайлдберриз напрямую
-    df['Удержания_minus'] = df[penalty_col_name] + df['Эквайринг'] + df['Эквайринг_2'] + df['При выдачи от'] + df[
-        'При выдачи в']
+    df['Удержания_plus'] = sum_exists(df, damages_col_name, substituted_col_name)
+    df['Удержания_minus'] = sum_exists(df, penalty_col_name, 'Эквайринг', 'Эквайринг_2', 'При выдачи от',
+                                       'При выдачи в')
 
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]

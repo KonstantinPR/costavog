@@ -119,6 +119,12 @@ CHOSEN_COLUMNS = [
     "material",
     "Артикул поставщика",
     "nmId",
+    "new_discount",
+    "discount_price",
+    "action_price",
+    "price_difference",
+    "Allowed",
+    "Allowed_border"
     "new_price",
     "new_discount",
     "ABC_XYZ_delta",
@@ -200,7 +206,8 @@ CHOSEN_COLUMNS = [
     "cartToOrderPercent",
     "buyoutPercent__re_1",
     "k_norma_revenue",
-    "Новая минимальная цена для применения скидки по автоакции"
+    "Новая минимальная цена для применения скидки по автоакции",
+    "Загружаемая скидка для участия в акции_old",
 ]
 
 DELIVERY_COLUMNS = [

@@ -93,7 +93,7 @@ def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
     weight_dict['k_net_cost'] = 3
     weight_dict['k_pure_value'] = 1
     weight_dict['k_qt_full'] = 1
-    weight_dict['k_rating'] = 1
+    # weight_dict['k_rating'] = 1
 
     weighted_sum = (
             df['k_is_sell'] * weight_dict['k_is_sell'] +
@@ -101,8 +101,8 @@ def discount(df, k_delta=1, k_norma_revenue=3, reset_if_null=True):
             df['k_logistic'] * weight_dict['k_logistic'] +
             df['k_net_cost'] * weight_dict['k_net_cost'] +
             df['k_pure_value'] * weight_dict['k_pure_value'] +
-            df['k_qt_full'] * weight_dict['k_qt_full'] +
-            df['k_rating'] * weight_dict['k_rating']
+            df['k_qt_full'] * weight_dict['k_qt_full']
+            # df['k_rating'] * weight_dict['k_rating']
         # Add other coefficients here with their respective weights
     )
 

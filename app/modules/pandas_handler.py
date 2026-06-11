@@ -119,6 +119,10 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
     Returns:
         pd.DataFrame: The merged DataFrame.
     """
+    # Check if right_df is empty
+    if right_df.empty:
+        return left_df  # Return a copy to avoid modifying original
+
 
     # Convert both left and right keys to string to ensure matching even if types are different
     left_df = to_str(left_df, left_on)
@@ -251,7 +255,7 @@ def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
             excel_buffer = io.BytesIO()
             with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
                 for i, df in enumerate(valid_files[0]):
-                    df.to_excel(writer, sheet_name=f'Sheet{i+1}', index=False)
+                    df.to_excel(writer, sheet_name=f'Sheet{i + 1}', index=False)
             excel_buffer.seek(0)
             return excel_buffer, list_names[0]  # Return the Excel file directly
         else:
@@ -272,7 +276,7 @@ def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
                     df_output = io.BytesIO()
                     with pd.ExcelWriter(df_output, engine='xlsxwriter') as writer:
                         for i, df in enumerate(file):
-                            df.to_excel(writer, sheet_name=f'Sheet{i+1}', index=False)
+                            df.to_excel(writer, sheet_name=f'Sheet{i + 1}', index=False)
                     df_output.seek(0)
                     zip_file.writestr(name + ".xlsx", df_output.getvalue())  # Add .xlsx extension
                 else:
@@ -284,6 +288,7 @@ def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
 
     zip_buffer.seek(0)
     return zip_buffer, zip_name
+
 
 # def files_to_zip(list_files: list, list_names: list, zip_name='zip_files.zip'):
 #     print(f"files_to_zip...")
@@ -389,6 +394,7 @@ def csv_to_df(report_content):
 def keys_values_in_list_from_dict(dfs_dict, ext=''):
     filtered_dfs_list = []
     filtered_dfs_names_list = []
+    # print(dfs_dict)
 
     for name, value in dfs_dict.items():  # Используем "value" вместо "df"
         if isinstance(value, pd.DataFrame):
