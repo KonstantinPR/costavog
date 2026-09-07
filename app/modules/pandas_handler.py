@@ -144,7 +144,7 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
                          suffixes=(left_suffix, right_suffix))
 
     # Rename columns to remove suffixes
-    merged_df.rename(columns=lambda x: x.replace(suffix, ''), inplace=True)
+    merged_df.rename(columns=lambda x: x.replace(suffix, '') if isinstance(x, str) else x, inplace=True)
 
     if how == 'outer':
         # Update the left_on column where values are missing
@@ -153,7 +153,7 @@ def df_merge_drop(left_df, right_df, left_on, right_on, how="left"):
         merged_df.loc[condition, left_on] = merged_df[right_on]
 
     # Drop columns from the right DataFrame that have the suffix
-    columns_to_drop = [col for col in merged_df.columns if drop_suffix in col]
+    columns_to_drop = [col for col in merged_df.columns if drop_suffix in str(col)]
     merged_df.drop(columns_to_drop, axis=1, inplace=True)
 
     return merged_df

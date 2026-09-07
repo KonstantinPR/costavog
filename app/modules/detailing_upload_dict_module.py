@@ -119,6 +119,8 @@ CHOSEN_COLUMNS = [
     "material",
     "Артикул поставщика",
     "nmId",
+    "new_discount_fin",
+    "new_price",
     "new_discount",
     "discount_price",
     "action_price",
@@ -126,7 +128,6 @@ CHOSEN_COLUMNS = [
     "Allowed",
     "Allowed_border"
     "new_price",
-    "new_discount",
     "ABC_XYZ_delta",
     "ABC_XYZ",
     "d_disc",

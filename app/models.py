@@ -43,6 +43,7 @@ class Company(db.Model):
     ozon_api_token = db.Column(db.String(1000), default=0)
     ozon_client_id = db.Column(db.String(1000), default=0)
     checked = db.Column(db.Integer, default=0)
+    yandex_folder_prefix = db.Column(db.String(100), default='TASKER')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

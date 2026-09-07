@@ -60,7 +60,7 @@ def zips_to_list(zip_downloaded):
 def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная цена для применения скидки по автоакции, RUB",
               col_price="net_cost", new_price="new_price"):
     """Calculate and return a subset DataFrame with updated min prices, without modifying the original."""
-    # List of desired columns
+
     columns = [
         "Бренд", "Категория", "Артикул WB", "Артикул продавца", "Последний баркод",
         "Остатки WB", "Остатки продавца", "Оборачиваемость", "Цена со скидкой",
@@ -73,49 +73,78 @@ def min_price(df, pow_k=0.5, k=80, col_min="Новая минимальная ц
     # Проверка существования колонок
     if col_price not in df.columns:
         raise KeyError(f"Column '{col_price}' not found in DataFrame.")
-
     if 'nmId' not in df.columns:
         raise KeyError("Column 'nmId' not found in DataFrame.")
+    if 'price' not in df.columns:
+        raise KeyError("Column 'price' not found in DataFrame.")
 
     # Обрабатываем нулевые цены
+    if new_price not in df.columns:
+        df[new_price] = df["price"]
+
+    # 🔥 APPLY DISCOUNT FIRST (before saving df_new_price)
+    if 'new_discount_fin' in df.columns:
+        df[new_price] = df['price'] - df['price'] * df['new_discount_fin'] / 100
+
+    # NOW save the (potentially discounted) new_price
     df_col_price = pd.to_numeric(df[col_price], errors='coerce').fillna(0)
     df_new_price = pd.to_numeric(df[new_price], errors='coerce')
-    # Then, fill NaN values with corresponding values from df["price"]
     df_new_price = df_new_price.fillna(df["price"])
-    df.loc[df['new_price'].isin(pandas_handler.FALSE_LIST_3), 'new_price'] = df['price']
 
-    # Расчет минимальной цены:
-    # 2000 (3578 + 4900) / 2 = 4239
-    # 1000 2530
-    # 500 1789
-    # 100 800
+    # Handle FALSE_LIST_3 if it exists
+    if hasattr(pandas_handler, 'FALSE_LIST_3'):
+        df.loc[df[new_price].isin(pandas_handler.FALSE_LIST_3), new_price] = df['price']
 
+    # Расчет минимальной цены
     df[col_min] = ((df_col_price ** pow_k) * k)
-    # 2000 (3578 + 4900) / 2 = 4239
     df[col_min] = (df[col_min] + df_new_price) / 2
     df[col_min] = df[col_min].round(0)
+
+    # Convert to int safely - handle NaN and infinite values
+    df[col_min] = df[col_min].fillna(0).replace([np.inf, -np.inf], 0)
+    df[col_min] = df[col_min].round(0).astype(int)
+
+    # Cap at new_price
     df.loc[df[col_min] > df['new_price'], col_min] = df['new_price']
 
-    # Создаем DataFrame с Артикул WB
-    df_temp_min = pd.DataFrame({
-        "Артикул WB": df["nmId"],
-        # "Артикул поставщика": df["Артикул продавца"]
-    })
+    # Создаем DataFrame с нужными колонками
+    # KEEP nmId for filtering
+    df_temp_min = df[['nmId'] + [col for col in columns if col in df.columns]].copy()
 
-    # Мержим
-    df_temp_min = df_temp_min.merge(df, left_on="Артикул WB", right_on="nmId", how='left')
-
-    # Убедимся, что все нужные колонки есть, и заполняем отсутствующие пустыми строками
+    # Ensure all columns exist
     for col in columns:
         if col not in df_temp_min.columns:
             df_temp_min[col] = ''
 
-    # Выбираем только нужные колонки
-    df_temp_min = df_temp_min[columns]
-    df_temp_min.replace('', np.nan, inplace=True)
-    df_temp_min = df_temp_min.dropna(how='all')
-    df_temp_min.replace(np.nan, '', inplace=True)
-    df_temp_min = df_temp_min[df_temp_min["Артикул WB"] != ""]
+    # IMPORTANT FIX: Keep nmId and select only needed columns
+    # Instead of df_temp_min = df_temp_min[columns], keep nmId too
+    keep_columns = ['nmId'] + [col for col in columns if col in df_temp_min.columns]
+    df_temp_min = df_temp_min[keep_columns]
+
+    # Convert numeric columns to appropriate types
+    for col in df_temp_min.columns:
+        if pd.api.types.is_numeric_dtype(df_temp_min[col]):
+            df_temp_min[col] = df_temp_min[col].fillna(0)
+        else:
+            df_temp_min[col] = df_temp_min[col].fillna('')
+
+    # Filter using nmId (which we now have)
+    df_temp_min = df_temp_min[df_temp_min["nmId"].astype(str).str.strip() != ""]
+    df_temp_min = df_temp_min[df_temp_min["nmId"].notna()]
+
+    # If "Артикул WB" column exists, fill empty values with nmId
+    if "Артикул WB" in df_temp_min.columns:
+        df_temp_min["Артикул WB"] = df_temp_min["Артикул WB"].fillna(df_temp_min["nmId"])
+        df_temp_min.loc[df_temp_min["Артикул WB"] == "", "Артикул WB"] = df_temp_min["nmId"]
+    else:
+        # If "Артикул WB" doesn't exist, create it from nmId
+        df_temp_min["Артикул WB"] = df_temp_min["nmId"]
+
+    # You can drop nmId if you don't want it in the final output
+    # df_temp_min = df_temp_min.drop(columns=['nmId'])
+
+    df_temp_min.to_excel("df_temp_min.xlsx")
+    print(f"df_temp_min shape after filtering: {df_temp_min.shape}")
 
     return df_temp_min
 
@@ -342,6 +371,7 @@ def get_data_from(request) -> SimpleNamespace:
     r.path_to_save = request.form.get("path_to_save")
     r.is_just_concatenate = 'is_just_concatenate' in request.form
     r.is_discount_template = 'is_discount_template' in request.form
+    r.is_delivery = 'is_delivery' in request.form
     r.is_dynamic = 'is_dynamic' in request.form
     r.is_chosen_columns = 'is_chosen_columns' in request.form
     r.is_net_cost = 'is_net_cost' in request.form
@@ -389,30 +419,25 @@ def mix_detailings(df, is_compare_detailing=""):
         df_2026 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2026'])
         df_2025 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2025'])
         df_2024 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2024'])
-        df_2023 = yandex_disk_handler.get_excel_file_from_ydisk(app.config['REPORT_DETAILING_UPLOAD_2023'])
 
         # Merge the first DataFrame
-        df = df.merge(df_ALL_LONG[['Артикул поставщика', 'Маржа-себест.']],
+        df = df.merge(df_ALL_LONG[['Артикул поставщика', 'Маржа-себест.', 'Маржа']],
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_ALL_LONG'))
         # Merge the second DataFrame
-        df = df.merge(df_2026[['Артикул поставщика', 'Маржа-себест.']],
+        df = df.merge(df_2026[['Артикул поставщика', 'Маржа-себест.', 'Маржа']],
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_2026'))
-        df = df.merge(df_2025[['Артикул поставщика', 'Маржа-себест.']],
+        df = df.merge(df_2025[['Артикул поставщика', 'Маржа-себест.', 'Маржа']],
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_2025'))
-        df = df.merge(df_2024[['Артикул поставщика', 'Маржа-себест.']],
+        df = df.merge(df_2024[['Артикул поставщика', 'Маржа-себест.', 'Маржа']],
                       on='Артикул поставщика',
                       how='left',
                       suffixes=('', '_2024'))
-        df = df.merge(df_2023[['Артикул поставщика', 'Маржа-себест.']],
-                      on='Артикул поставщика',
-                      how='left',
-                      suffixes=('', '_2023'))
 
 
     except Exception as e:
@@ -573,11 +598,11 @@ def promofile_limit(df_promo, k_action_border=36):
     if current_percentage < 0.31 * k_action_border:  # ~30% от цели
         needed_target_percentage = 0.31 * k_action_border
         target_count_to_add = max(0, int(total_with_stock * (
-                    needed_target_percentage / 100.0)) - current_allowed_with_stock)
+                needed_target_percentage / 100.0)) - current_allowed_with_stock)
     elif current_percentage < k_action_border:
         needed_target_percentage = k_action_border
         target_count_to_add = max(0, int(total_with_stock * (
-                    needed_target_percentage / 100.0)) - current_allowed_with_stock)
+                needed_target_percentage / 100.0)) - current_allowed_with_stock)
 
     print(f"📈 Нужно добавить товаров: {target_count_to_add}")
 

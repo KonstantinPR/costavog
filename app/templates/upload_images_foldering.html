@@ -44,6 +44,16 @@
                                 <option selected value="DESCENDING">DESCENDING</option>
                             </select>
                         </div>
+                        <div class="col-xs-12 col-sm-12 col-lg-12 p-2">
+                            <label for="change_order" class="form-label">Поменять местами фото позиции 1 и N</label>
+                            <input class="form-control form-control-lg" type="number"
+                                   name="change_order" id="change_order"
+                                   placeholder="Введите номер позиции для замены (например: 4)"
+                                   min="2" value="">
+                            <small class="form-text text-muted">
+                                Например: если указать 4, то фото с номером 1 и 4 поменяются местами
+                            </small>
+                        </div>
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_cards_from_yadisk"
                                    name="is_cards_from_yadisk"
@@ -55,7 +65,7 @@
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 p-2">
                             <input class="form-check-input" type="checkbox" value="is_leading_nulls"
                                    name="is_leading_nulls"
-                                   id="is_leading_nulls" checked>
+                                   id="is_leading_nulls">
                             <label class="form-check-label" for="is_leading_nulls">
                                 Добавить лидирующие нули в имя файла (например из "-2.JPG" в "-002.JPG")
                             </label>

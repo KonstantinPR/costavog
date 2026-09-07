@@ -72,8 +72,15 @@ def _process_folder(folder_info):
         return None
 
 
-def process_delivering(folder_path='', period=0, date_from='', date_end=''):
+def process_delivering(folder_path='', period=0, is_delivery=True, date_from='', date_end=''):
     """Delivering goods from our store to WB count"""
+
+    if not is_delivery:
+        dfs_dict = {
+            'df_delivery_concat': pd.DataFrame(),
+            'df_delivery_pivot': pd.DataFrame()
+        }
+        return dfs_dict
 
     if not date_from:
         if not period:

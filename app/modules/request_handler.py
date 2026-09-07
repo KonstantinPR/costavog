@@ -26,26 +26,54 @@ def get_files(request):
     return files
 
 
-def to_df(request, html_text_input_name='text_input', html_file_input_name='file', input_column='vendorCode'):
-    """To get request and take from it text_input and make from it df, or take file and make df"""
-    df = pd.DataFrame
+def to_df_text_columns(request, html_text_input_name='text_input', input_column='vendorCode'):
+    """Parse text input with tab-separated pairs into a DataFrame with Article and Article_WB columns"""
 
-    if request.form[html_text_input_name]:
+    if request.form.get(html_text_input_name, '').strip():
+        input_text = request.form[html_text_input_name]
+
+        # Check if input contains tabs (tab-separated pairs)
+        if '\t' in input_text:
+            # Split by spaces and rebuild pairs
+            parts = input_text.split()
+
+            # Group them into pairs
+            data = []
+            for i in range(0, len(parts), 2):
+                if i + 1 < len(parts):
+                    data.append([parts[i].strip(), parts[i + 1].strip()])
+
+            if data:  # Only create DataFrame if we have data
+                df = pd.DataFrame(data, columns=['Article', 'Article_WB'])
+                print("Tab-separated pairs detected:")
+                return df
+
+    # Return None if no tab-separated data found
+    return None
+
+
+def to_df(request, html_text_input_name='text_input', html_file_input_name='file', input_column='vendorCode'):
+    """Original to_df function - unchanged for backward compatibility"""
+    df = pd.DataFrame()
+
+    if request.form.get(html_text_input_name, '').strip():
         print(html_file_input_name)
         input_text = request.form[html_text_input_name]
         input_text = input_text.split(" ")
         df = pd.DataFrame(input_text, columns=[input_column])
         return df
-    elif request.files[html_file_input_name]:
+    elif request.files.get(html_file_input_name):
         input_txt = request.files[html_file_input_name]
         filename = input_txt.filename
         try:
-            df = pd.read_csv(input_txt, sep='	', names=[input_column])
-            if df[input_column][0] == input_column: df = df.drop([0, 0]).reset_index(drop=True)
+            df = pd.read_csv(input_txt, sep='\t', names=[input_column])
+            if df[input_column][0] == input_column:
+                df = df.drop([0, 0]).reset_index(drop=True)
         except:
             df = pd.read_excel(input_txt)
 
-    if df.empty: flash("Необходимые данные не переданы")
+    if df.empty:
+        flash("Необходимые данные не переданы")
     return df
 
 

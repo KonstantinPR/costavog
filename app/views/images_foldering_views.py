@@ -56,15 +56,21 @@ def images_foldering():
 
     """
     if request.method == 'POST':
-        df = request_handler.to_df(request, input_column="Article")
+        # First try to get DataFrame with tab-separated pairs
+        df = request_handler.to_df_text_columns(request, input_column="Article")
+
+        # If no tab-separated data found, fallback to original to_df
+        if df is None:
+            df = request_handler.to_df(request, input_column="Article")
+
+        # Continue with existing logic...
         df.columns = [col.strip() for col in df.columns]
         marketplace = request.form["multiply_number"]
         is_replace = request.form["is_replace"]
         order_is = request.form["order_is"]
         is_cards_from_yadisk = request.form.get("is_cards_from_yadisk")
         is_leading_nulls = request.form.get("is_leading_nulls")
-
-        # print(df)
+        change_order = request.form.get("change_order")
 
         # Use get_all_cards_api_wb to retrieve nmID values based on vendorCode
         if marketplace == "WB":
@@ -76,20 +82,17 @@ def images_foldering():
 
                 # Merge df and df_nm_wb on Article and vendorCode columns
                 df = pd.merge(df, df_nm_wb, left_on="Article", right_on="vendorCode", how="left")
-                # print (df)
                 # Duplicate and rename nmID column to 'Article_WB'
                 df['Article_WB'] = df['nmID'].copy()
                 df['Article_WB'] = df['nmID'].apply(int).apply(str)
+
         if marketplace == "OZON":
             df['Article_WB'] = df['Article'].copy()
 
-        # Remove duplicate rows based on the 'Article' column
-        # df.drop_duplicates(subset='Article', keep='first', inplace=True)
         df.reset_index(drop=True, inplace=True)
 
-        # Now merged_df contains nmID values along with other columns from df and df_nm_wb
-
-        return_data = img_processor.img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls)
+        return_data = img_processor.img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls,
+                                                  change_order=change_order)
         download_name = 'image_zip.zip'
 
         return_data_separated = img_processor.create_zip_of_zips(return_data, max_size_mb=500)

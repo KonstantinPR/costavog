@@ -6,6 +6,7 @@ def check_discount(df, allowed_delta_percent):
     # plan_price_name = "Плановая цена для акции"
     current_price_name = "Текущая розничная цена"
     new_discount_col = "new_discount"
+    new_discount_col_fin = "new_discount_fin"
     promo_discount_name = "Загружаемая скидка для участия в акции"
 
     promo_discount_name_actual = "Загружаемая скидка для участия в акции исправленная"
@@ -39,6 +40,7 @@ def check_discount(df, allowed_delta_percent):
     df.loc[df["price_difference"] >= allowed_ratio, new_discount_col] = df[promo_discount_name]
     df.loc[df["price_difference"] < allowed_ratio, new_discount_col] = df[new_discount_col]
     df.loc[df["price_difference"] < allowed_ratio, "Allowed"] = "No"
+    df[new_discount_col_fin] = df[new_discount_col]
     # df.to_excel("df_promo2.xlsx")
 
     return df

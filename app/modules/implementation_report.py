@@ -9,6 +9,7 @@ default_pattern = r".*?(\d{1,9}(?:\.\d{2})*,\d{2})"
 # Define patterns for extracting financial data
 patterns = {
     "total_product_value": r"Всего стоимость реализованного товара" + default_pattern,
+    "total_product_value_2": r"Итого стоимость реализованного товара и услуг" + default_pattern,
     "total_service_value": r"Всего стоимость реализованных услуг" + default_pattern,
     "total_deducted_value": r"Итого зачтено из стоимости реализованного товара" + default_pattern,
     "wildberries_reward": r"Сумма вознаграждения Вайлдберриз за текущий период \(ВВ\), без НДС" + default_pattern,
@@ -28,6 +29,7 @@ patterns = {
 # Define the desired column names
 column_names = {
     "total_product_value": "Всего стоимость реализованного товара",
+    "total_product_value_2": "Итого стоимость реализованного товара и услуг",
     "total_service_value": "Всего стоимость реализованных услуг",
     "total_deducted_value": "Итого зачтено из стоимости реализованного товара",
     "wildberries_reward": "Сумма вознаграждения Вайлдберриз за текущий период (ВВ), без НДС",
@@ -53,6 +55,7 @@ def calculate_financial_totals(extracted_data, text):
                       extracted_data.items()}
 
     extracted_data["Добавить доход в бухгалтерию"] = extracted_data[column_names["total_product_value"]] + \
+                                                     extracted_data[column_names["total_product_value_2"]] + \
                                                      extracted_data[column_names["compensation_damage"]] + \
                                                      extracted_data[column_names["other_payments"]]
 

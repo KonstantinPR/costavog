@@ -50,6 +50,8 @@ def pivot_expanse(df, type_name, sum_name, agg_col_name='Артикул пост
     else:
         df = df.rename(columns={sum_name: f'{str(type_name)}'})
 
+    # if col_name not in df.columns:
+    #     df[col_name] = 0
 
     return df
 
@@ -70,6 +72,7 @@ def sum_exists(df, *column_names):
         print(f"[DEBUG] safe_sum: Ignoring missing columns: {missing}")
 
     return df[existing].sum(axis=1)
+
 
 def days_between(d1, d2):
     """

@@ -597,7 +597,166 @@ def add_leading_nulls(zip_bytes_io, is_leading_nulls=True):
     return output_io
 
 
-def img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls=True):
+def swap_photo_positions(df, folder_path, marketplace, change_order=None):
+    """
+    Swap photos between position 1 and position N in each article folder.
+
+    Args:
+        df: DataFrame containing article information
+        folder_path: Path to the main folder containing article subfolders
+        marketplace: 'WB' or 'OZON'
+        change_order: Integer indicating which position to swap with position 1
+                      If None or 1, no swapping is performed
+
+    Example:
+        If change_order = 4:
+        JZ2-VUITTON-7170-BLACK-1.JPG -> JZ2-VUITTON-7170-BLACK-4.JPG
+        JZ2-VUITTON-7170-BLACK-4.JPG -> JZ2-VUITTON-7170-BLACK-1.JPG
+    """
+    if change_order is None:
+        print("No change_order provided, skipping photo position swapping.")
+        return
+
+    # Convert to int to ensure it's a number
+    try:
+        change_order = int(change_order)
+    except (ValueError, TypeError):
+        print(f"Invalid change_order value: {change_order}. Must be an integer.")
+        return
+
+    if change_order == 1:
+        print("change_order is 1, no swapping needed.")
+        return
+
+    print(f"Starting photo position swapping with change_order={change_order}")
+    print(f"Folder path: {folder_path}")
+    print(f"Marketplace: {marketplace}")
+
+    # Pattern to match filename with position number at the end
+    # Example: JZ2-VUITTON-7170-BLACK-1.JPG
+    # The pattern captures: base_name (everything before the last number), position_number, extension
+    pattern = re.compile(r'^(.*?)(\d+)\.([^.]+)$', re.IGNORECASE)
+
+    # Get the column name for article identification
+    if marketplace == "WB":
+        article_col = "Article_WB"
+    else:  # OZON
+        article_col = "Article_WB"  # For OZON, Article_WB is same as Article
+
+    print(f"Using article column: {article_col}")
+    print(f"DataFrame columns: {df.columns.tolist()}")
+    print(f"Number of articles: {len(df)}")
+
+    # Iterate through each article in the dataframe
+    for idx, row in df.iterrows():
+        article = str(row[article_col]).strip()
+        print(f"\nProcessing article: {article}")
+
+        # Construct the folder path for this article
+        article_folder = os.path.join(folder_path, article)
+        print(f"Article folder path: {article_folder}")
+
+        if not os.path.exists(article_folder):
+            print(f"Folder not found: {article_folder}")
+            continue
+
+        if not os.path.isdir(article_folder):
+            print(f"Path is not a directory: {article_folder}")
+            continue
+
+        # Get all files in the folder
+        files = os.listdir(article_folder)
+        print(f"Files in folder: {files}")
+
+        # Find files that need renaming
+        files_to_rename = {}
+
+        for filename in files:
+            match = pattern.match(filename)
+            if match:
+                base_name = match.group(1)
+                position = int(match.group(2))
+                extension = match.group(3)
+
+                # Store file info by position
+                files_to_rename[position] = {
+                    'filename': filename,
+                    'base_name': base_name,
+                    'extension': extension,
+                    'full_path': os.path.join(article_folder, filename)
+                }
+                print(f"  Found file: position={position}, base_name={base_name}, extension={extension}")
+
+        print(f"Found positions: {sorted(files_to_rename.keys())}")
+
+        # Check if we have both position 1 and position N files
+        if 1 in files_to_rename and change_order in files_to_rename:
+            print(f"Found both position 1 and position {change_order}")
+
+            # Get file info for position 1 and position N
+            file_1 = files_to_rename[1]
+            file_n = files_to_rename[change_order]
+
+            print(f"Position 1 file: {file_1['filename']}")
+            print(f"Position {change_order} file: {file_n['filename']}")
+
+            # Create new filenames with swapped positions
+            new_filename_1 = f"{file_n['base_name']}1.{file_n['extension']}"
+            new_filename_n = f"{file_1['base_name']}{change_order}.{file_1['extension']}"
+
+            print(f"New position 1 filename: {new_filename_1}")
+            print(f"New position {change_order} filename: {new_filename_n}")
+
+            # Full paths for new files
+            new_path_1 = os.path.join(article_folder, new_filename_1)
+            new_path_n = os.path.join(article_folder, new_filename_n)
+
+            # Check if new filenames already exist and are not the ones we're renaming
+            if os.path.exists(new_path_1) and new_path_1 != file_n['full_path']:
+                print(f"Warning: {new_path_1} already exists and is not the source file")
+
+            if os.path.exists(new_path_n) and new_path_n != file_1['full_path']:
+                print(f"Warning: {new_path_n} already exists and is not the source file")
+
+            try:
+                # Rename position N to position 1 first (temporary)
+                temp_name = f"{file_n['base_name']}temp_{change_order}.{file_n['extension']}"
+                temp_path = os.path.join(article_folder, temp_name)
+
+                print(f"Step 1: Renaming {file_n['filename']} -> {temp_name}")
+                os.rename(file_n['full_path'], temp_path)
+
+                print(f"Step 2: Renaming {file_1['filename']} -> {new_filename_n}")
+                os.rename(file_1['full_path'], new_path_n)
+
+                print(f"Step 3: Renaming {temp_name} -> {new_filename_1}")
+                os.rename(temp_path, new_path_1)
+
+                print(f"SUCCESS: Swapped positions 1 and {change_order} in folder: {article}")
+                print(f"  {file_1['filename']} -> {new_filename_n}")
+                print(f"  {file_n['filename']} -> {new_filename_1}")
+
+            except Exception as e:
+                print(f"ERROR renaming files in folder {article}: {e}")
+                # Attempt to recover if something went wrong
+                try:
+                    # Check if temporary file exists and restore it
+                    if os.path.exists(temp_path):
+                        print("Attempting to restore from temporary file...")
+                        os.rename(temp_path, file_n['full_path'])
+                        print("Restored successfully")
+                except Exception as restore_error:
+                    print(f"Failed to restore: {restore_error}")
+        else:
+            if 1 not in files_to_rename:
+                print(f"Position 1 file not found in folder: {article}")
+                print("Available positions:", sorted(files_to_rename.keys()))
+            if change_order not in files_to_rename:
+                print(f"Position {change_order} file not found in folder: {article}")
+                print("Available positions:", sorted(files_to_rename.keys()))
+
+
+def img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls=True, change_order=None):
     images_folder = app.config["YANDEX_FOLDER_IMAGE"]
 
     # Create folder structure
@@ -611,6 +770,9 @@ def img_foldering(df, marketplace, is_replace, order_is, is_leading_nulls=True):
 
     # Rename folders
     rename_folders(df, folder_path, marketplace)
+
+    # NEW: Call the photo position swapping function
+    swap_photo_positions(df, folder_path, marketplace, change_order)
 
     # Create zip file
     zip_file_data = create_zip_file(folder_path)

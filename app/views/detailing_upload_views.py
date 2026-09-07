@@ -110,6 +110,7 @@ def upload_detailing():
                                              testing_mode=r.testing_mode, is_upload=r.is_save_yadisk)
 
     df_template = detailing_upload_module.df_disc_template_create(df, df_promo, r.is_discount_template)
+    # df.to_excel("df_before_min_pr_test.xlsx")
     df_min_priced = detailing_upload_module.min_price(df, pow_k=0.5, k=80)
 
     df_dynamic_list_out = detailing_upload_module.remain_only_columns(

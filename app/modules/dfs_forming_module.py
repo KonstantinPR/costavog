@@ -128,6 +128,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
 
     df_wb_sales = pivot_expanse(df, sales_name, type_wb_sales_col_name_all, col_name="WB реализовал руб")
     df_wb_backs = pivot_expanse(df, backs_name, type_wb_sales_col_name_all, col_name="WB вернули руб")
+    # df_wb_backs.to_excel("df_wb_backs.xlsx")
     df_sales = pivot_expanse(df, sales_name, type_sales_col_name_all)
     df_backs = pivot_expanse(df, backs_name, type_sales_col_name_all)
     df_logistic = pivot_expanse(df, logistic_name, type_delivery_service_col_name)
@@ -148,7 +149,7 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     df_qt_logistic_to = pivot_expanse(df, logistic_name, qt_logistic_to_col_name, col_name='Логистика до, шт.')
     df_qt_logistic_back = pivot_expanse(df, logistic_name, qt_logistic_back_col_name, col_name='Логистика от, шт.')
 
-    df.to_excel('df_pivot_expanse.xlsx')
+    # df.to_excel('df_pivot_expanse.xlsx')
 
     df = df.drop_duplicates(subset=[article_column_name])
     dfs = [df_wb_sales, df_wb_backs, df_sales, df_backs, df_logistic, df_compensation_substituted,
@@ -166,30 +167,56 @@ def zip_detail_V2(concatenated_dfs, drop_duplicates_in=None):
     # dfs_names = [sales_name, logistic_name, backs_name, substituted_col_name]
     df = df.fillna(0)
 
-    # df.to_excel("v2.xlsx")
+    # df.to_excel("v3.xlsx")
+
+    def sum_exists(df, *columns):
+        """Суммирует существующие колонки, пропуская отсутствующие."""
+        existing_cols = [col for col in columns if col in df.columns]
+        if not existing_cols:
+            return 0
+        return df[existing_cols].sum(axis=1)
+
+    # Проверяем наличие всех необходимых колонок
+    required_cols = [
+        'WB реализовал руб', 'WB вернули руб', 'Продажа', 'Возврат',
+        'Продажа, шт.', 'Возврат, шт.', 'Логистика до, шт.', 'Логистика от, шт.',
+        'Логистика', sales_name, backs_name, logistic_name
+    ]
+
+    for col in required_cols:
+        if col not in df.columns:
+            df[col] = 0
+            print(f"Warning: Created missing column: {col}")
+
+    # Основные расчеты
     df['Ч. WB_реализовал'] = df['WB реализовал руб'] - df['WB вернули руб']
     df['Ч. Продажа'] = df['Продажа'] - df['Возврат']
     df['WB_комиссия руб'] = df['Ч. WB_реализовал'] - df['Ч. Продажа']
     df['Ч. Продажа шт.'] = df['Продажа, шт.'] - df['Возврат, шт.']
-    df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.']
+
+    # Безопасное деление
+    df['Ср. Ц. Продажа/ед.'] = df['Ч. Продажа'] / df['Ч. Продажа шт.'].replace(0, np.nan)
     df['Логистика шт.'] = df['Логистика до, шт.'] + df['Логистика от, шт.']
-    df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.']
+    df['Логистика. ед'] = df['Логистика'] / df['Логистика шт.'].replace(0, np.nan)
+
+    # Удержания
     df['Удержания_plus'] = sum_exists(df, damages_col_name, substituted_col_name)
     df['Удержания_minus'] = sum_exists(df, penalty_col_name, 'Эквайринг', 'Эквайринг_2', 'При выдачи от',
                                        'При выдачи в')
 
+    # Выручка
     df['Выручка'] = df[sales_name] - df[backs_name] + df['Удержания_plus'] - df['Удержания_minus']
     df['Выручка-Логистика'] = df['Выручка'] - df[logistic_name]
 
-    # Ensure the column exists
+    # Работа с датами
     if 'Дата заказа покупателем' not in df.columns:
-        df['Дата заказа покупателем'] = ""
+        df['Дата заказа покупателем'] = pd.NaT
+    else:
+        df['Дата заказа покупателем'] = pd.to_datetime(df['Дата заказа покупателем'], errors='coerce')
 
-    # Generate 'Дней в продаже'
-    df['Дней в продаже'] = [
-        days_between(d, datetime.today()) if pd.notnull(d) and d != "" else ""
-        for d in df['Дата заказа покупателем']
-    ]
+    df['Дней в продаже'] = df['Дата заказа покупателем'].apply(
+        lambda d: days_between(d, datetime.today()) if pd.notnull(d) else ""
+    )
 
     if drop_duplicates_in:
         df.drop_duplicates(subset=drop_duplicates_in)

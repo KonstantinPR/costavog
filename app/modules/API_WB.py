@@ -243,29 +243,80 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
 
     print("stock from API WB ...")
     api_key = app.config['WB_API_TOKEN']
-    url = f"https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom={date_from}"
-    headers = {'Authorization': api_key}
 
-    response = requests.get(url, headers=headers)
-    df = response.json()
-    df = pd.json_normalize(df)
+    # New endpoint URL
+    url = "https://seller-analytics-api.wildberries.ru/api/analytics/v1/stocks-report/wb-warehouses"
 
+    # New headers
+    headers = {
+        'Authorization': api_key,
+        'Content-Type': 'application/json'
+    }
+
+    # Request body
+    payload = {
+        "limit": 250000,  # Maximum limit
+        "offset": 0
+    }
+
+    # Make POST request with JSON payload
+    response = requests.post(url, headers=headers, json=payload)
+
+    # Check if request was successful
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+    # Parse response
+    data = response.json()
+    # print(data)
+
+    # CRITICAL FIX: Extract items from data['data']['items']
+    items_list = data['data']['items']
+
+    print(f"Number of items: {len(items_list)}")
+    print(f"First item: {items_list[0] if items_list else 'empty'}")
+
+    # Create DataFrame from items list - THIS WILL WORK NOW
+    df = pd.DataFrame(items_list)
+
+    # Debug: Check what we got
+    print(f"DataFrame columns: {df.columns.tolist()}")
+    print(f"DataFrame shape: {df.shape}")
+    print(f"First 3 rows:\n{df.head(3)}")
+
+    # Rename columns to match expected format
+    if 'quantityFull' not in df.columns:
+        df['quantityFull'] = 0
+    if 'quantity' not in df.columns:
+        df['quantity'] = 0
+
+    # Make sure inWayToClient and inWayFromClient exist
+    if 'inWayToClient' not in df.columns:
+        df['inWayToClient'] = 0
+    if 'inWayFromClient' not in df.columns:
+        df['inWayFromClient'] = 0
+
+    # Filter out Shushary warehouse if needed
     if 'warehouseName' in df.columns and is_shushary:
         print("Удаление сгоревших товаров Шушар из остатков ...")
         df = df[df['warehouseName'] != 'Санкт-Петербург Шушары']
+        df = df[df['warehouseName'] != 'Склад СПБ Шушары Московское']  # Also filter this one
 
-    df = df.reset_index().rename_axis(None, axis=1)
+    df = df.reset_index(drop=True).rename_axis(None, axis=1)
     df.replace(np.NaN, 0, inplace=True)
+
+    print(f"DataFrame columns after cleanup: {df.columns.tolist()}")
+    print(f"DataFrame shape after cleanup: {df.shape}")
 
     if not request:
         return df
 
+    # Process request parameters
     if hasattr(request, 'form'):
-        # If it's a Flask request object, get the values from the form
         no_city = request.form.get('no_city')
         no_sizes = request.form.get('no_sizes')
     elif isinstance(request, dict):
-        # If it's a dictionary, directly access the values
         no_city = request.get('no_city')
         no_sizes = request.get('no_sizes')
     else:
@@ -273,92 +324,124 @@ def get_wb_stock_api(request=None, testing_mode=False, is_shushary=True, is_uplo
 
     print("stock from API WB is gotten")
 
-    # print (no_city)
-    # print (no_sizes)
+    # Add missing columns that might be needed for pivot_table
+    if 'supplierArticle' not in df.columns:
+        df['supplierArticle'] = ''
+    if 'category' not in df.columns:
+        df['category'] = ''
+    if 'subject' not in df.columns:
+        df['subject'] = ''
+    if 'brand' not in df.columns:
+        df['brand'] = ''
+    if 'techSize' not in df.columns:
+        df['techSize'] = ''
 
+    # Save before pivot to check
+    # df.to_excel("df_before_pivot.xlsx")
+
+    # Handle different pivot table scenarios
     if no_city == 'no_city' and no_sizes == 'no_sizes':
-        df = df.pivot_table(index=['nmId'],
-                            values=['quantityFull',
-                                    'inWayFromClient',
-                                    'inWayToClient',
-                                    'supplierArticle',
-                                    'category',
-                                    'subject',
-                                    'brand',
-                                    ],
-                            aggfunc={'quantityFull': sum,
-                                     'inWayFromClient': sum,
-                                     'inWayToClient': sum,
-                                     'supplierArticle': 'first',
-                                     'category': 'first',
-                                     'subject': 'first',
-                                     'brand': 'first',
-                                     },
-                            margins=False)
+        print(no_city)
+        print(no_sizes)
 
-        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
-        df = df.reset_index().rename_axis(None, axis=1)
+        # Now df should have proper columns: nmId, quantityFull, inWayFromClient, inWayToClient, etc.
+        df_pivot = df.pivot_table(index=['nmId'],
+                                  values=['quantityFull',
+                                          'quantity',
+                                          'inWayFromClient',
+                                          'inWayToClient',
+                                          'supplierArticle',
+                                          'category',
+                                          'subject',
+                                          'brand',
+                                          ],
+                                  aggfunc={'quantityFull': sum,
+                                           'quantity': sum,
+                                           'inWayFromClient': sum,
+                                           'inWayToClient': sum,
+                                           'supplierArticle': 'first',
+                                           'category': 'first',
+                                           'subject': 'first',
+                                           'brand': 'first',
+                                           },
+                                  margins=False)
 
-        return df
+        df_pivot['quantityFull'] = df_pivot['quantity'] + df_pivot['inWayFromClient'] + df_pivot[
+            'inWayToClient']
+        df_pivot['quantityWarehouse'] = df_pivot['quantityFull'] - df_pivot['inWayFromClient'] - df_pivot[
+            'inWayToClient']
+        df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+
+        # df_pivot.to_excel("df_after_pivot.xlsx")
+
+        return df_pivot
 
     if no_city == 'no_city':
-        df = df.pivot_table(index=['nmId', 'techSize'],
-                            values=['quantityFull',
-                                    'inWayFromClient',
-                                    'inWayToClient',
-                                    'supplierArticle',
-                                    'category',
-                                    'subject',
-                                    'brand',
-                                    ],
-                            aggfunc={'quantityFull': sum,
-                                     'inWayFromClient': sum,
-                                     'inWayToClient': sum,
-                                     'supplierArticle': 'first',
-                                     'category': 'first',
-                                     'subject': 'first',
-                                     'brand': 'first',
-                                     },
-                            margins=False)
-
-        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
-        df = df.reset_index().rename_axis(None, axis=1)
+        df_pivot = df.pivot_table(index=['nmId', 'techSize'],
+                                  values=['quantityFull',
+                                          'quantity',
+                                          'inWayFromClient',
+                                          'inWayToClient',
+                                          'supplierArticle',
+                                          'category',
+                                          'subject',
+                                          'brand',
+                                          ],
+                                  aggfunc={'quantityFull': sum,
+                                           'quantity': sum,
+                                           'inWayFromClient': sum,
+                                           'inWayToClient': sum,
+                                           'supplierArticle': 'first',
+                                           'category': 'first',
+                                           'subject': 'first',
+                                           'brand': 'first',
+                                           },
+                                  margins=False)
+        df_pivot['quantityFull'] = df_pivot['quantity'] + df_pivot['inWayFromClient'] + df_pivot[
+            'inWayToClient']
+        df_pivot['quantityWarehouse'] = df_pivot['quantityFull'] - df_pivot['inWayFromClient'] - df_pivot[
+            'inWayToClient']
+        df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
 
         if is_archive:
             yandex_disk_handler.copy_file_to_archive_folder(path_or_config=app.config['YANDEX_KEY_STOCK_WB'],
                                                             is_archive=is_archive)
 
-        if is_upload_yandex and df is not None:
+        if is_upload_yandex and df_pivot is not None:
             file_name = f'stock_wb.xlsx'
-            yandex_disk_handler.upload_to_YandexDisk(file=df, file_name=file_name,
+            yandex_disk_handler.upload_to_YandexDisk(file=df_pivot, file_name=file_name,
                                                      path=app.config['YANDEX_KEY_STOCK_WB'])
 
-        return df
+        return df_pivot
 
     if no_sizes == 'no_sizes':
-        df = df.pivot_table(index=['nmId', 'warehouseName'],
-                            values=['quantityFull',
-                                    'inWayFromClient',
-                                    'inWayToClient',
-                                    'supplierArticle',
-                                    'category',
-                                    'subject',
-                                    'brand',
-                                    ],
-                            aggfunc={'quantityFull': sum,
-                                     'inWayFromClient': sum,
-                                     'inWayToClient': sum,
-                                     'supplierArticle': 'first',
-                                     'category': 'first',
-                                     'subject': 'first',
-                                     'brand': 'first',
-                                     },
-                            margins=False)
+        df_pivot = df.pivot_table(index=['nmId', 'warehouseName'],
+                                  values=['quantityFull',
+                                          'quantity',
+                                          'inWayFromClient',
+                                          'inWayToClient',
+                                          'supplierArticle',
+                                          'category',
+                                          'subject',
+                                          'brand',
+                                          ],
+                                  aggfunc={'quantityFull': sum,
+                                           'quantity': sum,
+                                           'inWayFromClient': sum,
+                                           'inWayToClient': sum,
+                                           'supplierArticle': 'first',
+                                           'category': 'first',
+                                           'subject': 'first',
+                                           'brand': 'first',
+                                           },
+                                  margins=False)
+        df_pivot['quantityFull'] = df_pivot['quantity'] + df_pivot['inWayFromClient'] + df_pivot[
+            'inWayToClient']
+        df_pivot['quantityWarehouse'] = df_pivot['quantityFull'] - df_pivot['inWayFromClient'] - df_pivot[
+            'inWayToClient']
+        df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
 
-        df['quantityWarehouse'] = df['quantityFull'] - df['inWayFromClient'] - df['inWayToClient']
-        df = df.reset_index().rename_axis(None, axis=1)
-
-        return df
+        return df_pivot
 
     return df
 

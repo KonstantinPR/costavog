@@ -53,7 +53,10 @@ JEANS_SIZES = {
     '38': '52',
     '39': '52-54',
     '40': '54-56',
-    '41': '56'
+    '41': '56',
+    '42': '56-58',
+    '43': '58',
+    '44': '58-60',
 }
 
 
@@ -106,7 +109,7 @@ def merge_spec(df1, df2, left_on=COL_ART_NAME, right_on=COL_ART_NAME, how='outer
     # print(df2)
     random_suffix = f'_col_on_drop_{randrange(10)}'
     df = df1.merge(df2, how=how, left_on=left_on, right_on=right_on, suffixes=('', random_suffix), sort=False)
-    df.to_excel("merged.xlsx")
+    # df.to_excel("merged.xlsx")
     for idx, col in enumerate(df.columns):
         if f'{col}{random_suffix}' in df.columns:
             for idj, val in enumerate(df[f'{col}{random_suffix}']):
